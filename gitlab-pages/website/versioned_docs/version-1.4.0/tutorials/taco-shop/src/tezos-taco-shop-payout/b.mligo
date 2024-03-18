@@ -22,7 +22,7 @@ module TacoShop = struct
     (* We won't sell tacos if the amount is not correct *)
 
     let () =
-      if (Tezos.get_amount ()) <> current_purchase_price
+      if (Mavryk.get_amount ()) <> current_purchase_price
       then
         failwith
           "Sorry, the taco you are trying to purchase has a different price" in
@@ -36,11 +36,11 @@ module TacoShop = struct
         taco_shop_storage in
 
     let receiver : unit contract =
-      match (Tezos.get_contract_opt ownerAddress : unit contract option) with
+      match (Mavryk.get_contract_opt ownerAddress : unit contract option) with
         Some (contract) -> contract
       | None -> (failwith "Not a contract" : unit contract) in 
 
-    let payoutOperation : operation = Tezos.transaction () (Tezos.get_amount ()) receiver in
+    let payoutOperation : operation = Mavryk.transaction () (Mavryk.get_amount ()) receiver in
     let operations : operation list = [payoutOperation] in
 
     operations, taco_shop_storage

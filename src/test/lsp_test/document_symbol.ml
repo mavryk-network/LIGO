@@ -25,7 +25,7 @@ let%expect_test "Simple document symbols" =
        "kind": 13,
        "name": "z",
        "range": {
-         "end": { "character": 31, "line": 0 },
+         "end": { "character": 32, "line": 0 },
          "start": { "character": 6, "line": 0 }
        },
        "selectionRange": {

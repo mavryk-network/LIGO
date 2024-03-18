@@ -16,6 +16,6 @@ There are three kinds of utilities, corresponding to their dependencies.
 
 Of particular interest in `simple-utils` is `trace.ml`, a module used pervasively in LIGO’s code-base. It deals with exceptions (and soon enough debugging annotations) in a functional manner. It offers a lot of utilities to build, combine and propagate exceptions. Given it’s used everywhere, that it relies on some advanced features of OCaml (higher order functions, ppx preprocessing) and that it exposes **a lot** of functions, it’s a good idea to look at this file’s documentation.
 ## tezos-modded
-`tezos-modded` is a modded version of Tezos. There are modifications in it that are quite useful (exposing more functions from the protocol, giving more options to functions already defined), but not integrated yet.
+`tezos-modded` is a modded version of Mavryk. There are modifications in it that are quite useful (exposing more functions from the protocol, giving more options to functions already defined), but not integrated yet.
 It should in the end be integrated into the Tezos protocol, but until then, we use this.
 

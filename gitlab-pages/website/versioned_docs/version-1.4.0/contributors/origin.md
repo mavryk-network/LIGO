@@ -3,7 +3,7 @@ id: origin
 title: Origin
 ---
 
-LIGO is a programming language that aims to provide developers with an uncomplicated and safe way to implement smart contracts. Since it is being implemented for the Tezos blockchain LIGO compiles to Michelson—the native smart contract language of Tezos.
+LIGO is a programming language that aims to provide developers with an uncomplicated and safe way to implement smart contracts. Since it is being implemented for the Tezos blockchain LIGO compiles to Michelson—the native smart contract language of Mavryk.
 
 > Smart contracts are programs that run within a blockchain network.
 

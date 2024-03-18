@@ -1,4 +1,4 @@
 author: er433
 merge_request: '1533'
-title: 'Testing framework: add support for Tezos.implicit_account'
+title: 'Testing framework: add support for Mavryk.implicit_account'
 type: added

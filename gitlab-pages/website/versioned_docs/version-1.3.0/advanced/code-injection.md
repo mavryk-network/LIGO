@@ -152,7 +152,7 @@ ligo compile contract --protocol nairobi --disable-michelson-typechecking gitlab
 
 
 > ⚠️ Just for reference, there is support now for generating the
-> instruction `NEVER` directly from LIGO, using `Tezos.never`.
+> instruction `NEVER` directly from LIGO, using `Mavryk.never`.
 
 <!-- updated use of entry -->
 

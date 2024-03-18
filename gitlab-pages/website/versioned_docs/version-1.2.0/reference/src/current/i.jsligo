@@ -1,1 +1,1 @@
-let check = (kh: key_hash) => Tezos.implicit_account(kh);
+let check = (kh: key_hash) => Mavryk.implicit_account(kh);

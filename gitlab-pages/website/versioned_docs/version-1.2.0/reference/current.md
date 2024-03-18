@@ -21,7 +21,7 @@ Get the balance for the contract.
 <Syntax syntax="cameligo">
 
 ```cameligo
-let check (p,s : unit * mav) = [], Tezos.get_balance()
+let check (p,s : unit * mav) = [], Mavryk.get_balance()
 ```
 
 </Syntax>
@@ -30,7 +30,7 @@ let check (p,s : unit * mav) = [], Tezos.get_balance()
 
 ```jsligo
 let check = (p: unit, s: mav):[list<operation>, mav] =>
-  [list([]), Tezos.get_balance()];
+  [list([]), Mavryk.get_balance()];
 ```
 
 </Syntax>
@@ -56,7 +56,7 @@ smart contracts like this:
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
-let today         = Tezos.get_now ()
+let today         = Mavryk.get_now ()
 let one_day       = 86_400
 let in_24_hrs     = today + one_day
 let some_date     = ("2000-01-01t10:10:10Z" : timestamp)
@@ -68,7 +68,7 @@ let one_day_later = some_date + one_day
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-let today         = Tezos.get_now();
+let today         = Mavryk.get_now();
 let one_day       = 86_400;
 let in_24_hrs     = today + one_day;
 let some_date     = ("2000-01-01t10:10:10Z" as timestamp);
@@ -83,7 +83,7 @@ let one_day_later = some_date + one_day;
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
-let today     = Tezos.get_now ()
+let today     = Mavryk.get_now ()
 let one_day   = 86_400
 let in_24_hrs = today - one_day
 ```
@@ -93,7 +93,7 @@ let in_24_hrs = today - one_day
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-let today     = Tezos.get_now();
+let today     = Mavryk.get_now();
 let one_day   = 86_400;
 let in_24_hrs = today - one_day;
 ```
@@ -109,7 +109,7 @@ for numbers
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
-let not_tomorrow = (Tezos.get_now () = in_24_hrs)
+let not_tomorrow = (Mavryk.get_now () = in_24_hrs)
 ```
 
 </Syntax>
@@ -117,7 +117,7 @@ let not_tomorrow = (Tezos.get_now () = in_24_hrs)
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-let not_tomorrow = (Tezos.get_now() == in_24_hrs);
+let not_tomorrow = (Mavryk.get_now() == in_24_hrs);
 ```
 
 </Syntax>
@@ -136,7 +136,7 @@ transaction.
 <Syntax syntax="cameligo">
 
 ```cameligo
-let threshold (p : unit) = if Tezos.get_amount () = 100tz then 42 else 0
+let threshold (p : unit) = if Mavryk.get_amount () = 100tz then 42 else 0
 ```
 
 </Syntax>
@@ -145,7 +145,7 @@ let threshold (p : unit) = if Tezos.get_amount () = 100tz then 42 else 0
 
 ```jsligo
 function threshold (p : unit) {
-  if (Tezos.get_amount() == 100mav) return 42 else return 0;
+  if (Mavryk.get_amount() == 100mav) return 42 else return 0;
 };
 ```
 
@@ -164,7 +164,7 @@ Get the address that initiated the current transaction.
 <Syntax syntax="cameligo">
 
 ```cameligo
-let check (p : unit) = Tezos.get_sender ()
+let check (p : unit) = Mavryk.get_sender ()
 ```
 
 </Syntax>
@@ -172,7 +172,7 @@ let check (p : unit) = Tezos.get_sender ()
 <Syntax syntax="jsligo">
 
 ```jsligo group=e
-let check = (p : unit) => Tezos.get_sender ();
+let check = (p : unit) => Mavryk.get_sender ();
 ```
 
 </Syntax>
@@ -191,8 +191,8 @@ Get the address associated with a value of type `contract`.
 
 ```cameligo
 let check (p : key_hash) =
-  let c = Tezos.implicit_account p
-  in Tezos.address c
+  let c = Mavryk.implicit_account p
+  in Mavryk.address c
 ```
 
 </Syntax>
@@ -201,8 +201,8 @@ let check (p : key_hash) =
 
 ```jsligo group=f
 let check = (p : key_hash) => {
-  let c = Tezos.implicit_account(p);
-  return Tezos.address(c);
+  let c = Mavryk.implicit_account(p);
+  return Mavryk.address(c);
 };
 ```
 
@@ -221,7 +221,7 @@ Get the address of the currently running contract.
 <Syntax syntax="cameligo">
 
 ```cameligo
-let check (p : unit) = Tezos.get_self_address ()
+let check (p : unit) = Mavryk.get_self_address ()
 ```
 
 </Syntax>
@@ -229,7 +229,7 @@ let check (p : unit) = Tezos.get_self_address ()
 <Syntax syntax="jsligo">
 
 ```jsligo group=g
-let check = (p : unit) => Tezos.get_self_address();
+let check = (p : unit) => Mavryk.get_self_address();
 ```
 
 </Syntax>
@@ -249,7 +249,7 @@ you are not using entrypoints: use "%default"
 <Syntax syntax="cameligo">
 
 ```cameligo
-let check (p : unit) = Tezos.self("%default")
+let check (p : unit) = Mavryk.self("%default")
 ```
 
 </Syntax>
@@ -257,7 +257,7 @@ let check (p : unit) = Tezos.self("%default")
 <Syntax syntax="jsligo">
 
 ```jsligo group=h
-let check = (p: unit) => Tezos.self("%default");
+let check = (p: unit) => Mavryk.self("%default");
 ```
 
 </Syntax>
@@ -279,7 +279,7 @@ See also: http://tezos.gitlab.io/user/glossary.html#implicit-account
 <Syntax syntax="cameligo">
 
 ```cameligo
-let check (kh : key_hash) = Tezos.implicit_account kh
+let check (kh : key_hash) = Mavryk.implicit_account kh
 ```
 
 </Syntax>
@@ -287,7 +287,7 @@ let check (kh : key_hash) = Tezos.implicit_account kh
 <Syntax syntax="jsligo">
 
 ```jsligo group=i
-let check = (kh: key_hash) => Tezos.implicit_account(kh);
+let check = (kh: key_hash) => Mavryk.implicit_account(kh);
 ```
 
 </Syntax>
@@ -302,23 +302,23 @@ let get_source: (_u : unit) => address
 
 Get the _originator_ (address) of the current transaction. That is, if
 a chain of transactions led to the current execution get the address
-that began the chain. Not to be confused with `Tezos.get_sender`, which
+that began the chain. Not to be confused with `Mavryk.get_sender`, which
 gives the address of the contract or user which directly caused the
 current transaction.
 
 > ⚠️ There are a few caveats you should keep in mind before using
-> `Tezos.get_source` over `Tezos.get_sender`:
+> `Mavryk.get_source` over `Mavryk.get_sender`:
 >
-> 1. `Tezos.get_source` will never be a contract, so if you want to allow
+> 1. `Mavryk.get_source` will never be a contract, so if you want to allow
 >    contracts (multisigs etc) to operate your contract, you need to
->    use `Tezos.get_sender`
+>    use `Mavryk.get_sender`
 > 2. https://vessenes.com/tx-origin-and-ethereum-oh-my/ -- in general
->    it is somewhat unsafe to assume that `Tezos.get_source` understands
+>    it is somewhat unsafe to assume that `Mavryk.get_source` understands
 >    everything that is going to happen in a transaction. If
->    `Tezos.get_source` transfers to a malicious (or sufficiently
+>    `Mavryk.get_source` transfers to a malicious (or sufficiently
 >    attackable) contract, that contract might potentially transfer to
->    yours, without `Tezos.get_source`'s consent. So if you are using
->    `Tezos.get_source` for authentication, you risk being confused. A
+>    yours, without `Mavryk.get_source`'s consent. So if you are using
+>    `Mavryk.get_source` for authentication, you risk being confused. A
 >    good historical example of this is bakers paying out delegation
 >    rewards. Naive bakers did (and probably still do) just use
 >    tezos-client to transfer to whatever KT1 delegates they had, even
@@ -329,7 +329,7 @@ current transaction.
 <Syntax syntax="cameligo">
 
 ```cameligo
-let check (p : unit) = Tezos.get_source ()
+let check (p : unit) = Mavryk.get_source ()
 ```
 
 </Syntax>
@@ -337,7 +337,7 @@ let check (p : unit) = Tezos.get_source ()
 <Syntax syntax="jsligo">
 
 ```jsligo group=j
-let check = (p : unit) => Tezos.get_source();
+let check = (p : unit) => Mavryk.get_source();
 ```
 
 </Syntax>
@@ -372,7 +372,7 @@ type storage = bytes
 
 [@entry]
 let main (_ignore : unit) (store : storage) =
-  let packed = Bytes.pack (Tezos.get_chain_id ()) in
+  let packed = Bytes.pack (Mavryk.get_chain_id ()) in
   if (store <> packed) then
     (failwith "wrong chain" : (operation list * storage))
   else
@@ -388,7 +388,7 @@ type storage = bytes;
 
 @entry
 let main = (_ignore: unit, storage: storage) : [list<operation>, storage] => {
-  let packed = Bytes.pack(Tezos.get_chain_id());
+  let packed = Bytes.pack(Mavryk.get_chain_id());
   if (storage != packed) {
     return failwith("wrong chain") as [list<operation>, storage];
   } else {
@@ -552,7 +552,7 @@ val voting_power : key_hash -> nat
 let voting_power: (key_hash:key_hash) => nat
 </SyntaxTitle>
 
-Return the voting power of a given contract. The voting power value is the full staking power of the delegate, currently expressed in mumav. Though, developers should not rely on `Tezos.voting_power` to query the staking power of a contract in mumav: the value returned by `Tezos.voting_power` is still of type` nat and it should only be considered relative to `Tezos.total_voting_power`.
+Return the voting power of a given contract. The voting power value is the full staking power of the delegate, currently expressed in mumav. Though, developers should not rely on `Mavryk.voting_power` to query the staking power of a contract in mumav: the value returned by `Mavryk.voting_power` is still of type` nat and it should only be considered relative to `Mavryk.total_voting_power`.
 
 ## Sapling
 
@@ -587,7 +587,7 @@ let sapling_empty_state: sapling_state&lt;n&gt;
 <Syntax syntax="cameligo">
 
 ```cameligo group=sap_t
-let x = Tezos.sapling_empty_state
+let x = Mavryk.sapling_empty_state
 ```
 
 </Syntax>
@@ -595,7 +595,7 @@ let x = Tezos.sapling_empty_state
 <Syntax syntax="jsligo">
 
 ```jsligo group=sap_t
-let x = Tezos.sapling_empty_state ;
+let x = Mavryk.sapling_empty_state ;
 ```
 
 </Syntax>
@@ -617,7 +617,7 @@ Verify sapling update
 
 ```cameligo group=sap_t
 let f (tr : tr) =
-  match Tezos.sapling_verify_update tr x with
+  match Mavryk.sapling_verify_update tr x with
     Some (_, x) -> x
   | None -> (failwith "failed" : int * st)
 ```
@@ -628,7 +628,7 @@ let f (tr : tr) =
 
 ```jsligo group=sap_t
 let f = (tr : tr) =>
-  match (Tezos.sapling_verify_update(tr, x)) {
+  match (Mavryk.sapling_verify_update(tr, x)) {
     when(Some(p)): p[1];
     when(None()): failwith ("failed")
   };
@@ -650,7 +650,7 @@ type result = operation list * storage
 
 [@entry]
 let main (i : parameter) (store : storage) : result =
-  let my_ticket1 = Option.unopt (Tezos.create_ticket i 10n) in
+  let my_ticket1 = Option.unopt (Mavryk.create_ticket i 10n) in
   let _, x = Big_map.get_and_update "hello" (Some my_ticket1) store
   in [], x
 ```
@@ -668,7 +668,7 @@ type result = [list<operation>, storage];
 
 @entry
 function main (i: parameter, store : storage): result {
-  let my_ticket1 = Option.unopt (Tezos.create_ticket (i, 10n));
+  let my_ticket1 = Option.unopt (Mavryk.create_ticket (i, 10n));
   let [_x, ret] = Big_map.get_and_update ("hello", Some(my_ticket1), store);
   return [list([]), ret]
 };

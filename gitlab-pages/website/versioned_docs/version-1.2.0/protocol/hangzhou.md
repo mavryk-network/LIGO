@@ -54,7 +54,7 @@ type chest_opening_result =
  | ["Fail_timelock"];
 </SyntaxTitle>
 
-A type for the result of chest opening, see `Tezos.open_chest`
+A type for the result of chest opening, see `Mavryk.open_chest`
 
 ### New primitives
 
@@ -155,7 +155,7 @@ type return = operation list * storage
 let main (p, _ : parameter * storage) : return =
   let (ck,c) = p in
   let new_s =
-    match Tezos.open_chest ck c 10n with
+    match Mavryk.open_chest ck c 10n with
     | Ok_opening b -> b
     | Fail_timelock -> 0x00
     | Fail_decrypt -> 0x01
@@ -196,7 +196,7 @@ let test =
 
 ```jsligo skip
 let open_or_fail = ([ck, c, @time] : [chest_key, chest, nat]) : bytes => {
-  return (match ( Tezos.open_chest(ck,c,@time), {
+  return (match ( Mavryk.open_chest(ck,c,@time), {
     Ok_opening: (b:bytes) => b,
     Fail_decrypt: () => failwith("decrypt"),
     Fail_timelock: () => failwith("timelock"),
@@ -210,7 +210,7 @@ let open_or_fail = ([ck, c, @time] : [chest_key, chest, nat]) : bytes => {
 
 ```pascaligo skip
 function open_or_fail (const ck : chest_key; const c : chest; const @time : nat) : bytes is
-  case Tezos.open_chest (ck, c, @time) of [
+  case Mavryk.open_chest (ck, c, @time) of [
     Ok_opening (b) -> b
   | Fail_decrypt -> (failwith("decrypt"))
   | Fail_timelock -> (failwith("timelock"))
@@ -306,38 +306,38 @@ function main (const _ : unit ; const s : storage) : list (operation) * storage 
 
 A few primitives have a slightly different meaning when executed as part of a view:
 
-- `Tezos.get_balance` represents the current amount of mumav held by the contract attached to the view
-- `Tezos.get_sender` represents the caller of the view
-- `Tezos.get_amount` is always 0 mumav
-- `Tezos.get_self_address` represents the contract attached to the view
+- `Mavryk.get_balance` represents the current amount of mumav held by the contract attached to the view
+- `Mavryk.get_sender` represents the caller of the view
+- `Mavryk.get_amount` is always 0 mumav
+- `Mavryk.get_self_address` represents the contract attached to the view
 
-On the caller side, the primitive `Tezos.call_view` will allow you to call another contract view and get its result by providing the view name; the contract address and the parameter of the view. If the address is nonexistent; the name does not match of of the contract
-view or the parameter type do not match, `Tezos.call_view` will return `None`.
+On the caller side, the primitive `Mavryk.call_view` will allow you to call another contract view and get its result by providing the view name; the contract address and the parameter of the view. If the address is nonexistent; the name does not match of of the contract
+view or the parameter type do not match, `Mavryk.call_view` will return `None`.
 
 <Syntax syntax="cameligo">
 
 ```cameligo group=views
-let view_call ((name,parameter,addr): string * int * address) : int option = Tezos.call_view "sto_plus_n" 1 addr
+let view_call ((name,parameter,addr): string * int * address) : int option = Mavryk.call_view "sto_plus_n" 1 addr
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo group=views
-let view_call = ([name,parameter,addr]: [string , int , address]) : option<int> => Tezos.call_view ("sto_plus_n", 1, addr)
+let view_call = ([name,parameter,addr]: [string , int , address]) : option<int> => Mavryk.call_view ("sto_plus_n", 1, addr)
 ```
 
 </Syntax>
 <Syntax syntax="pascaligo">
 
 ```pascaligo group=views
-function view_call (const name : string; const parameter : int; const addr: address) : option (int) is Tezos.call_view ("sto_plus_n", 1, addr)
+function view_call (const name : string; const parameter : int; const addr: address) : option (int) is Mavryk.call_view ("sto_plus_n", 1, addr)
 ```
 
 </Syntax>
 
 ### Global constant
 
-The new primitive `Tezos.constant` allows you to use a predefined
+The new primitive `Mavryk.constant` allows you to use a predefined
 constant already registered on chain.  It accepts a hash in the form
 of a string and will require a type annotation.

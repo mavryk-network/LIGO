@@ -13,7 +13,7 @@
  type storage = mav ;
 
  const main3 = ( [ _unit , _storage ] : [ unit , storage ] ) : [ list < operation > , mav ] =>
- [ ( list [ ] ) as list < operation > ) , Tezos . balance ] ;
+ [ ( list [ ] ) as list < operation > ) , Mavryk . balance ] ;
 
  const main = ( x : [ unit storage ] ) : [ list < operation > , mav ] => main3 ( [ x [ 0 ] , x [ 1 ] ] ) ;
 

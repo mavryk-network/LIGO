@@ -9,7 +9,7 @@ const { InMemorySigner } = require("@taquito/signer")
 async function initializeTezos(networkConfig) {
     const uri = `${networkConfig.host}:${networkConfig.port}`
     const Tezos = new taquito.TezosToolkit(uri)
-    Tezos.setProvider({
+    Mavryk.setProvider({
         signer: new InMemorySigner(networkConfig.secretKey),
     })
     return Tezos
@@ -28,7 +28,7 @@ class Artifacts {
         )
         const artifact = JSON.parse(await readFile(artifactFile))
         if (this.chainId === null) {
-            this.chainId = await this.Tezos.rpc.getChainId()
+            this.chainId = await this.Mavryk.rpc.getChainId()
         }
         let address = null
         try {
@@ -39,7 +39,7 @@ class Artifacts {
             )
             throw err
         }
-        return this.Tezos.contract.at(address)
+        return this.Mavryk.contract.at(address)
     }
 }
 

@@ -15,4 +15,4 @@ type storage = mav
 type return = operation list * storage
 
 let main (_ : parameter) (_ : storage) : return =
-  ([] : operation list), Tezos.get_balance ()
+  ([] : operation list), Mavryk.get_balance ()

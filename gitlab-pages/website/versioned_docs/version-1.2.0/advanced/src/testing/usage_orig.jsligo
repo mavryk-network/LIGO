@@ -5,7 +5,7 @@ const main = (_p: unit, s: storage) : [ list<operation> , storage] => {
   let x =
     match (s) {
       when(Some(ticket)): ((ticket: ticket<bytes>) => {
-        let [_v , t] = Tezos.read_ticket (ticket) ;
+        let [_v , t] = Mavryk.read_ticket (ticket) ;
         return Some (t)
       })(ticket);
       when(None()): None()

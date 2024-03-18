@@ -107,7 +107,7 @@ let error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.Free variable usage is not allowed in call to \
-         Tezos.create_contract:@.%a@]"
+         Mavryk.create_contract:@.%a@]"
         snippet_pp
         e.location
         snippet_pp
@@ -115,7 +115,7 @@ let error_ppformat
     | `Self_ast_aggregated_create_contract_lambda (_cst, e) ->
       Format.fprintf
         f
-        "@[<hv>%a@.Invalid usage of Tezos.create_contract.@.The first argument must be \
+        "@[<hv>%a@.Invalid usage of Mavryk.create_contract.@.The first argument must be \
          an inline function. @]"
         snippet_pp
         e.location
@@ -230,7 +230,7 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
   | `Self_ast_aggregated_fvs_in_create_contract_lambda (_, v) ->
     let location = Value_var.get_location v in
     let message =
-      "Free variable usage is not allowed in call to Tezos.create_contract."
+      "Free variable usage is not allowed in call to Mavryk.create_contract."
     in
     let content = make_content ~message ~location () in
     make ~stage ~content
@@ -238,7 +238,7 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
     let location = e.location in
     let message =
       Format.sprintf
-        "Invalid usage of Tezos.create_contract.@.The first argument must be an inline \
+        "Invalid usage of Mavryk.create_contract.@.The first argument must be an inline \
          function."
     in
     let content = make_content ~message ~location () in

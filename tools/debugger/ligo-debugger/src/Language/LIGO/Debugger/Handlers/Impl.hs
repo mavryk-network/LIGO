@@ -73,9 +73,9 @@ import Morley.Michelson.Typed
   SomeContract (..), pattern DefEpName)
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Address (Constrained (Constrained), ta)
-import Morley.Tezos.Core (Timestamp (Timestamp), dummyChainId, tz)
-import Morley.Tezos.Crypto (parseHash)
+import Morley.Mavryk.Address (Constrained (Constrained), ta)
+import Morley.Mavryk.Core (Timestamp (Timestamp), dummyChainId, tz)
+import Morley.Mavryk.Crypto (parseHash)
 
 import Language.LIGO.DAP.Variables
 import Language.LIGO.Debugger.CLI

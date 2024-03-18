@@ -1,1 +1,1 @@
-let current_addr : address = Tezos.get_self_address ()
+let current_addr : address = Mavryk.get_self_address ()

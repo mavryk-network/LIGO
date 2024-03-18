@@ -52,7 +52,7 @@ Here is how you emit events and fetch them from your tests:
 
 ```pascaligo test-ligo group=test_ex
 function main ( const x : (int*int) * unit ) is
-  (list [Tezos.emit ("%foo", x.0) ; Tezos.emit ("%foo", x.0.0)], Unit)
+  (list [Mavryk.emit ("%foo", x.0) ; Mavryk.emit ("%foo", x.0.0)], Unit)
 
 const test_foo = {
   const orig = Test.originate (main, Unit, 0mav) ;
@@ -68,7 +68,7 @@ const test_foo = {
 ```cameligo test-ligo group=test_ex
 module C = struct
   [@entry] let main (p: int*int) (_: unit) =
-    [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
+    [Mavryk.emit "%foo" p ; Mavryk.emit "%foo" p.0],()
 end
 
 let test_foo =
@@ -84,8 +84,8 @@ let test_foo =
 namespace C {
   @entry
   let main = (p: [int, int], _s : unit) => { 
-    let op1 = Tezos.emit("%foo", p);
-    let op2 = Tezos.emit("%foo", p[0]);
+    let op1 = Mavryk.emit("%foo", p);
+    let op2 = Mavryk.emit("%foo", p[0]);
     return [list([op1, op2]), unit];
   };
 }

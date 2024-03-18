@@ -43,7 +43,7 @@ let originate_oven_with
   let (fresh_ticket, counter) = match ticket with
     | None -> (None : bytes ticket option), 0n
     | Some t ->
-      let (_, (_, qty)), fresh = Tezos.read_ticket t in
+      let (_, (_, qty)), fresh = Mavryk.read_ticket t in
       (Some fresh, qty)
   in
   Breath.Contract.originate

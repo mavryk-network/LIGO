@@ -170,7 +170,7 @@ What is supported as part of MVP:
 * Display of variables, including records, constructors, lists, and combinations of them;
 * Stack frames display;
 * Breakpoints (but not guaranteed to work properly in all the cases at the moment);
-* Providing custom environment (`Tezos.get_now`, `Tezos.get_balance`, etc).
+* Providing custom environment (`Mavryk.get_now`, `Mavryk.get_balance`, etc).
 
 Bits of functionality that will be added very soon:
 * Contracts related functionality:
@@ -268,14 +268,14 @@ The debugger supports providing a custom environment for your contracts. You can
 ...
 ```
 All these fields are optional. Let's describe what they mean:
-1. `now`. The value returned by `Tezos.get_now()`. Default: current system time.
-2. `level`. The value returned by `Tezos.get_level()`. Default: `"10000"`.
-3. `sender`. The value returned by `Tezos.get_sender()`. Default: `"mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"`.
-4. `source`. The value returned by `Tezos.get_source()`. Default: `"mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"`.
-5. `self`. The value returned by `Tezos.get_self_address()`. Default: `"KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b"`.
-6. `amount`. The value returned by `Tezos.get_amount()`. Default: `"0"`.
-7. `balance`. The value returned by `Tezos.get_balance()`. Default: `"1000000"`.
-8. `chainId`. The value returned by `Tezos.get_chain_id()`. Default: `"NetXH12Aer3be93"`.
+1. `now`. The value returned by `Mavryk.get_now()`. Default: current system time.
+2. `level`. The value returned by `Mavryk.get_level()`. Default: `"10000"`.
+3. `sender`. The value returned by `Mavryk.get_sender()`. Default: `"mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"`.
+4. `source`. The value returned by `Mavryk.get_source()`. Default: `"mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"`.
+5. `self`. The value returned by `Mavryk.get_self_address()`. Default: `"KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b"`.
+6. `amount`. The value returned by `Mavryk.get_amount()`. Default: `"0"`.
+7. `balance`. The value returned by `Mavryk.get_balance()`. Default: `"1000000"`.
+8. `chainId`. The value returned by `Mavryk.get_chain_id()`. Default: `"NetXH12Aer3be93"`.
 9. `votingPowers`. At this moment only the `simple` kind is supported. In the `contents` field you should specify key hashes and their voting powers. Default: `{ "kind": "simple", "contents": { "mv1E97cthY1QUw8D1LuWNDiYzG8EGacuVt2K": "100" } }`.
 
 ### Providing configuration in LIGO

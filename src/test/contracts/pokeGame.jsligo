@@ -18,7 +18,7 @@ const poke = (_p : unit, store: storage): return_ => {
   //extract opt ticket from map
   const [t, tom]: [option<ticket<string>>, map<address, ticket<string>>] =
     Map.get_and_update(
-      Tezos.get_source(),
+      Mavryk.get_source(),
       None() as option<ticket<string>>,
       ticketOwnership
     );
@@ -31,8 +31,8 @@ const poke = (_p : unit, store: storage): return_ => {
         //let t burn
         feedback,
         pokeTraces: Map.add(
-          Tezos.get_source(),
-          { receiver: Tezos.get_self_address(), feedback: "" },
+          Mavryk.get_source(),
+          { receiver: Mavryk.get_self_address(), feedback: "" },
           pokeTraces
         ),
         ticketOwnership: tom,
@@ -49,13 +49,13 @@ const pokeAndGetFeedback = (oracleAddress : address, store : storage) => {
   //extract opt ticket from map
   const [t, tom]: [option<ticket<string>>, map<address, ticket<string>>] =
     Map.get_and_update(
-      Tezos.get_source(),
+      Mavryk.get_source(),
       None() as option<ticket<string>>,
       ticketOwnership
     );
 
   //Read the feedback view
-  let feedbackOpt: option<string> = Tezos.call_view(
+  let feedbackOpt: option<string> = Mavryk.call_view(
     "feedback",
     unit,
     oracleAddress
@@ -72,7 +72,7 @@ const pokeAndGetFeedback = (oracleAddress : address, store : storage) => {
             {
               feedback,
               pokeTraces: Map.add(
-                Tezos.get_source(),
+                Mavryk.get_source(),
                 feedbackMessage,
                 pokeTraces
               ),
@@ -99,7 +99,7 @@ const init = (p : [address, nat], store: storage) : return_ => {
       }
     ]
   } else {
-    const t : ticket<string> = Option.unopt(Tezos.create_ticket("can_poke", ticketCount));
+    const t : ticket<string> = Option.unopt(Mavryk.create_ticket("can_poke", ticketCount));
     return [
       list([]) as list<operation>,
       {

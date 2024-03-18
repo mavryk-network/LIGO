@@ -43,7 +43,7 @@ let originate
   (quantity: mav) : (a, b) originated =
   let {addr=typed_address; code=_; size=_} = Test.originate contract storage quantity in
   let contract = Test.to_contract typed_address in
-  let address = Tezos.address contract in
+  let address = Mavryk.address contract in
 
   let () =
     Logger.log level ("originated smart contract", name, address, storage, quantity)

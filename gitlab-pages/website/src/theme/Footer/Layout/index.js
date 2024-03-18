@@ -81,7 +81,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
             )}
             <Title level={3}>Ligo</Title>
             <Subtitle className={styles["footer__brand-subtitle"]}>
-              The smart-contract language tailored for Tezos.
+              The smart-contract language tailored for Mavryk.
             </Subtitle>
           </div>
           <div className={styles["footer__links"]}>{links}</div>

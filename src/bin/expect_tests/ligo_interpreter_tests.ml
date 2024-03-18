@@ -177,13 +177,13 @@ let%expect_test _ =
      13 |   let parameter = Commit salted_hash in
      14 |   let () = Test.set_source first_committer in
                      ^^^^^^^^^^^^^^^
-     15 |   let lock_time = Tezos.get_now () + 15 + 86_400 in
+     15 |   let lock_time = Mavryk.get_now () + 15 + 86_400 in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `State.set_source` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_hashlock.mligo", line 16, characters 10-39:
-     15 |   let lock_time = Tezos.get_now () + 15 + 86_400 in
+     15 |   let lock_time = Mavryk.get_now () + 15 + 86_400 in
      16 |   let _ = Test.transfer_to_contract_exn contr parameter 0mav in
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      17 |   let new_storage = Test.get_storage typed_addr in
@@ -829,7 +829,7 @@ let%expect_test _ =
      14 |   let orig = Test.originate (contract_of C) init_storage 0mumav in
      15 |   let contr = Test.to_contract orig.addr in
                         ^^^^^^^^^^^^^^^^
-     16 |   let addr = Tezos.address contr in
+     16 |   let addr = Mavryk.address contr in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.to_contract` from `Test.Next` is encouraged for a smoother migration.
@@ -1008,14 +1008,14 @@ let%expect_test _ =
     458 | let test_chain_id =
     459 |   let chain_id = Test.eval ("NetXH12Aer3be93" : chain_id) in
                            ^^^^^^^^^
-    460 |   assert (chain_id = Test.eval (Tezos.get_chain_id ()))
+    460 |   assert (chain_id = Test.eval (Mavryk.get_chain_id ()))
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
     File "./interpret_test.mligo", line 460, characters 21-30:
     459 |   let chain_id = Test.eval ("NetXH12Aer3be93" : chain_id) in
-    460 |   assert (chain_id = Test.eval (Tezos.get_chain_id ()))
+    460 |   assert (chain_id = Test.eval (Mavryk.get_chain_id ()))
                                ^^^^^^^^^
     461 |
     :
@@ -1268,13 +1268,13 @@ let%expect_test _ =
       4 |   let orig = Test.originate (contract_of C) () 0mav in
       5 |   let contr = Test.to_contract orig.addr in
                         ^^^^^^^^^^^^^^^^
-      6 |   let addr = Tezos.address contr in
+      6 |   let addr = Mavryk.address contr in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.to_contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_fail.mligo", line 7, characters 8-33:
-      6 |   let addr = Tezos.address contr in
+      6 |   let addr = Mavryk.address contr in
       7 |   match Test.transfer_to_contract contr (Main ()) 10mav with
                   ^^^^^^^^^^^^^^^^^^^^^^^^^
       8 |   | Success _ -> (failwith "Should fail !" : michelson_program )
@@ -4279,7 +4279,7 @@ let%expect_test _ =
   [%expect
     {|
     File "./test_implicit_account.jsligo", line 5, characters 4-12:
-      4 |     let a : address = Tezos.address(c);
+      4 |     let a : address = Mavryk.address(c);
       5 |     Test.log(Test.get_balance_of_address(a));
               ^^^^^^^^
       6 |     Test.transfer_to_contract_exn(c, unit, (123 as mumav));
@@ -4288,7 +4288,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_implicit_account.jsligo", line 5, characters 13-40:
-      4 |     let a : address = Tezos.address(c);
+      4 |     let a : address = Mavryk.address(c);
       5 |     Test.log(Test.get_balance_of_address(a));
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
       6 |     Test.transfer_to_contract_exn(c, unit, (123 as mumav));
@@ -4309,7 +4309,7 @@ let%expect_test _ =
       6 |     Test.transfer_to_contract_exn(c, unit, (123 as mumav));
       7 |     Test.log(Test.get_balance_of_address(a));
               ^^^^^^^^
-      8 |     return list([Tezos.address(c) , ...accList]);
+      8 |     return list([Mavryk.address(c) , ...accList]);
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
@@ -4318,7 +4318,7 @@ let%expect_test _ =
       6 |     Test.transfer_to_contract_exn(c, unit, (123 as mumav));
       7 |     Test.log(Test.get_balance_of_address(a));
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      8 |     return list([Tezos.address(c) , ...accList]);
+      8 |     return list([Mavryk.address(c) , ...accList]);
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
@@ -4350,7 +4350,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Account.new` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_accounts.mligo", line 8, characters 12-38:
-      7 |   let a = Tezos.address c in
+      7 |   let a = Mavryk.address c in
       8 |   let to_ = Test.nth_bootstrap_account 0 in
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
       9 |   let _ = Test.transfer_to_contract_exn c () 123mav in
@@ -4413,7 +4413,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Account.add` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_accounts.mligo", line 22, characters 12-38:
-     21 |   let a = Tezos.address c in
+     21 |   let a = Mavryk.address c in
      22 |   let to_ = Test.nth_bootstrap_account 0 in
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
      23 |   let _ = Test.transfer_to_contract_exn c () 123mav in
@@ -4492,7 +4492,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `State.reset` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_baker_account.mligo", line 13, characters 11-19:
-     12 |   let a = Tezos.address c in
+     12 |   let a = Mavryk.address c in
      13 |   let () = Test.log "STARTING BALANCE AND VOTING POWER" in
                      ^^^^^^^^
      14 |   let () = Test.log(Test.get_balance_of_address a) in
@@ -5692,10 +5692,10 @@ let%expect_test _ =
   [%expect
     {|
   File "./reset_time.mligo", line 3, characters 11-30:
-    2 |   let t1 = Tezos.get_now () in
+    2 |   let t1 = Mavryk.get_now () in
     3 |   let () = Test.reset_state_at ("2012-02-02t10:10:10Z" : timestamp) 2n ([] : mav list) in
                    ^^^^^^^^^^^^^^^^^^^
-    4 |   let t2 = Tezos.get_now () in
+    4 |   let t2 = Mavryk.get_now () in
   :
   Warning: deprecated value.
   In a future version, `Test` will be replaced by `Test.Next`, and using `State.reset_at` from `Test.Next` is encouraged for a smoother migration.
@@ -6154,7 +6154,7 @@ let%expect_test _ =
      12 |   let ta = orig.addr in
      13 |   let c = Test.to_contract ta in
                     ^^^^^^^^^^^^^^^^
-     14 |   let a = Tezos.address c in
+     14 |   let a = Mavryk.address c in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.to_contract` from `Test.Next` is encouraged for a smoother migration.
@@ -6789,7 +6789,7 @@ let%expect_test _ =
      11 | let test_transfer_to_contract =
      12 |   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
                        ^^^^^^^^^^^^^^
-     13 |   let main_addr = Tezos.address (Test.to_contract orig.addr) in
+     13 |   let main_addr = Mavryk.address (Test.to_contract orig.addr) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
@@ -6798,15 +6798,15 @@ let%expect_test _ =
      11 | let test_transfer_to_contract =
      12 |   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
-     13 |   let main_addr = Tezos.address (Test.to_contract orig.addr) in
+     13 |   let main_addr = Mavryk.address (Test.to_contract orig.addr) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Account.address` from `Test.Next` is encouraged for a smoother migration.
 
-    File "./contract_with_ticket_param.mligo", line 13, characters 33-49:
+    File "./contract_with_ticket_param.mligo", line 13, characters 34-50:
      12 |   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
-     13 |   let main_addr = Tezos.address (Test.to_contract orig.addr) in
-                                           ^^^^^^^^^^^^^^^^
+     13 |   let main_addr = Mavryk.address (Test.to_contract orig.addr) in
+                                            ^^^^^^^^^^^^^^^^
      14 |
     :
     Warning: deprecated value.
@@ -6816,14 +6816,14 @@ let%expect_test _ =
      31 |   in
      32 |   let s, addr = Test.get_storage_of_address main_addr in
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     33 |   let p_addr = proxy_taddr |> Test.to_contract |> Tezos.address in
+     33 |   let p_addr = proxy_taddr |> Test.to_contract |> Mavryk.address in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_storage` from `Test.Next` is encouraged for a smoother migration.
 
     File "./contract_with_ticket_param.mligo", line 33, characters 30-46:
      32 |   let s, addr = Test.get_storage_of_address main_addr in
-     33 |   let p_addr = proxy_taddr |> Test.to_contract |> Tezos.address in
+     33 |   let p_addr = proxy_taddr |> Test.to_contract |> Mavryk.address in
                                         ^^^^^^^^^^^^^^^^
      34 |   assert (s = "world" && addr = p_addr)
     :
@@ -7630,13 +7630,13 @@ let%expect_test _ =
       4 |   let {addr = taddr ; code = _ ; size = _} = Test.originate (contract_of C) () 0mav in
       5 |   let contr = Test.to_contract taddr in
                         ^^^^^^^^^^^^^^^^
-      6 |   let addr = Tezos.address contr in
+      6 |   let addr = Mavryk.address contr in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.to_contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "../../test/contracts/negative//interpreter_tests/test_source1.mligo", line 7, characters 11-19:
-      6 |   let addr = Tezos.address contr in
+      6 |   let addr = Mavryk.address contr in
       7 |   let () = Test.log addr in
                      ^^^^^^^^
       8 |   let () = Test.set_source addr in
@@ -8117,10 +8117,10 @@ let%expect_test _ =
    12 |     let r = originate_record () in
    13 |     let packed = Bytes.pack (fun() ->
                          ^^^^^^^^^^^^^^^^^^^^^
-   14 |         match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   15 |           Some(c) -> let op = Tezos.transaction () 0mumav c in [op]
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   14 |         match (Mavryk.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   15 |           Some(c) -> let op = Mavryk.transaction () 0mumav c in [op]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    16 |         | None ->  ([] : operation list)
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    17 |     ) in
@@ -8170,19 +8170,19 @@ let%expect_test _ =
      11 |   let {addr = ta ; code = _ ; size = _} = Test.originate (contract_of C) 0 0mav in
      12 |   let c = Test.to_contract ta in
                     ^^^^^^^^^^^^^^^^
-     13 |   let a = Tezos.address c in
+     13 |   let a = Mavryk.address c in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.to_contract` from `Test.Next` is encouraged for a smoother migration.
 
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 18, characters 10-66:
-     17 |   let _ = (Tezos.get_contract a : (C parameter_of contract)) in
-     18 |   let _ = (Tezos.get_contract_with_error a "foo" : (int contract)) in
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 18, characters 10-67:
+     17 |   let _ = (Mavryk.get_contract a : (C parameter_of contract)) in
+     18 |   let _ = (Mavryk.get_contract_with_error a "foo" : (int contract)) in
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      19 |   ()
 
     An uncaught error occured:
     Failwith: "foo"
     Trace:
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 18, characters 10-66 ,
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 18, characters 10-66 |}]
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 18, characters 10-67 ,
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 18, characters 10-67 |}]

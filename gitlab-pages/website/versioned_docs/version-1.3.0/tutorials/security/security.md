@@ -29,10 +29,10 @@ type storage = {owner : address; transactionLog : transaction list}
 type result = operation list * storage
 
 let do_send (dst, @amount : address * mav) =
-  let callee = Tezos.get_contract_opt dst in
+  let callee = Mavryk.get_contract_opt dst in
   match callee with
     Some contract ->
-      let op = Tezos.transaction () @amount contract in
+      let op = Mavryk.transaction () @amount contract in
       Outgoing (dst, @amount), [op]
   | None -> (failwith "Could not send tokens" : transaction * operation list)
 
@@ -41,12 +41,12 @@ let do_fund (from, @amount : address * mav) =
 
 [@entry]
 let fund (_ : unit) (s : storage) : result =
-  let tx, ops = do_fund (Tezos.get_sender (), Tezos.get_amount ()) in
+  let tx, ops = do_fund (Mavryk.get_sender (), Mavryk.get_amount ()) in
   ops, { s with transactionLog = tx :: s.transactionLog }
 
 [@entry]
 let send (args : address * mav) (s : storage) =
-  let u = assert ((Tezos.get_sender ()) = s.owner && (Tezos.get_amount ()) = 0mumav) in
+  let u = assert ((Mavryk.get_sender ()) = s.owner && (Mavryk.get_amount ()) = 0mumav) in
   let tx, ops = do_send args in
   ops, { s with transactionLog = tx :: s.transactionLog }
 ```
@@ -108,9 +108,9 @@ In fact, if the front-runner is a baker, the so-called _miner extracted value_ [
 
 ## Timestamps
 
-Aside from transaction ordering, bakers can manipulate other variables you might want to rely on. A classic example of such a value is `Tezos.get_now`. Previously, it used to be equal to the current block timestamp. This behaviour has been changed to eliminate straightforward manipulations. Since Tezos is a distributed system, there is no way to make sure the block was produced _exactly_ at the specified time. Thus, bakers could slightly adjust the timestamp to make a transaction produce a different result.
+Aside from transaction ordering, bakers can manipulate other variables you might want to rely on. A classic example of such a value is `Mavryk.get_now`. Previously, it used to be equal to the current block timestamp. This behaviour has been changed to eliminate straightforward manipulations. Since Tezos is a distributed system, there is no way to make sure the block was produced _exactly_ at the specified time. Thus, bakers could slightly adjust the timestamp to make a transaction produce a different result.
 
-In the current protocol, `Tezos.get_now` is equal to the _previous_ block timestamp plus a fixed value. Although `Tezos.get_now` becomes less manipulable with this new behaviour, the only assumption you can make is that the operation goes through _roughly about_ the specified timestamp. And, of course, you should never use `Tezos.get_now` as a source of randomness.
+In the current protocol, `Mavryk.get_now` is equal to the _previous_ block timestamp plus a fixed value. Although `Mavryk.get_now` becomes less manipulable with this new behaviour, the only assumption you can make is that the operation goes through _roughly about_ the specified timestamp. And, of course, you should never use `Mavryk.get_now` as a source of randomness.
 
 ## Reentrancy and call injection
 
@@ -145,7 +145,7 @@ type parameter = mav * (unit contract)
 
 let withdraw (param, s : parameter * storage) =
   let @amount, beneficiary = param in
-  let beneficiary_addr = Tezos.address beneficiary in
+  let beneficiary_addr = Mavryk.address beneficiary in
   let @balance =
     match (Map.find_opt beneficiary_addr s.balances) with
       Some v -> v
@@ -154,7 +154,7 @@ let withdraw (param, s : parameter * storage) =
     | Some x -> x
     | None -> (failwith "Insufficient balance" : mav)
   in
-  let op = Tezos.transaction () @amount beneficiary in
+  let op = Mavryk.transaction () @amount beneficiary in
   let new_balances =
     Map.update beneficiary_addr (Some new_balance) s.balances in
   [op], {s with balances = new_balances}
@@ -208,15 +208,15 @@ type storage = {owner : address; beneficiaries : address list}
 
 let send_rewards (beneficiary_addr : address) =
   let maybe_contract =
-    Tezos.get_contract_opt beneficiary_addr in
+    Mavryk.get_contract_opt beneficiary_addr in
   let beneficiary =
     match maybe_contract with
       Some contract -> contract
     | None -> (failwith "CONTRACT_NOT_FOUND" : unit contract) in
-  Tezos.transaction () 5000000mumav beneficiary
+  Mavryk.transaction () 5000000mumav beneficiary
 
 let main (p, s : unit * storage) =
-  if (Tezos.get_sender ()) <> s.owner
+  if (Mavryk.get_sender ()) <> s.owner
   then (failwith "ACCESS_DENIED" : operation list * storage)
   else
     let ops = List.map send_rewards s.beneficiaries in
@@ -236,9 +236,9 @@ When developing a contract, you may often want to restrict access to certain ent
 1. The request comes from an authorised entity
 2. This entity cannot be tricked into sending this request.
 
-You may be tempted to use `Tezos.get_source` instruction – it returns the address of an implicit account who injected the operation – but this violates our second requirement. It is easy to ask the owner of this implicit account to make a seemingly innocent transfer to a malicious contract that, in turn, emits an operation to a restricted entrypoint. The attacker contract may disguise itself as some blockchain game or a DAO, but neither the caller would be aware of its side-effects nor the callee would notice the presence of the intermediary. You should **never** use `Tezos.get_source` for authorisation purposes.
+You may be tempted to use `Mavryk.get_source` instruction – it returns the address of an implicit account who injected the operation – but this violates our second requirement. It is easy to ask the owner of this implicit account to make a seemingly innocent transfer to a malicious contract that, in turn, emits an operation to a restricted entrypoint. The attacker contract may disguise itself as some blockchain game or a DAO, but neither the caller would be aware of its side-effects nor the callee would notice the presence of the intermediary. You should **never** use `Mavryk.get_source` for authorisation purposes.
 
-Checking whether `Tezos.get_sender` – the address of the immediate caller – is authorised to perform an operation is better: since the request comes directly from the authorised entity, we can be more certain this call is intended. Such an approach is a decent default choice if both conditions hold true:
+Checking whether `Mavryk.get_sender` – the address of the immediate caller – is authorised to perform an operation is better: since the request comes directly from the authorised entity, we can be more certain this call is intended. Such an approach is a decent default choice if both conditions hold true:
 1. The sender contract is well secured against emitting arbitrary operations. For instance, it must not contain ["view" entrypoints](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-4/tzip-4.md#view-entrypoints) as defined in [TZIP-4](https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-4/tzip-4.md).
 2. You only need to authorise an immediate caller and not the contracts somewhere up in the call chain.
 

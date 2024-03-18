@@ -1,1 +1,1 @@
-let today : timestamp = Tezos.get_now ()
+let today : timestamp = Mavryk.get_now ()

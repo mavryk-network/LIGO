@@ -74,8 +74,8 @@ val call_view : string -> 'arg -> address -> 'ret option
 let call_view : string => 'arg => address => option &lt;'ret&gt;
 </SyntaxTitle>
 
-The primitive `Tezos.call_view` will allow you to call another contract view and get its result by providing the view name; the contract address and the parameter of the view. If the address is nonexistent; the name does not match of of the contract
-view or the parameter type do not match, `Tezos.call_view` will return `None`.
+The primitive `Mavryk.call_view` will allow you to call another contract view and get its result by providing the view name; the contract address and the parameter of the view. If the address is nonexistent; the name does not match of of the contract
+view or the parameter type do not match, `Mavryk.call_view` will return `None`.
 
 ## Defining Off-Chain Views
 

@@ -414,7 +414,7 @@ how those built-ins can be utilised.
 
 ### Accepting or Declining Tokens in a Smart Contract
 
-This example shows how `Tezos.get_amount` and `failwith` can be used to
+This example shows how `Mavryk.get_amount` and `failwith` can be used to
 decline any transaction that sends more mav than `0mav`, that is, no
 incoming tokens are accepted.
 
@@ -427,7 +427,7 @@ type result = operation list * storage
 
 [@entry]
 let no_tokens (action : parameter) (store : storage) : result =
-  if Tezos.get_amount () > 0mav then
+  if Mavryk.get_amount () > 0mav then
     failwith "This contract does not accept tokens."
   else ([], store)
 ```
@@ -443,7 +443,7 @@ type result = [list<operation>, storage];
 
 @entry
 const no_tokens = (action: parameter, store: storage): result => {
-  if (Tezos.get_amount() > 0mav) {
+  if (Mavryk.get_amount() > 0mav) {
     return failwith("This contract does not accept tokens.");
   } else {
     return [list([]), store];
@@ -455,7 +455,7 @@ const no_tokens = (action: parameter, store: storage): result => {
 
 ### Access Control
 
-This example shows how `Tezos.get_sender` can be used to deny access to an
+This example shows how `Mavryk.get_sender` can be used to deny access to an
 entrypoint.
 
 <Syntax syntax="cameligo">
@@ -465,7 +465,7 @@ let owner = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address)
 
 [@entry]
 let owner_only (action : parameter) (store: storage) : result =
-  if Tezos.get_sender () <> owner then failwith "Access denied."
+  if Mavryk.get_sender () <> owner then failwith "Access denied."
   else ([], store)
 ```
 
@@ -477,15 +477,15 @@ let owner_only (action : parameter) (store: storage) : result =
 const owner = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 
 const owner_only = (action: parameter, store: storage): result => {
-  if (Tezos.get_sender() != owner) { return failwith("Access denied."); }
+  if (Mavryk.get_sender() != owner) { return failwith("Access denied."); }
   else { return [list([]), store]; };
 };
 ```
 
 </Syntax>
 
-> Note that we do not use `Tezos.get_source`, but instead
-> `Tezos.get_sender`. In our [tutorial about
+> Note that we do not use `Mavryk.get_source`, but instead
+> `Mavryk.get_sender`. In our [tutorial about
 > security](../tutorials/security/security.md#incorrect-authorisation-checks)
 > you can read more about it.
 
@@ -550,8 +550,8 @@ let dest = ("KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" : address)
 
 [@entry]
 let proxy (action : parameter) (store : storage) : result =
-  let counter : parameter contract = Tezos.get_contract_with_error dest "not found" in
-  let op = Tezos.transaction (Increment 5) 0mav counter
+  let counter : parameter contract = Mavryk.get_contract_with_error dest "not found" in
+  let op = Mavryk.transaction (Increment 5) 0mav counter
   in [op], store
 ```
 
@@ -589,8 +589,8 @@ type result = [list<operation>, storage];
 const dest = "KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" as address;
 
 const proxy = (action: parameter, store: storage): result => {
-  let counter : contract<parameter> = Tezos.get_contract_with_error(dest, "not found");
-  let op = Tezos.transaction(Increment(5), 0mav, counter);
+  let counter : contract<parameter> = Mavryk.get_contract_with_error(dest, "not found");
+  let op = Mavryk.transaction(Increment(5), 0mav, counter);
   return [list([op]), store];
 };
 ```

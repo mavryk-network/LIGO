@@ -330,7 +330,7 @@ function buy_taco(taco_kind_index: nat, taco_shop_storage: taco_shop_storage): [
 In order to make Pedro's taco shop profitable, he needs to stop giving
 away tacos for free. When a contract is invoked via a transaction, an
 amount of tezzies to be sent can be specified as well. This amount is
-accessible within LIGO as `Tezos.get_amount`.
+accessible within LIGO as `Mavryk.get_amount`.
 
 To make sure we get paid, we will:
 
@@ -358,7 +358,7 @@ let buy_taco (taco_kind_index : nat) (taco_shop_storage : taco_shop_storage)
     (* We won't sell tacos if the amount is not correct *)
 
     let () =
-      if (Tezos.get_amount ()) <> current_purchase_price
+      if (Mavryk.get_amount ()) <> current_purchase_price
       then
         failwith
           "Sorry, the taco you are trying to purchase has a different price" in
@@ -391,7 +391,7 @@ const buy_taco = (taco_kind_index: nat, taco_shop_storage: taco_shop_storage) : 
     };
   const current_purchase_price : mav = taco_kind.max_price / taco_kind.current_stock ;
   /* We won't sell tacos if the amount is not correct */
-  if ((Tezos.get_amount ()) != current_purchase_price) {
+  if ((Mavryk.get_amount ()) != current_purchase_price) {
     return failwith ("Sorry, the taco you are trying to purchase has a different price")
   } else {
     /* Update the storage decreasing the stock by 1n */
@@ -627,14 +627,14 @@ following line, depending on your preference.
 <Syntax syntax="cameligo">
 
 ```cameligo skip
-if (Tezos.get_amount ()) <> current_purchase_price then
+if (Mavryk.get_amount ()) <> current_purchase_price then
 ```
 
 </Syntax>
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-if ((Tezos.get_amount ()) != current_purchase_price)
+if ((Mavryk.get_amount ()) != current_purchase_price)
 ```
 
 </Syntax>
@@ -644,7 +644,7 @@ if ((Tezos.get_amount ()) != current_purchase_price)
 <Syntax syntax="cameligo">
 
 ```cameligo skip
-if (Tezos.get_amount ()) >= current_purchase_price then
+if (Mavryk.get_amount ()) >= current_purchase_price then
 ```
 
 </Syntax>
@@ -652,7 +652,7 @@ if (Tezos.get_amount ()) >= current_purchase_price then
 <Syntax syntax="jsligo">
 
 ```jsligo skip
-if ((Tezos.get_amount ()) >= current_purchase_price)
+if ((Mavryk.get_amount ()) >= current_purchase_price)
 ```
 
 </Syntax>

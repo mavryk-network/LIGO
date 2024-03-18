@@ -4,7 +4,7 @@ title: Michelson and LIGO
 ---
 
 Currently LIGO compiles to [Michelson](https://tezos.gitlab.io/whitedoc/michelson.html),
-the native smart contract language supported by Tezos. This page explains the
+the native smart contract language supported by Mavryk. This page explains the
 relationship between LIGO and the underlying Michelson it compiles to. Understanding
 Michelson is not a requirement to use LIGO, but it does become important if you want
 to formally verify contracts using [Mi-Cho-Coq](https://gitlab.com/nomadic-labs/mi-cho-coq/)

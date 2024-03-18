@@ -34,7 +34,7 @@ type options = Memory_proto_alpha.options
 
 type dry_run_options =
   { parameter_ty : (Stacking.Program.meta, string) Tezos_micheline.Micheline.node option
-        (* added to allow dry-running contract using `Tezos.self` *)
+        (* added to allow dry-running contract using `Mavryk.self` *)
   ; amount : string
   ; balance : string
   ; now : string option

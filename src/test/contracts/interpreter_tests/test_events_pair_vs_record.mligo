@@ -7,7 +7,7 @@ module C = struct
   type storage = unit
 
   [@entry]
-  let main (p : mystruct) (s : storage) : operation list * storage = [ Tezos.emit "%foo" p; ], s
+  let main (p : mystruct) (s : storage) : operation list * storage = [ Mavryk.emit "%foo" p; ], s
 end
 
 let test_foo =

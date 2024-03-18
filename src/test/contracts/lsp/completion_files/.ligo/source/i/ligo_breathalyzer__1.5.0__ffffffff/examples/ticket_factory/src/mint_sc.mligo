@@ -33,14 +33,14 @@ let create_new_ticket (storage: storage) (qty: mav) : bytes ticket option =
   else
     let qty_nat = tez_to_nat qty in
     let payload = storage.fixed_payload in
-    Tezos.create_ticket payload qty_nat
+    Mavryk.create_ticket payload qty_nat
 
 let process_mint
     (storage: storage)
     (callback: bytes ticket contract)
     (qty: mav) : operation =
   match create_new_ticket storage qty with
-  | Some fresh_ticket -> Tezos.transaction fresh_ticket 0mav callback
+  | Some fresh_ticket -> Mavryk.transaction fresh_ticket 0mav callback
   | None -> failwith "Ticket creation failure"
 
 let process_redeem
@@ -48,16 +48,16 @@ let process_redeem
     (self_address: address)
     (ticket: bytes ticket)
     (callback: unit contract) : operation =
-  let (addr, (payload, qty)), _burned_ticket = Tezos.read_ticket ticket in
+  let (addr, (payload, qty)), _burned_ticket = Mavryk.read_ticket ticket in
   let () = if qty <= 0n then failwith "mint_sc: invalid amount" in
   let () = if addr <> self_address then failwith "mint_sc: invalid ticketer" in
   let () = if payload <> storage.fixed_payload then failwith "mint_sc: invalid payload" in
   let retribution = nat_to_tez qty in
-  Tezos.transaction unit retribution callback
+  Mavryk.transaction unit retribution callback
 
 [@entry]
 let mint_process_mint (callback: bytes ticket contract) (storage: storage): applied =
-  let quantity = Tezos.get_amount () in
+  let quantity = Mavryk.get_amount () in
   let operation = process_mint storage callback quantity in
   ([operation], storage)
 
@@ -65,6 +65,6 @@ let mint_process_mint (callback: bytes ticket contract) (storage: storage): appl
 let mint_process_redeem
   (ticket, callback: bytes ticket * unit contract)
   (storage: storage): applied =
-  let self_address = Tezos.get_self_address () in
+  let self_address = Mavryk.get_self_address () in
   let operation = process_redeem storage self_address ticket callback in
   ([operation], storage)

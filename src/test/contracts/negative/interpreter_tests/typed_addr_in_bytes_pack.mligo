@@ -11,8 +11,8 @@ let originate_record () =
 let test =
     let r = originate_record () in
     let packed = Bytes.pack (fun() -> 
-        match (Tezos.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
-          Some(c) -> let op = Tezos.transaction () 0mumav c in [op]
+        match (Mavryk.get_entrypoint_opt "%transfer" r.addr : unit contract option) with
+          Some(c) -> let op = Mavryk.transaction () 0mumav c in [op]
         | None ->  ([] : operation list)
     ) in
     let () = Test.log(packed) in

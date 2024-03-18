@@ -22,12 +22,12 @@ val constant : string -> 'a
 let constant : string => 'a
 </SyntaxTitle>
 
-The primitive `Tezos.constant` allows you to use a predefined constant already registered on chain.
+The primitive `Mavryk.constant` allows you to use a predefined constant already registered on chain.
 It accepts a hash in the form of a string and will require a type annotation.
 
 ## Using global constants
 
-Global constants are introduced using `Tezos.constant`. This function
+Global constants are introduced using `Mavryk.constant`. This function
 expects a _constant hash_, i.e. a hash that corresponds to a
 particular constant that was registered on network.
 
@@ -40,12 +40,12 @@ to the Michelson code
 ```
 
 In a contract, we can make reference to a global constant by using the
-`Tezos.constant` operation:
+`Mavryk.constant` operation:
 
 <Syntax syntax="cameligo">
 
 ```cameligo group=global_call
-let c : int -> int = Tezos.constant "expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2"
+let c : int -> int = Mavryk.constant "expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2"
 
 [@entry]
 let main (_p : unit) (s : int) : operation list * int =
@@ -57,7 +57,7 @@ let main (_p : unit) (s : int) : operation list * int =
 <Syntax syntax="jsligo">
 
 ```jsligo group=global_call
-const c : ((_p : int) => int) = Tezos.constant("expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2")
+const c : ((_p : int) => int) = Mavryk.constant("expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2")
 
 @entry
 let main = (_p : unit, s : int) : [list<operation>, int] =>
@@ -107,7 +107,7 @@ In general, we can compile a constant doing the following steps:
 
 - Register the output of `compile expression` using `tezos-client`.
 
-- Capture the constant hash given by `tezos-client` and use it in the code with `Tezos.constant`.
+- Capture the constant hash given by `tezos-client` and use it in the code with `Mavryk.constant`.
 
 - Compile the contract that uses the hash constant by passing the argument `--constants`.
 
@@ -233,7 +233,7 @@ references to `helper` by
 <Syntax syntax="cameligo">
 
 ```
-(Tezos.constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf" : (string * int) -> int)
+(Mavryk.constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf" : (string * int) -> int)
 ```
 
 </Syntax>
@@ -241,7 +241,7 @@ references to `helper` by
 <Syntax syntax="jsligo">
 
 ```
-(Tezos.constant("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf") as ((_ps : [string, int]) => int))
+(Mavryk.constant("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf") as ((_ps : [string, int]) => int))
 ```
 
 </Syntax>
@@ -253,7 +253,7 @@ The new version of `global_call` looks as follows:
 ```cameligo group=global_call_2
 [@entry]
 let main (p : string) (s : int) : operation list * int =
-  ([], (Tezos.constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")(p, s))
+  ([], (Mavryk.constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")(p, s))
 ```
 
 </Syntax>
@@ -263,7 +263,7 @@ let main (p : string) (s : int) : operation list * int =
 ```jsligo group=global_call_2
 @entry
 const main = (p: string, s: int) : [list<operation>, int] =>
-  [ list([]), Tezos.constant("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")([p, s]) ];
+  [ list([]), Mavryk.constant("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")([p, s]) ];
 ```
 
 </Syntax>
@@ -337,7 +337,7 @@ returns an string that is the constant hash corresponding to the
 constant registered.
 
 The string returned by `Test.register_constant` can be used via
-`Tezos.constant`, as in the examples above.
+`Mavryk.constant`, as in the examples above.
 
 A simple usage case is the following, in which we obtain a
 `michelson_program` by using `Test.eval`:
@@ -356,7 +356,7 @@ module C = struct
 
   [@entry]
   let main (() : parameter) (store : storage) : return =
-    [], (Tezos.constant ct store)
+    [], (Mavryk.constant ct store)
 end
 
 let test =
@@ -380,7 +380,7 @@ namespace C {
 
   @entry
   const main = (p: parameter, s: storage) : [list<operation>, storage] =>
-    [list([]), Tezos.constant(ct)(s)];
+    [list([]), Mavryk.constant(ct)(s)];
 }
 
 const _test = () => {

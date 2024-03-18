@@ -6,5 +6,5 @@ type storage = int;
 
 @entry
 const unique = (_p : organization, _s : storage) => {
-    return failwith("You need to be part of Tezos organization to activate an organization");
+    return failwith("You need to be part of Mavryk organization to activate an organization");
 };

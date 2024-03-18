@@ -7,10 +7,10 @@ type storage = {owner : address; transactionLog : transaction list}
 type result = operation list * storage
 
 let do_send (dst, @amount : address * mav) =
-  let callee = Tezos.get_contract_opt dst in
+  let callee = Mavryk.get_contract_opt dst in
   match callee with
     Some contract ->
-      let op = Tezos.transaction () @amount contract in
+      let op = Mavryk.transaction () @amount contract in
       Outgoing (dst, @amount), [op]
   | None -> (failwith "Could not send tokens" : transaction * operation list)
 
@@ -19,12 +19,12 @@ let do_fund (from, @amount : address * mav) =
 
 [@entry]
 let fund (_ : unit) (s : storage) : result =
-  let tx, ops = do_fund (Tezos.get_sender (), Tezos.get_amount ()) in
+  let tx, ops = do_fund (Mavryk.get_sender (), Mavryk.get_amount ()) in
   ops, { s with transactionLog = tx :: s.transactionLog }
 
 [@entry]
 let send (args : address * mav) (s : storage) =
-  let u = assert ((Tezos.get_sender ()) = s.owner && (Tezos.get_amount ()) = 0mumav) in
+  let u = assert ((Mavryk.get_sender ()) = s.owner && (Mavryk.get_amount ()) = 0mumav) in
   let tx, ops = do_send args in
   ops, { s with transactionLog = tx :: s.transactionLog }
 type storage = {beneficiary : address; balances : (address, mav) map}
@@ -33,7 +33,7 @@ type parameter = mav * (unit contract)
 
 let withdraw (param, s : parameter * storage) =
   let @amount, beneficiary = param in
-  let beneficiary_addr = Tezos.address beneficiary in
+  let beneficiary_addr = Mavryk.address beneficiary in
   let @balance =
     match (Map.find_opt beneficiary_addr s.balances) with
       Some v -> v
@@ -42,7 +42,7 @@ let withdraw (param, s : parameter * storage) =
     | Some x -> x
     | None -> (failwith "Insufficient balance" : mav)
   in
-  let op = Tezos.transaction () @amount beneficiary in
+  let op = Mavryk.transaction () @amount beneficiary in
   let new_balances =
     Map.update beneficiary_addr (Some new_balance) s.balances in
   [op], {s with balances = new_balances}
@@ -50,15 +50,15 @@ type storage = {owner : address; beneficiaries : address list}
 
 let send_rewards (beneficiary_addr : address) =
   let maybe_contract =
-    Tezos.get_contract_opt beneficiary_addr in
+    Mavryk.get_contract_opt beneficiary_addr in
   let beneficiary =
     match maybe_contract with
       Some contract -> contract
     | None -> (failwith "CONTRACT_NOT_FOUND" : unit contract) in
-  Tezos.transaction () 5000000mumav beneficiary
+  Mavryk.transaction () 5000000mumav beneficiary
 
 let main (p, s : unit * storage) =
-  if (Tezos.get_sender ()) <> s.owner
+  if (Mavryk.get_sender ()) <> s.owner
   then (failwith "ACCESS_DENIED" : operation list * storage)
   else
     let ops = List.map send_rewards s.beneficiaries in

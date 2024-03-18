@@ -198,8 +198,8 @@ let pp
     | `Self_ast_aggregated_warning_bad_self_type (got, expected, loc) ->
       Format.fprintf
         f
-        "@[<hv>%a@ Warning: Tezos.self type annotation.@.Annotation \"%a\" was given, \
-         but contract being compiled would expect \"%a\".@.Note that \"Tezos.self\" \
+        "@[<hv>%a@ Warning: Mavryk.self type annotation.@.Annotation \"%a\" was given, \
+         but contract being compiled would expect \"%a\".@.Note that \"Mavryk.self\" \
          refers to the current contract, so the parameters should be generally the same. \
          @]"
         snippet_pp
@@ -445,8 +445,8 @@ let to_warning : all -> Simple_utils.Warning.t =
   | `Self_ast_aggregated_warning_bad_self_type (got, expected, location) ->
     let message =
       Format.asprintf
-        "Warning: Tezos.self type annotation.@.Annotation \"%a\" was given, but contract \
-         being compiled would expect \"%a\".@.Note that \"Tezos.self\" refers to the \
+        "Warning: Mavryk.self type annotation.@.Annotation \"%a\" was given, but contract \
+         being compiled would expect \"%a\".@.Note that \"Mavryk.self\" refers to the \
          current contract, so the parameters should be generally the same."
         Ast_aggregated.PP.type_expression
         got

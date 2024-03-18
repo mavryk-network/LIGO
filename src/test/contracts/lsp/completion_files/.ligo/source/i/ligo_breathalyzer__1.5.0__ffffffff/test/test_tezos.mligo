@@ -31,7 +31,7 @@ module Other = struct
 
   [@entry]
   let default () (storage: storage): operation list * storage =
-    match (Tezos.call_view "get_value" () storage.simple: int option) with
+    match (Mavryk.call_view "get_value" () storage.simple: int option) with
       | None -> failwith "Should not happen"
       | Some x -> [], { storage with x = x }
 
@@ -58,7 +58,7 @@ let case_views_1 =
           contract (Increment 3);
         B.Assert.is_equal
           "should be -2"
-          (Tezos.call_view "get_value" () contract.originated_address)
+          (Mavryk.call_view "get_value" () contract.originated_address)
           (Some (-2))
       ])
 
@@ -79,13 +79,13 @@ let case_views_2 =
           other (Default ());
         B.Assert.is_equal
           "should be 10"
-          (Tezos.call_view "view" () other.originated_address)
+          (Mavryk.call_view "view" () other.originated_address)
           (Some 10)
       ])
 
 let suite =
   B.Model.suite
-    "Test suite for Tezos operations"
+    "Test suite for Mavryk operations"
     [ case_views_1
     ; case_views_2
     ]

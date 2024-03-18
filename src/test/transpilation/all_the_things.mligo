@@ -42,15 +42,15 @@ type action =
 
 let transfer (p,s : transfer * storage) : operation list * storage =
    let new_allowances =
-    if Tezos.get_sender () = p.address_from then s.allowances
+    if Mavryk.get_sender () = p.address_from then s.allowances
     else
-      let authorized_value = match Big_map.find_opt (Tezos.get_sender (),p.address_from) s.allowances with
+      let authorized_value = match Big_map.find_opt (Mavryk.get_sender (),p.address_from) s.allowances with
         Some value -> value
       |  None       -> 0n
       in
       if (authorized_value < p.value)
       then (failwith "Not Enough Allowance" : allowances)
-      else Big_map.update (Tezos.get_sender (),p.address_from) (Some (abs(authorized_value - p.value))) s.allowances
+      else Big_map.update (Mavryk.get_sender (),p.address_from) (Some (abs(authorized_value - p.value))) s.allowances
    in
   let sender_balance = match Big_map.find_opt p.address_from s.tokens with
     Some value -> value
@@ -68,14 +68,14 @@ let transfer (p,s : transfer * storage) : operation list * storage =
     ([]:operation list), {s with tokens = new_tokens; allowances = new_allowances}
 
 let approve (p,s : approve * storage) : operation list * storage =
-  let previous_value = match Big_map.find_opt (p.spender, Tezos.get_sender ()) s.allowances with
+  let previous_value = match Big_map.find_opt (p.spender, Mavryk.get_sender ()) s.allowances with
     Some value -> value
   |  None -> 0n
   in
   if previous_value > 0n && p.value > 0n
   then (failwith "Unsafe Allowance Change" : operation list * storage)
   else
-    let new_allowances = Big_map.update (p.spender, Tezos.get_sender ()) (Some (p.value)) s.allowances in
+    let new_allowances = Big_map.update (p.spender, Mavryk.get_sender ()) (Some (p.value)) s.allowances in
     ([] : operation list), {s with allowances = new_allowances}
 
 let getAllowance (p,s : getAllowance * storage) : operation list * storage =
@@ -83,7 +83,7 @@ let getAllowance (p,s : getAllowance * storage) : operation list * storage =
     Some value -> value
   |  None -> 0n
   in
-  let op = Tezos.transaction value 0mumav p.callback in
+  let op = Mavryk.transaction value 0mumav p.callback in
   ([op],s)
 
 let getBalance (p,s : getBalance * storage) : operation list * storage =
@@ -91,12 +91,12 @@ let getBalance (p,s : getBalance * storage) : operation list * storage =
     Some value -> value
   |  None -> 0n
   in
-  let op = Tezos.transaction value 0mumav p.callback in
+  let op = Mavryk.transaction value 0mumav p.callback in
   ([op],s)
 
 let getTotalSupply (p,s : getTotalSupply * storage) : operation list * storage =
   let total = s.total_amount in
-  let op    = Tezos.transaction total 0mumav p.callback in
+  let op    = Mavryk.transaction total 0mumav p.callback in
   ([op],s)
 
 
@@ -108,9 +108,9 @@ let main (a,s:action * storage) =
   |  GetBalance p -> getBalance (p,s)
   |  GetTotalSupply p -> getTotalSupply (p,s)
 let main (p : key_hash) =
-  let c : unit contract = Tezos.implicit_account p
-  in Tezos.address c
-let check_ (p : unit) : int = if Tezos.get_amount () = 100mav then 42 else 0
+  let c : unit contract = Mavryk.implicit_account p
+  in Mavryk.address c
+let check_ (p : unit) : int = if Mavryk.get_amount () = 100mav then 42 else 0
 (* should return a constant function *)
 let f1 (x : unit) : unit -> mav =
   let amt : mav = Current.amount in
@@ -328,7 +328,7 @@ type storage = mav
 type return = operation list * storage
 
 let main (p, s : parameter * storage) : return =
-  ([] : operation list), Tezos.get_balance ()
+  ([] : operation list), Mavryk.get_balance ()
 type toto = int
 
 let foo : toto = 42 + 127
@@ -464,7 +464,7 @@ let main (p, s : int * storage) = ([] : operation list), p + s
 type return = operation list * string
 
 let main (action, store : string * string) : return =
-  let toto : operation * address = Tezos.create_contract
+  let toto : operation * address = Mavryk.create_contract
     (fun (p, s : nat * string) -> (([] : operation list), "one"))
     (None: key_hash option)
     300tz
@@ -554,12 +554,12 @@ type return = operation list * storage
 let attempt (p, store : param * storage) : return =
   (* if p.attempt <> store.challenge then failwith "Failed challenge" else *)
   let contract : unit contract =
-    match (Tezos.get_contract_opt Tezos.get_sender () : unit contract option) with
+    match (Mavryk.get_contract_opt Mavryk.get_sender () : unit contract option) with
       Some contract -> contract
     | None ->  (failwith "No contract" : unit contract)
   in
   let transfer : operation =
-    Tezos.transaction (unit, contract, 10.00mav) in
+    Mavryk.transaction (unit, contract, 10.00mav) in
   let store : storage = {challenge = p.new_challenge}
   in ([] : operation list), store
 type commit = {
@@ -590,9 +590,9 @@ type return = operation list * storage
 
 let commit (p, s : bytes * storage) : return =
   let commit : commit =
-    {date = Tezos.get_now () + 86_400; salted_hash = p} in
+    {date = Mavryk.get_now () + 86_400; salted_hash = p} in
   let updated_map: commit_set =
-    Big_map.update Tezos.get_sender () (Some commit) s.commits in
+    Big_map.update Mavryk.get_sender () (Some commit) s.commits in
   let s = {s with commits = updated_map}
   in ([] : operation list), s
 
@@ -608,7 +608,7 @@ let reveal (p, s : reveal * storage) : return =
        (failwith "You have not made a commitment to hash against yet."
         : commit)
     in
-    if Tezos.get_now () < commit.date
+    if Mavryk.get_now () < commit.date
     then
       (failwith "It has not been 24 hours since your commit yet.": return)
     else
@@ -830,11 +830,11 @@ let main (action, storage : action * storage) : return =
   | Update_details ud -> update_details (ud, storage)
   | Skip -> skip ((), storage)
 let main2 (p : key_hash) (s : unit) =
-  let c : unit contract = Tezos.implicit_account p
+  let c : unit contract = Mavryk.implicit_account p
   in ([] : operation list), unit
 
 let main (p,s : key_hash * unit) = main2 p s
-let main (kh : key_hash) : unit contract = Tezos.implicit_account kh
+let main (kh : key_hash) : unit contract = Mavryk.implicit_account kh
 // Demonstrate CameLIGO inclusion statements, see includer.mligo
 
 let foo : int = 144
@@ -1562,11 +1562,11 @@ type return = operation list * storage
 let main (tr, store : parameter * storage) : return =
  ([] : operation list),
  (
-    let es : ss = Tezos.sapling_empty_state in
-    match Tezos.sapling_verify_update tr es with
+    let es : ss = Mavryk.sapling_empty_state in
+    match Mavryk.sapling_verify_update tr es with
    | Some x -> x
    | None -> (failwith "failed" : storage)
- )let main (p : unit) : address = Tezos.get_self_address ()
+ )let main (p : unit) : address = Mavryk.get_self_address ()
 let y (_ : unit) : nat =
   let x : nat = 1n in
   begin
@@ -1606,7 +1606,7 @@ let mem_op (s : string set) : bool = Set.mem "foobar" s
 
 let size_op (s: string set) : nat = Set.cardinal s
 let main (p : key_hash) : operation list =
-  let useless : operation = Tezos.set_delegate (Some p)
+  let useless : operation = Mavryk.set_delegate (Some p)
   in ([] : operation list)
 (* Test that the string concatenation syntax in CameLIGO works *)
 
@@ -1663,20 +1663,25 @@ type storage =
 
 let main (arg : parameter * storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mumav);
+    assert (Mavryk.get_amount () = 0mumav);
     let (p,s) = arg in
     match p with
     | Burn ticket ->
       begin
-        let ((ticketer, _), ticket) = (Tezos.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
-        assert (ticketer = Tezos.get_self_address ());
+        let ((ticketer, _), ticket) = (Mavryk.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
+        assert (ticketer = Mavryk.get_self_address ());
         (([] : operation list), s)
       end
     | Mint mint ->
       begin
-        assert (Tezos.get_sender () = s.admin);
-        let ticket = Tezos.create_ticket () mint.amount in
-        let op = Tezos.transaction ticket 0mumav mint.destination in
+        assert (Mavryk.get_sender () = s.admin);
+        let ticket = Mavryk.create_ticket () mint.amount in
+        let op = 
+          Mavryk.transaction
+            ticket
+            0mumav
+            mint.destination 
+            in
         ([op], s)
       end
   end
@@ -1705,18 +1710,18 @@ type storage =
 
 let main (arg : parameter * storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mumav);
+    assert (Mavryk.get_amount () = 0mumav);
     let (p,storage) = arg in
     let {manager = manager ; tickets = tickets } = storage in
     ( match p with
       | Receive ticket ->
-        let ((ticketer,_), ticket) = Tezos.read_ticket ticket in
+        let ((ticketer,_), ticket) = Mavryk.read_ticket ticket in
         let (old_ticket, tickets) = Big_map.get_and_update ticketer (None : unit ticket option) tickets in
         let ticket =
           match old_ticket with
           | None -> ticket
           | Some old_ticket -> (
-            match Tezos.join_tickets (ticket, old_ticket) with
+            match Mavryk.join_tickets (ticket, old_ticket) with
             | None -> (failwith "impossible?" : unit ticket)
             | Some joined -> joined
           )
@@ -1724,24 +1729,24 @@ let main (arg : parameter * storage) : operation list * storage =
         let (_, tickets) = Big_map.get_and_update ticketer (Some ticket) tickets in
         (([] : operation list), {manager = manager; tickets = tickets})
       | Send send -> begin
-        assert (Tezos.get_sender () = manager) ;
+        assert (Mavryk.get_sender () = manager) ;
         let (ticket, tickets) = Big_map.get_and_update send.ticketer (None : unit ticket option) tickets in
         ( match ticket with
           | None -> (failwith "no tickets" : operation list * storage)
           | Some ticket ->
-            let ((_,(_,total_amt)), ticket) = Tezos.read_ticket ticket in
+            let ((_,(_,total_amt)), ticket) = Mavryk.read_ticket ticket in
             let send_amt = send.amount in
             let keep_amt : nat =
               match is_nat (total_amt - send_amt) with
               | None -> (failwith "not enough tickets" : nat)
               | Some keep_amt -> keep_amt
             in
-            ( match Tezos.split_ticket ticket (send_amt, keep_amt) with
+            ( match Mavryk.split_ticket ticket (send_amt, keep_amt) with
               | None -> (failwith "impossible?" : operation list * storage)
               | Some split_tickets ->
                 let (send_ticket,keep_ticket) = split_tickets in
                 let (_, tickets) = Big_map.get_and_update send.ticketer (Some keep_ticket) tickets in
-                let op = Tezos.transaction send_ticket 0mumav send.destination in
+                let op = Mavryk.transaction send_ticket 0mumav send.destination in
                 ([op], {manager = manager; tickets = tickets})
             )
         )
@@ -1759,8 +1764,8 @@ type storage = {
 type return = operation list * storage
 
 let main (action, store : parameter * storage) : return =
-  (* Multiple evaluations of Tezos.get_now () give different values *)
-  let my_now : timestamp = Tezos.get_now () in
+  (* Multiple evaluations of Mavryk.get_now () give different values *)
+  let my_now : timestamp = Mavryk.get_now () in
   if my_now > store.next_use
   then
     let store : storage =
@@ -1850,10 +1855,10 @@ let reset (reset, _ : reset * storage) : return =
    finish_time = reset.finish_time}
 
 let vote (vote, store : vote * storage) : return =
-  let my_now = Tezos.get_now () in
+  let my_now = Mavryk.get_now () in
   (* let _ =
      assert (my_now >= store.start_time && store.finish_time > my_now) in *)
-  let addr = Tezos.get_sender () in
+  let addr = Mavryk.get_sender () in
   (* let _ = assert (not Set.mem addr store.voters) in *)
   let store =
     match vote with

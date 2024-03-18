@@ -10,7 +10,7 @@ const main = (action: parameter, store: storage): [list<operation>, storage] => 
       match(action)
         {
           when(Increment(n)): store + n;
-          when(Extend(k)): (Tezos.never(k) as storage);
+          when(Extend(k)): (Mavryk.never(k) as storage);
         }
     )
   ]

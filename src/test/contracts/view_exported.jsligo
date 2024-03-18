@@ -11,5 +11,5 @@ const test = do {
   Test.log(orig.code);
   let c = Test.to_contract(orig.addr);
 
-  Test.log(Tezos.call_view("bar", unit, Tezos.address(c)) as option<C.storage>);
+  Test.log(Mavryk.call_view("bar", unit, Mavryk.address(c)) as option<C.storage>);
 };

@@ -7,11 +7,11 @@ type x = | ["Left", int];
 @entry
 const main = (p: parameter, s: storage): [list<operation>, storage] => {
   let contract =
-    match (Tezos.get_entrypoint_opt("%left", "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address)) {
+    match (Mavryk.get_entrypoint_opt("%left", "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address)) {
       when(Some(c)): c;
       when(None()): failwith ("contract does not match")
     };
   return [
-    list([Tezos.transaction(Left(2), 2mumav, contract)]),
+    list([Mavryk.transaction(Left(2), 2mumav, contract)]),
     s];
 };

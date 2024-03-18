@@ -1,8 +1,8 @@
 author: er433
-description: '#### Soon to be deprecated: `Tezos.amount`, `Tezos.balance`, `Tezos.now`,
-  `Tezos.sender`, `Tezos.source`, `Tezos.level`, `Tezos.self_address`, `Tezos.chain_id`,
-  `Tezos.total_voting_power`.\n\nThese should be replaced by their \"thunked\" counterpart,
-  which are prefixed with `get_`. E.g. `Tezos.balance : unit -> tez`.'
+description: '#### Soon to be deprecated: `Mavryk.amount`, `Mavryk.balance`, `Mavryk.now`,
+  `Mavryk.sender`, `Mavryk.source`, `Mavryk.level`, `Mavryk.self_address`, `Mavryk.chain_id`,
+  `Mavryk.total_voting_power`.\n\nThese should be replaced by their \"thunked\" counterpart,
+  which are prefixed with `get_`. E.g. `Mavryk.balance : unit -> tez`.'
 merge_request: '1758'
 title: Deprecate message for thunked constants in stdlib
 type: deprecated

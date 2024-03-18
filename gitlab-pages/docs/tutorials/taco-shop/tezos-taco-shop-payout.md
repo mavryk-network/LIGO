@@ -51,7 +51,7 @@ module TacoShop = struct
     (* We won't sell tacos if the amount is not correct *)
 
     let () =
-      if (Tezos.get_amount ()) <> current_purchase_price
+      if (Mavryk.get_amount ()) <> current_purchase_price
       then
         failwith
           "Sorry, the taco you are trying to purchase has a different price" in
@@ -107,7 +107,7 @@ namespace TacoShop {
     };
   const current_purchase_price : mav = taco_kind.max_price / taco_kind.current_stock ;
   /* We won't sell tacos if the amount is not correct */
-  if ((Tezos.get_amount ()) != current_purchase_price) {
+  if ((Mavryk.get_amount ()) != current_purchase_price) {
     return failwith ("Sorry, the taco you are trying to purchase has a different price")
   } else {
     /* Update the storage decreasing the stock by 1n */
@@ -186,7 +186,7 @@ contract with no parameters, or an implicit account.
 ```cameligo group=ex1
 let ownerAddress : address = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" : address)
 let receiver : unit contract =
-  match (Tezos.get_contract_opt ownerAddress : unit contract option) with
+  match (Mavryk.get_contract_opt ownerAddress : unit contract option) with
     Some (contract) -> contract
   | None -> (failwith "Not a contract" : unit contract)
 ```
@@ -198,7 +198,7 @@ let receiver : unit contract =
 ```jsligo group=ex1
 const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address)
 const receiver : contract<unit> =
-  match (Tezos.get_contract_opt(ownerAddress) as option<contract<unit>>) {
+  match (Mavryk.get_contract_opt(ownerAddress) as option<contract<unit>>) {
     when(Some(contract)): contract;
     when(None()): (failwith ("Not a contract") as contract<unit>)
   }
@@ -220,7 +220,7 @@ contract.
 <Syntax syntax="cameligo">
 
 ```cameligo group=ex1
-let payoutOperation : operation = Tezos.transaction () (Tezos.get_amount ()) receiver
+let payoutOperation : operation = Mavryk.transaction () (Mavryk.get_amount ()) receiver
 let operations : operation list = [payoutOperation]
 ```
 
@@ -229,7 +229,7 @@ let operations : operation list = [payoutOperation]
 <Syntax syntax="jsligo">
 
 ```jsligo group=ex1
-const payoutOperation : operation = Tezos.transaction (unit, Tezos.get_amount (), receiver) ;
+const payoutOperation : operation = Mavryk.transaction (unit, Mavryk.get_amount (), receiver) ;
 const operations : list <operation> = list([payoutOperation]);
 ```
 
@@ -268,7 +268,7 @@ module TacoShop = struct
     (* We won't sell tacos if the amount is not correct *)
 
     let () =
-      if (Tezos.get_amount ()) <> current_purchase_price
+      if (Mavryk.get_amount ()) <> current_purchase_price
       then
         failwith
           "Sorry, the taco you are trying to purchase has a different price" in
@@ -282,11 +282,11 @@ module TacoShop = struct
         taco_shop_storage in
 
     let receiver : unit contract =
-      match (Tezos.get_contract_opt ownerAddress : unit contract option) with
+      match (Mavryk.get_contract_opt ownerAddress : unit contract option) with
         Some (contract) -> contract
       | None -> (failwith "Not a contract" : unit contract) in 
 
-    let payoutOperation : operation = Tezos.transaction () (Tezos.get_amount ()) receiver in
+    let payoutOperation : operation = Mavryk.transaction () (Mavryk.get_amount ()) receiver in
     let operations : operation list = [payoutOperation] in
 
     operations, taco_shop_storage
@@ -341,7 +341,7 @@ namespace TacoShop {
       taco_kind.max_price / taco_kind.current_stock;
     /* We won't sell tacos if the amount is not correct */
 
-    if ((Tezos.get_amount()) != current_purchase_price) {
+    if ((Mavryk.get_amount()) != current_purchase_price) {
       return failwith(
         "Sorry, the taco you are trying to purchase has a different price"
       )
@@ -360,25 +360,25 @@ namespace TacoShop {
         );
 
       const receiver : contract<unit> =
-      match ((Tezos.get_contract_opt (ownerAddress))) {
+      match ((Mavryk.get_contract_opt (ownerAddress))) {
         when(Some(contract)): contract;
         when(None()): ((failwith ("Not a contract")))
       };
 
       const donationReceiver : contract<unit>  =
-        match ((Tezos.get_contract_opt (donationAddress))) {
+        match ((Mavryk.get_contract_opt (donationAddress))) {
           when(Some(contract)): contract;
           when(None()): ((failwith ("Not a contract")))
         };
 
-      const donationAmount = ((Tezos.get_amount ()) / 10n) as mav;
+      const donationAmount = ((Mavryk.get_amount ()) / 10n) as mav;
 
       // Pedro will get 90% of the amount
-      const op1 = match ((Tezos.get_amount ()) - donationAmount) {
-        when(Some(x)): Tezos.transaction (unit, x, receiver);
+      const op1 = match ((Mavryk.get_amount ()) - donationAmount) {
+        when(Some(x)): Mavryk.transaction (unit, x, receiver);
         when(None()): failwith ("Insufficient balance")
       };
-      const op2 = Tezos.transaction (unit, donationAmount, donationReceiver);
+      const op2 = Mavryk.transaction (unit, donationAmount, donationReceiver);
       const operations : list<operation> = list([ op1 , op2 ]);
 
       return [operations, taco_shop_storage]
@@ -450,24 +450,24 @@ let ownerAddress : address = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" : address)
 let donationAddress : address = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
 let receiver : unit contract =
-  match ((Tezos.get_contract_opt ownerAddress) : unit contract option) with
+  match ((Mavryk.get_contract_opt ownerAddress) : unit contract option) with
     Some contract -> contract
   | None -> ((failwith "Not a contract") : unit contract)
 
 let donationReceiver : unit contract  =
-  match ((Tezos.get_contract_opt donationAddress) : unit contract option) with
+  match ((Mavryk.get_contract_opt donationAddress) : unit contract option) with
     Some contract -> contract
   | None -> ((failwith "Not a contract") : unit contract)
 
-let donationAmount : mav = (Tezos.get_amount ()) / 10n
+let donationAmount : mav = (Mavryk.get_amount ()) / 10n
 
 let operations : operation list =
     // Pedro will get 90% of the amount
-    let op = match ((Tezos.get_amount ()) - donationAmount) with
-      | Some x -> Tezos.transaction () x receiver
+    let op = match ((Mavryk.get_amount ()) - donationAmount) with
+      | Some x -> Mavryk.transaction () x receiver
       | None -> (failwith "Insufficient balance")
     in
-    [ op ; Tezos.transaction () donationAmount donationReceiver ]
+    [ op ; Mavryk.transaction () donationAmount donationReceiver ]
 ```
 
 </Syntax>
@@ -479,25 +479,25 @@ const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address);
 const donationAddress = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address);
 
 const receiver : contract<unit> =
-  match ((Tezos.get_contract_opt (ownerAddress)) as option<contract<unit>>) {
+  match ((Mavryk.get_contract_opt (ownerAddress)) as option<contract<unit>>) {
     when(Some(contract)): contract;
     when(None()): ((failwith ("Not a contract")) as contract<unit>)
   };
 
 const donationReceiver : contract<unit>  =
-  match ((Tezos.get_contract_opt (donationAddress)) as option<contract<unit>>) {
+  match ((Mavryk.get_contract_opt (donationAddress)) as option<contract<unit>>) {
     when(Some(contract)): contract;
     when(None()): ((failwith ("Not a contract")) as contract<unit>)
   };
 
-const donationAmount = ((Tezos.get_amount ()) / 10n) as mav;
+const donationAmount = ((Mavryk.get_amount ()) / 10n) as mav;
 
 // Pedro will get 90% of the amount
-const op1 = match ((Tezos.get_amount ()) - donationAmount) {
-  when(Some(x)): Tezos.transaction (unit, x, receiver);
+const op1 = match ((Mavryk.get_amount ()) - donationAmount) {
+  when(Some(x)): Mavryk.transaction (unit, x, receiver);
   when(None()): failwith ("Insufficient balance")
 };
-const op2 = Tezos.transaction (unit, donationAmount, donationReceiver);
+const op2 = Mavryk.transaction (unit, donationAmount, donationReceiver);
 const operations : list<operation> = list([ op1 , op2 ]);
 ```
 

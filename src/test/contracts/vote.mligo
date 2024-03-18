@@ -39,10 +39,10 @@ let reset (reset : reset) (_ : storage) : return =
 
 [@entry]
 let vote (vote : vote) (store : storage) : return =
-  (* let now = Tezos.get_now () in
+  (* let now = Mavryk.get_now () in
      let _ = assert (now >= store.start_time && store.finish_time > now) in *)
 
-  let addr = Tezos.get_sender () in
+  let addr = Mavryk.get_sender () in
   (* let _ = assert (not Set.mem addr store.voters) in *)
 
   let store =

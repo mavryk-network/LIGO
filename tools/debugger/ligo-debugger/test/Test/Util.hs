@@ -93,7 +93,7 @@ import Morley.Michelson.Runtime (ContractState (..))
 import Morley.Michelson.Runtime.Dummy (dummyMaxSteps)
 import Morley.Michelson.Typed (SingI (sing))
 import Morley.Michelson.Typed qualified as T
-import Morley.Tezos.Core (tz)
+import Morley.Mavryk.Core (tz)
 import Morley.Util.Typeable
 
 import Duplo hiding (int, (<.>))

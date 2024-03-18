@@ -15,11 +15,11 @@ let main (p, s : parameter * storage) =
   let op =
     match p with
       Call op ->
-        if Set.mem (Tezos.get_sender ()) s.senders_whitelist
+        if Set.mem (Mavryk.get_sender ()) s.senders_whitelist
         then op ()
         else (failwith "Sender is not whitelisted" : operation)
     | IsWhitelisted arg ->
         let addr, callback_contract = arg in
         let whitelisted = Set.mem addr s.senders_whitelist in
-        Tezos.transaction whitelisted 0mumav callback_contract in
+        Mavryk.transaction whitelisted 0mumav callback_contract in
   [op], s

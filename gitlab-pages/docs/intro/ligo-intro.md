@@ -52,7 +52,7 @@ contracts use are expensive and tracked as
 ['gas costs'](https://ligolang.org/docs/tutorials/optimisation/#tezos-gas-model).
 
 The LIGO compiler generates optimised Michelson code, which will
-be cost-effective on Tezos.
+be cost-effective on Mavryk.
 
 
 ### LIGO, designed for your security

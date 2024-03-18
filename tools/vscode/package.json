@@ -314,43 +314,43 @@
                                 "properties": {
                                     "now": {
                                         "default": "2020-01-01T00:00:00Z",
-                                        "description": "Value returned by `Tezos.get_now()`"
+                                        "description": "Value returned by `Mavryk.get_now()`"
                                     },
                                     "level": {
                                         "default": 0,
-                                        "description": "Value returned by `Tezos.get_level()`"
+                                        "description": "Value returned by `Mavryk.get_level()`"
                                     },
                                     "sender": {
                                         "type": "string",
                                         "default": "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq",
-                                        "description": "Value returned by `Tezos.get_sender()`"
+                                        "description": "Value returned by `Mavryk.get_sender()`"
                                     },
                                     "source": {
                                         "type": "string",
                                         "default": "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq",
-                                        "description": "Value returned by `Tezos.get_source()`"
+                                        "description": "Value returned by `Mavryk.get_source()`"
                                     },
                                     "self": {
                                         "type": "string",
                                         "default": "KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b",
-                                        "description": "Value returned by `Tezos.get_self_address()`"
+                                        "description": "Value returned by `Mavryk.get_self_address()`"
                                     },
                                     "amount": {
                                         "default": 0,
-                                        "description": "Value returned by `Tezos.get_amount()`"
+                                        "description": "Value returned by `Mavryk.get_amount()`"
                                     },
                                     "balance": {
                                         "default": 0,
-                                        "description": "Value returned by `Tezos.get_balance()`"
+                                        "description": "Value returned by `Mavryk.get_balance()`"
                                     },
                                     "chainId": {
                                         "type": "string",
                                         "default": "NetXH12Aer3be93",
-                                        "description": "Value returned by `Tezos.get_chain_id()`"
+                                        "description": "Value returned by `Mavryk.get_chain_id()`"
                                     },
                                     "votingPowers": {
                                         "type": "object",
-                                        "description": "Voting power distribution, affects `Tezos.voting_power` and `Tezos.get_total_voting_power()`",
+                                        "description": "Voting power distribution, affects `Mavryk.voting_power` and `Mavryk.get_total_voting_power()`",
                                         "properties": {
                                             "kind": {
                                                 "enum": "simple"

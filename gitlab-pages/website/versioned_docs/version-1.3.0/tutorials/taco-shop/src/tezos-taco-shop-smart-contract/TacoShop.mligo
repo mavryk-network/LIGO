@@ -19,7 +19,7 @@ let buy_taco (taco_kind_index : nat) (taco_shop_storage : taco_shop_storage)
     (* We won't sell tacos if the amount is not correct *)
 
     let () =
-      if (Tezos.get_amount ()) <> current_purchase_price
+      if (Mavryk.get_amount ()) <> current_purchase_price
       then
         failwith
           "Sorry, the taco you are trying to purchase has a different price" in

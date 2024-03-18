@@ -37,8 +37,8 @@ import Morley.Debugger.DAP.LanguageServer qualified as MD
 import Morley.Debugger.DAP.Types (MichelsonJson (..))
 import Morley.Debugger.DAP.Types.Morley (SimpleVotingPowersInfo (..), VotingPowersConfig (..))
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Address (ContractAddress, L1Address)
-import Morley.Tezos.Core (ChainId, Mumav, Timestamp)
+import Morley.Mavryk.Address (ContractAddress, L1Address)
+import Morley.Mavryk.Core (ChainId, Mumav, Timestamp)
 
 data LigoLaunchRequest = LigoLaunchRequest
   { noDebug             :: Maybe Bool

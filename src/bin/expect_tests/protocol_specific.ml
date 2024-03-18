@@ -11,7 +11,7 @@ let%expect_test _ =
      17 | [@entry]
      18 | let main (p : bls_l) (s : bool) : operation list * bool =
                                 ^
-     19 |   (([] : operation list), Tezos.pairing_check p)
+     19 |   (([] : operation list), Mavryk.pairing_check p)
     :
     Warning: unused variable "s".
     Hint: replace it by "_s" to prevent this warning.
@@ -86,10 +86,10 @@ let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "emit.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative/emit.mligo", line 4, characters 3-18:
+    File "../../test/contracts/negative/emit.mligo", line 4, characters 3-19:
       3 |   let x = "%lol" in
-      4 |   [Tezos.emit x 12], x
-             ^^^^^^^^^^^^^^^
+      4 |   [Mavryk.emit x 12], x
+             ^^^^^^^^^^^^^^^^
 
     Invalid event tag.
     The tag must be a string literal. |}]

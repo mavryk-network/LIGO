@@ -20,7 +20,7 @@ module TacoShop = struct
     (* We won't sell tacos if the amount is not correct *)
 
     let () =
-      if (Tezos.get_amount ()) <> current_purchase_price
+      if (Mavryk.get_amount ()) <> current_purchase_price
       then
         failwith
           "Sorry, the taco you are trying to purchase has a different price" in

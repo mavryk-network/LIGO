@@ -23,15 +23,15 @@ type return_ = [list<operation>, storage];
 
 const  commit = ([p, s] : [bytes, storage]) : return_ => {
   const commit : commit =
-    { date: Tezos.get_now() + 86400, salted_hash: p };
+    { date: Mavryk.get_now() + 86400, salted_hash: p };
   const updated_map : commit_set =
-    Big_map.update(Tezos.get_sender(), (Some (commit)), s.commits);
+    Big_map.update(Mavryk.get_sender(), (Some (commit)), s.commits);
   const s_ = {...s, commits: updated_map};
   return [(list([]) as list<operation>), s_]
 }
   
 const reveal = ([p, s] : [reveal, storage]) : return_ => {
-  const sender = Tezos.get_sender();
+  const sender = Mavryk.get_sender();
   if (!s.unused) {
      /* TODO */
   } else {
@@ -40,7 +40,7 @@ const reveal = ([p, s] : [reveal, storage]) : return_ => {
         when (Some(c)) : c;
         when (None()) : failwith("You have not made a commitment to hash against yet.")
       };
-    if (Tezos.get_now() < commit.date) {
+    if (Mavryk.get_now() < commit.date) {
       failwith("It has not been 24 hours since your commit yet.");
     } else {
       const salted =

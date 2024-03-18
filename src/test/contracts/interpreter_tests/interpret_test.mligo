@@ -457,7 +457,7 @@ let test_not =
 
 let test_chain_id =
   let chain_id = Test.eval ("NetXH12Aer3be93" : chain_id) in
-  assert (chain_id = Test.eval (Tezos.get_chain_id ()))
+  assert (chain_id = Test.eval (Mavryk.get_chain_id ()))
 
 let test_concats =
   let ss = ["aa"; "bb"; ""; "cc"] in

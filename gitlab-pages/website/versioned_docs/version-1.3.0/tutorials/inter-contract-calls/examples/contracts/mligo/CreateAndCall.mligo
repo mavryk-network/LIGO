@@ -3,16 +3,16 @@
 // the execution after the contract is originated.
 let create_and_call (st : address list) =
   let create_op, addr =
-    Tezos.create_contract
+    Mavryk.create_contract
       (fun (p, s : int * int) -> ([] : operation list), p + s)
       (None : key_hash option)
       0mav
       1 in
   let call_op =
-    Tezos.transaction
+    Mavryk.transaction
       (addr, 41)
       0mav
-      (Tezos.self "%callback" : (address * int) contract)
+      (Mavryk.self "%callback" : (address * int) contract)
   in [create_op; call_op], addr :: st
 
 // At this point, we can be sure that the contract is originated
@@ -21,14 +21,14 @@ let create_and_call (st : address list) =
 // no-one is trying to abuse the %callback entrypoint to call
 // other contracts on our behalf.
 let call_counter (addr, n : address * int) =
-  let u = assert (Tezos.get_sender () = Tezos.get_self_address ()) in
+  let u = assert (Mavryk.get_sender () = Mavryk.get_self_address ()) in
   let callee_opt : int contract option =
-    Tezos.get_contract_opt addr in
+    Mavryk.get_contract_opt addr in
   let callee =
     match callee_opt with
     | Some contract -> contract
     | None -> (failwith "Could not find contract" : int contract)
-  in Tezos.transaction n 0mav callee
+  in Mavryk.transaction n 0mav callee
 
 type parameter =
   CreateAndCall

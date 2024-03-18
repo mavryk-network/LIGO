@@ -1,1 +1,1 @@
-let check = (p: unit) => Tezos.self("%default");
+let check = (p: unit) => Mavryk.self("%default");

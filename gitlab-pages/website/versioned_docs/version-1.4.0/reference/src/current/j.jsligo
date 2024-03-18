@@ -1,1 +1,1 @@
-let check = (p : unit) => Tezos.get_source();
+let check = (p : unit) => Mavryk.get_source();

@@ -45,4 +45,4 @@ Returns the current minimal time between blocks, the value is obtained from the 
 
 ### Voting power
 
-The voting power of a contract is no longer rounded to rolls. It is now instead the full staking power of the delegate, currently expressed in mumav. Though, developers should not rely on `Tezos.voting_power` to query the staking power of a contract in mumav: the value returned by `Tezos.voting_power` is still of type` nat and it should only be considered relative to `Tezos.total_voting_power`.
+The voting power of a contract is no longer rounded to rolls. It is now instead the full staking power of the delegate, currently expressed in mumav. Though, developers should not rely on `Mavryk.voting_power` to query the staking power of a contract in mumav: the value returned by `Mavryk.voting_power` is still of type` nat and it should only be considered relative to `Mavryk.total_voting_power`.

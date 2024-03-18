@@ -33,13 +33,13 @@ type applied = operation list * storage
 let request_mint (mint_address: address) (qty: mav) : operation =
   if qty <= 0mav then failwith "oven_sc: amount should not null"
   else
-    let callback : bytes ticket contract = Tezos.self "%oven_retrieve_ticket" in
+    let callback : bytes ticket contract = Mavryk.self "%oven_retrieve_ticket" in
     let mint_sc : (Mint parameter_of) contract =
-      Tezos.get_contract_with_error
+      Mavryk.get_contract_with_error
         mint_address
         "oven_sc: unable to find mint contract"
     in
-    Tezos.transaction (Mint_process_mint callback: Mint parameter_of) qty mint_sc
+    Mavryk.transaction (Mint_process_mint callback: Mint parameter_of) qty mint_sc
 
 let retrieve_ticket
     (counter: nat)
@@ -47,39 +47,39 @@ let retrieve_ticket
     (minted_ticket: bytes ticket) : bytes ticket option * nat =
   match stored_ticket with
   | None ->
-     let (_, (_, n)), fresh_ticket = Tezos.read_ticket minted_ticket in
+     let (_, (_, n)), fresh_ticket = Mavryk.read_ticket minted_ticket in
      (Some fresh_ticket, n)
   | Some ticket ->
-      let (_, (_, n)), fresh_ticket = Tezos.read_ticket minted_ticket in
-      (Tezos.join_tickets (ticket, fresh_ticket), counter + n)
+      let (_, (_, n)), fresh_ticket = Mavryk.read_ticket minted_ticket in
+      (Mavryk.join_tickets (ticket, fresh_ticket), counter + n)
 
 let request_redeem (mint_address: address) (stored_ticket : bytes ticket option) : operation =
   match stored_ticket with
   | None -> failwith "oven_sc: no stored ticket"
   | Some ticket ->
-    let (_, (_, qty)), ticket = Tezos.read_ticket ticket in
+    let (_, (_, qty)), ticket = Mavryk.read_ticket ticket in
     if qty <= 0n then failwith "oven_sc: quantity is null"
     else
-      let callback : unit contract = Tezos.self "%oven_retrieve_tez" in
+      let callback : unit contract = Mavryk.self "%oven_retrieve_tez" in
       let mint_sc : (Mint parameter_of) contract =
-      Tezos.get_contract_with_error
+      Mavryk.get_contract_with_error
         mint_address
         "oven_sc: unable to find mint contract"
       in
-      Tezos.transaction ((Mint_process_redeem (ticket, callback)): Mint parameter_of) 0mav mint_sc
+      Mavryk.transaction ((Mint_process_redeem (ticket, callback)): Mint parameter_of) 0mav mint_sc
 
 let retrieve_tez (owner_address : address) (retribution: mav) : operation =
   let beneficiary : unit contract =
-     Tezos.get_contract_with_error owner_address "oven_sc: unable to find owner"
+     Mavryk.get_contract_with_error owner_address "oven_sc: unable to find owner"
   in
-  Tezos.transaction unit retribution beneficiary
+  Mavryk.transaction unit retribution beneficiary
 
 [@entry]
 let oven_request_mint
   (_: unit)
   ({owner_address; mint_address; stored_ticket; qty_ticket}: storage) : applied =
-  let _ = assert_with_error (Tezos.get_source () = owner_address) "oven_sc: not owner" in
-  let quantity = Tezos.get_amount () in
+  let _ = assert_with_error (Mavryk.get_source () = owner_address) "oven_sc: not owner" in
+  let quantity = Mavryk.get_amount () in
   let operation = request_mint mint_address quantity in
   ([operation], {
       owner_address = owner_address
@@ -91,7 +91,7 @@ let oven_request_mint
 let oven_retrieve_ticket
   (minted_ticket: bytes ticket)
   ({owner_address; mint_address; stored_ticket; qty_ticket}: storage) : applied =
-  let _ = assert_with_error (Tezos.get_source () = owner_address) "oven_sc: not owner" in
+  let _ = assert_with_error (Mavryk.get_source () = owner_address) "oven_sc: not owner" in
   let (new_ticket, counter) = retrieve_ticket qty_ticket stored_ticket minted_ticket in
   ([], {
     owner_address = owner_address
@@ -103,7 +103,7 @@ let oven_retrieve_ticket
 let oven_request_redeem
   (_: unit)
   ({owner_address; mint_address; stored_ticket; qty_ticket = _}: storage) : applied =
-  let _ = assert_with_error (Tezos.get_source () = owner_address) "oven_sc: not owner" in
+  let _ = assert_with_error (Mavryk.get_source () = owner_address) "oven_sc: not owner" in
   let operation = request_redeem mint_address stored_ticket in
   ([operation], {
     owner_address = owner_address
@@ -115,8 +115,8 @@ let oven_request_redeem
 let oven_retrieve_tez
   (_: unit)
   ({owner_address; mint_address; stored_ticket = _; qty_ticket = _}: storage) : applied =
-  let _ = assert_with_error (Tezos.get_source () = owner_address) "oven_sc: not owner" in
-  let quantity = Tezos.get_amount () in
+  let _ = assert_with_error (Mavryk.get_source () = owner_address) "oven_sc: not owner" in
+  let quantity = Mavryk.get_amount () in
   let operation = retrieve_tez owner_address quantity in
   ([operation], {
     owner_address = owner_address

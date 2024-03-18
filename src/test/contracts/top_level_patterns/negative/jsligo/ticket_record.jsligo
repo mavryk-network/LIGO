@@ -1,9 +1,9 @@
 type t = { b: ticket<string> };
 
-const { b } = { b: Option.unopt(Tezos.create_ticket("one", 10 as nat)) };
+const { b } = { b: Option.unopt(Mavryk.create_ticket("one", 10 as nat)) };
 
 type storage = ticket<string>;
 
 @entry
 const main = (_p: unit, _s: storage): [list<operation>, storage] =>
-  [list([]), Option.unopt(Tezos.join_tickets([b, b]))];
+  [list([]), Option.unopt(Mavryk.join_tickets([b, b]))];

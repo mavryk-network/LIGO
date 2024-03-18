@@ -34,7 +34,7 @@ let bid_happy_path =
       let contract = Util.originate level in
 
       let alice_action = Breath.Context.act_as alice (Util.bid contract 1mav) in
-      let start_time = Tezos.get_now () in
+      let start_time = Mavryk.get_now () in
       let bob_action = Breath.Context.act_as bob (Util.bid contract 2mav) in
       let carol_action = Breath.Context.act_as carol (Util.bid contract 3mav) in
 
@@ -58,7 +58,7 @@ let bid_leader_try_to_be_upgraded_twice =
       let contract = Util.originate level in
 
       let alice_fst_action = Breath.Context.act_as alice (Util.bid contract 1mav) in
-      let start_time = Tezos.get_now () in
+      let start_time = Mavryk.get_now () in
       let alice_snd_action = Breath.Context.act_as alice (Util.bid contract 2mav) in
 
       let storage = Breath.Contract.storage_of contract in
@@ -80,7 +80,7 @@ let bid_try_to_upgrade_with_a_lower_amount =
       let contract = Util.originate level in
 
       let alice_action = Breath.Context.act_as alice (Util.bid contract 2mav) in
-      let start_time = Tezos.get_now () in
+      let start_time = Mavryk.get_now () in
       let bob_action = Breath.Context.act_as bob (Util.bid contract 1mav) in
 
       let storage = Breath.Contract.storage_of contract in
@@ -127,14 +127,14 @@ let claim_leader_can_claim =
       ; bob_bid
       ; Breath.Assert.is_equal
           "should not claimable before waiting"
-          (Tezos.call_view "is_claimable" () contract.originated_address)
+          (Mavryk.call_view "is_claimable" () contract.originated_address)
           (Some false)
       ; Breath.Context.wait_for 86_400n
       (* Notice how we have to call the contract after waiting, unlike
        * what we did for the two calls to Bid. *)
       ; Breath.Assert.is_equal
           "should be claimable after waiting"
-          (Tezos.call_view "is_claimable" () contract.originated_address)
+          (Mavryk.call_view "is_claimable" () contract.originated_address)
           (Some true)
       ; Breath.Context.call_as bob contract Claim
     ])

@@ -1,6 +1,6 @@
 author: er433
-description: '#### Deprecated: `Tezos.amount`, `Tezos.balance`, `Tezos.now`, `Tezos.sender`,
-  `Tezos.source`, `Tezos.level`, `Tezos.self_address`, `Tezos.chain_id`, `Tezos.total_voting_power`'
+description: '#### Deprecated: `Mavryk.amount`, `Mavryk.balance`, `Mavryk.now`, `Mavryk.sender`,
+  `Mavryk.source`, `Mavryk.level`, `Mavryk.self_address`, `Mavryk.chain_id`, `Mavryk.total_voting_power`'
 merge_request: '1877'
 title: Remove thunked constants
 type: deprecated

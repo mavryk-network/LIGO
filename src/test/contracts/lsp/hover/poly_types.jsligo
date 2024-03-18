@@ -20,7 +20,7 @@ function f<a> (r : t<a>) {
   return {...r, y : "42"}
 }
 
-const ticket = Tezos.create_ticket(42n, 42n)
+const ticket = Mavryk.create_ticket(42n, 42n)
 
 const lst = List.map (c => c + 42, list([1, 2]))
 

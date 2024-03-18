@@ -24,7 +24,7 @@ namespace TacoShop {
       taco_kind.max_price / taco_kind.current_stock;
     /* We won't sell tacos if the amount is not correct */
 
-    if ((Tezos.get_amount()) != current_purchase_price) {
+    if ((Mavryk.get_amount()) != current_purchase_price) {
       return failwith(
         "Sorry, the taco you are trying to purchase has a different price"
       )
@@ -43,25 +43,25 @@ namespace TacoShop {
         );
 
       const receiver : contract<unit> =
-      match ((Tezos.get_contract_opt (ownerAddress))) {
+      match ((Mavryk.get_contract_opt (ownerAddress))) {
         when(Some(contract)): contract;
         when(None()): ((failwith ("Not a contract")))
       };
 
       const donationReceiver : contract<unit>  =
-        match ((Tezos.get_contract_opt (donationAddress))) {
+        match ((Mavryk.get_contract_opt (donationAddress))) {
           when(Some(contract)): contract;
           when(None()): ((failwith ("Not a contract")))
         };
 
-      const donationAmount = ((Tezos.get_amount ()) / 10n) as mav;
+      const donationAmount = ((Mavryk.get_amount ()) / 10n) as mav;
 
       // Pedro will get 90% of the amount
-      const op1 = match ((Tezos.get_amount ()) - donationAmount) {
-        when(Some(x)): Tezos.transaction (unit, x, receiver);
+      const op1 = match ((Mavryk.get_amount ()) - donationAmount) {
+        when(Some(x)): Mavryk.transaction (unit, x, receiver);
         when(None()): failwith ("Insufficient balance")
       };
-      const op2 = Tezos.transaction (unit, donationAmount, donationReceiver);
+      const op2 = Mavryk.transaction (unit, donationAmount, donationReceiver);
       const operations : list<operation> = list([ op1 , op2 ]);
 
       return [operations, taco_shop_storage]

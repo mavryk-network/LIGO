@@ -1,7 +1,7 @@
 module C = struct
   [@entry]
   let main (p : int * int) (_ : unit) : operation list * unit =
-    [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
+    [Mavryk.emit "%foo" p ; Mavryk.emit "%foo" p.0],()
 end
 
 let test_foo =

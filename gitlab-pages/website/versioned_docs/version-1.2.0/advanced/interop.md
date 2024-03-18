@@ -5,7 +5,7 @@ title: Interop
 
 import Syntax from '@theme/Syntax';
 
-LIGO can work together with other smart contract languages on Tezos. However,
+LIGO can work together with other smart contract languages on Mavryk. However,
 data structures might have different representations in Michelson and not
 correctly match the standard LIGO types.
 
@@ -527,11 +527,11 @@ type x = Left of int
 [@entry]
 let main (p : parameter) (s : storage): operation list * storage =
   let contract =
-    match Tezos.get_entrypoint_opt "%left" ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address) with
+    match Mavryk.get_entrypoint_opt "%left" ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address) with
     | Some c -> c
     | None -> failwith "contract does not match"
   in
-  [Tezos.transaction (Left 2) 2mumav contract], s
+  [Mavryk.transaction (Left 2) 2mumav contract], s
 ```
 
 </Syntax>
@@ -548,12 +548,12 @@ type x = | ["Left", int];
 @entry
 const main = (p: parameter, s: storage): [list<operation>, storage] => {
   let contract =
-    match (Tezos.get_entrypoint_opt("%left", "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address)) {
+    match (Mavryk.get_entrypoint_opt("%left", "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address)) {
       when(Some(c)): c;
       when(None()): failwith ("contract does not match")
     };
   return [
-    list([Tezos.transaction(Left(2), 2mumav, contract)]),
+    list([Mavryk.transaction(Left(2), 2mumav, contract)]),
     s];
 };
 ```

@@ -261,8 +261,8 @@ let nat (bytes: bytes) : nat =
 let ediv (type a b) (left: a) (right: b) : (a, b) external_ediv =
   [%michelson ({| {EDIV} |} left right : (a, b) external_ediv)]
 
-(** Tezos-specific functions *)
-module Tezos = struct
+(** Mavryk-specific functions *)
+module Mavryk = struct
 
   (* Addresses *)
 
@@ -2311,7 +2311,7 @@ module Test = struct
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `State.bake_until` from `Test.Next` is encouraged for a smoother migration."]
   let bake_until_n_cycle_end (n : nat) : unit = [%external ("TEST_BAKE_UNTIL_N_CYCLE_END", n)]
 
-  let get_time (_u : unit) : timestamp = Tezos.get_now ()
+  let get_time (_u : unit) : timestamp = Mavryk.get_now ()
 
   (** Registers a `key_hash` corresponding to an account as a delegate. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `State.register_delegate` from `Test.Next` is encouraged for a smoother migration."]
@@ -2448,7 +2448,7 @@ module Test = struct
     annotated with the expected payload type. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `State.last_events` from `Test.Next` is encouraged for a smoother migration."]
   let get_last_events_from (type a p s) (addr : (p,s) typed_address) (rtag: string) : a list =
-    let addr = Tezos.address (to_contract addr) in
+    let addr = Mavryk.address (to_contract addr) in
     let event_map : (address * a) list = [%external ("TEST_LAST_EVENTS", rtag)] in
     let f ((acc, (c_addr,event)) : a list * (address * a)) : a list =
       if addr = c_addr then event::acc
@@ -2950,10 +2950,10 @@ module Test = struct
       (()       : unit)
       : operation list * unit =
       let ((v,amt),dst_addr) = p in
-      let ticket = Option.unopt (Tezos.create_ticket v amt) in
+      let ticket = Option.unopt (Mavryk.create_ticket v amt) in
       let tx_param = mk_param ticket in
-      let c : whole_p contract = Tezos.get_contract_with_error dst_addr "Testing proxy: you provided a wrong address" in
-      let op = Tezos.transaction tx_param 1mumav c
+      let c : whole_p contract = Mavryk.get_contract_with_error dst_addr "Testing proxy: you provided a wrong address" in
+      let op = Mavryk.transaction tx_param 1mumav c
       in [op], ()
 
     [@private]
@@ -2965,10 +2965,10 @@ module Test = struct
       (_          : address option)
       : operation list * address option =
       let (v,amt) = p in
-      let ticket = Option.unopt (Tezos.create_ticket v amt) in
+      let ticket = Option.unopt (Mavryk.create_ticket v amt) in
       let init_storage : whole_s = mk_storage ticket in
       let op,addr =
-        Tezos.create_contract main (None: key_hash option) 0mumav init_storage
+        Mavryk.create_contract main (None: key_hash option) 0mumav init_storage
       in [op], Some addr
 
     [@private]
@@ -3187,7 +3187,7 @@ module Test = struct
         (addr : (p,s) typed_address)
         (rtag: string)
       : a list =
-        let addr = Tezos.address (to_contract addr) in
+        let addr = Mavryk.address (to_contract addr) in
         let event_map : (address * a) list = [%external ("TEST_LAST_EVENTS", rtag)] in
         let f ((acc, (c_addr,event)) : a list * (address * a)) : a list =
           if addr = c_addr then event::acc

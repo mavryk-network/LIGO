@@ -21,8 +21,8 @@ import Morley.Michelson.Parser (MichelsonSource (MSName))
 import Morley.Michelson.Text (MText, mt)
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Address (Constrained (Constrained), ImplicitAddress, ta, unImplicitAddress)
-import Morley.Tezos.Core
+import Morley.Mavryk.Address (Constrained (Constrained), ImplicitAddress, ta, unImplicitAddress)
+import Morley.Mavryk.Core
   (ChainId (UnsafeChainId), parseChainId, timestampFromSeconds, timestampQuote, tz)
 
 import Language.LIGO.AST hiding ((<.>))

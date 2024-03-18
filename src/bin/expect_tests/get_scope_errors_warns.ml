@@ -369,14 +369,14 @@ let%expect_test _ =
   [%expect
     {|
     Scopes:
-    [  ] File "../../test/contracts/warning_duplicate2.mligo", line 1, characters 8-35
+    [  ] File "../../test/contracts/warning_duplicate2.mligo", line 1, characters 8-36
     [ x#1:4-5  ] File "../../test/contracts/warning_duplicate2.mligo", line 2, characters 9-10
     [ x#1:4-5  ] File "../../test/contracts/warning_duplicate2.mligo", line 2, characters 12-13
 
     Variable definitions:
     (x#1:4-5 -> x)
     Range: File "../../test/contracts/warning_duplicate2.mligo", line 1, characters 4-5
-    Decl Range: File "../../test/contracts/warning_duplicate2.mligo", line 1, characters 0-35
+    Decl Range: File "../../test/contracts/warning_duplicate2.mligo", line 1, characters 0-36
     Content: |resolved: option (ticket (nat))|
     references:
       File "../../test/contracts/warning_duplicate2.mligo", line 2, characters 9-10 ,
@@ -406,7 +406,7 @@ let%expect_test _ =
     {|
     Scopes:
     [  ] File "../../test/contracts/warning_duplicate.mligo", line 2, characters 10-13
-    [  ] File "../../test/contracts/warning_duplicate.mligo", line 2, characters 23-65
+    [  ] File "../../test/contracts/warning_duplicate.mligo", line 2, characters 23-66
     [ Foo#1:7-10  ] File "../../test/contracts/warning_duplicate.mligo", line 5, characters 9-14
     [ Foo#1:7-10  ] File "../../test/contracts/warning_duplicate.mligo", line 5, characters 16-21
 
@@ -427,7 +427,7 @@ let%expect_test _ =
     Content: Members: Variable definitions:
                       (x#2:6-7 -> x)
                       Range: File "../../test/contracts/warning_duplicate.mligo", line 2, characters 6-7
-                      Decl Range: File "../../test/contracts/warning_duplicate.mligo", line 2, characters 2-65
+                      Decl Range: File "../../test/contracts/warning_duplicate.mligo", line 2, characters 2-66
                       Content: |core: ticket (nat)|
                       references:
                         File "../../test/contracts/warning_duplicate.mligo", line 5, characters 13-14 ,

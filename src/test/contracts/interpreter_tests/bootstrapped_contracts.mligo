@@ -7,10 +7,10 @@ type storage =
 
 let main (_, storage : unit * storage) : operation list * storage =
   if storage.state > 0 then
-    (let contract = match (Tezos.get_contract_opt storage.fellow : unit contract option) with
+    (let contract = match (Mavryk.get_contract_opt storage.fellow : unit contract option) with
        | Some contract -> contract
        | None -> (failwith "oops" : unit contract) in
-     let op = Tezos.transaction () 0mumav contract in
+     let op = Mavryk.transaction () 0mumav contract in
      let storage = { storage with state = storage.state - 1 } in
      (([op]: operation list), storage))
   else

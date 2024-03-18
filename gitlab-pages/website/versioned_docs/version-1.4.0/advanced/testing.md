@@ -218,7 +218,7 @@ Now imagine you have a value of type `parameter_ty`/`storage_ty` containing a ti
 in the operation data, tickets will be represented in Michelson as pairs:
 
 ```bash
-> ligo compile expression cameligo 'Tezos.create_ticket 0x0202 10n'
+> ligo compile expression cameligo 'Mavryk.create_ticket 0x0202 10n'
 (Pair "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG" 0x0202 10)
 ```
 
@@ -289,8 +289,8 @@ module C = struct
   [@entry]
   let main (p : param) (_ : storage) : operation list * storage =
     let (_,ticket) = p in
-    let (_,(v,_)) , _ = Tezos.read_ticket ticket in
-    [] , (v, Tezos.get_sender ())
+    let (_,(v,_)) , _ = Mavryk.read_ticket ticket in
+    [] , (v, Mavryk.get_sender ())
 end
 let test_transfer_to_contract =
   let {addr = main_taddr; code = _ ; size = _} = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
@@ -332,8 +332,8 @@ namespace C {
   @entry
   function main (p: param, _s: [string , address]) : [list<operation> , [string , address]] {
     let [_v,ticket] = p ;
-    let [[_addr,[v,_t]] , _ticket] = Tezos.read_ticket (ticket) ;
-    return ([list([]) , [v, Tezos.get_sender ()]])
+    let [[_addr,[v,_t]] , _ticket] = Mavryk.read_ticket (ticket) ;
+    return ([list([]) , [v, Mavryk.get_sender ()]])
   };
 }
 
@@ -402,7 +402,7 @@ let main (() : unit) (s : storage) : operation list * storage =
   [] , (
     match s with
     | Some ticket ->
-      let (_ , t) = Tezos.read_ticket ticket in
+      let (_ , t) = Mavryk.read_ticket ticket in
       Some t
     | None -> None
   )
@@ -436,7 +436,7 @@ const main = (_p: unit, s: storage) : [ list<operation> , storage] => {
   let x =
     match (s) {
       when(Some(ticket)): ((ticket: ticket<bytes>) => {
-        let [_v , t] = Tezos.read_ticket (ticket) ;
+        let [_v , t] = Mavryk.read_ticket (ticket) ;
         return Some (t)
       })(ticket);
       when(None()): None()
@@ -754,7 +754,7 @@ Here is how you emit events and fetch them from your tests:
 ```cameligo test-ligo group=test_ex
 module C = struct
   [@entry] let main (p : int*int) () =
-    [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
+    [Mavryk.emit "%foo" p ; Mavryk.emit "%foo" p.0],()
 end
 
 let test_foo =
@@ -770,8 +770,8 @@ let test_foo =
 namespace C {
   @entry
   let main = (p: [int, int], _: unit) => {
-    let op1 = Tezos.emit("%foo", p);
-    let op2 = Tezos.emit("%foo", p[0]);
+    let op1 = Mavryk.emit("%foo", p);
+    let op2 = Mavryk.emit("%foo", p[0]);
     return [list([op1, op2]), unit];
     };
 }

@@ -76,13 +76,13 @@ let%expect_test _ =
     {|
     Scopes:
     [ p#1:11-12  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 10-14
-    [ p#1:11-12  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 26-52
-    [ p#1:11-12 c#2:6-7  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 3, characters 2-17
+    [ p#1:11-12  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 26-53
+    [ p#1:11-12 c#2:6-7  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 3, characters 2-18
 
     Variable definitions:
     (check#1:4-9 -> check)
     Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 1, characters 4-9
-    Decl Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 1, character 0 to line 3, character 17
+    Decl Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 1, character 0 to line 3, character 18
     Content: |core: key_hash -> address|
     references: []
     Mod Path =
@@ -92,7 +92,7 @@ let%expect_test _ =
     Decl Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 1, characters 11-23
     Content: |core: key_hash|
     references:
-      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 50-51
+      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 51-52
     Mod Path =
     Def Type = Parameter
     (c#2:6-7 -> c)
@@ -100,7 +100,7 @@ let%expect_test _ =
     Decl Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, character 2 to line 3, character 2
     Content: |core: contract (unit)|
     references:
-      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 3, characters 16-17
+      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 3, characters 17-18
     Mod Path =
     Def Type = Local
     Type definitions:

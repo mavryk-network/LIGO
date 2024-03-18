@@ -7,7 +7,7 @@ module C = struct
   let ct : string = Test.register_constant ct
   [@entry]
   let main (() : parameter)  (store : storage) : return =
-  ([] : operation list), ((Tezos.constant ct : int -> int) store)
+  ([] : operation list), ((Mavryk.constant ct : int -> int) store)
 end
 
 let test =

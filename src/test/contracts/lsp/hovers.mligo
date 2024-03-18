@@ -73,7 +73,7 @@ let x1 =
     let (Endo g) = endo_list2 f1 in
     g [List.cons [5] (List.map f t)]
 
-let z = Tezos.create_contract (fun x y -> ([], x + y))
+let z = Mavryk.create_contract (fun x y -> ([], x + y))
 
 type t = Test.Proxy_ticket.proxy_address
 

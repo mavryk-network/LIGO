@@ -49,8 +49,8 @@ let%expect_test _ =
   [%expect
     {|
     View rule violated:
-          - Tezos.create_contract ; Tezos.set_delegate and Tezos.transaction cannot be used because they are stateful (expect in lambdas)
-          - Tezos.self can't be used because the entry-point does not make sense in a view |}]
+          - Mavryk.create_contract ; Mavryk.set_delegate and Mavryk.transaction cannot be used because they are stateful (expect in lambdas)
+          - Mavryk.self can't be used because the entry-point does not make sense in a view |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "view_restrictions.mligo" ];
@@ -123,43 +123,43 @@ let%expect_test _ =
     {|
     File "../../test/contracts/views_using_view.test.mligo", line 14, characters 42-54:
      13 |     = [], (match p with
-     14 |             Basic (v,a)       -> Integer (Option.unopt (Tezos.call_view "basic" a v))
+     14 |             Basic (v,a)       -> Integer (Option.unopt (Mavryk.call_view "basic" a v))
                                                     ^^^^^^^^^^^^
-     15 |           | Get_storage v     -> Integer (Option.unopt (Tezos.call_view "get_storage" () v))
+     15 |           | Get_storage v     -> Integer (Option.unopt (Mavryk.call_view "get_storage" () v))
     :
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
     File "../../test/contracts/views_using_view.test.mligo", line 15, characters 42-54:
-     14 |             Basic (v,a)       -> Integer (Option.unopt (Tezos.call_view "basic" a v))
-     15 |           | Get_storage v     -> Integer (Option.unopt (Tezos.call_view "get_storage" () v))
+     14 |             Basic (v,a)       -> Integer (Option.unopt (Mavryk.call_view "basic" a v))
+     15 |           | Get_storage v     -> Integer (Option.unopt (Mavryk.call_view "get_storage" () v))
                                                     ^^^^^^^^^^^^
-     16 |           | Not_funny v       -> Integer (Option.unopt (Tezos.call_view "not_funny" () v) )
+     16 |           | Not_funny v       -> Integer (Option.unopt (Mavryk.call_view "not_funny" () v) )
     :
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
     File "../../test/contracts/views_using_view.test.mligo", line 16, characters 42-54:
-     15 |           | Get_storage v     -> Integer (Option.unopt (Tezos.call_view "get_storage" () v))
-     16 |           | Not_funny v       -> Integer (Option.unopt (Tezos.call_view "not_funny" () v) )
+     15 |           | Get_storage v     -> Integer (Option.unopt (Mavryk.call_view "get_storage" () v))
+     16 |           | Not_funny v       -> Integer (Option.unopt (Mavryk.call_view "not_funny" () v) )
                                                     ^^^^^^^^^^^^
-     17 |           | Get_address v     -> Address (Option.unopt (Tezos.call_view "get_address" () v))
+     17 |           | Get_address v     -> Address (Option.unopt (Mavryk.call_view "get_address" () v))
     :
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
     File "../../test/contracts/views_using_view.test.mligo", line 17, characters 42-54:
-     16 |           | Not_funny v       -> Integer (Option.unopt (Tezos.call_view "not_funny" () v) )
-     17 |           | Get_address v     -> Address (Option.unopt (Tezos.call_view "get_address" () v))
+     16 |           | Not_funny v       -> Integer (Option.unopt (Mavryk.call_view "not_funny" () v) )
+     17 |           | Get_address v     -> Address (Option.unopt (Mavryk.call_view "get_address" () v))
                                                     ^^^^^^^^^^^^
-     18 |           | Super_not_funny v -> Integer (Option.unopt (Tezos.call_view "super_not_funny" () v)))
+     18 |           | Super_not_funny v -> Integer (Option.unopt (Mavryk.call_view "super_not_funny" () v)))
     :
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
     File "../../test/contracts/views_using_view.test.mligo", line 18, characters 42-54:
-     17 |           | Get_address v     -> Address (Option.unopt (Tezos.call_view "get_address" () v))
-     18 |           | Super_not_funny v -> Integer (Option.unopt (Tezos.call_view "super_not_funny" () v)))
+     17 |           | Get_address v     -> Address (Option.unopt (Mavryk.call_view "get_address" () v))
+     18 |           | Super_not_funny v -> Integer (Option.unopt (Mavryk.call_view "super_not_funny" () v)))
                                                     ^^^^^^^^^^^^
      19 | end
     :
@@ -440,7 +440,7 @@ let%expect_test _ =
 
     File "../../test/contracts/view_exported.jsligo", line 14, characters 2-10:
      13 |
-     14 |   Test.log(Tezos.call_view("bar", unit, Tezos.address(c)) as option<C.storage>);
+     14 |   Test.log(Mavryk.call_view("bar", unit, Mavryk.address(c)) as option<C.storage>);
             ^^^^^^^^
      15 | };
     :

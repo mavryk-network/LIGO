@@ -7,7 +7,7 @@ module C = struct
   [@entry] let check (p : parameter) (_s : storage) : return =
     let (ck,c) = p in
     let new_s =
-      match Tezos.open_chest ck c 10n with
+      match Mavryk.open_chest ck c 10n with
       | Some b -> b
       | _ -> 0xff
     in [], new_s

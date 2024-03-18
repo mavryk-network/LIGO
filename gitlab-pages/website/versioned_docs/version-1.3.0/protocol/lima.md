@@ -11,7 +11,7 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 ### Deprecation
 
-The types `chest` and the primitive `Tezos.open_chest` are deprecated (see the changelogs for the Lima protocol).
+The types `chest` and the primitive `Mavryk.open_chest` are deprecated (see the changelogs for the Lima protocol).
 
 ### Changes in API
 

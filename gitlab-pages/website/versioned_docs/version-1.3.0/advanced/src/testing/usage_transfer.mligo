@@ -5,8 +5,8 @@ module C = struct
   [@entry]
   let main (p : param) (_ : storage) : operation list * storage =
     let (_,ticket) = p in
-    let (_,(v,_)) , _ = Tezos.read_ticket ticket in
-    [] , (v, Tezos.get_sender ())
+    let (_,(v,_)) , _ = Mavryk.read_ticket ticket in
+    [] , (v, Mavryk.get_sender ())
 end
 let test_transfer_to_contract =
   let {addr = main_taddr; code = _ ; size = _} = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in

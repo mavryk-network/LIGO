@@ -10,7 +10,7 @@ This article is aimed at those who have some experience with
 developing smart contracts for Ethereum in Solidity. We will cover the
 key differences between Solidity and LIGO, compare the execution model
 of Ethereum and Tezos blockchains, and list the features you should be
-aware of while developing smart contracts for Tezos.
+aware of while developing smart contracts for Mavryk.
 
 ## Languages and libraries
 
@@ -47,7 +47,7 @@ similarity would be a bad friend for those migrating to a different
 blockchain architecture.
 
 We will, however, try to associate the terms known to you with the
-terms used in Tezos. Note that this is just an _association,_ and not
+terms used in Mavryk. Note that this is just an _association,_ and not
 the exact equivalence.
 
 | Ethereum term            | Tezos term           | Notes |
@@ -349,7 +349,7 @@ Solidity has visibility modifiers like `private` and `public` for storage entrie
 
 It is a popular misconception in the Ethereum world that by marking a storage field `private` you can make this field visible only from inside the contract. Both in Tezos and Ethereum, the contract storage is public. This is due to how blockchains work: nodes need to read contracts' storage to execute and validate the transactions. Tezos allows anyone to inspect storage of any contract with one CLI command. In Ethereum, it is harder but still feasible.
 
-Making a storage field `public` in Solidity instructs the compiler to generate a `view` method that returns the value of this field. In Tezos, it is possible to inspect the storage directly, and it is not possible to return values from contract calls. Thus, public and private storage fields are equivalent in Tezos.
+Making a storage field `public` in Solidity instructs the compiler to generate a `view` method that returns the value of this field. In Tezos, it is possible to inspect the storage directly, and it is not possible to return values from contract calls. Thus, public and private storage fields are equivalent in Mavryk.
 
 For contract methods, the dispatching logic defines which functions within the contract are accessible from the outside world. Consider the following snippet:
 
@@ -528,14 +528,14 @@ let treasury (p, s : unit * storage) =
   let newStorage = {s with rewardsLeft = 0mumav} in
 
   // Then we find our beneficiary's `handleRewards` entrypoint:
-  let beneficiaryOpt = Tezos.get_entrypoint_opt "%handleTransfer" s.beneficiaryAddress in
+  let beneficiaryOpt = Mavryk.get_entrypoint_opt "%handleTransfer" s.beneficiaryAddress in
   let beneficiary =
     match beneficiaryOpt with
       Some contract -> contract
     | None -> failwith "Beneficiary does not exist" in
 
   // Then we prepare the internal operation we want to perform
-  let operation = Tezos.transaction () s.rewardsLeft beneficiary in
+  let operation = Mavryk.transaction () s.rewardsLeft beneficiary in
 
   // ...and return both the operations and the updated storage
   ([operation], newStorage)
@@ -553,7 +553,7 @@ let treasury = (p : unit, s : storage) => {
   let newStorage = {...s, rewardsLeft: 0mumav};
 
   // Then we find our beneficiary's `handleRewards` entrypoint:
-  let beneficiaryOpt = Tezos.get_entrypoint_opt("%handleTransfer", s.beneficiaryAddress);
+  let beneficiaryOpt = Mavryk.get_entrypoint_opt("%handleTransfer", s.beneficiaryAddress);
   let beneficiary =
     match(beneficiaryOpt) {
      when(Some(contract)): contract;
@@ -561,7 +561,7 @@ let treasury = (p : unit, s : storage) => {
     };
 
   // Then we prepare the internal operation we want to perform
-  let operation = Tezos.transaction(unit, s.rewardsLeft, beneficiary);
+  let operation = Mavryk.transaction(unit, s.rewardsLeft, beneficiary);
 
   // ...and return both the operations and the updated storage
   return [list([operation]), newStorage];
@@ -581,7 +581,7 @@ type parameter = DoSomething | DoSomethingCont of int
 
 let doSomething (p, s : unit * int) =
   (* The callee should call `%doSomethingCont` with the value we want *)
-  let op = Tezos.transaction ... in
+  let op = Mavryk.transaction ... in
   ([op], s)
 
 let doSomethingCont (p, s : int * int) = ([] : operation list), p + s
@@ -596,7 +596,7 @@ type parameter = ["DoSomething"] | ["DoSomethingCont", int];
 
 let doSomething = ([p, s]: [unit, int]) => {
   /* The callee should call `%doSomethingCont` with the value we want */
-  let op = Tezos.transaction ...;
+  let op = Mavryk.transaction ...;
   return [list([op]), s]
 }
 
@@ -616,7 +616,7 @@ You can find more details on how Tezos contracts interact with each other in our
 Fee model in Tezos is more complicated than the Ethereum one. The most important bits you should know about are:
 1. In Tezos, you _burn_ a certain amount of Tez for increasing the size of the stored data. For example, if you add a new entry to a map or replace a string with a longer one, you must burn your Tez tokens.
 2. When you call a contract, the transaction spends gas for reading, deserialising and type-checking the storage. Also, a certain amount of gas gets spent for serialising and writing the storage back to the context. In practice, it means that **the larger your code and storage are, the more expensive it is to call your contract,** regardless of the number of computations performed. If you have big or unbounded containers in storage, you should most probably use `big_map`.
-3. Emitting internal operations is very expensive in terms of gas: there is a fixed cost of 10000 gas for `Tezos.get_{contract, entrypoint}_opt` plus the cost of reading, deserialising, and type-checking the parameter of the callee.
+3. Emitting internal operations is very expensive in terms of gas: there is a fixed cost of 10000 gas for `Mavryk.get_{contract, entrypoint}_opt` plus the cost of reading, deserialising, and type-checking the parameter of the callee.
 
 Always test for gas consumption and strive to minimise the size of the data stored on chain and the number of internal operations emitted. You can read more on fees in our [Optimisation guide](../optimisation/optimisation.md) or in the [Serokell blog post](https://medium.com/tqtezos/how-to-minimize-transaction-costs-of-tezos-smart-contracts-9962347faf64).
 

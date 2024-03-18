@@ -35,8 +35,8 @@ import Morley.Debugger.Core (DebugPrint (DebugPrint), DebugPrintMode (..))
 import Morley.Michelson.Typed (Constrained (SomeValue), SomeValue)
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Core qualified as T
-import Morley.Tezos.Crypto.BLS12381 (toMichelsonBytes)
+import Morley.Mavryk.Core qualified as T
+import Morley.Mavryk.Crypto.BLS12381 (toMichelsonBytes)
 
 import Language.LIGO.AST.Skeleton (Lang (Caml, Js))
 import Language.LIGO.Debugger.CLI.Exception

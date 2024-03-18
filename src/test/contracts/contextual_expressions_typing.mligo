@@ -14,6 +14,6 @@ let f2 =
    : unit -> t -> int)
 
 let f3 =
-  (fun () -> module A = Tezos in
+  (fun () -> module A = Mavryk in
      fun s -> s.one + 1
    : unit -> t -> int)

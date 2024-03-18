@@ -24,7 +24,7 @@
 #import "contract.mligo" "Contract"
 #import "result.mligo" "Result"
 
-(* Defined in Tezos protocol with default parameters. *)
+(* Defined in Mavryk protocol with default parameters. *)
 let blocktime = 15n
 let blocks_per_cycle = 12n
 
@@ -72,7 +72,7 @@ let init_default () : actor * (actor * actor * actor) =
 
 (** [act_as actor f] performs the operation [f] as [actor]. *)
 let act_as (type a) (actor: actor) (handler : unit -> a) : a =
-  let old_source = Tezos.get_source () in
+  let old_source = Mavryk.get_source () in
   let address = actor.address in
   let () = Test.set_source address in
   let result = handler () in
@@ -95,7 +95,7 @@ let call_as
 let rec wait_for_blocks (n_blocks: nat) : unit =
   if n_blocks = 0n then ()
   else
-    let source = Tezos.get_source () in
+    let source = Mavryk.get_source () in
     let source : (unit, unit) typed_address = Test.cast_address source in
     (* We transfer a valid amount from the source to itself to bake a block
     and change the time *)
@@ -113,7 +113,7 @@ let wait_for_with_blocks_per_cycle
   let cycles_to_skip = seconds / (blocks_per_cycle * blocktime) in
   let _ =
     if cycles_to_skip > 0n then
-      (* Adding 1n here because of Tezos bake_until_n_cycle_end implementation. *)
+      (* Adding 1n here because of Mavryk bake_until_n_cycle_end implementation. *)
       Test.bake_until_n_cycle_end (cycles_to_skip + 1n)
     else
       let blocks_to_skip = seconds / blocktime in

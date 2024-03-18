@@ -1,4 +1,4 @@
-const name: string = "Tezos";
+const name: string = "Mavryk";
 const t: string = "t";
 const i: int = 42;
 const n: nat = 7n;

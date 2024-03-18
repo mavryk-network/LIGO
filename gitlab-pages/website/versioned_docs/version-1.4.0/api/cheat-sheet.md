@@ -377,7 +377,7 @@ let destinationAddress : address =
   ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
 let contract : unit contract =
-  match (Tezos.get_contract_opt (Tezos.get_sender ()) : unit contract option) with
+  match (Mavryk.get_contract_opt (Mavryk.get_sender ()) : unit contract option) with
     Some contract -> contract
     | None -> (failwith "no contract" : unit contract)
 ```
@@ -391,7 +391,7 @@ Transactions
 ```cameligo group=tezos_specific
 
 let payment : operation =
-  Tezos.transaction unit 100mumav contract
+  Mavryk.transaction unit 100mumav contract
 
 ```
 
@@ -889,7 +889,7 @@ const destinationAddress: address =
   "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 
 const contract : contract<unit> =
-  match(Tezos.get_contract_opt(Tezos.get_sender()) as option<contract<unit>>) {
+  match(Mavryk.get_contract_opt(Mavryk.get_sender()) as option<contract<unit>>) {
     when(Some(contract)): contract;
     when(None()): failwith("no contract or wrong contract type")
   }
@@ -903,7 +903,7 @@ Transactions
 
 ```jsligo group=tezos_specific
 const payment: operation =
-  Tezos.transaction(unit, 100mumav, contract);
+  Mavryk.transaction(unit, 100mumav, contract);
 ```
 
 </div>

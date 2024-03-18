@@ -4,13 +4,13 @@ module C = struct
   [@entry]
   let main (p : param) (_ : string * address) : operation list * (string * address) =
     let (_,ticket) = p in
-    let (_,(v,_)) , _ = Tezos.read_ticket ticket in
-    [] , (v, Tezos.get_sender ())
+    let (_,(v,_)) , _ = Mavryk.read_ticket ticket in
+    [] , (v, Mavryk.get_sender ())
 end
 
 let test_transfer_to_contract =
   let orig = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
-  let main_addr = Tezos.address (Test.to_contract orig.addr) in
+  let main_addr = Mavryk.address (Test.to_contract orig.addr) in
 
   (* Use this address everytime you want to send tickets from the same proxy-contract *)
   let proxy_taddr =
@@ -30,5 +30,5 @@ let test_transfer_to_contract =
     Test.Proxy_ticket.transfer proxy_taddr (ticket_info,main_addr)
   in
   let s, addr = Test.get_storage_of_address main_addr in
-  let p_addr = proxy_taddr |> Test.to_contract |> Tezos.address in
+  let p_addr = proxy_taddr |> Test.to_contract |> Mavryk.address in
   assert (s = "world" && addr = p_addr)

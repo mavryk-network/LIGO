@@ -48,7 +48,7 @@ let%expect_test _ =
     {|
   File "../../test/contracts/warning_duplicate.mligo", line 2, characters 6-7:
     1 | module Foo = struct
-    2 |   let x : nat ticket = Option.unopt (Tezos.create_ticket 42n 42n)
+    2 |   let x : nat ticket = Option.unopt (Mavryk.create_ticket 42n 42n)
               ^
     3 | end
   :
@@ -70,7 +70,7 @@ let%expect_test _ =
   [%expect
     {|
   File "../../test/contracts/warning_duplicate2.mligo", line 1, characters 4-5:
-    1 | let x = Tezos.create_ticket 42n 42n
+    1 | let x = Mavryk.create_ticket 42n 42n
             ^
     2 | let x = (x, x)
   :
@@ -94,7 +94,7 @@ let%expect_test _ =
 
   File "../../test/contracts/duplicate_ticket_local_module.mligo", line 8, characters 8-14:
     7 |   module B = struct
-    8 |     let ticket = Option.unopt (Tezos.create_ticket 10n 10n)
+    8 |     let ticket = Option.unopt (Mavryk.create_ticket 10n 10n)
                 ^^^^^^
     9 |
   :
@@ -102,7 +102,7 @@ let%expect_test _ =
 
   File "../../test/contracts/duplicate_ticket_local_module.mligo", line 8, characters 17-29:
     7 |   module B = struct
-    8 |     let ticket = Option.unopt (Tezos.create_ticket 10n 10n)
+    8 |     let ticket = Option.unopt (Mavryk.create_ticket 10n 10n)
                          ^^^^^^^^^^^^
     9 |
   :
@@ -111,7 +111,7 @@ let%expect_test _ =
 
   File "../../test/contracts/duplicate_ticket_local_module.mligo", line 13, characters 6-18:
    12 |   end in
-   13 |   [], Option.unopt (Tezos.join_tickets (fst B.y, snd B.y))
+   13 |   [], Option.unopt (Mavryk.join_tickets (fst B.y, snd B.y))
               ^^^^^^^^^^^^
   :
   Warning: deprecated value.

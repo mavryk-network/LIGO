@@ -1,8 +1,8 @@
 namespace C {
   @entry
   let main = (p: [int, int], _: unit) => {
-    let op1 = Tezos.emit("%foo", p);
-    let op2 = Tezos.emit("%foo", p[0]);
+    let op1 = Mavryk.emit("%foo", p);
+    let op2 = Mavryk.emit("%foo", p[0]);
     return [list([op1, op2]), unit];
     };
 }

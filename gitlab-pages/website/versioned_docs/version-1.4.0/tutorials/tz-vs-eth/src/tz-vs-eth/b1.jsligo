@@ -5,7 +5,7 @@ let treasury = (p : unit, s : storage) => {
   let newStorage = {...s, rewardsLeft: 0mumav};
 
   // Then we find our beneficiary's `handleRewards` entrypoint:
-  let beneficiaryOpt = Tezos.get_entrypoint_opt("%handleTransfer", s.beneficiaryAddress);
+  let beneficiaryOpt = Mavryk.get_entrypoint_opt("%handleTransfer", s.beneficiaryAddress);
   let beneficiary =
     match(beneficiaryOpt) {
      when(Some(contract)): contract;
@@ -13,7 +13,7 @@ let treasury = (p : unit, s : storage) => {
     };
 
   // Then we prepare the internal operation we want to perform
-  let operation = Tezos.transaction(unit, s.rewardsLeft, beneficiary);
+  let operation = Mavryk.transaction(unit, s.rewardsLeft, beneficiary);
 
   // ...and return both the operations and the updated storage
   return [list([operation]), newStorage];

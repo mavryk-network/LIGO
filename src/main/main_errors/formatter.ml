@@ -561,9 +561,9 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.View rule violated:\n\
-        \      - Tezos.create_contract ; Tezos.set_delegate and Tezos.transaction cannot \
+        \      - Mavryk.create_contract ; Mavryk.set_delegate and Mavryk.transaction cannot \
          be used because they are stateful (expect in lambdas)\n\
-        \      - Tezos.self can't be used because the entry-point does not make sense in \
+        \      - Mavryk.self can't be used because the entry-point does not make sense in \
          a view@.@]"
         snippet_pp
         loc

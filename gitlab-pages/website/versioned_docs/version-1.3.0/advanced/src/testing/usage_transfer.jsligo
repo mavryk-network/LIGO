@@ -4,8 +4,8 @@ namespace C {
   @entry
   function main (p: param, _s: [string , address]) : [list<operation> , [string , address]] {
     let [_v,ticket] = p ;
-    let [[_addr,[v,_t]] , _ticket] = Tezos.read_ticket (ticket) ;
-    return ([list([]) , [v, Tezos.get_sender ()]])
+    let [[_addr,[v,_t]] , _ticket] = Mavryk.read_ticket (ticket) ;
+    return ([list([]) , [v, Mavryk.get_sender ()]])
   };
 }
 

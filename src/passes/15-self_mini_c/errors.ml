@@ -30,7 +30,7 @@ let error_ppformat
     | `Self_mini_c_bad_self_address ->
       let s =
         Format.asprintf
-          "\"Tezos.self\" must be used directly and cannot be used via another function."
+          "\"Mavryk.self\" must be used directly and cannot be used via another function."
       in
       Format.pp_print_string f s
     | `Self_mini_c_not_a_function ->
@@ -50,7 +50,7 @@ let error_ppformat
     | `Self_mini_c_fvs_in_create_contract_lambda (e, v) ->
       Format.fprintf
         f
-        "@[<hv>%a@.Not all free variables could be inlined in Tezos.create_contract \
+        "@[<hv>%a@.Not all free variables could be inlined in Mavryk.create_contract \
          usage: %a.@]"
         snippet_pp
         e.location
@@ -59,7 +59,7 @@ let error_ppformat
     | `Self_mini_c_create_contract_lambda (_cst, e) ->
       Format.fprintf
         f
-        "@[<hv>%a@.Invalid usage of Tezos.create_contract.@.The first argument must be \
+        "@[<hv>%a@.Invalid usage of Mavryk.create_contract.@.The first argument must be \
          an inline function. @]"
         snippet_pp
         e.location
@@ -98,7 +98,7 @@ let error_json : self_mini_c_error -> Simple_utils.Error.t =
     make ~stage ~content
   | `Self_mini_c_bad_self_address ->
     let message =
-      "\"Tezos.self\" must be used directly and cannot be used via another function."
+      "\"Mavryk.self\" must be used directly and cannot be used via another function."
     in
     let content = make_content ~message () in
     make ~stage ~content
@@ -128,7 +128,7 @@ let error_json : self_mini_c_error -> Simple_utils.Error.t =
   | `Self_mini_c_fvs_in_create_contract_lambda (e, v) ->
     let message =
       Format.asprintf
-        "Not all free variables could be inlined in Tezos.create_contract usage: %a"
+        "Not all free variables could be inlined in Mavryk.create_contract usage: %a"
         Value_var.pp
         v
     in
@@ -138,7 +138,7 @@ let error_json : self_mini_c_error -> Simple_utils.Error.t =
   | `Self_mini_c_create_contract_lambda (_, e) ->
     let message =
       Format.sprintf
-        "Invalid usage of Tezos.create_contract.@.The first argument must be an inline \
+        "Invalid usage of Mavryk.create_contract.@.The first argument must be an inline \
          function."
     in
     let location = e.location in

@@ -9,7 +9,7 @@ let%expect_test "error_recovery_fuzzing_cameligo" =
     PASS, 16, 68, 26, 49, 3, ./1local_type_decl.mligo
     PASS, 9, 103, 9, 57, 1, ./1match_bis.mligo
     PASS, 127, 705, 57, 492, 17, ./1record.mligo
-    PASS, 40, 261, 53, 359, 6, ./1ticket_builder.mligo
+    PASS, 41, 261, 53, 363, 6, ./1ticket_builder.mligo
     PASS, 148, 1175, 135, 817, 23, ./1ticket_wallet.mligo
     PASS, 13, 118, 44, 91, 2, ./1voting.mligo
     PASS, 16, 76, 12, 41, 3, ./2address.mligo

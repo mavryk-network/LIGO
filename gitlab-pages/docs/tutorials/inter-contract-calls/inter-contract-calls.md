@@ -5,7 +5,7 @@ title: Inter-contract invocations
 
 import Syntax from '@theme/Syntax';
 
-In this guide, we will look into contract interactions on Tezos. We will provide examples of how one contract can invoke and create other contracts on the same chain. We will also describe the execution model Tezos contracts live in and see how it is different from a more conventional "direct calls" model.
+In this guide, we will look into contract interactions on Mavryk. We will provide examples of how one contract can invoke and create other contracts on the same chain. We will also describe the execution model Tezos contracts live in and see how it is different from a more conventional "direct calls" model.
 
 ## Internal operations
 
@@ -41,21 +41,21 @@ type storage = unit
 
 [@entry]
 let main (destination_addr : parameter) (_ : storage) =
-  let maybe_contract = Tezos.get_contract_opt destination_addr in
+  let maybe_contract = Mavryk.get_contract_opt destination_addr in
   let destination_contract =
     match maybe_contract with
       Some contract -> contract
     | None -> failwith "Contract does not exist" in
-  let op = Tezos.transaction () (Tezos.get_amount ()) destination_contract in
+  let op = Mavryk.transaction () (Mavryk.get_amount ()) destination_contract in
   [op], ()
 ```
 
 </Syntax>
 
 
-It accepts a destination address as the parameter. Then we need to check whether the address points to a contract that accepts a unit. We do this with `Tezos.get_contract_opt`. This function returns `Some (value)` if the contract exists and the parameter type is correct. Otherwise, it returns `None`. In case it is `None`, we fail with an error, otherwise we use `Tezos.transaction` to forge the internal transaction to the destination contract.
+It accepts a destination address as the parameter. Then we need to check whether the address points to a contract that accepts a unit. We do this with `Mavryk.get_contract_opt`. This function returns `Some (value)` if the contract exists and the parameter type is correct. Otherwise, it returns `None`. In case it is `None`, we fail with an error, otherwise we use `Mavryk.transaction` to forge the internal transaction to the destination contract.
 
-> Note: since `Tezos.transaction` is called with unit as its first argument, LIGO infer that `destination_addr` has to point to a contract that accepts unit
+> Note: since `Mavryk.transaction` is called with unit as its first argument, LIGO infer that `destination_addr` has to point to a contract that accepts unit
 
 Let us also examine a contract that stores the address of another contract and passes an argument to it. Here is how this "proxy" can look like:
 
@@ -69,22 +69,22 @@ type parameter = int
 type storage = address
 
 let get_contract (addr : address) =
-  match Tezos.get_contract_opt addr with
+  match Mavryk.get_contract_opt addr with
     Some contract -> contract
   | None -> failwith "Callee does not exist"
 
 [@entry]
 let main (param : parameter) (callee_addr : storage) =
   let callee = get_contract (callee_addr) in
-  let op = Tezos.transaction param 0mumav callee in
+  let op = Mavryk.transaction param 0mumav callee in
   [op], callee_addr
 ```
 
 </Syntax>
 
 To call a contract, we need to add a type annotation `: int contract
-option` for `Tezos.get_contract_opt`. LIGO knows that
-`Tezos.get_contract_opt` returns a `contract option` but at the time
+option` for `Mavryk.get_contract_opt`. LIGO knows that
+`Mavryk.get_contract_opt` returns a `contract option` but at the time
 of type inference it does not know that the callee accepts an
 `int`. In this case, we expect the callee to accept an `int`. Such a
 callee can be implemented like this:
@@ -133,7 +133,7 @@ The type got transformed to an annotated tree of Michelson union types (denoted 
 
 In Tezos, we are not required to provide the _full_ type of the contract parameter if we specify an entrypoint. In this case, we just need to know the type of the _entrypoint_ parameter – in case of `%add`, it is an `int` – not the full type.
 
-To specify an entrypoint, we can use `Tezos.get_entrypoint_opt` instead of `Tezos.get_contract_opt`. It accepts an extra argument with an entrypoint name:
+To specify an entrypoint, we can use `Mavryk.get_entrypoint_opt` instead of `Mavryk.get_contract_opt`. It accepts an extra argument with an entrypoint name:
 
 <Syntax syntax="cameligo">
 
@@ -145,14 +145,14 @@ type parameter = int
 type storage = address
 
 let get_add_entrypoint (addr : address) =
-  match Tezos.get_entrypoint_opt "%add" addr with
+  match Mavryk.get_entrypoint_opt "%add" addr with
     Some contract -> contract
   | None -> failwith "The entrypoint does not exist"
 
 [@entry]
 let main (param : parameter) (callee_addr : storage) =
   let add : int contract = get_add_entrypoint (callee_addr) in
-  let op = Tezos.transaction param 0mumav add in
+  let op = Mavryk.transaction param 0mumav add in
   [op], callee_addr
 ```
 
@@ -250,7 +250,7 @@ When trying to port an existing distributed application to Tezos, you may want t
 
 In theory, one can use a callback – the callee could emit an operation back to the caller with the computed value. However, this pattern is often insecure:
 * You should somehow make sure that the response matches the request. Due to the breadth-first order of execution, you cannot assume that there have been no other requests in between.
-* Some contracts use `Tezos.get_sender` value for authorisation. If a third-party contract can make a contract emit an operation, the dependent contracts may no longer be sure that the operation coming from the sender is indeed _authorised_ by the sender.
+* Some contracts use `Mavryk.get_sender` value for authorisation. If a third-party contract can make a contract emit an operation, the dependent contracts may no longer be sure that the operation coming from the sender is indeed _authorised_ by the sender.
 
 Let us look at a simple access control contract with a "view" entrypoint:
 
@@ -263,7 +263,7 @@ type storage = {senders_whitelist : address set}
 
 [@entry]
 let call (op : unit -> operation) (s : storage) : operation list * storage =
-  if Set.mem (Tezos.get_sender ()) s.senders_whitelist
+  if Set.mem (Mavryk.get_sender ()) s.senders_whitelist
   then [op ()], s
   else failwith "Sender is not whitelisted"
 
@@ -271,7 +271,7 @@ let call (op : unit -> operation) (s : storage) : operation list * storage =
 let iswhitelisted (arg : address * (bool contract)) (s : storage) : operation list * storage =
   let addr, callback_contract = arg in
   let whitelisted = Set.mem addr s.senders_whitelist in
-  let op = Tezos.transaction whitelisted 0mumav callback_contract in
+  let op = Mavryk.transaction whitelisted 0mumav callback_contract in
   [op], s
 ```
 
@@ -301,7 +301,7 @@ let transfer (arg : address * address * nat) (s : storage) : result =
 
 [@entry]
 let setpaused (paused : bool) (s : storage) : result =
-  if (Tezos.get_sender ()) <> s.owner
+  if (Mavryk.get_sender ()) <> s.owner
   then failwith "Access denied"
   else [], {s with paused = paused}
 ```
@@ -315,7 +315,7 @@ You may notice that we can abuse the `IsWhitelisted` entrypoint to pause and unp
 
 ## Contract factories
 
-So far, we have covered only one type of operation – transaction. But we can _originate_ contracts from LIGO a well! There is a special instruction `Tezos.create_contract`. It accepts four arguments:
+So far, we have covered only one type of operation – transaction. But we can _originate_ contracts from LIGO a well! There is a special instruction `Mavryk.create_contract`. It accepts four arguments:
 1. Contract code. Note that the code must be an inline function that does not use any existing bindings.
 2. Optional delegate.
 3. The amount of Tez to send to the contract upon origination.
@@ -326,7 +326,7 @@ For example, we can create a new counter contract with
 <Syntax syntax="cameligo">
 
 ```cameligo group=solo_create_contract
-let op = Tezos.create_contract
+let op = Mavryk.create_contract
   (fun (p : int) (s : int) -> [], p + s)
   None
   0mumav
@@ -336,7 +336,7 @@ let op = Tezos.create_contract
 </Syntax>
 
 
-`Tezos.create_contract` returns a pair of _origination operation_ and the _address_ of the new contract. Note that, at this stage, the contract has not been originated yet! That is why you cannot forge a transaction to the newly-created contract: `Tezos.get_{contract, entrypoint}_opt` would fail if called before the origination operation has been processed.
+`Mavryk.create_contract` returns a pair of _origination operation_ and the _address_ of the new contract. Note that, at this stage, the contract has not been originated yet! That is why you cannot forge a transaction to the newly-created contract: `Mavryk.get_{contract, entrypoint}_opt` would fail if called before the origination operation has been processed.
 
 `CreateAndCall` contract in the examples folder shows how we can call the created contract with a callback mechanism:
 
@@ -351,13 +351,13 @@ let op = Tezos.create_contract
 
 let create_and_call (storage : address list) =
   let create_op, addr =
-    Tezos.create_contract
+    Mavryk.create_contract
       (fun (p : int) (s : int) -> [], p + s)
       None
       0mav
       1 in
   let call_op =
-    Tezos.transaction (addr, 41) 0mav (Tezos.self "%callback") in
+    Mavryk.transaction (addr, 41) 0mav (Mavryk.self "%callback") in
   [create_op; call_op], addr :: storage
 ```
 

@@ -74,8 +74,8 @@ module Bar = struct
   let bar (addr : address) (s : unit) : operation list * unit =
     let arg : foo = {foo = 1n; bar = 2; baz = "three"} in
     let amt : mav = 0tz in
-    let dst : foo contract = Tezos.get_entrypoint "%foo" addr in
-    let tx = Tezos.transaction arg amt dst in
+    let dst : foo contract = Mavryk.get_entrypoint "%foo" addr in
+    let tx = Mavryk.transaction arg amt dst in
     ([tx], s)
 
   (* dummy entrypoint to avoid bug with single entrypoint :( *)
@@ -116,8 +116,8 @@ namespace Bar {
   const bar = (addr: address, s: unit) : [list<operation>, unit] => {
     const arg : foo = {foo: 1n, bar: 2, baz: "three"};
     const amt : mav = 0tz;
-    const dst : contract<foo> = Tezos.get_entrypoint("%foo", addr);
-    const tx = Tezos.transaction(arg, amt, dst);
+    const dst : contract<foo> = Mavryk.get_entrypoint("%foo", addr);
+    const tx = Mavryk.transaction(arg, amt, dst);
     return [list([tx]), s];
   }
 

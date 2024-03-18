@@ -11,11 +11,11 @@ module Proxy = struct
   [@entry]
   let main (p : param) (_ : store) : operation list * store
     = [], (match p with
-            Basic (v,a)       -> Integer (Option.unopt (Tezos.call_view "basic" a v))
-          | Get_storage v     -> Integer (Option.unopt (Tezos.call_view "get_storage" () v))
-          | Not_funny v       -> Integer (Option.unopt (Tezos.call_view "not_funny" () v) )
-          | Get_address v     -> Address (Option.unopt (Tezos.call_view "get_address" () v))
-          | Super_not_funny v -> Integer (Option.unopt (Tezos.call_view "super_not_funny" () v)))
+            Basic (v,a)       -> Integer (Option.unopt (Mavryk.call_view "basic" a v))
+          | Get_storage v     -> Integer (Option.unopt (Mavryk.call_view "get_storage" () v))
+          | Not_funny v       -> Integer (Option.unopt (Mavryk.call_view "not_funny" () v) )
+          | Get_address v     -> Address (Option.unopt (Mavryk.call_view "get_address" () v))
+          | Super_not_funny v -> Integer (Option.unopt (Mavryk.call_view "super_not_funny" () v)))
 end
 
 type orig1 = (| Default, int) origination_result

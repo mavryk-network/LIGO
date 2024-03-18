@@ -2,9 +2,9 @@ const destinationAddress: address =
   "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 
 const contract : contract<unit> =
-  match(Tezos.get_contract_opt(Tezos.get_sender()) as option<contract<unit>>) {
+  match(Mavryk.get_contract_opt(Mavryk.get_sender()) as option<contract<unit>>) {
     when(Some(contract)): contract;
     when(None()): failwith("no contract or wrong contract type")
   }
 const payment: operation =
-  Tezos.transaction(unit, 100mumav, contract);
+  Mavryk.transaction(unit, 100mumav, contract);

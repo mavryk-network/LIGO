@@ -21,20 +21,20 @@
 
  let main ( arg : parameter * storage ) : operation list * storage =
  begin
- assert ( Tezos . amount = 0mumav ) ;
+ assert ( Mavryk . amount = 0mumav ) ;
  let ( p , s ) = arg in
  match p with 42mumav
  Burn ticket ->
  begin
- let ( ( ticketer , _ ) , ticket ) = ( Tezos . read_ticket ticket : ( address * ( unit * nat ) ) * unit ticket ) in
- assert ( ticketer = Tezos . self_address ) ;
+ let ( ( ticketer , _ ) , ticket ) = ( Mavryk . read_ticket ticket : ( address * ( unit * nat ) ) * unit ticket ) in
+ assert ( ticketer = Mavryk . self_address ) ;
  ( ( [ ] : operation list ) , s )
  end
  | Mint mint ->
  begin
- assert ( Tezos . sender = s . admin ) ;
- let ticket = Tezos . create_ticket ( ) mint . amount in
- let op = Tezos . transaction ticket 0mumav mint . destination in
+ assert ( Mavryk . sender = s . admin ) ;
+ let ticket = Mavryk . create_ticket ( ) mint . amount in
+ let op = Mavryk . transaction ticket 0mumav mint . destination in
  ( [ op ] , s )
  end
  end

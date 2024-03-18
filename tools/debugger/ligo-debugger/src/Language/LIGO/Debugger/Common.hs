@@ -47,8 +47,8 @@ import Morley.Michelson.Typed
   Instr (DIG, DUP, DUPN, LAMBDA, Nested, Nop, PUSH, SWAP, UNIT), SomeValue, Value, Value' (..),
   pattern (:#), pattern ConcreteMeta, withValueTypeSanity)
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Address (KindedAddress (ImplicitAddress), ta)
-import Morley.Tezos.Address.Kinds (AddressKind (AddressKindImplicit))
+import Morley.Mavryk.Address (KindedAddress (ImplicitAddress), ta)
+import Morley.Mavryk.Address.Kinds (AddressKind (AddressKindImplicit))
 
 import Duplo (extract, layer, leq, spineTo)
 

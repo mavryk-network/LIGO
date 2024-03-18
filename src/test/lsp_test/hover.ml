@@ -137,7 +137,7 @@ let%expect_test "hovers.mligo" =
         ; pos ~line:70 ~character:5
         ; pos ~line:72 ~character:23
         ; pos ~line:75 ~character:4
-        ; pos ~line:75 ~character:35
+        ; pos ~line:75 ~character:36
         ; pos ~line:75 ~character:27
         ; pos ~line:77 ~character:28
         ; pos ~line:79 ~character:8

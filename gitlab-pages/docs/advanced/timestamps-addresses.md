@@ -14,14 +14,14 @@ providing the given current timestamp for the contract.
 ### Starting time of the current block
 
 You can obtain the starting time of the current block using the
-built-in `Tezos.get_now`. This timestamp does not change during the execution
+built-in `Mavryk.get_now`. This timestamp does not change during the execution
 of the contract. Please be aware that it is up to the baker to set the
 current timestamp value.
 
 <Syntax syntax="cameligo">
 
 ```cameligo group=a
-let today : timestamp = Tezos.get_now ()
+let today : timestamp = Mavryk.get_now ()
 ```
 
 </Syntax>
@@ -29,14 +29,14 @@ let today : timestamp = Tezos.get_now ()
 <Syntax syntax="jsligo">
 
 ```jsligo group=a
-const today: timestamp = Tezos.get_now();
+const today: timestamp = Mavryk.get_now();
 ```
 
 </Syntax>
 
 
 > When running code, the LIGO CLI option `--now`
-> allows you to control what `Tezos.get_now` returns.
+> allows you to control what `Mavryk.get_now` returns.
 
 ### Timestamp Arithmetics
 
@@ -49,7 +49,7 @@ constraints on your smart contracts. Consider the following scenarios.
 <Syntax syntax="cameligo">
 
 ```cameligo group=b
-let today : timestamp = Tezos.get_now ()
+let today : timestamp = Mavryk.get_now ()
 let one_day : int = 86_400
 let in_24_hrs : timestamp = today + one_day
 let some_date : timestamp = ("2000-01-01t10:10:10Z" : timestamp)
@@ -61,7 +61,7 @@ let one_day_later : timestamp = some_date + one_day
 <Syntax syntax="jsligo">
 
 ```jsligo group=b
-const today: timestamp = Tezos.get_now();
+const today: timestamp = Mavryk.get_now();
 const one_day: int = 86_400;
 const in_24_hrs: timestamp = today + one_day;
 const some_date: timestamp = "2000-01-01t10:10:10Z" as timestamp;
@@ -77,7 +77,7 @@ const one_day_later: timestamp = some_date + one_day;
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
-let today : timestamp = Tezos.get_now ()
+let today : timestamp = Mavryk.get_now ()
 let one_day : int = 86400
 let in_24_hrs : timestamp = today - one_day
 ```
@@ -87,7 +87,7 @@ let in_24_hrs : timestamp = today - one_day
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-const today: timestamp = Tezos.get_now();
+const today: timestamp = Mavryk.get_now();
 const one_day: int = 86400;
 const in_24_hrs: timestamp = today - one_day;
 ```
@@ -101,7 +101,7 @@ Timestamps can be subtracted, that means, we can use minus (`-`) between two tim
 <Syntax syntax="cameligo">
 
 ```cameligo group=g
-let today : timestamp = Tezos.get_now ()
+let today : timestamp = Mavryk.get_now ()
 let some_date : timestamp = ("2035-01-01t10:10:10Z" : timestamp)
 let secs_until_some_date : int = some_date - today
 ```
@@ -111,7 +111,7 @@ let secs_until_some_date : int = some_date - today
 <Syntax syntax="jsligo">
 
 ```jsligo group=g
-const today: timestamp = Tezos.get_now();
+const today: timestamp = Mavryk.get_now();
 const some_date: timestamp = "2035-01-01t10:10:10Z" as timestamp;
 const secs_until_some_date: int = some_date - today;
 ```
@@ -129,7 +129,7 @@ applying to numbers.
 <Syntax syntax="cameligo">
 
 ```cameligo group=c
-let not_tomorrow : bool = (Tezos.get_now () = in_24_hrs)
+let not_tomorrow : bool = (Mavryk.get_now () = in_24_hrs)
 ```
 
 </Syntax>
@@ -137,7 +137,7 @@ let not_tomorrow : bool = (Tezos.get_now () = in_24_hrs)
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-const not_tomorrow: bool = (Tezos.get_now() == in_24_hrs);
+const not_tomorrow: bool = (Mavryk.get_now() == in_24_hrs);
 ```
 
 </Syntax>

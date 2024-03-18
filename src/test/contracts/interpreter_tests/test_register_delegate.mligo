@@ -6,8 +6,8 @@ let test =
 
   let acc = Test.new_account () in
   let pkh = Crypto.hash_key acc.1 in
-  let c = Tezos.implicit_account pkh in
-  let a = Tezos.address c in
+  let c = Mavryk.implicit_account pkh in
+  let a = Mavryk.address c in
 
   let _ = Test.transfer_to_contract_exn c () 1000000mav in
   let () = Test.register_delegate pkh in

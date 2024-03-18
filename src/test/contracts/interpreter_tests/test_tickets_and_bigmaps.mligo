@@ -13,18 +13,18 @@ module C = struct
   let buy_ticket ({data; tickets} : storage) : operation list * storage =
     let _check_given_amount =
       assert_with_error
-        (Tezos.get_amount () = data.price)
+        (Mavryk.get_amount () = data.price)
         "1" in
-    let owner = (Tezos.get_sender()) in
+    let owner = (Mavryk.get_sender()) in
     let (owned_tickets_opt, tickets) =
       Big_map.get_and_update owner (None : unit ticket option) tickets in
     let new_ticket =
-      Option.value_with_error "option is None" (Tezos.create_ticket unit 1n) in
+      Option.value_with_error "option is None" (Mavryk.create_ticket unit 1n) in
     let join_tickets =
       match owned_tickets_opt with
         None -> new_ticket
       | Some owned_tickets ->
-          (match Tezos.join_tickets (owned_tickets, new_ticket) with
+          (match Mavryk.join_tickets (owned_tickets, new_ticket) with
               None -> failwith "2"
               | Some joined_tickets -> joined_tickets)
     in

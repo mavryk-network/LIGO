@@ -16,4 +16,4 @@ let b =
 
 [@entry]
 let main (p : bls_l) (s : bool) : operation list * bool =
-  (([] : operation list), Tezos.pairing_check p)
+  (([] : operation list), Mavryk.pairing_check p)

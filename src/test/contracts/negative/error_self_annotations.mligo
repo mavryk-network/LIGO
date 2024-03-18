@@ -4,6 +4,6 @@ type param =
 
 [@entry]
 let main (_ : param) (_ : unit) : operation list * unit =
-  let c = (Tezos.self ("%a") : unit contract) in
-  let op = Tezos.transaction () 0mumav c in
+  let c = (Mavryk.self ("%a") : unit contract) in
+  let op = Mavryk.transaction () 0mumav c in
   ([op] : operation list), ()

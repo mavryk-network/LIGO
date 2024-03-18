@@ -24,7 +24,7 @@ of measuring and optimising your contracts.
 ### What limits and fees are there?
 
 Bounding the contracts' complexity is crucial for public blockchains
-like Tezos. These bounds ensure liveness – the chain's ability to
+like Mavryk. These bounds ensure liveness – the chain's ability to
 progress and produce new blocks in a reasonable time.
 
 Limits:
@@ -95,7 +95,7 @@ To understand how gas is spent, let us look at the phases of transaction executi
 At each phase, a certain amount of gas is consumed. It would be a rough but useful approximation to say that:
 * the amount of gas consumed at phases 1–3 is proportional to `size(code) + size(storage)`
 * the interpretation cost (phase 4) is roughly `cost(expensive_instructions) + kε`, where:
-  - `cost(expensive_instructions)` is the total cost of some specific expensive instructions – `Tezos.get_contract_opt`, `Bytes.pack`, etc. – invoked by the transaction
+  - `cost(expensive_instructions)` is the total cost of some specific expensive instructions – `Mavryk.get_contract_opt`, `Bytes.pack`, etc. – invoked by the transaction
   - `k` – the total number of atomic Michelson instructions executed in the transaction.
   - `ε` – the average instruction cost.
 * the amount of gas consumed at phases 5–6 is proportional to `size(storage)`.
@@ -112,7 +112,7 @@ In practice, it turns out that if you do not have costly loops with a large numb
 In other words, **the gas consumption depends mostly on the total size of the contract code and storage** (and possibly a small number of expensive instructions, if any). The amount of code _actually executed_ does not affect gas consumption as much.
 
 Here is a list of instructions you should use wisely:
-* `Tezos.get_contract_opt` and `Tezos.get_entrypoint_opt` – converting an `address` to a typed contract costs fixed 10000 gas units plus the cost for reading and deserialising the code of the callee. If the callee is large, such operation may consume _a lot_ more than you might expect.
+* `Mavryk.get_contract_opt` and `Mavryk.get_entrypoint_opt` – converting an `address` to a typed contract costs fixed 10000 gas units plus the cost for reading and deserialising the code of the callee. If the callee is large, such operation may consume _a lot_ more than you might expect.
 * `Bytes.pack` and `Bytes.unpack` involve serialising and deserialising values, so their cost depends on the size of the data.
 * Big map access – reading and updating the values stored in a big map may be expensive.
 
@@ -153,7 +153,7 @@ When you make a transaction that writes something to persistent memory, you need
 
 ### Constants optimisation
 
-One of the most rewarding ways to optimise your contract is shrinking the constants. For example, if your contract has long, overly-verbose error descriptions passed to `Tezos.failwith`, you should consider replacing them with short abbreviated strings or even integer error codes.
+One of the most rewarding ways to optimise your contract is shrinking the constants. For example, if your contract has long, overly-verbose error descriptions passed to `Mavryk.failwith`, you should consider replacing them with short abbreviated strings or even integer error codes.
 
 If you have repeating constants (e.g., you may have several entrypoints that check permissions and a constant "PERMISSION_DENIED" error), you can extract these constants to a top-level binding. In this case, the LIGO compiler will generate the code of the form:
 

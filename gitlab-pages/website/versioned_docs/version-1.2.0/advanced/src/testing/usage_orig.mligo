@@ -7,7 +7,7 @@ let main (() : unit) (s : storage) : operation list * storage =
   [] , (
     match s with
     | Some ticket ->
-      let (_ , t) = Tezos.read_ticket ticket in
+      let (_ , t) = Mavryk.read_ticket ticket in
       Some t
     | None -> None
   )

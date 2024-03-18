@@ -28,11 +28,11 @@ import Morley.Michelson.Printer.Util (doesntNeedParens, printDocS)
 import Morley.Michelson.TypeCheck (TypeCheckOptions(..), typeCheckContractAndStorage)
 import Morley.Michelson.Typed (SomeContractAndStorage(..))
 import Morley.Michelson.Untyped (Contract, Value)
-import Morley.Tezos.Address (KindedAddress(ImplicitAddress))
-import Morley.Tezos.Address.Alias
+import Morley.Mavryk.Address (KindedAddress(ImplicitAddress))
+import Morley.Mavryk.Address.Alias
   (AddressOrAlias(AddressAlias), Alias(ContractAlias, ImplicitAlias))
-import Morley.Tezos.Core (Mumav(UnsafeMumav, unMumav))
-import Morley.Tezos.Crypto (KeyHash, PublicKey, SecretKey, detSecretKey, hashKey, toPublic)
+import Morley.Mavryk.Core (Mumav(UnsafeMumav, unMumav))
+import Morley.Mavryk.Crypto (KeyHash, PublicKey, SecretKey, detSecretKey, hashKey, toPublic)
 
 import Common (WebIDEM)
 import Config (ServerConfig(..))
