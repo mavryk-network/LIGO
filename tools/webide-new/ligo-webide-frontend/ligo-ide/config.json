@@ -1,12 +1,12 @@
 {
     "defaultProtocol":{
        "showName":"Atlas",
-       "name":"oxford2"
+       "name":"atlas"
     },
     "protocols":[
        {
-          "showName":"Oxford2",
-          "name":"oxford2"
+          "showName":"Atlas",
+          "name":"atlas"
        }
     ],
     "networks":[

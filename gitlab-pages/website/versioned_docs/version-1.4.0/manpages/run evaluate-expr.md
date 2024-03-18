@@ -54,7 +54,7 @@ warn about unused recursion in a recursive function
 treat warnings as errors
 
 **-p PROTOCOL**
-choose protocol's types/values pre-loaded into the LIGO environment (oxford2). By default, the current protocol (oxford2) will be used (alias: --protocol)
+choose protocol's types/values pre-loaded into the LIGO environment (atlas). By default, the current protocol (atlas) will be used (alias: --protocol)
 
 **-help**
 print this help text and exit (alias: -?)
