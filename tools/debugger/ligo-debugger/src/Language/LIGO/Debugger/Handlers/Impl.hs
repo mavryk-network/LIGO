@@ -74,7 +74,7 @@ import Morley.Michelson.Typed
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
 import Morley.Mavryk.Address (Constrained (Constrained), ta)
-import Morley.Mavryk.Core (Timestamp (Timestamp), dummyChainId, tz)
+import Morley.Mavryk.Core (Timestamp (Timestamp), dummyChainId, mv)
 import Morley.Mavryk.Crypto (parseHash)
 
 import Language.LIGO.DAP.Variables
@@ -904,7 +904,7 @@ initDebuggerSession req = do
   -- @{ SELF_ADDRESS; CONTRACT }@ replacement
   -- (we need to have this contract state to use @CONTRACT@ instruction).
   let contractState = ContractState
-        { csBalance = [tz|0u|]
+        { csBalance = [mv|0u|]
         , csContract = contract
         , csStorage = stor
         , csDelegate = Nothing
@@ -955,8 +955,8 @@ initContractEnv selfState env ceMaxSteps = do
   ceNow <- liftIO $
     maybe (Timestamp <$> getPOSIXTime) (pure . unMichelsonJson) env.now
 
-  let ceBalance = maybe [tz|1|] unMichelsonJson env.balance
-  let ceAmount = maybe [tz|0|] unMichelsonJson env.amount
+  let ceBalance = maybe [mv|1|] unMichelsonJson env.balance
+  let ceAmount = maybe [mv|0|] unMichelsonJson env.amount
 
   let ceSelf =
         env.self

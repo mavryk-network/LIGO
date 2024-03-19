@@ -32,5 +32,5 @@ test_singleFile = mkTest "compiles basic single-file input correctly" $ do
         }
   actual <- post "compile-expression" body
   expected <- liftIO . fmap CompilerResponse
-    $ Text.readFile (contractsDir </> "basic/compile_expression_output.tz")
+    $ Text.readFile (contractsDir </> "basic/compile_expression_output.mv")
   liftIO (actual @?= expected)

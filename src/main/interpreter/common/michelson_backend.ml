@@ -71,16 +71,16 @@ module Tezos_eq = struct
 
 
   let timestamp_add : Z.t -> Z.t -> Z.t =
-   fun tz n ->
+   fun mv n ->
     let open Memory_proto_alpha.Protocol.Script_timestamp in
-    let t = of_zint tz in
+    let t = of_zint mv in
     add_delta t (Memory_proto_alpha.Protocol.Script_int.of_zint n) |> to_zint
 
 
   let timestamp_sub : Z.t -> Z.t -> Z.t =
-   fun tz n ->
+   fun mv n ->
     let open Memory_proto_alpha.Protocol.Script_timestamp in
-    let t = of_zint tz in
+    let t = of_zint mv in
     sub_delta t (Memory_proto_alpha.Protocol.Script_int.of_zint n) |> to_zint
 
 

@@ -93,7 +93,7 @@ import Morley.Michelson.Runtime (ContractState (..))
 import Morley.Michelson.Runtime.Dummy (dummyMaxSteps)
 import Morley.Michelson.Typed (SingI (sing))
 import Morley.Michelson.Typed qualified as T
-import Morley.Mavryk.Core (tz)
+import Morley.Mavryk.Core (mv)
 import Morley.Util.Typeable
 
 import Duplo hiding (int, (<.>))
@@ -344,7 +344,7 @@ mkSnapshotsForImpl logger maxStepsMb (ContractRunData file mModuleName (param ::
   let allLocs = getInterestingSourceLocations parsedContracts exprLocs <> statementLocs
 
   let contractState = ContractState
-        { csBalance = [tz|0u|]
+        { csBalance = [mv|0u|]
         , csContract = contract
         , csStorage = T.toVal st
         , csDelegate = Nothing

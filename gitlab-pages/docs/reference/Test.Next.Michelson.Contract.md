@@ -39,4 +39,4 @@ val from&#95;file : &#39;p &#39;s.string -&gt; (&#39;p, &#39;s) michelson&#95;co
 <SyntaxTitle syntax="jsligo">
 let from&#95;file: &lt;p, s&gt;(&#95;: string) =&gt; michelson&#95;contract&lt;p, s&gt;
 </SyntaxTitle>
-Reads a contract from a `.tz` file.
+Reads a contract from a `.mv` file.

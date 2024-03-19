@@ -111,7 +111,7 @@ On your machine we will use the ligo compiler CLI, open a terminal in the folder
 <Syntax syntax="cameligo">
 
 ```zsh
-ligo compile contract main.mligo -m Counter -o counter.tz
+ligo compile contract main.mligo -m Counter -o counter.mv
 ```
 
 </Syntax>
@@ -119,7 +119,7 @@ ligo compile contract main.mligo -m Counter -o counter.tz
 <Syntax syntax="jsligo">
 
 ```zsh
-ligo compile contract main.jsligo -m Counter -o counter.tz
+ligo compile contract main.jsligo -m Counter -o counter.mv
 ```
 
 </Syntax>
@@ -127,7 +127,7 @@ ligo compile contract main.jsligo -m Counter -o counter.tz
 The `compile contract` takes a filename, the file you want to
 compile. The `-m` parameter indicates the namespace or module
 corresponding to the contract to compile inside the file.  The `-o`
-parameter indicates to store the result in `counter.tz` instead of
+parameter indicates to store the result in `counter.mv` instead of
 outputting it in the terminal.
 
 LIGO will aggregate all functions marked with `@entry` inside the
@@ -135,7 +135,7 @@ module/namespace and build a contract function from them that
 dispatches according to the parameter passed. This function is the
 default contract function compiled (`$main`).
 
-Now, you should have a Michelson contract `counter.tz` in the folder
+Now, you should have a Michelson contract `counter.mv` in the folder
 ready to be deploy. But before that, we want to test it to be sure
 that it behaves as expected because once publish, it cannot be
 modified.
@@ -297,7 +297,7 @@ You are now ready to originate your contract with your user. On your wallet, cop
 ```zsh
 octez-client originate contract counter \
               transferring 0 from <my_tz_address...> \
-              running counter.tz \
+              running counter.mv \
               --init 10 --burn-cap 0.1 --force
 ```
 

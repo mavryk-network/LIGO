@@ -2387,7 +2387,7 @@ module Test = struct
     let ast_c : (p,s) michelson_contract = [%external ("TEST_COMPILE_CONTRACT", f, no_vs)] in
     [%external ("TEST_COMPILE_AST_CONTRACT", ast_c)]
 
-  (** Reads a contract from a `.tz` file. *)
+  (** Reads a contract from a `.mv` file. *)
   [@deprecated "In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.Contract.from_file` from `Test.Next` is encouraged for a smoother migration."]
   let read_contract_from_file (type p s) (fn : string) : (p,s) michelson_contract = [%external ("TEST_READ_CONTRACT_FROM_FILE", fn)]
 
@@ -3367,7 +3367,7 @@ module Test = struct
         (** Measures the size of a contract. *)
         let size = size
 
-        (** Reads a contract from a `.tz` file. *)
+        (** Reads a contract from a `.mv` file. *)
         let from_file = read_contract_from_file
       end
     end

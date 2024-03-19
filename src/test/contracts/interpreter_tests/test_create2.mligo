@@ -2,7 +2,7 @@ module Factory = struct
   [@entry]
   let main (i : int) (s : address list) : operation list * address list =
     let main (d : int) (k : int) : operation list * int = ([], d + k) in
-    let (op, addr) = Mavryk.create_contract main (None : key_hash option) 1tz i in
+    let (op, addr) = Mavryk.create_contract main (None : key_hash option) 1mv i in
     [op], addr :: s
 end
 

@@ -20,9 +20,9 @@ values of type `mav` are units of measure of Tezos tokens.
   * Tezos tokens can be specified using literals of three kinds:
       * units of millionth of `mav`, using the suffix `mumav` after a
         natural literal, like `10000mumav` or `0mumav`;
-      * units of `mav`, using the suffix `tz` or `mav`, like `3tz` or
+      * units of `mav`, using the suffix `mv` or `mav`, like `3mv` or
         `3mav`;
-      * decimal amounts of `tz` or `mav`, like `12.3tz` or `12.4mav`.
+      * decimal amounts of `mv` or `mav`, like `12.3mv` or `12.4mav`.
 
 Note that large integral values can be expressed using underscores to
 separate groups of digits, like `1_000mumav` or `0.000_004mav`.

@@ -88,12 +88,12 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 
 
 Instead of outputting the resulted compiled code in the screen, we can
-tell LIGO to write it in a file called `mockup_testme.tz`:
+tell LIGO to write it in a file called `mockup_testme.mv`:
 
 <Syntax syntax="cameligo">
 
 ```shell
-ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.mligo --output-file mockup_testme.tz
+ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.mligo --output-file mockup_testme.mv
 ```
 
 </Syntax>
@@ -101,7 +101,7 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 <Syntax syntax="jsligo">
 
 ```shell
-ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.jsligo --output-file mockup_testme.tz
+ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.jsligo --output-file mockup_testme.mv
 ```
 
 </Syntax>
@@ -151,7 +151,7 @@ Tezos:
 ```shell skip
 mockup-client originate contract mockup_testme \
               transferring 0 from bootstrap1 \
-              running "`cat mockup_testme.tz`" \
+              running "`cat mockup_testme.mv`" \
               --init \"foo\" --burn-cap 0.1
 ```
 

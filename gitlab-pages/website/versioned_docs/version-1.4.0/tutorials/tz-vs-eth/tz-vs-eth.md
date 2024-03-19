@@ -1,5 +1,5 @@
 ---
-id: tz-vs-eth
+id: mv-vs-eth
 title: Migrating from Ethereum
 ---
 

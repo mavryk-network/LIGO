@@ -1783,7 +1783,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `State.set_baker` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 61, characters 4-12:
-     60 |   let tz = fun (n:nat) ->
+     60 |   let mv = fun (n:nat) ->
      61 |     Test.run (fun (x : unit -> nat) -> x () * 1mumav) (fun (_ : unit) -> n)
               ^^^^^^^^
      62 |   in
@@ -1813,7 +1813,7 @@ let%expect_test _ =
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000mav) in
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
                      ^^^^^^^^^^^
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
@@ -1822,14 +1822,14 @@ let%expect_test _ =
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000mav) in
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 11-22:
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
                      ^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
     :
@@ -1838,7 +1838,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 65, characters 24-44:
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
                                   ^^^^^^^^^^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
     :
@@ -1847,7 +1847,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 65, characters 46-55:
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
                                                         ^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
     :
@@ -1856,7 +1856,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 65, characters 57-84:
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
     :
@@ -1864,7 +1864,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 66, characters 11-22:
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
                      ^^^^^^^^^^^
      67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
@@ -1873,7 +1873,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 66, characters 25-52:
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
@@ -2124,7 +2124,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `State.set_baker` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 61, characters 4-12:
-     60 |   let tz = fun (n:nat) ->
+     60 |   let mv = fun (n:nat) ->
      61 |     Test.run (fun (x : unit -> nat) -> x () * 1mumav) (fun (_ : unit) -> n)
               ^^^^^^^^
      62 |   in
@@ -2154,7 +2154,7 @@ let%expect_test _ =
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000mav) in
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
                      ^^^^^^^^^^^
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
@@ -2163,14 +2163,14 @@ let%expect_test _ =
      63 |   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000mav) in
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 65, characters 11-22:
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
                      ^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
     :
@@ -2179,7 +2179,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 65, characters 24-44:
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
                                   ^^^^^^^^^^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
     :
@@ -2188,7 +2188,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 65, characters 46-55:
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
                                                         ^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
     :
@@ -2197,7 +2197,7 @@ let%expect_test _ =
 
     File "./test_example.mligo", line 65, characters 57-84:
      64 |   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
     :
@@ -2205,7 +2205,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 66, characters 11-22:
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
                      ^^^^^^^^^^^
      67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
@@ -2214,7 +2214,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_example.mligo", line 66, characters 25-52:
-     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+     65 |   let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
      66 |   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
      67 |   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
@@ -5577,7 +5577,7 @@ let%expect_test _ =
     {|
     File "./test_read_contract.mligo", line 3, characters 4-32:
       2 |   let c : (unit, unit) michelson_contract =
-      3 |     Test.read_contract_from_file "contract_under_test/compiled.tz" in
+      3 |     Test.read_contract_from_file "contract_under_test/compiled.mv" in
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       4 |   let s = Test.decompile (Test.parse_michelson "Unit") in
     :
@@ -5585,7 +5585,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.Contract.from_file` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_read_contract.mligo", line 4, characters 10-24:
-      3 |     Test.read_contract_from_file "contract_under_test/compiled.tz" in
+      3 |     Test.read_contract_from_file "contract_under_test/compiled.mv" in
       4 |   let s = Test.decompile (Test.parse_michelson "Unit") in
                     ^^^^^^^^^^^^^^
       5 |   let a = Test.originate_contract c s 0mav in
@@ -5594,7 +5594,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.decompile` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_read_contract.mligo", line 4, characters 26-46:
-      3 |     Test.read_contract_from_file "contract_under_test/compiled.tz" in
+      3 |     Test.read_contract_from_file "contract_under_test/compiled.mv" in
       4 |   let s = Test.decompile (Test.parse_michelson "Unit") in
                                     ^^^^^^^^^^^^^^^^^^^^
       5 |   let a = Test.originate_contract c s 0mav in
@@ -5622,7 +5622,7 @@ let%expect_test _ =
 
     File "./test_read_contract.mligo", line 9, characters 56-84:
       8 | let test_bar =
-      9 |   let c : (unit, (int,string) map) michelson_contract = Test.read_contract_from_file "contract_under_test/other_compiled.tz" in
+      9 |   let c : (unit, (int,string) map) michelson_contract = Test.read_contract_from_file "contract_under_test/other_compiled.mv" in
                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      10 |   let s = Test.decompile (Test.constant_to_michelson_program "{ Elt 1 \\"hi\\" }") in
     :
@@ -5630,7 +5630,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.Contract.from_file` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_read_contract.mligo", line 10, characters 10-24:
-      9 |   let c : (unit, (int,string) map) michelson_contract = Test.read_contract_from_file "contract_under_test/other_compiled.tz" in
+      9 |   let c : (unit, (int,string) map) michelson_contract = Test.read_contract_from_file "contract_under_test/other_compiled.mv" in
      10 |   let s = Test.decompile (Test.constant_to_michelson_program "{ Elt 1 \\"hi\\" }") in
                     ^^^^^^^^^^^^^^
      11 |   let a = Test.originate_contract c s 0mav in
@@ -5639,7 +5639,7 @@ let%expect_test _ =
     In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.decompile` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test_read_contract.mligo", line 10, characters 26-60:
-      9 |   let c : (unit, (int,string) map) michelson_contract = Test.read_contract_from_file "contract_under_test/other_compiled.tz" in
+      9 |   let c : (unit, (int,string) map) michelson_contract = Test.read_contract_from_file "contract_under_test/other_compiled.mv" in
      10 |   let s = Test.decompile (Test.constant_to_michelson_program "{ Elt 1 \\"hi\\" }") in
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      11 |   let a = Test.originate_contract c s 0mav in

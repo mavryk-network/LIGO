@@ -467,7 +467,7 @@ let main (action, store : string * string) : return =
   let toto : operation * address = Mavryk.create_contract
     (fun (p, s : nat * string) -> (([] : operation list), "one"))
     (None: key_hash option)
-    300tz
+    300mv
     "un"
   in
   ([toto.0], store)let hasherman512 (s : bytes) : bytes = Crypto.sha512 s
@@ -1028,12 +1028,12 @@ let divs_int =
 
 let divs_nat =
   let a = 1n/2n in
-  let b = 1tz/2tz in
+  let b = 1mv/2mv in
   (a = 0n) && (a = b)
 
 let divs_tez =
-  let a = 1tz/2n in
-  (a = 0.5tz)
+  let a = 1mv/2n in
+  (a = 0.5mv)
 
 let var_neg =
   let a = 2 in
@@ -1643,7 +1643,7 @@ let add_more_tez : mav =
 (*
 Modelled after:
 
-  https://gitlab.com/tezos/tezos/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_builder_fungible.tz
+  https://gitlab.com/tezos/tezos/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_builder_fungible.mv
 
 Goes with ticket_wallet.mligo.
 *)
@@ -1688,7 +1688,7 @@ let main (arg : parameter * storage) : operation list * storage =
 (*
 Modelled after:
 
-  https://gitlab.com/tezos/tezos/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_wallet_fungible.tz
+  https://gitlab.com/tezos/tezos/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_wallet_fungible.mv
 
 Goes with ticket_builder.mligo.
 *)

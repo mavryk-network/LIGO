@@ -92,7 +92,7 @@ const incrementJStorage = "0";
 
 const config = (name: string, projectName: string, syntax: string) => `{
   "main": "./contracts/${name}.${syntax}",
-  "deploy": "./build/contracts/${name}.tz",
+  "deploy": "./build/contracts/${name}.mv",
   "storage": "./storages/InitialStorage",
   "module": "Counter",
   "projectName": "${projectName}"

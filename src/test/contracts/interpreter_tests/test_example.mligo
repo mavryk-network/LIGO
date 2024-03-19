@@ -57,12 +57,12 @@ let test2 =
   let () = Test.set_source bsa3 in
   let () = Test.set_baker bsa2 in
   // some balance tests:
-  let tz = fun (n:nat) ->
+  let mv = fun (n:nat) ->
     Test.run (fun (x : unit -> nat) -> x () * 1mumav) (fun (_ : unit) -> n)
   in
   let () = Test.assert ((Test.get_balance_of_address bsa0) = 2000mav) in
   let () = Test.assert ((Test.get_balance_of_address bsa1) = 0mumav) in
-  let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (tz 0n)) in
+  let () = Test.assert (Test.michelson_equal (Test.eval (Test.get_balance_of_address bsa1)) (mv 0n)) in
   let () = Test.assert ((Test.get_balance_of_address bsa2) = 3800000mav) in
   let () = Test.assert ((Test.get_balance_of_address bsa3) = 3800000000000mumav) in
   ()

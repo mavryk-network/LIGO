@@ -144,7 +144,7 @@ export class CompilerManager {
       projectManager.projectRoot,
       ""
     )}`;
-    const amendedBuildPath = buildPath.replace(/\.[^/.]+$/, ".tz");
+    const amendedBuildPath = buildPath.replace(/\.[^/.]+$/, ".mv");
     const fileFolder = amendedBuildPath.substring(0, amendedBuildPath.lastIndexOf("/"));
     const fileName = amendedBuildPath.substring(
       amendedBuildPath.lastIndexOf("/") + 1,

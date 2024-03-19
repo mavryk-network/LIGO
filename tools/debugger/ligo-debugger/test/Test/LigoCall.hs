@@ -23,7 +23,7 @@ import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
 import Morley.Mavryk.Address (Constrained (Constrained), ImplicitAddress, ta, unImplicitAddress)
 import Morley.Mavryk.Core
-  (ChainId (UnsafeChainId), parseChainId, timestampFromSeconds, timestampQuote, tz)
+  (ChainId (UnsafeChainId), parseChainId, timestampFromSeconds, timestampQuote, mv)
 
 import Language.LIGO.AST hiding ((<.>))
 import Language.LIGO.Debugger.CLI
@@ -403,8 +403,8 @@ test_config_resolution = testGroup "LIGO config resolution"
             , parameter = Just [int||"some_param"|]
             , contractEnv = Just LigoContractEnv
                 { now = Just $ MichelsonJson [timestampQuote|2020-01-01T00:00:00Z|]
-                , balance = Just $ MichelsonJson [tz|1|]
-                , amount = Just $ MichelsonJson [tz|2|]
+                , balance = Just $ MichelsonJson [mv|1|]
+                , amount = Just $ MichelsonJson [mv|2|]
                 , self = Just [ta|KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b|]
                 , source = Just $ Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
                 , sender = Just $ Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
@@ -431,8 +431,8 @@ test_config_resolution = testGroup "LIGO config resolution"
             , parameter = Just [int||"some_param"|]
             , contractEnv = Just LigoContractEnv
                 { now = Just $ MichelsonJson [timestampQuote|2020-01-01T00:00:00Z|]
-                , balance = Just $ MichelsonJson [tz|1|]
-                , amount = Just $ MichelsonJson [tz|2|]
+                , balance = Just $ MichelsonJson [mv|1|]
+                , amount = Just $ MichelsonJson [mv|2|]
                 , self = Just [ta|KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b|]
                 , source = Just $ Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
                 , sender = Nothing
@@ -457,7 +457,7 @@ test_config_resolution = testGroup "LIGO config resolution"
             , contractEnv = Just LigoContractEnv
                 { now = Nothing
                 , balance = Nothing
-                , amount = Just $ MichelsonJson [tz|3|]
+                , amount = Just $ MichelsonJson [mv|3|]
                 , self = Nothing
                 , source = Nothing
                 , sender = Nothing

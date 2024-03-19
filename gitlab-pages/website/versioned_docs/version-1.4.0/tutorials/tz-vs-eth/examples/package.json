@@ -1,5 +1,5 @@
 {
-  "name": "ligo-examples-tz-vs-eth",
+  "name": "ligo-examples-mv-vs-eth",
   "version": "0.1.0",
   "description": "The examples contracts in LIGO: Migrating from Ethereum to Tezos",
   "main": "index.js",

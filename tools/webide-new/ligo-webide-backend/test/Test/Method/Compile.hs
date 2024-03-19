@@ -33,7 +33,7 @@ test_singleFile = mkTest "compiles basic single-file input correctly" $ do
         }
   actual <- post "compile" body
   expected <- liftIO . fmap CompilerResponse
-    $ Text.readFile (contractsDir </> "basic/output.tz")
+    $ Text.readFile (contractsDir </> "basic/output.mv")
   liftIO (actual @?= expected)
 
 test_singleFile_moduleContract :: TestM TestTree
@@ -53,7 +53,7 @@ test_singleFile_moduleContract = mkTest "compiles basic single-file input with m
         }
   actual <- post "compile" body
   expected <- liftIO . fmap CompilerResponse
-    $ Text.readFile (contractsDir </> "module_contract/output.tz")
+    $ Text.readFile (contractsDir </> "module_contract/output.mv")
   liftIO (actual @?= expected)
 
 test_multiFile :: TestM TestTree
@@ -79,5 +79,5 @@ test_multiFile = mkTest "compiles multi-file input correctly" $ do
             }
     actual <- post "compile" body
     expected <- liftIO . fmap CompilerResponse
-      $ Text.readFile (contractsDir </> "multifile/output.tz")
+      $ Text.readFile (contractsDir </> "multifile/output.mv")
     liftIO (actual @?= expected)

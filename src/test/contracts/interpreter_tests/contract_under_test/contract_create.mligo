@@ -20,7 +20,7 @@ let main (action : parameter) (store : storage) : return =
       let x : operation * address = Mavryk.create_contract
         (fun (_p : nat) (_s : string) -> (failwith 111: operation list * string))
         (None: key_hash option) 
-        1tz
+        1mv
         "un"
       in
       ([x.0], (Some x.1))

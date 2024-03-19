@@ -32,7 +32,7 @@ modelSessionManager.registerModeDetector((filePath) => {
   if (base.endsWith(".jsligo")) {
     return "jsligoext";
   }
-  if (base.endsWith(".tz")) {
+  if (base.endsWith(".mv")) {
     return "tzext";
   }
   return defaultModeDetector(filePath);

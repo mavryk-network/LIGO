@@ -69,7 +69,7 @@ Tezos*.
 
 Here is an example of a Michelson contract.
 
-**`counter.tz`**
+**`counter.mv`**
 ```michelson
 { parameter (or (or (nat %add) (nat %sub)) (unit %default)) ;
   storage int ;

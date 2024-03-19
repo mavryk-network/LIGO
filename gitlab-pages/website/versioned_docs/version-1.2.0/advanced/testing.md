@@ -544,7 +544,7 @@ Now build the `balances` map that will serve as the input of our test.
 ```cameligo test-ligo group=unit-remove-balance-mixed
 let balances : balances =
   let a1, a2, a3 = Test.nth_bootstrap_account 1, Test.nth_bootstrap_account 2, Test.nth_bootstrap_account 3
-  in Map.literal [(a1, 10tz); (a2, 100tz); (a3, 1000tz)]
+  in Map.literal [(a1, 10mv); (a2, 100mv); (a3, 1000mv)]
 ```
 
 </Syntax>

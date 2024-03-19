@@ -636,11 +636,11 @@ let%expect_test _ =
     {xxx|
     File "../../test/contracts/negative/of_file.mligo", line 4, characters 5-30:
       3 |   ({| { PUSH unit Unit ; PUSH mumav 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}
-      4 |      [%of_file "./removed.tz"]
+      4 |      [%of_file "./removed.mv"]
                ^^^^^^^^^^^^^^^^^^^^^^^^^
       5 |    : operation * address)]
 
-    Found a system error: ./removed.tz: No such file or directory. |xxx}]
+    Found a system error: ./removed.mv: No such file or directory. |xxx}]
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_of_file.jsligo" ];
@@ -648,18 +648,18 @@ let%expect_test _ =
     {|
     File "../../test/contracts/negative/create_contract_of_file.jsligo", line 3, characters 21-59:
       2 | const main = (u : unit, _ : unit) : [list<operation>, unit] => {
-      3 |   let [op, _addr] = (create_contract_of_file `./removed.tz`)(None(), 1mav, u);
+      3 |   let [op, _addr] = (create_contract_of_file `./removed.mv`)(None(), 1mav, u);
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       4 |   return [list([op]), []]
 
-    Found a system error: ./removed.tz: No such file or directory. |}]
+    Found a system error: ./removed.mv: No such file or directory. |}]
 
 let%expect_test _ =
   run_ligo_good
     [ "compile"; "expression"; "cameligo"; "s"; "--init-file"; contract "of_file.mligo" ];
   [%expect
     {xxx|
-    "let s = [%of_file \"./of_file.mligo\"]\n\nlet m () =\n  [%michelson\n  ({| { PUSH unit Unit ; PUSH mumav 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}\n     [%of_file \"./interpreter_tests/contract_under_test/compiled.tz\"]\n   : operation * address)]\n\n[@entry]\nlet main (_ : unit) (_ : unit) : operation list * unit =\n  let op, _ = m () in\n  [op], ()\n" |xxx}]
+    "let s = [%of_file \"./of_file.mligo\"]\n\nlet m () =\n  [%michelson\n  ({| { PUSH unit Unit ; PUSH mumav 300000000 ; NONE key_hash ; CREATE_CONTRACT (codestr $0) ; PAIR } |}\n     [%of_file \"./interpreter_tests/contract_under_test/compiled.mv\"]\n   : operation * address)]\n\n[@entry]\nlet main (_ : unit) (_ : unit) : operation list * unit =\n  let op, _ = m () in\n  [op], ()\n" |xxx}]
 
 let%expect_test _ =
   run_ligo_good
@@ -1144,7 +1144,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 5, cha
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   7 |     (None: key_hash option)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  8 |     300tz
+  8 |     300mv
       ^^^^^^^^^^
   9 |     "un"
       ^^^^^^^^

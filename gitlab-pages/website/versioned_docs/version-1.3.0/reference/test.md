@@ -242,7 +242,7 @@ val read_contract_from_file : string -> michelson_contract
 let read_contract_from_file = (filepath: string) => michelson_contract
 </SyntaxTitle>
 
-Reads a contract from a `.tz` file.
+Reads a contract from a `.mv` file.
 
 <SyntaxTitle syntax="cameligo">
 val originate_contract : michelson_contract -> michelson_program -> mav -> address

@@ -197,7 +197,7 @@ const sidebars = {
       "api/cheat-sheet",
       "tutorials/registry/what-is-the-registry",
       "tutorials/registry/how-to-make-an-audit",
-      "tutorials/tz-vs-eth/tz-vs-eth"
+      "tutorials/mv-vs-eth/mv-vs-eth"
     ]
   },
   "API": {

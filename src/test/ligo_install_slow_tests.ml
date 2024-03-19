@@ -110,7 +110,7 @@ module Slow_test = struct
       let* _ = cd ~dir:cwd in
       (* SIDE-EFFECT : delete the repo *)
       rm_rf ~path:repo_dest;
-      (* return the generated .tz file as a string *)
+      (* return the generated .mv file as a string *)
       Ok s
 
 

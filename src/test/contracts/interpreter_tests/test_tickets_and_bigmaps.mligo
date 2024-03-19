@@ -44,7 +44,7 @@ let test_one =
 
   let init_storage = {
       data = {
-        price = 1tz;
+        price = 1mv;
       };
       tickets = (Big_map.empty: (address, unit ticket) big_map);
   } in

@@ -64,7 +64,7 @@
     },
     "numericliterals": {
       "name": "constant.numeric.mligo",
-      "match": "\\b(\\+|\\-)?[0-9]+(n|tz|mav|mumav|)\\b",
+      "match": "\\b(\\+|\\-)?[0-9]+(n|mv|mav|mumav|)\\b",
       "captures": {}
     },
     "operators": {

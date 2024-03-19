@@ -1,3 +1,3 @@
 (* File extension for Michelson contracts *)
 
-let extension = ".tz"
+let extension = ".mv"

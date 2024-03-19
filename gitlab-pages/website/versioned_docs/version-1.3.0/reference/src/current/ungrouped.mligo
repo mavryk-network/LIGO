@@ -1,5 +1,5 @@
 let check (p,s : unit * mav) = [], Mavryk.get_balance()
-let threshold (p : unit) = if Mavryk.get_amount () = 100tz then 42 else 0
+let threshold (p : unit) = if Mavryk.get_amount () = 100mv then 42 else 0
 let check (p : unit) = Mavryk.get_sender ()
 let check (p : key_hash) =
   let c = Mavryk.implicit_account p
