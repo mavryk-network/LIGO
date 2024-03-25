@@ -1,1 +1,0 @@
-let today : timestamp = Mavryk.get_now ()

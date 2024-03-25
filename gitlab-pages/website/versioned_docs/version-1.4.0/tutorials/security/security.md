@@ -5,15 +5,15 @@ title: Smart contract security
 
 import Syntax from '@theme/Syntax';
 
-In this article, we will cover the basics of Tezos smart contract security. We will describe several potential vulnerabilities that stem from developers' misconceptions about the distributed nature of blockchains. We will also suggest ways to protect your contracts against these kinds of attacks.
+In this article, we will cover the basics of Mavryk smart contract security. We will describe several potential vulnerabilities that stem from developers' misconceptions about the distributed nature of blockchains. We will also suggest ways to protect your contracts against these kinds of attacks.
 
 **Disclaimer:**
 1. This guide is aimed at giving the reader an overview of popular attacks on smart contracts and distributed applications. It is not an exhaustive list of all the possible attack vectors. Please, use your own judgement.
-2. The descriptions in this document are valid for the protocol 008_PtEdo2Zk (Edo). Since Tezos is an upgradeable blockchain, some of the blockchain mechanics may change in case a new proposal is adopted.
+2. The descriptions in this document are valid for the protocol 008_PtEdo2Zk (Edo). Since Mavryk is an upgradeable blockchain, some of the blockchain mechanics may change in case a new proposal is adopted.
 
 ## Resource constraints
 
-Tezos limits the resources available to the contracts. It bounds operations size so that nodes can broadcast the operations over the network in a reasonable time. It also places a limit on the computations the bakers need to perform to validate an operation – the **gas limit.** When you develop your contract, you need to bear these limits in mind.
+Mavryk limits the resources available to the contracts. It bounds operations size so that nodes can broadcast the operations over the network in a reasonable time. It also places a limit on the computations the bakers need to perform to validate an operation – the **gas limit.** When you develop your contract, you need to bear these limits in mind.
 
 Let us look at a seemingly innocent wallet contract that stores an event log:
 
@@ -59,11 +59,11 @@ This contract:
 2. Can send some mav via the `Send` entrypoint callable by the owner.
 3. Stores a log of all the operations.
 
-What can go wrong? To answer this question, we will need to dive a bit into how Tezos processes transactions and what limits it places on them.
+What can go wrong? To answer this question, we will need to dive a bit into how Mavryk processes transactions and what limits it places on them.
 
-To guarantee that the nodes spend reasonable time processing transactions, Tezos requires that the execution consumes no more than a certain amount of _gas_ (in the current protocol, it is 1 040 000 gas units).
+To guarantee that the nodes spend reasonable time processing transactions, Mavryk requires that the execution consumes no more than a certain amount of _gas_ (in the current protocol, it is 1 040 000 gas units).
 
-But in Tezos, the amount of gas consumed depends on the size of the storage! All non-lazy (i.e. non-BigMap) storage entries get fetched, deserialised, and type-checked upon each contract invocation. It means that:
+But in Mavryk, the amount of gas consumed depends on the size of the storage! All non-lazy (i.e. non-BigMap) storage entries get fetched, deserialised, and type-checked upon each contract invocation. It means that:
 1. Our contract will be more and more expensive to call with every transaction made.
 2. Eventually, when the gas consumption is too high, every transaction will hit the upper bound, which will render the contract unusable.
 
@@ -79,7 +79,7 @@ Generally, you need to think about whether the side effect of gas consumption ca
 2. Ensure that your contract logic does not allow attackers to increase the interpretation cost, e.g., by forcing future transactions to run a huge loop.
 
 ## Transaction ordering
-It is crucial to understand that all blockchains, including Tezos, are distributed systems where block producers – bakers in Tezos – are free to include, censor, and reorder transactions within a block. For most of the practical applications, this does not pose a threat. However, in some cases, especially in Decentralised Finance (DeFi) applications, bakers can use their power to gain economic benefit from reordering or censoring out user transactions.
+It is crucial to understand that all blockchains, including Mavryk, are distributed systems where block producers – bakers in Mavryk – are free to include, censor, and reorder transactions within a block. For most of the practical applications, this does not pose a threat. However, in some cases, especially in Decentralised Finance (DeFi) applications, bakers can use their power to gain economic benefit from reordering or censoring out user transactions.
 
 Aside from bakers, other actors can indirectly influence the transaction ordering as well. Attackers can set higher fees or use accounts with lower counter values to make bakers put the attackers' transactions in front of others.
 
@@ -108,18 +108,18 @@ In fact, if the front-runner is a baker, the so-called _miner extracted value_ [
 
 ## Timestamps
 
-Aside from transaction ordering, bakers can manipulate other variables you might want to rely on. A classic example of such a value is `Mavryk.get_now`. Previously, it used to be equal to the current block timestamp. This behaviour has been changed to eliminate straightforward manipulations. Since Tezos is a distributed system, there is no way to make sure the block was produced _exactly_ at the specified time. Thus, bakers could slightly adjust the timestamp to make a transaction produce a different result.
+Aside from transaction ordering, bakers can manipulate other variables you might want to rely on. A classic example of such a value is `Mavryk.get_now`. Previously, it used to be equal to the current block timestamp. This behaviour has been changed to eliminate straightforward manipulations. Since Mavryk is a distributed system, there is no way to make sure the block was produced _exactly_ at the specified time. Thus, bakers could slightly adjust the timestamp to make a transaction produce a different result.
 
 In the current protocol, `Mavryk.get_now` is equal to the _previous_ block timestamp plus a fixed value. Although `Mavryk.get_now` becomes less manipulable with this new behaviour, the only assumption you can make is that the operation goes through _roughly about_ the specified timestamp. And, of course, you should never use `Mavryk.get_now` as a source of randomness.
 
 ## Reentrancy and call injection
 
-Tezos features a rather unconventional model of execution:
+Mavryk features a rather unconventional model of execution:
 1. The contract state is updated _after_ the computations are completed.
 2. The contracts cannot emit operations in the middle of execution.
 3. Internal operations are _queued._
 
-The first two points resemble the Checks-Effects-Interactions pattern popular in Solidity. In Ethereum, it is considered a best practice, and Tezos enforces this on the protocol level. Such restrictions help  prevent reentrancy attacks: if the state of your contract is updated _before_ someone makes a reentrant call, this call would be treated as a regular one and should do no harm.
+The first two points resemble the Checks-Effects-Interactions pattern popular in Solidity. In Ethereum, it is considered a best practice, and Mavryk enforces this on the protocol level. Such restrictions help  prevent reentrancy attacks: if the state of your contract is updated _before_ someone makes a reentrant call, this call would be treated as a regular one and should do no harm.
 
 Consider the following snippet in Solidity:
 ```
@@ -134,7 +134,7 @@ function withdraw(uint256 amount) {
 
 You may notice that the _effect_ of updating the storage happens after _interaction_ – transferring the `amount` to the beneficiary. This contract has a reentrancy vulnerability: the contract execution would get paused during the transfer, and the beneficiary can call `withdraw` again _before_ their balance is updated.
 
-It is quite hard to repeat this attack on Tezos, where the contract storage is always updated _before_ any interactions:
+It is quite hard to repeat this attack on Mavryk, where the contract storage is always updated _before_ any interactions:
 
 <Syntax syntax="cameligo">
 
@@ -163,7 +163,7 @@ let withdraw (param, s : parameter * storage) =
 </Syntax>
 
 
-Notice that the code flow is similar: we first check whether the beneficiary has enough balance, then forge an operation that sends the money, and finally we update the balances mapping. The difference is that in Tezos the operations are not executed immediately: we store the operation and later return it as a result of the entrypoint. Hence, the balances are updated by the time the operation is executed, so the reentrancy attack is mitigated.
+Notice that the code flow is similar: we first check whether the beneficiary has enough balance, then forge an operation that sends the money, and finally we update the balances mapping. The difference is that in Mavryk the operations are not executed immediately: we store the operation and later return it as a result of the entrypoint. Hence, the balances are updated by the time the operation is executed, so the reentrancy attack is mitigated.
 
 However, in some cases reentrancy attacks are still possible, especially if contracts are supposed to "wait" for a callback in an indeterminate state. If you, for example, choose to store balances in a separate contract, your execution flow will need a lot more interactions than sending one internal operation:
 

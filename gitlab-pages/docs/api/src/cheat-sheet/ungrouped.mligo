@@ -1,4 +1,4 @@
-let name : string = "Tezos"
+let name : string = "Mavryk"
 let t : string = "t"
 let i : int = 42
 let n : nat = 7n

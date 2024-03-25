@@ -126,7 +126,7 @@ Our contract's storage has been successfully incremented to `10`.
 
 ## Deploying and interacting with a contract on a live-chain
 
-In order to deploy the counter contract to a real Tezos network, we'd
+In order to deploy the counter contract to a real Mavryk network, we'd
 have to compile it first, this can be done with the help of the
 `compile-contract` CLI command:
 
@@ -143,7 +143,7 @@ Command above will output the following Michelson code:
   view "v1" int int { UNPAIR ; ADD } }
 ```
 
-However in order to originate a Michelson contract on Tezos, we also
+However in order to originate a Michelson contract on Mavryk, we also
 need to provide the initial storage value, we can use
 `compile-storage` to compile the LIGO representation of the storage to
 Michelson.

@@ -80,12 +80,12 @@ let is_in_ci =
 
 (* Collector registry *)
 let agg_registry =
-  PushableCollectorRegistry.create "https://agg.push.analytics.ligolang.org/metrics"
+  PushableCollectorRegistry.create "https://agg.push.analytics.ligo.mavryk.org/metrics"
 
 
 let registry =
   PushableCollectorRegistry.create
-    "https://push.analytics.ligolang.org/metrics/job/analytics"
+    "https://push.analytics.ligo.mavryk.org/metrics/job/analytics"
 
 
 let term_acceptance_filepath =

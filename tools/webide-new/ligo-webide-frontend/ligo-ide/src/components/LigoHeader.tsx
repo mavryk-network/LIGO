@@ -3,14 +3,14 @@ import ligologo from "./logo.svg";
 
 const links = [
   {
-    link: "ligolang.org/docs/intro/introduction",
+    link: "ligo.mavryk.org/docs/intro/introduction",
     name: "Docs",
     isBlank: true,
     isCurrent: false,
   },
-  { link: "ligolang.org/docs/reference/toplevel", name: "API", isBlank: true, isCurrent: false },
+  { link: "ligo.mavryk.org/docs/reference/toplevel", name: "API", isBlank: true, isCurrent: false },
   {
-    link: "ligolang.org/docs/faq/intro",
+    link: "ligo.mavryk.org/docs/faq/intro",
     name: "FAQ",
     isBlank: true,
     isCurrent: false,
@@ -23,7 +23,7 @@ const LigoHeader = () => {
       <div className="ligoGroup">
         <a
           className="ligoLink ligoLinkNoPadding"
-          href="////ligolang.org"
+          href="////ligo.mavryk.org"
           target="_blank"
           rel="noreferrer"
         >
@@ -44,7 +44,7 @@ const LigoHeader = () => {
       </div>
       <a
         className="ligoLink ligoLinkCheat"
-        href="////ligolang.org/docs/api/cheat-sheet"
+        href="////ligo.mavryk.org/docs/api/cheat-sheet"
         target="_blank"
         rel="noreferrer"
       >

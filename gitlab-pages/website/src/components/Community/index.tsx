@@ -27,7 +27,7 @@ const Community = ({ discordMembers, contributors = 78, packages }: CommunityPro
       value: discordMembers,
       title: "members on discord",
       description:
-        "The Ligo community is growing fast. Join our Discord to talk about the Tezos ecosystem, find help, and discover a lot more.",
+        "The Ligo community is growing fast. Join our Discord to talk about the Mavryk ecosystem, find help, and discover a lot more.",
       cta: {
         label: "join our discord",
         href: "https://discord.gg/tezos",
@@ -42,7 +42,7 @@ const Community = ({ discordMembers, contributors = 78, packages }: CommunityPro
         "The Ligo team and community have exposed some packages that you can reuse when developing your own contracts. Discover them on our registry!",
       cta: {
         label: "see our registry",
-        href: "https://packages.ligolang.org/",
+        href: "https://packages.mavryk.network/",
         rel: "",
       },
     },

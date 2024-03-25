@@ -16,10 +16,10 @@ ready. To avoid such situations, you need to understand what the
 limits are, how gas is consumed, and how storage and execution fees
 are computed.
 
-In this article, we will cover Tezos limits, fee model, and the basics
+In this article, we will cover Mavryk limits, fee model, and the basics
 of measuring and optimising your contracts.
 
-## Tezos gas model
+## Mavryk gas model
 
 ### What limits and fees are there?
 
@@ -59,7 +59,7 @@ Thus, to reduce the origination cost, you need to reduce the size of the contrac
 
 When you make a **transaction** to a contract, things get a little more complicated:
 * You still must respect the *operation size limit*, which is proportional to the size of the parameter you pass to the contract. You may hit this limit if you try to pass a huge lambda or a container with a lot of items to a contract.
-* If, as a result of executing the contract, the size of the contract's storage exceeds its maximum historical size, you will have to pay a _burn fee_ for the excess bytes (`0.00025ꜩ/B * excess_bytes`). This may be a bit hard to grasp, but if you think about it, this behaviour is reasonable: Tezos burns money for storage no more than once, and never mints Tez back for the storage you free. Imagine the following sequence of operations:
+* If, as a result of executing the contract, the size of the contract's storage exceeds its maximum historical size, you will have to pay a _burn fee_ for the excess bytes (`0.00025ꜩ/B * excess_bytes`). This may be a bit hard to grasp, but if you think about it, this behaviour is reasonable: Mavryk burns money for storage no more than once, and never mints Tez back for the storage you free. Imagine the following sequence of operations:
    - The contract gets originated; let us assume the storage size is 500 bytes. The originator burns `0.06425ꜩ + 0.00025ꜩ/B * 500B = 0.18925ꜩ`.
    - During some transaction, the storage size decreases to 400 bytes.
    - You submit an operation that increases the storage size to 505 bytes. Since 500 bytes have been paid for already, you only need to burn `5B * 0.00025ꜩ/B = 0.00125ꜩ`.
@@ -80,7 +80,7 @@ Although the optimisation targets listed above are inter-related, it is reasonab
 
 ### Gas consumption
 
-Contrary to a more conventional instruction-based gas accounting, where each instruction has a cost associated with it, Tezos gas reflects actual computations and I/O operations performed by the nodes. On the one hand, it prevents vulnerabilities caused by incorrect estimation of the instruction costs. On the other hand, it makes the gas model more complex than, for example, the Ethereum one.
+Contrary to a more conventional instruction-based gas accounting, where each instruction has a cost associated with it, Mavryk gas reflects actual computations and I/O operations performed by the nodes. On the one hand, it prevents vulnerabilities caused by incorrect estimation of the instruction costs. On the other hand, it makes the gas model more complex than, for example, the Ethereum one.
 
 To understand how gas is spent, let us look at the phases of transaction execution:
 1. Reading the serialised contract code and storage from the context
@@ -100,7 +100,7 @@ At each phase, a certain amount of gas is consumed. It would be a rough but usef
   - `ε` – the average instruction cost.
 * the amount of gas consumed at phases 5–6 is proportional to `size(storage)`.
 
-These approximations are not exactly true: real deserialisation gas consumption also depends on the inherent complexity of the code and data types, converting to a typed representation depends on the actual data and code being converted, and interpreter gas consumption is the sum of the instruction costs. However, such simplified formula makes it possible to lower the dimensionality of the problem and simplify analysis, while not losing much in terms of general trends. For detailed info on gas consumption, please refer to the [Tezos gas model description](https://gitlab.com/tezos/tezos/-/blob/52a074ab3eb43ad0087804b8521f36cb517f7c28/docs/whitedoc/gas_consumption.rst).
+These approximations are not exactly true: real deserialisation gas consumption also depends on the inherent complexity of the code and data types, converting to a typed representation depends on the actual data and code being converted, and interpreter gas consumption is the sum of the instruction costs. However, such simplified formula makes it possible to lower the dimensionality of the problem and simplify analysis, while not losing much in terms of general trends. For detailed info on gas consumption, please refer to the [Mavryk gas model description](https://gitlab.com/tezos/tezos/-/blob/52a074ab3eb43ad0087804b8521f36cb517f7c28/docs/whitedoc/gas_consumption.rst).
 
 According to our approximations, the formula for the total gas consumption would be:
 ```
@@ -130,9 +130,9 @@ You should try to minimise the size of the code as possible.
 
 ### Storage size
 
-There are two types of contract storage in Tezos: regular contract storage and lazy storage – big maps. Although these types are not distinguished at the language level (you can work with big maps as with any regular entry in your storage record), the difference is quite important.
+There are two types of contract storage in Mavryk: regular contract storage and lazy storage – big maps. Although these types are not distinguished at the language level (you can work with big maps as with any regular entry in your storage record), the difference is quite important.
 
-Tezos nodes read, deserialise, and convert all non-lazy storage to typed representation **upon each contract call,** even if a transaction does not read some storage entries. Moreover, after the contract finishes its execution, the contents of the storage are serialised back into bytes and written to the persistent distributive memory, even if the storage was not modified, or just a part of it was modified by the transaction. These actions are quite resource-intensive and cost a significant amount of gas. Thus, **you should do your best to reduce the amount of non-lazy storage** occupied by your contract.
+Mavryk nodes read, deserialise, and convert all non-lazy storage to typed representation **upon each contract call,** even if a transaction does not read some storage entries. Moreover, after the contract finishes its execution, the contents of the storage are serialised back into bytes and written to the persistent distributive memory, even if the storage was not modified, or just a part of it was modified by the transaction. These actions are quite resource-intensive and cost a significant amount of gas. Thus, **you should do your best to reduce the amount of non-lazy storage** occupied by your contract.
 
 Lazy storage, expressed as big maps, works quite differently. Only those elements that have been explicitly read (using `Big_map.find_opt`) are fetched from the context, deserialised, and converted to typed representation. If the transaction makes any changes to big map entries, only these changed entries are serialised and written to the context.
 
@@ -239,7 +239,7 @@ Imagine you have a contract with a number of small frequently-used entrypoints a
 
 <Syntax syntax="cameligo">
 
-It turns out we can do better. Tezos has a lazy container – big map. The contents of big map are read, deserialised and type-checked during the call to `Big_map.find_opt`, and not at the beginning of the transaction. We can use this container to store the code of our heavy entrypoints: we need to add a `(bool, entrypoint_lambda) big_map` to the storage record, and then use `Big_map.find_opt` to fetch the code of the entrypoint from storage. (Note: in theory, we could use `(unit, entrypoint_lambda) big_map`, but, unfortunately, `unit` type is not comparable, so we cannot use it as a big map index).
+It turns out we can do better. Mavryk has a lazy container – big map. The contents of big map are read, deserialised and type-checked during the call to `Big_map.find_opt`, and not at the beginning of the transaction. We can use this container to store the code of our heavy entrypoints: we need to add a `(bool, entrypoint_lambda) big_map` to the storage record, and then use `Big_map.find_opt` to fetch the code of the entrypoint from storage. (Note: in theory, we could use `(unit, entrypoint_lambda) big_map`, but, unfortunately, `unit` type is not comparable, so we cannot use it as a big map index).
 
 Here is how it looks like:
 ```cameligo
@@ -284,7 +284,7 @@ piece of code you are trying to optimise.
 
 ## Conclusion
 
-We have discussed the Tezos fee and gas model and identified the
+We have discussed the Mavryk fee and gas model and identified the
 following optimisation targets: contract and storage size, gas
 consumption, and excess bytes written to storage. We also discussed
 inlining, constants optimisation, lazy storage, and lazy entrypoint

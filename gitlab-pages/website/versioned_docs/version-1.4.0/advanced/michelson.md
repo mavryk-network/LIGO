@@ -12,7 +12,7 @@ or tune the performance of contracts outputted by the LIGO compiler.
 
 **The rationale and design of Michelson**
 
-Michelson is a Domain-Specific Language (DSL) for writing Tezos smart contracts
+Michelson is a Domain-Specific Language (DSL) for writing Mavryk smart contracts
 inspired by Lisp and Forth. This unusual lineage aims at satisfying unusual
 constraints, but entails some tensions in the design.
 
@@ -65,7 +65,7 @@ The existence of a formal type system for Michelson, of a formal
 specification of its dynamic semantics (evaluation), of a Michelson
 interpreter in Coq, of proofs in Coq of properties of some typical
 contracts, all those achievements are instances of *formal methods in
-Tezos*.
+Mavryk*.
 
 Here is an example of a Michelson contract.
 
@@ -103,7 +103,7 @@ the nodes. Instructions are used to transform a prefix of the stack,
 that is, the topmost part of it, for example, by duplicating its top
 element, dropping it, subtracting the first two etc.
 
-> 💡 A Michelson program running on the Tezos blockchain is meant to
+> 💡 A Michelson program running on the Mavryk blockchain is meant to
 > output a pair of values including a `list of operations` to include
 > in a transaction, and a new `storage` value to persist on the chain.
 
@@ -131,7 +131,7 @@ function reset () { storage = 0; }
 In our JavaScript program the initial `storage` value is `0` and it
 can be modified by calling `add (a)`, `sub (a)` and `reset ()`.
 
-We cannot run JavaScript on the Tezos blockchain, but we can choose
+We cannot run JavaScript on the Mavryk blockchain, but we can choose
 LIGO, which will abstract the stack management and allow us to create
 readable, type-safe, and efficient smart contracts.
 

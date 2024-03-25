@@ -83,7 +83,7 @@ with any name for the storage.)
 
 <Syntax syntax="jsligo">
 
-Note that the name `default` has a special meaning for a Tezos entry point,
+Note that the name `default` has a special meaning for a Mavryk entry point,
 and denotes the default entry point to be called unless another one is
 specified. Due to the fact that `default` is a reserved keyword in JsLIGO,
 we use the escape notation `@default` to write the function name, without
@@ -406,9 +406,9 @@ ligo compile parameter --library . \
 
 </Syntax>
 
-## Tezos-specific Built-ins
+## Mavryk-specific Built-ins
 
-A LIGO smart contract can query part of the state of the Tezos
+A LIGO smart contract can query part of the state of the Mavryk
 blockchain by means of built-in values. In this section you will find
 how those built-ins can be utilised.
 

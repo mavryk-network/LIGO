@@ -389,20 +389,12 @@ const sidebars = {
     ],
     "Changelog": [
       "intro/changelog",
-      "protocol/hangzhou",
-      "protocol/ithaca",
-      "protocol/jakarta",
-      "protocol/kathmandu",
-      "protocol/lima",
-      "protocol/mumbai",
-      "protocol/nairobi",
-      "protocol/oxford"
+      "protocol/atlas"
     ]
   },
   "faq": {
     "FAQ": [
       "faq/intro",
-      "faq/v1-migration-guide",
       "faq/convert-address-to-contract",
       "faq/polymorphic-comparison",
       "faq/catch-error-view",

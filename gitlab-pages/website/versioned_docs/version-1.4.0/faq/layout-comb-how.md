@@ -29,7 +29,7 @@ problem.
 
 In theory, it is possible that after upgrading to LIGO 1.0, your
 contracts could compile successfully, your `ligo run test` could pass,
-and even "integration" tests (e.g. using a sandbox or test Tezos
+and even "integration" tests (e.g. using a sandbox or test Mavryk
 network) could pass, yet after deployment you might still find that
 your contracts are catastrophically broken.
 

@@ -122,12 +122,12 @@ export async function executeDeploy(context: LigoContext, client: LigoProtocolCl
         init: JSON.parse(storage.result),
       });
 
-      // TODO: Sometimes 'better-call.dev' link doesn't lead to the contract info.
+      // TODO: Sometimes 'better-call.mavryk.io' link doesn't lead to the contract info.
       // (see: https://gitlab.com/serokell/ligo/ligo/-/merge_requests/282#note_921119098)
       // We need to examine why this happens and to fix it if possible
       const contract = await op.contract();
       ligoOutput.appendLine(`The contract was successfully deployed on the ${network} test network`)
-      ligoOutput.appendLine(`View your contract here: https://better-call.dev/${network}/${contract.address}`)
+      ligoOutput.appendLine(`View your contract here: https://better-call.mavryk.io/${network}/${contract.address}`)
       ligoOutput.appendLine(`The address of your new contract is: ${contract.address}`)
       ligoOutput.appendLine(`The initial storage of your contract is: ${storage.result}`)
       ligoOutput.show()

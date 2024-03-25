@@ -568,7 +568,7 @@ annotations it wouldn't be clear what our `int` would be referring to.
 This currently only works for `or`'s or variant types in LIGO.
 
 ## Amendment
-With the upcoming 007 amendment to Tezos this will change though, and also
+With the upcoming 007 amendment to Mavryk this will change though, and also
 `pair`s can be ordered differently.
 
 <!-- updated use of entry -->

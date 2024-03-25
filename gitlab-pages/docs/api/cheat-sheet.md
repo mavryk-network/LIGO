@@ -48,7 +48,7 @@ let testC =
 <div className="example">
 
 ```cameligo
-let name : string = "Tezos"
+let name : string = "Mavryk"
 ```
 
 </div>
@@ -546,7 +546,7 @@ const testC = do {
 <div className="example">
 
 ```jsligo
-const name: string = "Tezos";
+const name: string = "Mavryk";
 ```
 
 </div>

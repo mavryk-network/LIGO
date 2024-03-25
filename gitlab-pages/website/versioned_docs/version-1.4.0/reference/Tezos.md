@@ -1,13 +1,13 @@
 ---
 id: tezos-reference
-title: Tezos
+title: Mavryk
 hide_table_of_contents: true
 ---
 import Syntax from '@theme/Syntax';
 import SyntaxTitle from '@theme/SyntaxTitle';
 
 
-Tezos-specific functions
+Mavryk-specific functions
 
 
 <SyntaxTitle syntax="cameligo">

@@ -5,7 +5,7 @@
 
 # Here symlink gonna be replaced by the files themself
 
-ARG BUILDER_IMAGE="node:16"
+ARG BUILDER_IMAGE="node:18"
 ARG RUNNER_IMAGE="joseluisq/static-web-server:2.9-alpine"
 
 FROM ${BUILDER_IMAGE} as builder

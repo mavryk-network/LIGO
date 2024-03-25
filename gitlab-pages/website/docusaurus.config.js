@@ -8,7 +8,7 @@ const singleTheme = require("prism-react-renderer/themes/duotoneLight");
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Ligo",
-  url: "https://ligolang.org",
+  url: "https://ligo.mavryk.org",
   baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -68,7 +68,7 @@ const config = {
       announcementBar: {
         id: "support_us",
         content:
-          "<b>Ligo v1 is now available ! Check the migration guide : https://ligolang.org/docs/next/faq/v1-migration-guide ! </b>",
+          "<b>Ligo is now available for Mavryk !</b>",
         backgroundColor: "#003ee0",
         textColor: "#efefef",
         isCloseable: false,
@@ -86,8 +86,8 @@ const config = {
           { to: "docs/intro/introduction", label: "Docs", position: "left", target: "_self" },
           { to: "docs/reference/toplevel-reference", label: "API", position: "left" },
           { to: "docs/faq/intro", label: "FAQ", position: "left" },
-          { to: "https://packages.ligolang.org/packages", label: "Registry", position: "right" },
-          { to: "https://ide.ligolang.org/", label: "Web IDE", position: "right" },
+          { to: "https://packages.mavryk.network/packages", label: "Registry", position: "right" },
+          { to: "https://ide.mavryk.network/", label: "Web IDE", position: "right" },
         ],
       },
       footer: {
@@ -109,7 +109,7 @@ const config = {
               },
               {
                 label: "Registry",
-                href: "https://packages.ligolang.org/packages",
+                href: "https://packages.mavryk.network/packages",
               },
               {
                 label: "Ligo CLI",
@@ -170,7 +170,7 @@ const config = {
               },
               {
                 label: "Bounties",
-                href: "https://bounties.ligolang.org",
+                href: "https://bounties.ligo.mavryk.org",
                 rel: "noopener noreferrer nofollow",
               },
             ],

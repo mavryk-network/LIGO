@@ -9,8 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@taquito/signer": "^7.0.1-beta.0",
-    "@taquito/taquito": "^7.0.1-beta.0",
+    "@mavrykdynamics/taquito-signer": "^19.0.2",
+    "@mavrykdynamics/taquito": "^19.0.2",
     "truffle": "5.5.0-tezos.4"
   },
   "devDependencies": {

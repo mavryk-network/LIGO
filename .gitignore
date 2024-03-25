@@ -27,3 +27,6 @@ changelog.txt
 
 jsoo/dist
 jsoo/lib
+
+# Local Netlify folder
+.netlify

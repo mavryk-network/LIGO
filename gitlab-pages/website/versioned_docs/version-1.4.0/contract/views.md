@@ -1,7 +1,7 @@
 ---
 id: views
 title: LIGO views
-description: Views for Tezos written in LIGO
+description: Views for Mavryk written in LIGO
 hide_table_of_contents: true
 ---
 
@@ -10,7 +10,7 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 ## Defining On-Chain Views
 
-On-chain views can be defined using the `@view` attribute. For more information [see here](../protocol/hangzhou.md).
+On-chain views can be defined using the `@view` attribute.
 
 <Syntax syntax="cameligo">
 

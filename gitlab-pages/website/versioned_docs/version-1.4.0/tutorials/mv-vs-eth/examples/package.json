@@ -1,0 +1,22 @@
+{
+  "name": "ligo-examples-mv-vs-eth",
+  "version": "0.1.0",
+  "description": "The examples contracts in LIGO: Migrating from Ethereum to Mavryk",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx truffle test",
+    "start-sandbox": "npx ganache-cli --flavor tezos --seed alice"
+  },
+  "keywords": [
+    "ligo"
+  ],
+  "author": "Serokell",
+  "license": "MIT",
+  "dependencies": {
+    "@mavrykdynamics/taquito": "^19.0.2"
+  },
+  "devDependencies": {
+    "ganache-cli": "6.11.0-tezos.0",
+    "truffle": "5.5.0-tezos.4"
+  }
+}

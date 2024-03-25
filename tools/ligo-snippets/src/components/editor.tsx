@@ -69,7 +69,7 @@ Prism.languages = {
 
 async function openInIde(editorParams, snippetCode) {
     editorParams.editor.code = snippetCode
-    let webIdeUrl = 'https://ide.ligolang.org'
+    let webIdeUrl = 'https://ide.mavryk.network'
     const response = await axios.post(`${webIdeUrl}/api/share`, editorParams);
     const { hash } = await response.data;
     window.open(`${webIdeUrl}/p/${hash}`, "_blank");
@@ -238,7 +238,7 @@ export const LigoSnippet = (props) => {
                 entrypoint
             });
         } else {
-            response = await axios.post('https://cors-anywhere.herokuapp.com/https://ide.ligolang.org/api/compile-contract', {
+            response = await axios.post('https://cors-anywhere.herokuapp.com/https://ide.mavryk.network/api/compile-contract', {
                 syntax,
                 code,
                 entrypoint

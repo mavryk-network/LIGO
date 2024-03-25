@@ -145,7 +145,7 @@ const not_tomorrow: bool = (Mavryk.get_now() == in_24_hrs);
 
 ## Addresses
 
-The `address` type in LIGO denotes Tezos addresses (mv1, mv2, mv3,
+The `address` type in LIGO denotes Mavryk addresses (mv1, mv2, mv3,
 KT1, ...). Currently, addresses are created by casting a string to the
 `address` type. Beware of failures if the address is invalid. Consider
 the following examples.
@@ -172,7 +172,7 @@ const my_account: address =
 
 ## Signatures
 
-The `signature` type in LIGO datatype is used for Tezos signatures
+The `signature` type in LIGO datatype is used for Mavryk signatures
 (edsig, spsig). Signatures are created by casting a string. Beware of
 failure if the signature is invalid.
 
@@ -201,7 +201,7 @@ signature;
 
 ## Keys
 
-The `key` type in LIGO is used for Tezos public keys. Do not confuse
+The `key` type in LIGO is used for Mavryk public keys. Do not confuse
 them with map keys. Keys are made by casting strings. Beware of
 failure if the key is invalid.
 

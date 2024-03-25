@@ -22,7 +22,7 @@ Here you have such options:
 
 __Note__: `icon` is a map to asset logo in the project. To add it, put logo to `./ligo-ide/src/ligo-components/eth-sdk/assets`, import it in `./ligo-ide/src/ligo-components/eth-sdk/NetworkIcon.ts` and add to the `./ligo-ide/src/ligo-components/eth-sdk/networks.js`.
 
-__Note__: `type` is a `NetworkType` for `beacon` wallet. We use `@taquito/beacon-wallet` for it, so you should check what version of `@airgap/beacon-dapp` is currently available and what networks available in this version. You can get network updates info in `@airgap/beacon-dapp` [changelog](https://github.com/airgap-it/beacon-sdk/releases) and `@airgap/beacon-dapp` updates in `taquito` [changelog](https://tezostaquito.io/docs/version/). And in case of any updates upgrade dependencies. If network is not available in current version you should use `custom` type.
+__Note__: `type` is a `NetworkType` for `beacon` wallet. We use `@mavrykdynamics/taquito-beacon-wallet` for it, so you should check what version of `@airgap/beacon-dapp` is currently available and what networks available in this version. You can get network updates info in `@airgap/beacon-dapp` [changelog](https://github.com/airgap-it/beacon-sdk/releases) and `@airgap/beacon-dapp` updates in `taquito` [changelog](https://tezostaquito.io/docs/version/). And in case of any updates upgrade dependencies. If network is not available in current version you should use `custom` type.
 
 ## Licensing
 

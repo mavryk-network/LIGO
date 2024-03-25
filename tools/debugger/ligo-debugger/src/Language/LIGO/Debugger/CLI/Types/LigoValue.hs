@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, NumDecimals, UndecidableInstances #-}
 
 -- | Ligo Value representation from
--- https://ligolang.org/assets/files/values.schema-11c1c8c46fa17d8c9eae1cf28c49a307.json
+-- https://ligo.mavryk.org/assets/files/values.schema-11c1c8c46fa17d8c9eae1cf28c49a307.json
 -- json-schema.
 module Language.LIGO.Debugger.CLI.Types.LigoValue
   ( module Language.LIGO.Debugger.CLI.Types.LigoValue

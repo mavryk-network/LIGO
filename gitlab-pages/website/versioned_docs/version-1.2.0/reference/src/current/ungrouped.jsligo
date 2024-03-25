@@ -1,5 +1,0 @@
-let check = (p: unit, s: mav):[list<operation>, mav] =>
-  [list([]), Mavryk.get_balance()];
-function threshold (p : unit) {
-  if (Mavryk.get_amount() == 100mav) return 42 else return 0;
-};

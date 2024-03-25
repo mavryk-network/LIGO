@@ -28,7 +28,7 @@ The `@entry` attribute is used to indicate that a function should be available a
 
 ## @dyn_entry to mark a function as a dynamic entry point
 
-The `@dyn_entry` attribute is used to indicate that a function should be available as a dynamic entry point of the smart contract. Dynamic entry points can be removed or updated without deploying a new contract, unlike entry points marked with `@entry`, which cannot be modified after the contract is originated. Dynamic entry points can be used for example to implement a DAO (Decentralized Autonomous Organization) with a built-in update mechanism that allows participants to vote on upgrades to the contract, somewhat akin to the process which allows to amend the Tezos protocol. For more information, see [Dynamic entrypoints](../advanced/dynamic-entrypoints.md).
+The `@dyn_entry` attribute is used to indicate that a function should be available as a dynamic entry point of the smart contract. Dynamic entry points can be removed or updated without deploying a new contract, unlike entry points marked with `@entry`, which cannot be modified after the contract is originated. Dynamic entry points can be used for example to implement a DAO (Decentralized Autonomous Organization) with a built-in update mechanism that allows participants to vote on upgrades to the contract, somewhat akin to the process which allows to amend the Mavryk protocol. For more information, see [Dynamic entrypoints](../advanced/dynamic-entrypoints.md).
 
 ## @inline to ensure a function is inlined at its call sites
 
@@ -124,7 +124,7 @@ The `@entry` decorator is used to indicate that a function should be available a
 
 ## @dyn_entry to mark a function as a dynamic entry point
 
-The `@dyn_entry` decorator is used to indicate that a function should be available as a dynamic entry point of the smart contract. Dynamic entry points can be removed or updated without deploying a new contract, unlike entry points marked with `@entry`, which cannot be modified after the contract is originated. Dynamic entry points can be used for example to implement a DAO (Decentralized Autonomous Organization) with a built-in update mechanism that allows participants to vote on upgrades to the contract, somewhat akin to the process which allows to amend the Tezos protocol. For more information, see [Dynamic entrypoints](../advanced/dynamic-entrypoints.md).
+The `@dyn_entry` decorator is used to indicate that a function should be available as a dynamic entry point of the smart contract. Dynamic entry points can be removed or updated without deploying a new contract, unlike entry points marked with `@entry`, which cannot be modified after the contract is originated. Dynamic entry points can be used for example to implement a DAO (Decentralized Autonomous Organization) with a built-in update mechanism that allows participants to vote on upgrades to the contract, somewhat akin to the process which allows to amend the Mavryk protocol. For more information, see [Dynamic entrypoints](../advanced/dynamic-entrypoints.md).
 
 ## @inline to ensure a function is inlined at its call sites
 

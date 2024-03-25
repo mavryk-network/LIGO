@@ -633,7 +633,7 @@ async function updateLigoUnchecked(client: LanguageClient, ligoPath: string): Pr
         case 'string':
           if (semver.lt(newVersion, '1.0.0')) {
             vscode.window.showInformationMessage(
-              'LIGO v1 is released. Please visit https://ligolang.org for more information.',
+              'LIGO v1 is released. Please visit https://ligo.mavryk.org for more information.',
             )
           }
           if (semver.lt(newVersion, '0.61.0')) {

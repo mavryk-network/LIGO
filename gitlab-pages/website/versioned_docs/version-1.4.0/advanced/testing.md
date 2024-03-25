@@ -33,10 +33,10 @@ The command `ligo run test` can be used to test a contract using LIGO.
 When running the `ligo run test` command, LIGO code has access to an
 additional `Test` module. This module provides ways of originating
 contracts and executing transactions, as well as additional helper
-functions that allow to control different parameters of the Tezos
+functions that allow to control different parameters of the Mavryk
 testing library.
 
-> Note: The LIGO interpreter uses the [same library that Tezos internally uses for testing](https://gitlab.com/tezos/tezos/-/tree/master/src/proto_alpha/lib_protocol/test/helpers).
+> Note: The LIGO interpreter uses the [same library that Mavryk internally uses for testing](https://gitlab.com/tezos/tezos/-/tree/master/src/proto_alpha/lib_protocol/test/helpers).
 
 The function `Test.originate` allows to deploy a contract in the
 testing environment. It takes a contract, which is represented as a
@@ -791,7 +791,7 @@ When declaring the entry points of a contract using `@entry`, LIGO generates two
 * an implicit `main` function, which can be obtained using the keyword `contract_of(C)` where `C` is the namespace or module containing the entry points, and
 * the input type for that `main` function, which can be obtained using the keyword `parameter_of C`.
 
-In the example below, `contract_of(C)` is returns the implicitly-declared `main` function that calls the `increment` or `decrement` entry points depending on the argument given, and `parameter_of C` is the [variant](https://ligolang.org/docs/language-basics/unit-option-pattern-matching#variant-types) `["Increment", int] | ["Decrement", int]`.
+In the example below, `contract_of(C)` is returns the implicitly-declared `main` function that calls the `increment` or `decrement` entry points depending on the argument given, and `parameter_of C` is the [variant](https://ligo.mavryk.org/docs/language-basics/unit-option-pattern-matching#variant-types) `["Increment", int] | ["Decrement", int]`.
 
 ```jsligo group=tezos_specific
 namespace C {

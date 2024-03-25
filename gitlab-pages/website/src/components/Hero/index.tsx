@@ -11,7 +11,7 @@ import Smartchain from "@site/src/components/Icons/Smartchain";
 import Starlords from "@site/src/components/Icons/Starlords";
 import TZSafe from "@site/src/components/Icons/TZSafe";
 import TZVote from "@site/src/components/Icons/TZVote";
-import TezosDomains from "@site/src/components/Icons/TezosDomains";
+import MavrykDomains from "@site/src/components/Icons/MavrykDomains";
 import Title, { Subtitle } from "@site/src/components/Titles";
 import React from "react";
 import Marquee from "react-fast-marquee";
@@ -40,8 +40,8 @@ const BRANDS = [
   { link: "https://starlords.xyz/", component: <Starlords height={50} />, name: "Starlords" },
   {
     link: "https://tezos.domains",
-    component: <TezosDomains height={50} />,
-    name: "Tezos Domains",
+    component: <MavrykDomains height={50} />,
+    name: "Mavryk Domains",
   },
   {
     link: "https://www.smart-chain.fr/",
@@ -67,14 +67,14 @@ const Hero = () => {
         <span className={styles["hero__title-small"]}>smart contracts made easy</span>
       </Title>
       <Subtitle>
-        A simple smart-contract language <br /> built for <b>Tezos</b>, made for <b>developers</b>.
+        A simple smart-contract language <br /> built for <b>Mavryk</b>, made for <b>developers</b>.
       </Subtitle>
       <div className={styles["hero__cta"]}>
         <LinkAsButton aria-label="Get started" href={useBaseUrl("docs/intro/introduction")}>
           Get started
         </LinkAsButton>
         <LinkAsButton
-          href="https://ide.ligolang.org/"
+          href="https://ide.mavryk.network/"
           aria-label="Try Ligo online"
           title="Go to our Web-IDE to try Ligo online"
           target="_blank"

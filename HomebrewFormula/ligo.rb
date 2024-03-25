@@ -1,6 +1,6 @@
 class Ligo < Formula
   desc "Friendly Smart Contract Language for Tezos"
-  homepage "https://ligolang.org/"
+  homepage "https://ligo.mavryk.org/"
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules

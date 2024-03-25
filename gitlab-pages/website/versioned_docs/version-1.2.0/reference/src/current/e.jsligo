@@ -1,1 +1,0 @@
-let check = (p : unit) => Mavryk.get_sender ();

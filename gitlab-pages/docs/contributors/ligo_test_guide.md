@@ -46,7 +46,7 @@ You can find coverage tests by carefully going over the syntax tree for a syntax
 #### Depth
 > features are put through a wide variety of complex scenarios to make sure they stand up to real world use
 
-One of the best ways to find these is to use LIGO for a real project. This will require some time and energy—not just to learn LIGO but to write projects complex enough to stretch the limits of what the language can do. However, it will also get you used to engaging with LIGO from a developers perspective, asking how things could be better or what features are underdeveloped. If your project has practical use, you will also be contributing to the Tezos/LIGO ecosystem while you learn.
+One of the best ways to find these is to use LIGO for a real project. This will require some time and energy—not just to learn LIGO but to write projects complex enough to stretch the limits of what the language can do. However, it will also get you used to engaging with LIGO from a developers perspective, asking how things could be better or what features are underdeveloped. If your project has practical use, you will also be contributing to the Mavryk/LIGO ecosystem while you learn.
 
 *Note: because LIGO is open source, in order for us to add your work
  as a test case it needs to be licensed in a way that is compatible

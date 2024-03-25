@@ -8,7 +8,7 @@ import Syntax from '@theme/Syntax';
 LIGO offers three built-in numerical types: `int`, `nat` and
 `mav`. Values of type `int` are integers; values of type `nat` are
 natural numbers (integral numbers greater than or equal to zero);
-values of type `mav` are units of measure of Tezos tokens.
+values of type `mav` are units of measure of Mavryk tokens.
 
   * Integer literals are the same found in mainstream programming
     languages, for example, `10`, `-6` and `0`, but there is only one
@@ -17,7 +17,7 @@ values of type `mav` are units of measure of Tezos tokens.
   * Natural numbers are written as digits followed by the suffix `n`,
     like so: `12n`, `0n`, and the same restriction on zero as integers
     applies: `0n` is the only way to specify the natural zero.
-  * Tezos tokens can be specified using literals of three kinds:
+  * Mavryk tokens can be specified using literals of three kinds:
       * units of millionth of `mav`, using the suffix `mumav` after a
         natural literal, like `10000mumav` or `0mumav`;
       * units of `mav`, using the suffix `mv` or `mav`, like `3mv` or

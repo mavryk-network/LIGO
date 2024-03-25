@@ -1,7 +1,7 @@
 ---
 id: tickets
 title: Tickets
-description: Ticket operations for Tezos
+description: Ticket operations for Mavryk
 hide_table_of_contents: true
 ---
 

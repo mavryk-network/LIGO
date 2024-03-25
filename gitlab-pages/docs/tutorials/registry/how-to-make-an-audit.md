@@ -11,7 +11,7 @@ On packages, you can enquire an audit. To do so you'll have make transaction, an
 
 Here are the steps to follow if you want to ask for an audit:
 
-1. Connect your wallet by clicking the _Tezos height_ button at the top
+1. Connect your wallet by clicking the _Mavryk height_ button at the top
    <img src="/img/registry/connect-wallet.png" alt="Connect wallet" />
 2. Navigate to the package you want to audit
 
@@ -27,7 +27,7 @@ If you face any issue with the transactions, try to disconnect the wallet, refre
 
 Here are the steps to follow if you want to perform an audit:
 
-1. Connect your wallet by clicking the _Tezos height_ button at the top
+1. Connect your wallet by clicking the _Mavryk height_ button at the top
    <img src="/img/registry/connect-wallet.png" alt="Connect wallet" />
 2. Navigate to the package that enquired an audit
 3. Upload the proof of the audit and either _Validate_ or _Reject_ the audit

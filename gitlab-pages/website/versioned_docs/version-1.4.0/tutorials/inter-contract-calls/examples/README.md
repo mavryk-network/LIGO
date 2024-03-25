@@ -15,4 +15,4 @@ These examples demonstrate how one contract can call – or, rather, _invoke,_ o
 1. Run `npx ganache-cli --flavor tezos --seed alice` in the background.
 2. Use `truffle migrate` to originate the contracts and `npm run test` to run the tests.
 
-Note that `npm run test` calls a custom script to run the tests: currently, Truffle for Tezos does not provide a "clean room" environment for testing, so running `truffle test` will likely fail because the tests for the contracts are not isolated.
+Note that `npm run test` calls a custom script to run the tests: currently, Truffle for Mavryk does not provide a "clean room" environment for testing, so running `truffle test` will likely fail because the tests for the contracts are not isolated.

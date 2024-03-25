@@ -1,8 +1,0 @@
-const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address)
-const receiver : contract<unit> =
-  match (Mavryk.get_contract_opt(ownerAddress) as option<contract<unit>>) {
-    when(Some(contract)): contract;
-    when(None()): (failwith ("Not a contract") as contract<unit>)
-  }
-const payoutOperation : operation = Mavryk.transaction (unit, Mavryk.get_amount (), receiver) ;
-const operations : list <operation> = list([payoutOperation]);

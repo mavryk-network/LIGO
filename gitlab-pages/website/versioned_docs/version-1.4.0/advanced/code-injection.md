@@ -145,7 +145,7 @@ can compile it using the following command:
 <Syntax syntax="cameligo">
 
 ```shell
-ligo compile contract --protocol nairobi --disable-michelson-typechecking gitlab-pages/docs/advanced/src/code-injection/never.mligo
+ligo compile contract --protocol atlas --disable-michelson-typechecking gitlab-pages/docs/advanced/src/code-injection/never.mligo
 ```
 
 </Syntax>

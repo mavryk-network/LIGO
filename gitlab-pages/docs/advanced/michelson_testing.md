@@ -11,15 +11,15 @@ There are multiple frameworks for testing Michelson contracts, we will
 not get into details, but here is a list of tutorials showing how to
 test contracts in Michelson:
 
-* [PyTezos](https://baking-bad.org/blog/2019/09/16/testing-michelson-tezos-contracts-with-pytezos-library/)
+* [PyMavryk](https://pymavryk.mavryk.org/)
 
 * [Cleveland](https://gitlab.com/morley-framework/morley/-/blob/9455cd384b2ab897fb7b31822abca3730a4ad08b/code/cleveland/testingEDSL.md)
 
-Another alternative is to use Tezos's binary `tezos-client`
+Another alternative is to use Mavryk's binary `tezos-client`
 directly. There's a new
 [mockup](https://tezos.gitlab.io/user/mockup.html) mode which is does
-not need a Tezos node to be running (albeit this is less similar to
-mainnet than running a Tezos sandbox node).
+not need a Mavryk node to be running (albeit this is less similar to
+mainnet than running a Mavryk sandbox node).
 
 ### Testing with `tezos-client`'s mockup
 
@@ -125,8 +125,8 @@ tezos-client \
   create mockup
 ```
 
-This command returns a list of Tezos addresses that we can use with
-the client in subsequent commands. As recommended in the Tezos
+This command returns a list of Mavryk addresses that we can use with
+the client in subsequent commands. As recommended in the Mavryk
 documentation, we can add a shell alias to avoid mistakes:
 
 ```shell
@@ -146,7 +146,7 @@ mockup-client list known addresses
 ```
 
 We are now ready to originate (or "deploy") the contract on our mockup
-Tezos:
+Mavryk:
 
 ```shell skip
 mockup-client originate contract mockup_testme \

@@ -1,7 +1,0 @@
-type age = int
-type name = string
-const add = (a: int, b: int): int => {
-  let c = a;
-  let d = b;
-  return c + d
-};

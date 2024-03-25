@@ -8,7 +8,7 @@ export default function usePackages() {
   useEffect(() => {
     const abortController = new AbortController();
 
-    fetch("https://packages.ligolang.org/-/ui/packages", {
+    fetch("https://packages.mavryk.network/-/ui/packages", {
       signal: abortController.signal,
     })
       .then((response) => response.json())

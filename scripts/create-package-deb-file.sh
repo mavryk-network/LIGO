@@ -26,7 +26,7 @@ Package: ligo
 Version: ${version}-${revision}
 Priority: optional
 Architecture: amd64
-Maintainer: ligolang ligolang.org
+Maintainer: mavrykdynamics info@mavryk.io
 Description: ligo
   A friendly Smart Contract Language for Tezos
 EOF

@@ -1,4 +1,4 @@
-import { importKey } from "@taquito/signer";
+import { importKey } from "@mavrykdynamics/taquito-signer";
 import keypairManager from "~/base-components/keypair";
 import kp from "../kp";
 

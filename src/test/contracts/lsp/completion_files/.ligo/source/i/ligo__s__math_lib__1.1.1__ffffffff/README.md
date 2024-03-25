@@ -1,6 +1,6 @@
 # math-lib-cameligo
 
-This repository contains a math library for [LIGO](https://ligolang.org/). It is
+This repository contains a math library for [LIGO](https://ligo.mavryk.org/). It is
 provided in two flavors (`Float` & `Rational`), and the project is structured as 
 follows 
 

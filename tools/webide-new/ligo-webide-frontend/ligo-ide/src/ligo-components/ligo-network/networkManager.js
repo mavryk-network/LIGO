@@ -1,5 +1,5 @@
 import { getCachingKeys, dropByCacheKey } from "react-router-cache-route";
-import { BeaconWallet } from "@taquito/beacon-wallet";
+import { BeaconWallet } from "@mavrykdynamics/taquito-beacon-wallet";
 import headerActions from "~/ligo-components/ligo-header";
 import notification from "~/base-components/notification";
 import redux from "~/base-components/redux";

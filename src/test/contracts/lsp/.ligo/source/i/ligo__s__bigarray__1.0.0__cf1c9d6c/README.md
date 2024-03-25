@@ -9,7 +9,7 @@ Like lists, `Bigarray` items must have the same type.
 ## Usage
 
 This library is aimed to be used as module and can be consumed as a package from LIGO registry.
-While we recommend you consult the [documentation](https://ligolang.org/docs/advanced/package-management/), here's a quick tutorial.
+While we recommend you consult the [documentation](https://ligo.mavryk.org/docs/advanced/package-management/), here's a quick tutorial.
 
 
 1. `ligo install`

@@ -9,7 +9,7 @@ import Link from '@docusaurus/Link';
 <div>
 
 Meet **Pedro**, our *artisan taco chef*, who has decided to open a
-Taco shop on the Tezos blockchain, using a smart contract. He sells
+Taco shop on the Mavryk blockchain, using a smart contract. He sells
 two different kinds of tacos: **el Clásico** and the **Especial
 del Chef**.
 
@@ -149,7 +149,7 @@ ligo compile contract taco_shop.mligo
 > To avoid warning at compilation, change `taco_kind_index` into `_taco_kind_index`, it'll tell to the compiler that this variable is authorized to not be used.
 
 
-A good practice is to scope your contract into a [module](https://ligolang.org/docs/language-basics/modules?lang=cameligo).
+A good practice is to scope your contract into a [module](https://ligo.mavryk.org/docs/language-basics/modules?lang=cameligo).
 
 <Syntax syntax="cameligo">
 
@@ -194,7 +194,7 @@ namespace TacoShop {
 
 </Syntax>
 
-There is an impact onto the compilation, now you have to tell to the compiler which [module](https://ligolang.org/docs/language-basics/modules?lang=cameligo) it need to compile :
+There is an impact onto the compilation, now you have to tell to the compiler which [module](https://ligo.mavryk.org/docs/language-basics/modules?lang=cameligo) it need to compile :
 
 ```
 ligo compile contract taco_shop.mligo -m TacoShop
@@ -613,7 +613,7 @@ ligo run test gitlab-pages/docs/tutorials/taco-shop/src/tezos-taco-shop-smart-co
 </Syntax>
 
 
-**The test passed ! That's it - Pedro can now sell tacos on-chain, thanks to Tezos & LIGO.**
+**The test passed ! That's it - Pedro can now sell tacos on-chain, thanks to Mavryk & LIGO.**
 
 ---
 

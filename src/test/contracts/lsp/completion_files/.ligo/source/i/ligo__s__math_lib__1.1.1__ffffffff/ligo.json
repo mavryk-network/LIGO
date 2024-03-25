@@ -11,7 +11,7 @@
     "url": "git+https://github.com/ligolang/math-lib-cameligo.git"
   },
   "keywords": ["tezos", "ligo", "math", "float", "rational"],
-  "author": "ligoLANG <https://ligolang.org/>",
+  "author": "ligoLANG <https://ligo.mavryk.org/>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ligolang/math-lib-cameligo/issues"

@@ -1,4 +1,4 @@
-import { validateAddress } from "@taquito/utils";
+import { validateAddress } from "@mavrykdynamics/taquito-utils";
 
 const validate = (v: string, reg: RegExp, message: string) => !reg.test(v) && message;
 

@@ -1,6 +1,0 @@
-#include "./gitlab-pages/docs/advanced/src/testing/remove-balance.jsligo"
-let _u = Test.reset_state (5n, list([]) as list <mav>);
-let balances : balances =
-  Map.literal(list([[Test.nth_bootstrap_account(1), 10mav],
-                    [Test.nth_bootstrap_account(2), 100mav],
-                    [Test.nth_bootstrap_account(3), 1000mav]]));

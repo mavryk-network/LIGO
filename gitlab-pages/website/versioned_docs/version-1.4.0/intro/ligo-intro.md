@@ -6,9 +6,9 @@ title: Introduction to LIGO
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-### Ligo, a SmartContract Language built for Tezos
+### Ligo, a SmartContract Language built for Mavryk
 
-LIGO is a programming language for writing [smart contracts](https://opentezos.com/tezos-basics/smart-contracts), compiling in [Michelson](https://opentezos.com/michelson) and deployable on [Tezos blockchain](https://tezos.com/).
+LIGO is a programming language for writing [smart contracts](https://opentezos.com/tezos-basics/smart-contracts), compiling in [Michelson](https://opentezos.com/michelson) and deployable on [Mavryk blockchain](https://tezos.com/).
 
 Our hope is to have a simple, strongly typed language with
 a low footprint. Most useful smart contracts can express their core functionality in under a
@@ -42,14 +42,14 @@ Even if LIGO currently offers **two syntaxes**, you'll need to **choose only one
   let store_hello (delta : int) (store : storage) : operation list * storage = [], "Hello"
 ```
 
-A significant advantage of the multi-syntax feature is to share knowledge, toolings, and [modules](https://ligolang.org/docs/language-basics/modules) (like [libraries](https://ligolang.org/docs/advanced/package-management) onto [registry](https://packages.ligolang.org/packages)) in a larger community.
+A significant advantage of the multi-syntax feature is to share knowledge, toolings, and [modules](https://ligo.mavryk.org/docs/language-basics/modules) (like [libraries](https://ligo.mavryk.org/docs/advanced/package-management) onto [registry](https://packages.mavryk.network/packages)) in a larger community.
 
 ### LIGO, designed to be cost-effective
 
 Unlike desktop, mobile, or web application development, smart
 contracts cannot rely on cheap CPU time and memory.  All resources
 contracts use are expensive and tracked as
-['gas costs'](https://ligolang.org/docs/tutorials/optimisation/#tezos-gas-model).
+['gas costs'](https://ligo.mavryk.org/docs/tutorials/optimisation/#tezos-gas-model).
 
 The LIGO compiler generates optimised Michelson code, which will
 be cost-effective on Mavryk.
@@ -57,7 +57,7 @@ be cost-effective on Mavryk.
 
 ### LIGO, designed for your security
 
-Tezos smart contract live on the blockchain forever if a bug exists,
+Mavryk smart contract live on the blockchain forever if a bug exists,
 they cannot be patched or amended.  Smart contracts often directly
 control money or assets, which if stolen, could be a large financial
 loss to the contracts and their users.
@@ -69,17 +69,17 @@ LIGO will **bring people to web3** and by design **reduce the risk**
 But compiler design is insufficient, and LIGO uses **static analysis** to
 encourage people to write simple code, avoid anti-patterns, and use
 the
-[robust test framework](https://ligolang.org/docs/advanced/testing)
-which can simulate Tezos blockchain and offer
-[mutation tests](https://ligolang.org/docs/advanced/mutation-testing)
+[robust test framework](https://ligo.mavryk.org/docs/advanced/testing)
+which can simulate Mavryk blockchain and offer
+[mutation tests](https://ligo.mavryk.org/docs/advanced/mutation-testing)
 
 For critical code, LIGO also keeps its compiled output unbloated making **possible to formally verify** the compiled output using a project like
 [Mi-Cho-Coq](https://gitlab.com/nomadic-labs/mi-cho-coq/).
 
 ### A set of tools already available
 
-- Quickly explore LIGO using [webide](https://ide.ligolang.org/local)
-- Quickly bootstrap a project with [registry](https://packages.ligolang.org/packages)
+- Quickly explore LIGO using [webide](https://ide.mavryk.network/local)
+- Quickly bootstrap a project with [registry](https://packages.mavryk.network/packages)
 - Improve development experience with our LSP server available in the
   [VS Code extension](https://marketplace.visualstudio.com/items?itemName=ligolang-publish.ligo-vscode)
 - Understand and troubleshoot your code with the debugger available in [vscode extension](https://marketplace.visualstudio.com/items?itemName=ligolang-publish.ligo-vscode)
@@ -92,27 +92,27 @@ For critical code, LIGO also keeps its compiled output unbloated making **possib
 
 ### Do you want to try LIGO?
 
-For a quick overview, [get-started]( https://ligolang.org/docs/tutorials/getting-started) is a good choice. [Webide](https://ide.ligolang.org/) can be used to avoid installation onto your laptop.
+For a quick overview, [get-started]( https://ligo.mavryk.org/docs/tutorials/getting-started) is a good choice. [Webide](https://ide.mavryk.network/) can be used to avoid installation onto your laptop.
 
 ### Do you want to learn LIGO?
 
 Your choice to learn LIGO is already available:
-- Read [basics](https://ligolang.org/docs/language-basics/types) to have a basic comprehension
-- Write your first [smart contract](https://ligolang.org/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract).
+- Read [basics](https://ligo.mavryk.org/docs/language-basics/types) to have a basic comprehension
+- Write your first [smart contract](https://ligo.mavryk.org/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract).
 - Others resources are available on [marigold.dev](https://www.marigold.dev/learn)
 
 ### Do you want to build a production-ready project?
 
 You will need a deeper comprehension:
-- Teach yourself how to structure your code with [Combining code](https://ligolang.org/docs/next/language-basics/modules) section
-- Learn how to [write tests](https://ligolang.org/docs/next/advanced/testing?lang=jsligo) we strongly encourage to use [breathalyzer library from the LIGO registry.](https://packages.ligolang.org/package/ligo-breathalyzer)
-- Understand how to [secure a contract](https://ligolang.org/docs/tutorials/security)
+- Teach yourself how to structure your code with [Combining code](https://ligo.mavryk.org/docs/next/language-basics/modules) section
+- Learn how to [write tests](https://ligo.mavryk.org/docs/next/advanced/testing?lang=jsligo) we strongly encourage to use [breathalyzer library from the LIGO registry.](https://packages.mavryk.network/package/ligo-breathalyzer)
+- Understand how to [secure a contract](https://ligo.mavryk.org/docs/tutorials/security)
 
 ### Dig deeper
 
 In the end, maybe you will want to:
-- [Optimize your code](https://ligolang.org/docs/tutorials/optimisation/),
-- Understand [link between LIGO and Michelson](https://ligolang.org/docs/advanced/michelson-and-ligo)
-- [Interact with other contracts](https://ligolang.org/docs/tutorials/inter-contract-calls/)
+- [Optimize your code](https://ligo.mavryk.org/docs/tutorials/optimisation/),
+- Understand [link between LIGO and Michelson](https://ligo.mavryk.org/docs/advanced/michelson-and-ligo)
+- [Interact with other contracts](https://ligo.mavryk.org/docs/tutorials/inter-contract-calls/)
 
 <!-- updated use of entry -->

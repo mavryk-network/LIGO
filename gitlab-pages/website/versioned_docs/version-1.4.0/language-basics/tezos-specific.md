@@ -1,12 +1,12 @@
 ---
 id: tezos-specific
-title: Tezos Domain-Specific Operations
+title: Mavryk Domain-Specific Operations
 ---
 
 import Syntax from '@theme/Syntax';
 
-LIGO is a programming language for writing Tezos smart contracts. It
-would be a little odd if it did not have any Tezos specific
+LIGO is a programming language for writing Mavryk smart contracts. It
+would be a little odd if it did not have any Mavryk specific
 functions. This page will tell you about them.
 
 ## Pack and Unpack

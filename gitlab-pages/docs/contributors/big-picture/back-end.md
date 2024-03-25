@@ -20,5 +20,5 @@ environment of variables `(x -> 12, y -> “foo”)` is compiled as
 Michelson stack `(12 :: foo)`.  It has been simplified for multiple
 reasons: Having a simple model reduces its number of points of
 failure.  Having a simple model makes optimising it easier.  We
-submitted a change to the Tezos’ protocol that actually makes it more
+submitted a change to the Mavryk’ protocol that actually makes it more
 efficient.

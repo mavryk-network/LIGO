@@ -143,7 +143,7 @@ In the future, we plan on expanding the functionality of this file by adding mor
 
 ## Connecting the `ligo` executable
 
-You will need the `ligo` executable available on your computer. You can find out more from the [installation instructions](https://www.ligolang.org/docs/intro/installation/).
+You will need the `ligo` executable available on your computer. You can find out more from the [installation instructions](https://www.ligo.mavryk.org/docs/intro/installation/).
 
 You can specify a path to the `ligo` executable in `settings.json`. The debugger will look for it in the following order:
 1. The debugger will use this path if this field is filled.

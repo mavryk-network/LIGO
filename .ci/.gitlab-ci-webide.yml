@@ -148,7 +148,7 @@ webide-new-release-frontend-build-and-push:
       when: always
   script:
     - docker buildx build --build-context syntaxes=tools/vscode/syntaxes
-      --build-arg backend_url=backend.ide.ligolang.org
+      --build-arg backend_url=ligo-ide-backend.mavryk.network
       --build-arg http_protocol=https
       -f tools/webide-new/ligo-webide-frontend/ligo-ide/Dockerfile 
       tools/webide-new/ligo-webide-frontend/ligo-ide 

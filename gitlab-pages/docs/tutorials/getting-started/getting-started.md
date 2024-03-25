@@ -3,21 +3,21 @@ id: getting-started
 title: Getting started
 ---
 
-This section is aimed at newcomers to Ligo and Tezos smart-contracts.
+This section is aimed at newcomers to Ligo and Mavryk smart-contracts.
 In this tutorial, we will go through the following steps :
 
 - Writing a simple contract
 - Testing the contract
-- Deploying the contract to Tezos
+- Deploying the contract to Mavryk
 
 ## Before to start
 
 Two choices are offered, ideal if you want to work with Ligo :
 - Install necessary stuff onto your machine
-    - [Ligo compiler](https://ligolang.org/docs/intro/installation) to compile your code.
-    - [IDE plugins](https://ligolang.org/docs/intro/editor-support)
+    - [Ligo compiler](https://ligo.mavryk.org/docs/intro/installation) to compile your code.
+    - [IDE plugins](https://ligo.mavryk.org/docs/intro/editor-support)
     - [octez-client](https://tezos.gitlab.io/introduction/howtoget.html) used to interact with tezos blockchain. Pre-built binaries are available [here](https://github.com/serokell/tezos-packaging)
-- Use [webide](https://ide.ligolang.org), ideal if you want a quick view of ligo. You'll be able to do, test, dry-run, and deploy the code !
+- Use [webide](https://ide.mavryk.network), ideal if you want a quick view of ligo. You'll be able to do, test, dry-run, and deploy the code !
 
 ## Building a smart-contract.
 
@@ -73,7 +73,7 @@ namespace Counter {
 
 ### What is a namespace ?
 
-A namespace is the jsligo keyword to declare a Module in Ligo it provides a scope to the identifiers (names of types, functions, variables, etc) to prevent collisions between them. Only exported identifiers can be accessed from the outside using dot notation. More details in [Module section](https://ligolang.org/docs/language-basics/modules?lang=jsligo)
+A namespace is the jsligo keyword to declare a Module in Ligo it provides a scope to the identifiers (names of types, functions, variables, etc) to prevent collisions between them. Only exported identifiers can be accessed from the outside using dot notation. More details in [Module section](https://ligo.mavryk.org/docs/language-basics/modules?lang=jsligo)
 ```
 <namespace>.<identifier>
 ```
@@ -82,9 +82,9 @@ A namespace is the jsligo keyword to declare a Module in Ligo it provides a scop
 
 ### What is a storage ?
 
-Storage is the datas stored in your smart-contract, in michelson and on-chain. When you deploy your contract you will pay for the storage, so keep it as light as possible and use it only for data which has to be in blockchain. See [Optimisation section](https://ligolang.org/docs/tutorials/optimisation/) for more details.
+Storage is the datas stored in your smart-contract, in michelson and on-chain. When you deploy your contract you will pay for the storage, so keep it as light as possible and use it only for data which has to be in blockchain. See [Optimisation section](https://ligo.mavryk.org/docs/tutorials/optimisation/) for more details.
 
-When you will need to deploy a contract, the storage will need an init value (flag `--init` onto `octez-client`) defined in `Michelson`. It's possible to express it in Ligo using [compile storage command](https://ligolang.org/docs/manpages/compile%20storage).
+When you will need to deploy a contract, the storage will need an init value (flag `--init` onto `octez-client`) defined in `Michelson`. It's possible to express it in Ligo using [compile storage command](https://ligo.mavryk.org/docs/manpages/compile%20storage).
 
 ```
 ligo compile storage <your_main_file> <ligo_expression> -m <your_module_in_main_file>
@@ -93,13 +93,13 @@ ligo compile storage <your_main_file> <ligo_expression> -m <your_module_in_main_
 
 ### What is an entry ?
 
-An [entry-point](https://ligolang.org/docs/advanced/entrypoints-contracts?lang=jsligo#entry-points) is a pure function marked with `@entry` annotation that can be formalized as `[list<operation>, storage] = f(parameter, storage)` where :
+An [entry-point](https://ligo.mavryk.org/docs/advanced/entrypoints-contracts?lang=jsligo#entry-points) is a pure function marked with `@entry` annotation that can be formalized as `[list<operation>, storage] = f(parameter, storage)` where :
 - f is the entry-point function that is called
 - parameter contains the inputs that are sent by the caller when the contract is called
 - storage is the state of the storage. The input is the current state of the storage, and it outputs the next state
 - `list<operation>` is a list of commands that will be executed by the block chain (for instance transfers)
 
-It's also a function that the RPC node of the Tezos blockchain will expose. It'll be possible to interact with your smart-contract by calling them.
+It's also a function that the RPC node of the Mavryk blockchain will expose. It'll be possible to interact with your smart-contract by calling them.
 
 # Compile a contract
 
@@ -265,24 +265,24 @@ ligo run test main.jsligo
 The command will run every function main with `test` and return their values.
 
 More on the syntax for the test framework
-[here](https://ligolang.org/docs/advanced/testing#testing-with-test)
+[here](https://ligo.mavryk.org/docs/advanced/testing#testing-with-test)
 and more on how to write and test namespace/module contracts
-[here](https://ligolang.org/docs/next/language-basics/modules#modules-as-contracts).
+[here](https://ligo.mavryk.org/docs/next/language-basics/modules#modules-as-contracts).
 
 # Publishing the contract
 
-For deploying the contract on Tezos, we will use the `octez-client` interface as we did on the previous section.
+For deploying the contract on Mavryk, we will use the `octez-client` interface as we did on the previous section.
 
 First, you will need an account address. You can get one using any wallet listed [here](https://tezos.com/learn/store-and-use/).
 Once you have your first account configured, go to a [faucet](https://faucet.marigold.dev/), select the `ghostnet` testnet and claim `XTZ` tokens. clikc on the faucet and you will receive some tokens to play with.
 
-Then we are going to point the Tezos client to a Ghostnet testnet node
+Then we are going to point the Mavryk client to a Ghostnet testnet node
 
 ```zsh
 octez-client --endpoint https://ghostnet.tezos.marigold.dev/ config update
 ```
 
-Ghostnet is a testnet, which is a separate network from the Tezos mainnet, which can be used for testing.
+Ghostnet is a testnet, which is a separate network from the Mavryk mainnet, which can be used for testing.
 
 Export the mnemonic from your wallet (almost every wallet does it, look on settings or read wallet documentation to see how to do it), then import your account locally. Type on the terminal
 
@@ -292,21 +292,21 @@ octez-client import keys from mnemonic myWallet
 
 Paste the mnemonic when prompt appears
 
-You are now ready to originate your contract with your user. On your wallet, copy your public hash key address `mv1...` or `mv2...` and replace the placeholder `<my_tz_address...>` on the command you need to run :
+You are now ready to originate your contract with your user. On your wallet, copy your public hash key address `mv1...` or `mv2...` and replace the placeholder `<my_mv_address...>` on the command you need to run :
 
 ```zsh
 octez-client originate contract counter \
-              transferring 0 from <my_tz_address...> \
+              transferring 0 from <my_mv_address...> \
               running counter.mv \
               --init 10 --burn-cap 0.1 --force
 ```
 
-Again, you will receive several messages from the node and you should get the confirmation that the contract has been published. Note the `KT1...` address available in logs, you'll be able to find your contract onto an indexer like `tzkt` through url like `https://ghostnet.tzkt.io/KT1.../` don't forget to put your `KT1` address
+Again, you will receive several messages from the node and you should get the confirmation that the contract has been published. Note the `KT1...` address available in logs, you'll be able to find your contract onto an indexer like `mvkt` through url like `https://api.mavryk.io/basenet/v1/KT1.../` don't forget to put your `KT1` address
 
 You can know call your contract with
 
 ```zsh
-octez-client call counter from <my_tz_address...> \
+octez-client call counter from <my_mv_address...> \
              --arg "(Left (Right 32))" \
              --burn-cap 0.1
 ```
@@ -330,7 +330,7 @@ ligo compile parameter main.jsligo "Increment (32)" -m Counter
 
 </Syntax>
 
-If you do so, back to `tzkt`, you will see several information on the operation, including the new contract storage.
+If you do so, back to `mvkt`, you will see several information on the operation, including the new contract storage.
 
 
 ## Testing the Michelson contract locally
@@ -339,4 +339,4 @@ It can be annoying to deploy you contract onto a node to test it. We advise test
 
 This conclude this part of our tutorial.
 You should now be able to compile, test, publish and call a contract.
-Now you can go to the [tacos shop tutorial](https://ligolang.org/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract) to know more about programming with LIGO or you can start developing your own contract using the LIGO syntax you are more familiar with.
+Now you can go to the [tacos shop tutorial](https://ligo.mavryk.org/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract) to know more about programming with LIGO or you can start developing your own contract using the LIGO syntax you are more familiar with.

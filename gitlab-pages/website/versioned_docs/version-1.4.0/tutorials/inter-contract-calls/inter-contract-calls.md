@@ -5,7 +5,7 @@ title: Inter-contract invocations
 
 import Syntax from '@theme/Syntax';
 
-In this guide, we will look into contract interactions on Mavryk. We will provide examples of how one contract can invoke and create other contracts on the same chain. We will also describe the execution model Tezos contracts live in and see how it is different from a more conventional "direct calls" model.
+In this guide, we will look into contract interactions on Mavryk. We will provide examples of how one contract can invoke and create other contracts on the same chain. We will also describe the execution model Mavryk contracts live in and see how it is different from a more conventional "direct calls" model.
 
 ## Internal operations
 
@@ -18,10 +18,10 @@ We will mainly focus on internal _transactions,_ as this is the most common type
 
 ## A note on complexity
 
-Usually, you do not want to have overly-complex contract interactions when you develop your Tezos contracts. There are several reasons for this:
-1. Transactions between contracts are expensive. Tezos bakers need to fetch the callee from the context (this is how internal blockchain storage is called in Tezos), deserialise and type-check it, then perform the requested operation and store the result. Among these actions, code execution is the cheapest one in terms of gas.
+Usually, you do not want to have overly-complex contract interactions when you develop your Mavryk contracts. There are several reasons for this:
+1. Transactions between contracts are expensive. Mavryk bakers need to fetch the callee from the context (this is how internal blockchain storage is called in Mavryk), deserialise and type-check it, then perform the requested operation and store the result. Among these actions, code execution is the cheapest one in terms of gas.
 2. Transactions between contracts are hard and error-prone. When you split your business logic across several contracts, you need to think of how these contracts interact. This may cause unforeseen vulnerabilities if you do not give it enough attention.
-3. Tezos most probably has other means to achieve what you want. Lambdas make it possible to alter the behaviour of the contract after origination, new cryptographic primitives get introduced via protocol upgrades, separation of concerns can be achieved by splitting your business logic into LIGO modules that will eventually get compiled into a single contract, etc.
+3. Mavryk most probably has other means to achieve what you want. Lambdas make it possible to alter the behaviour of the contract after origination, new cryptographic primitives get introduced via protocol upgrades, separation of concerns can be achieved by splitting your business logic into LIGO modules that will eventually get compiled into a single contract, etc.
 
 However, there are legit reasons for using internal operations, including the following:
 1. You communicate with an external entity, e.g., transfer a third-party FA2 token.
@@ -30,7 +30,7 @@ However, there are legit reasons for using internal operations, including the fo
 
 ## Internal transactions in LIGO
 
-The simplest example of an internal transaction is sending Tez to a contract. Note that in Tezos, implicit accounts owned by people holding private keys are contracts as well. Implicit accounts have no code and accept _unit_ as the parameter. Consider the following code snippet:
+The simplest example of an internal transaction is sending Tez to a contract. Note that in Mavryk, implicit accounts owned by people holding private keys are contracts as well. Implicit accounts have no code and accept _unit_ as the parameter. Consider the following code snippet:
 
 <Syntax syntax="cameligo">
 
@@ -129,9 +129,9 @@ LIGO compiler generates the following Michelson type for the parameter of this c
     (int %subtract));
 ```
 
-The type got transformed to an annotated tree of Michelson union types (denoted with `or typeA typeB`). The annotations (`%add`, `%multiply`, etc.) here represent _entrypoints_ – a construct Tezos has special support for.
+The type got transformed to an annotated tree of Michelson union types (denoted with `or typeA typeB`). The annotations (`%add`, `%multiply`, etc.) here represent _entrypoints_ – a construct Mavryk has special support for.
 
-In Tezos, we are not required to provide the _full_ type of the contract parameter if we specify an entrypoint. In this case, we just need to know the type of the _entrypoint_ parameter – in case of `%add`, it is an `int` – not the full type.
+In Mavryk, we are not required to provide the _full_ type of the contract parameter if we specify an entrypoint. In this case, we just need to know the type of the _entrypoint_ parameter – in case of `%add`, it is an `int` – not the full type.
 
 To specify an entrypoint, we can use `Mavryk.get_entrypoint_opt` instead of `Mavryk.get_contract_opt`. It accepts an extra argument with an entrypoint name:
 
@@ -165,9 +165,9 @@ Entrypoints are especially useful for standardisation. For example, FA2 token st
 
 ## Interoperability and standards compliance
 
-There are several high-level languages for Tezos, and you should not expect that all the contracts you interact with are written in LIGO.
+There are several high-level languages for Mavryk, and you should not expect that all the contracts you interact with are written in LIGO.
 
-Internally, Tezos stores and operates on contracts in Michelson. Currently, Michelson does not support record and variant types of arbitrary length natively. It only has `pair a b` and `or a b`, each containing just _two_ type parameters.
+Internally, Mavryk stores and operates on contracts in Michelson. Currently, Michelson does not support record and variant types of arbitrary length natively. It only has `pair a b` and `or a b`, each containing just _two_ type parameters.
 
 <Syntax syntax="cameligo">
 
@@ -198,11 +198,11 @@ However, other languages may use a different representation. For example, they c
 
 It is not a problem for top-level parameter types: we can expect the callers to specify an entrypoint. But if we pass structures and values of variant types as entrypoint arguments, we need to make sure their internal representation is the same.
 
-If you interact with other contracts, or expect other contracts to interact with your contract, we strongly advise you to consider using special types and annotations described in the [Interop](https://ligolang.org/docs/advanced/interop) section of the documentation.
+If you interact with other contracts, or expect other contracts to interact with your contract, we strongly advise you to consider using special types and annotations described in the [Interop](https://ligo.mavryk.org/docs/advanced/interop) section of the documentation.
 
 ## Execution order
 
-When you emit an internal operation, Tezos puts it into the _internal operations queue._
+When you emit an internal operation, Mavryk puts it into the _internal operations queue._
 Here is how this queue looks like when you have one contract that emits two internal operations:
 
 | Current call | Queue before | Queue after |
@@ -211,7 +211,7 @@ Here is how this queue looks like when you have one contract that emits two inte
 | `B %foo` | [`C %bar`] | [`C %bar`] |
 | `C %bar` | [] | [] |
 
-Now imagine that `B %foo` emits another operation, e.g. it calls back to `A %fooCallback`. Tezos will put this internal operation to the end of the queue:
+Now imagine that `B %foo` emits another operation, e.g. it calls back to `A %fooCallback`. Mavryk will put this internal operation to the end of the queue:
 
 | Current call | Queue before | Queue after |
 |--------------|--------------|-------------|
@@ -229,7 +229,7 @@ This BFS execution order is very different from Ethereum's direct synchronous me
 ![DFS order of execution](./assets/dfs_order.png)
 
 Here is a more complex scenario featuring a graph of 12 different operations. We omit the contract and entrypoint names and use lowercase letters and numbers to identify operations.
-1. BFS order (Tezos):
+1. BFS order (Mavryk):
 
 ![BFS order of execution](./assets/complex_bfs.png)
 
@@ -246,7 +246,7 @@ In practice, you should always bear in mind that the internal operations are que
 
 ## Returning values
 
-When trying to port an existing distributed application to Tezos, you may want to _read_ the storage of another contract or call some entrypoint to get a computed value. In Tezos, entrypoints can only update storage and emit other operations.
+When trying to port an existing distributed application to Mavryk, you may want to _read_ the storage of another contract or call some entrypoint to get a computed value. In Mavryk, entrypoints can only update storage and emit other operations.
 
 In theory, one can use a callback – the callee could emit an operation back to the caller with the computed value. However, this pattern is often insecure:
 * You should somehow make sure that the response matches the request. Due to the breadth-first order of execution, you cannot assume that there have been no other requests in between.

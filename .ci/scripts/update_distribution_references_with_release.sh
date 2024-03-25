@@ -7,8 +7,8 @@ SRI_LIGO_BINARY_HASH=$3
 
 ROOT_FOLDER="../.."
 
-DISTRIBUTION_URL_PATTERN_DEB_NEXT="https://ligolang.org/deb/ligo.deb"
-DISTRIBUTION_URL_PATTERN_BINARY_NEXT="https://ligolang.org/bin/linux/ligo"
+DISTRIBUTION_URL_PATTERN_DEB_NEXT="https://ligo.mavryk.org/deb/ligo.deb"
+DISTRIBUTION_URL_PATTERN_BINARY_NEXT="https://ligo.mavryk.org/bin/linux/ligo"
 
 DISTRIBUTION_URL_GITLAB_ARTIFACT_REGEX_PATTERN_RELEASE="(.*https://gitlab\.com/mavryk-network/ligo/-/jobs/)[0-9]{10}(/artifacts/raw\/(ligo\.deb|ligo))"
 

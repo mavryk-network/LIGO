@@ -20,7 +20,7 @@ Version: $version\n\
 Architecture: all\n\
 Maintainer: info@ligolang.org\n\
 Depends: libev4, libgmp10, libgmpxx4ldbl\n\
-Homepage: http://ligolang.org\n\
+Homepage: http://ligo.mavryk.org\n\
 Description: LIGO is a statically typed high-level smart-contract language that compiles down to Michelson." >> /package/DEBIAN/control
 
 RUN cd /package/dist && dpkg-deb --build /package .

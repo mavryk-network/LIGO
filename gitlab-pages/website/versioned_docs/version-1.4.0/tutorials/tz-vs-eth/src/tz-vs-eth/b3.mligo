@@ -1,1 +1,0 @@
-type creature = {heads_count : nat; legs_count : nat; tails_count : nat}

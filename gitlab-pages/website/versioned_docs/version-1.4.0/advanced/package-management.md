@@ -47,12 +47,12 @@ by simply placing a manifest file, `ligo.json` over there.
 
 ## LIGO registry
 
-The [LIGO registry](https://packages.ligolang.org/) is used to host LIGO packages. The LIGO registry contains the contracts/libraries along with their metadata. The packages which reside on the LIGO registry can be installed using the `ligo install` command.
+The [LIGO registry](https://packages.mavryk.network/) is used to host LIGO packages. The LIGO registry contains the contracts/libraries along with their metadata. The packages which reside on the LIGO registry can be installed using the `ligo install` command.
 
 ## Consuming
 
 To fetch (download) & maintain different versions of external libraries we need a package manager.
-LIGO libraries can be published to the [LIGO registry](https://packages.ligolang.org/) as well as [npm](https://www.npmjs.com/).
+LIGO libraries can be published to the [LIGO registry](https://packages.mavryk.network/) as well as [npm](https://www.npmjs.com/).
 Using `ligo install` command we can fetch these ligo libraries.
 
 Note:
@@ -60,7 +60,7 @@ Earlier versions of LIGO used [`esy`](https://esy.sh) as the backend for package
 
 ### Workflow
 
-We will need the LIGO compiler to compile smart contracts, to get the LIGO compiler follow these [instructions](https://ligolang.org/docs/intro/installation).
+We will need the LIGO compiler to compile smart contracts, to get the LIGO compiler follow these [instructions](https://ligo.mavryk.org/docs/intro/installation).
 
 Next, we will use a simple dependency `@ligo/math-lib` published on the LIGO registry. To download & install the library, run,
 
@@ -311,7 +311,7 @@ Sample LIGO manifest (`ligo.json`) with some of the above information:
     "type": "git",
     "url": "git+https://github.com/ligolang/math-lib-cameligo.git"
   },
-  "author": "ligoLANG <https://ligolang.org/>",
+  "author": "ligoLANG <https://ligo.mavryk.org/>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ligolang/math-lib-cameligo/issues"
@@ -455,7 +455,7 @@ This would create a `.ligorc` in the home directory.
 ### Publishing
 
 LIGO packages can be published to a central repository at
-[`packages.ligolang.org`](https://packages.ligolang.org/) with the `ligo publish` command.
+[`packages.ligo.mavryk.org`](https://packages.mavryk.network/) with the `ligo publish` command.
 
 ```bash
 $ ligo publish

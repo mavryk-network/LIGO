@@ -13,4 +13,4 @@ As shown in the Schema, LIGO’s compiler is separated in roughly 3 separate par
 
 - The Front End. This is the bridge between a given syntax and the Common AST.
 
-- The Back End. This is the bridge between the Common AST and a given compilation target. Currently, our only target is Michelson, but we’ll also target Marigold, and if Tezos moves to Web Assembly, Web Assembly.
+- The Back End. This is the bridge between the Common AST and a given compilation target. Currently, our only target is Michelson, but we’ll also target Marigold, and if Mavryk moves to Web Assembly, Web Assembly.

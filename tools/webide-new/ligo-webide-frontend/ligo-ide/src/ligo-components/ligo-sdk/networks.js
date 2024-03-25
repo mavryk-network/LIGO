@@ -17,8 +17,8 @@ const networks = rawNetworks.map((v) => {
     chainId: `${v.name}+${v.url}`,
     symbol: v.symbol,
     logoIcon:
-      v.icon === "tezosmain"
-        ? NetworkAllLogoImg.tezosmain
+      v.icon === "mavrykmain"
+        ? NetworkAllLogoImg.mavrykmain
         : v.icon === "dpfmain"
         ? NetworkAllLogoImg.dpfmain
         : undefined,

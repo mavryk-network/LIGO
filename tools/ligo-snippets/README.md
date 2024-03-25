@@ -51,7 +51,7 @@ The `snippetData` values of `language` and `code` are required. These values det
 
 # Ligo Web IDE 
 
-Ligo Snippets can be opened in the Ligo Web IDE [(https://ide.ligolang.org/)](https://ide.ligolang.org/) by clicking the IDE button at the bottom of the snippet. The Ligo Web IDE can take in preset configurations for the available features. 
+Ligo Snippets can be opened in the Ligo Web IDE [(https://ide.mavryk.network/)](https://ide.mavryk.network/) by clicking the IDE button at the bottom of the snippet. The Ligo Web IDE can take in preset configurations for the available features. 
 
 ## Available Configurations
 

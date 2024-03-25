@@ -4,7 +4,7 @@
   "version": "0.14.8",
   "author": {
     "name": "LIGO",
-    "url": "https://ligolang.org"
+    "url": "https://ligo.mavryk.org"
   },
   "license": "GPL-3.0",
   "private": true,
@@ -27,10 +27,10 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.12.0",
     "@isomorphic-git/lightning-fs": "^4.4.1",
-    "@taquito/beacon-wallet": "^13.0.1",
-    "@taquito/signer": "^13.0.1",
-    "@taquito/taquito": "^13.0.1",
-    "@taquito/utils": "^13.0.1",
+    "@mavrykdynamics/taquito-beacon-wallet": "^19.0.2",
+    "@mavrykdynamics/taquito-signer": "^19.0.2",
+    "@mavrykdynamics/taquito": "^19.0.2",
+    "@mavrykdynamics/taquito-utils": "^19.0.2",
     "axios": "^0.27.2",
     "big.js": "^6.1.1",
     "bip39": "^3.0.4",

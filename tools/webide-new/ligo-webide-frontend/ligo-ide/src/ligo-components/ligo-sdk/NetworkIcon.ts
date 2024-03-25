@@ -1,7 +1,7 @@
-import tezosmain from "./assets/tezosmain.png";
+import mavrykmain from "./assets/mavrykmain.svg";
 import dpfmain from "./assets/dpfmain.png";
 
 export default {
-  tezosmain,
+  mavrykmain,
   dpfmain,
 };

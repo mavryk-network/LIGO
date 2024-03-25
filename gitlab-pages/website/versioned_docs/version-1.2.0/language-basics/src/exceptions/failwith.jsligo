@@ -1,3 +1,0 @@
-@entry
-const main = (p: unit, s: unit) : [list<operation>, unit] =>
-  failwith("This contract always fails");

@@ -1,7 +1,7 @@
 ---
 id: events
 title: Events
-description: Event operations for Tezos
+description: Event operations for Mavryk
 hide_table_of_contents: true
 ---
 

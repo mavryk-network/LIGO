@@ -357,7 +357,7 @@ For debugging.
   let print_customatizable_options fmt =
     fprintf fmt "(defgroup ligo nil\n";
     fprintf fmt "  \"Support for LIGO code.\";";
-    fprintf fmt "  :link '(url-link \"https://www.ligolang.org/\")\n";
+    fprintf fmt "  :link '(url-link \"https://www.ligo.mavryk.org/\")\n";
     fprintf fmt "  :group 'languages)\n\n";
     fprintf fmt "(defcustom ligo-bin \"ligo\"\n";
     fprintf fmt "  \"Path to LIGO executable.\"\n";

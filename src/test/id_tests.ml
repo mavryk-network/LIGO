@@ -24,7 +24,7 @@ let buy_id ~raise () =
   let open Lwt.Let_syntax in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -52,7 +52,7 @@ let buy_id ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.one
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -97,7 +97,7 @@ let buy_id_sender_addr ~raise () =
   let open Lwt.Let_syntax in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -125,7 +125,7 @@ let buy_id_sender_addr ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.one
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -168,7 +168,7 @@ let buy_id_wrong_amount ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -222,7 +222,7 @@ let update_details_owner ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -240,7 +240,7 @@ let update_details_owner ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -277,7 +277,7 @@ let update_details_owner ~raise () =
       ; "skip_price", e_mumav ~loc 1000000
       ]
   in
-  let details = e_bytes_string ~loc "ligolang.org" in
+  let details = e_bytes_string ~loc "ligo.mavryk.org" in
   let param =
     e_record_ez
       ~loc
@@ -306,7 +306,7 @@ let update_details_controller ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -324,7 +324,7 @@ let update_details_controller ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -361,7 +361,7 @@ let update_details_controller ~raise () =
       ; "skip_price", e_mumav ~loc 1000000
       ]
   in
-  let details = e_bytes_string ~loc "ligolang.org" in
+  let details = e_bytes_string ~loc "ligo.mavryk.org" in
   let param =
     e_record_ez
       ~loc
@@ -391,7 +391,7 @@ let update_details_nonexistent ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -409,7 +409,7 @@ let update_details_nonexistent ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -428,7 +428,7 @@ let update_details_nonexistent ~raise () =
       ; "skip_price", e_mumav ~loc 1000000
       ]
   in
-  let details = e_bytes_string ~loc "ligolang.org" in
+  let details = e_bytes_string ~loc "ligo.mavryk.org" in
   let param =
     e_record_ez
       ~loc
@@ -458,7 +458,7 @@ let update_details_wrong_addr ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -472,7 +472,7 @@ let update_details_wrong_addr ~raise () =
     Proto_alpha_utils.Memory_proto_alpha.(
       make_options ~env ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -491,7 +491,7 @@ let update_details_wrong_addr ~raise () =
       ; "skip_price", e_mumav ~loc 1000000
       ]
   in
-  let details = e_bytes_string ~loc "ligolang.org" in
+  let details = e_bytes_string ~loc "ligo.mavryk.org" in
   let param =
     e_record_ez
       ~loc
@@ -521,7 +521,7 @@ let update_details_unchanged ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -539,7 +539,7 @@ let update_details_unchanged ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -583,7 +583,7 @@ let update_owner ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -601,7 +601,7 @@ let update_owner ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -662,7 +662,7 @@ let update_owner_nonexistent ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -680,7 +680,7 @@ let update_owner_nonexistent ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -723,7 +723,7 @@ let update_owner_wrong_addr ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -741,7 +741,7 @@ let update_owner_wrong_addr ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -783,7 +783,7 @@ let skip ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -801,7 +801,7 @@ let skip ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.one
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc
@@ -851,7 +851,7 @@ let skip_wrong_amount ~raise () =
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let program = get_program ~raise () in
   let%bind owner_addr = addr 5 in
-  let owner_website = e_bytes_string ~loc "ligolang.org" in
+  let owner_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_1 =
     e_record_ez
       ~loc
@@ -869,7 +869,7 @@ let skip_wrong_amount ~raise () =
         ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.fifty_cents
         ())
   in
-  let new_website = e_bytes_string ~loc "ligolang.org" in
+  let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
     e_record_ez
       ~loc

@@ -99,6 +99,6 @@ export const DEFAULT_SHARE_PARAMS: ShareParams = {
 export const DEFAULT_COMPACT_LIGO_IDE_PROPS: (ShareParams & CompactLigoIdeProps) = {
   ...DEFAULT_SHARE_PARAMS,
   result: '',
-  webIdeUrl: process.env.NODE_ENV === 'production' ? 'https://ide.ligolang.org' : 'http://localhost:8080',
+  webIdeUrl: process.env.NODE_ENV === 'production' ? 'https://ide.mavryk.network' : 'http://localhost:8080',
   theme: 'light'
 };
