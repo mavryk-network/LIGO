@@ -109,4 +109,5 @@ COPY --from=web-ide-builder /lib/ /lib/
 COPY --from=web-ide-builder /webide_bin /webide_bin/
 COPY --from=ligo-compiler /root/ligo /usr/local/bin/ligo
 
-ENTRYPOINT [ "/webide_bin/ligo-webide-backend", "-p", "8080", "--ligo-path", "/usr/local/bin/ligo", "--octez-client-path", "/usr/local/bin/octez-client", "--verbose" ]
+ENTRYPOINT [ "/webide_bin/ligo-webide-backend", "-p", "8080", "--ligo-path", "/usr/local/bin/ligo", "--octez-client-path", "/usr/local/bin/octez-client", "--verbosity", "2" ]
+EXPOSE 8080
