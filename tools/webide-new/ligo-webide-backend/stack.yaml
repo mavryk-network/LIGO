@@ -11,10 +11,17 @@ extra-deps:
 #  - code/morley
 #  - code/morley-client
 #  - code/morley-prelude
-- lorentz-0.15.0
-- morley-1.19.0
-- morley-client-0.3.0
-- morley-prelude-0.5.1
+- git: https://gitlab.com/mavryk-network/morley.git
+  commit: 81e76c8ea5148e7505af0e9e7f052ea154d0a00a
+  subdirs: 
+  - code/mavryk-lorentz
+  - code/mavryk-morley
+  - code/mavryk-morley-client
+  - code/mavryk-morley-prelude
+# - lorentz-0.15.0
+# - morley-1.19.0
+# - morley-client-0.3.0
+# - morley-prelude-0.5.1
 - git: https://github.com/serokell/base-noprelude.git
   commit: c8b06c4c8a271fce0c2f41ab18e88d58e64bac52 # 4.15.1.0
 - OddWord-1.0.2.0

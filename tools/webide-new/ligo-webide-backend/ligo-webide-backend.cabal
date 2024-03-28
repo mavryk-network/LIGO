@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -108,11 +108,11 @@ library
     , lens
     , loot-prelude
     , lsp-types
+    , mavryk-morley
+    , mavryk-morley-client
     , megaparsec
     , microlens-platform
     , monad-control
-    , morley
-    , morley-client
     , mtl
     , openapi3
     , optparse-applicative

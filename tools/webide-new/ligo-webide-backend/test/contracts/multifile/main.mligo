@@ -1,16 +1,11 @@
 #include "dir/types.mligo"
 
-// Two entrypoints
+(* Three entrypoints *)
+[@entry]
+let increment (delta : int) (store : storage) : return = [], store + delta
 
-let add (store, delta : storage * int) : storage = store + delta
-let sub (store, delta : storage * int) : storage = store - delta
+[@entry]
+let decrement (delta : int) (store : storage) : return = [], store - delta
 
-(* Main access point that dispatches to the entrypoints according to
-   the smart contract parameter. *)
-
-let main (action, store : parameter * storage) : return =
- ([] : operation list),    // No operations
- (match action with
-   Increment (n) -> add (store, n)
- | Decrement (n) -> sub (store, n)
- | Reset         -> 0)
+[@entry]
+let reset (() : unit) (_ : storage) : return = [], 0

@@ -18,8 +18,8 @@ import Morley.Client
   mkMorleyClientEnv, revealKeyUnlessRevealed, runMorleyClientM)
 import Morley.Client.Action.Common (computeStorageLimit)
 import Morley.Client.RPC (AppliedResult, ProtocolParameters(ppCostPerByte))
-import Morley.Client.TezosClient.Impl as TezosClient (importKey)
-import Morley.Micheline (StringEncode(..), TezosMutez(..))
+import Morley.Client.MavrykClient.Impl as MavrykClient (importKey)
+import Morley.Micheline (StringEncode(..), MavrykMumav(..))
 import Morley.Michelson.Macro (expandContract)
 import Morley.Michelson.Parser
   (MichelsonSource(MSUnspecified), ParserException(..), parseExpandValue, parseNoEnv, program)
@@ -28,11 +28,11 @@ import Morley.Michelson.Printer.Util (doesntNeedParens, printDocS)
 import Morley.Michelson.TypeCheck (TypeCheckOptions(..), typeCheckContractAndStorage)
 import Morley.Michelson.Typed (SomeContractAndStorage(..))
 import Morley.Michelson.Untyped (Contract, Value)
-import Morley.Tezos.Address (KindedAddress(ImplicitAddress))
-import Morley.Tezos.Address.Alias
+import Morley.Mavryk.Address (KindedAddress(ImplicitAddress))
+import Morley.Mavryk.Address.Alias
   (AddressOrAlias(AddressAlias), Alias(ContractAlias, ImplicitAlias))
-import Morley.Tezos.Core (Mutez(UnsafeMutez, unMutez))
-import Morley.Tezos.Crypto (KeyHash, PublicKey, SecretKey, detSecretKey, hashKey, toPublic)
+import Morley.Mavryk.Core (Mumav(UnsafeMumav, unMumav))
+import Morley.Mavryk.Crypto (KeyHash, PublicKey, SecretKey, detSecretKey, hashKey, toPublic)
 
 import Common (WebIDEM)
 import Config (ServerConfig(..))
@@ -113,9 +113,9 @@ generateDeployScript request = do
 
   let morleyConfig :: MorleyClientConfig
       morleyConfig = MorleyClientConfig
-        { mccEndpointUrl = Just (BaseUrl Https "ghostnet.tezos.marigold.dev" 443 "")
-        , mccTezosClientPath = octezClientPath
-        , mccMbTezosClientDataDir = Nothing
+        { mccEndpointUrl = Just (BaseUrl Https "rpc.mavryk.network" 443 "/atlasnet")
+        , mccMavrykClientPath = octezClientPath
+        , mccMbMavrykClientDataDir = Nothing
         , mccVerbosity = 0
         , mccSecretKey = Nothing
         }
@@ -127,7 +127,7 @@ generateDeployScript request = do
   protocolParams <- liftIO $ runMorleyClientM env getProtocolParameters
 
   let storageLimit = unStringEncode $ computeStorageLimit appliedResults protocolParams
-  let costPerByte = unMutez $ unTezosMutez $ ppCostPerByte protocolParams
+  let costPerByte = unMumav $ unMavrykMumav $ ppCostPerByte protocolParams
   let burnFee = fromIntegral costPerByte * storageLimit
 
   let script = Text.pack $
@@ -160,7 +160,7 @@ mkOriginationData (SomeContractAndStorage con val) =
   OriginationData
     { odAliasBehavior = DontSaveAlias
     , odName = ContractAlias "contract"
-    , odBalance = UnsafeMutez 0
+    , odBalance = UnsafeMumav 0
     , odContract = con
     , odStorage = val
     , odDelegate = Nothing
@@ -190,7 +190,7 @@ keyHash = hashKey publicKey
 
 dryRunOperations
   :: OriginationData
-  -> MorleyClientM (NonEmpty (AppliedResult, TezosMutez))
+  -> MorleyClientM (NonEmpty (AppliedResult, MavrykMumav))
 dryRunOperations originationData = do
   alias <- importKey True (ImplicitAlias "sender") secretKey
   revealKeyUnlessRevealed (ImplicitAddress keyHash) Nothing

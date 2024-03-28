@@ -26,7 +26,7 @@ test_singleFile = mkTest "compiles basic single-file input correctly" $ do
                 [SourceFile "main.mligo" (Source source)]
               , pModule = Nothing
             },
-          cerFunction = "main",
+          cerFunction = "increment",
           cerProtocol = Nothing,
           cerDisplayFormat = Nothing
         }

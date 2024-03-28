@@ -81,8 +81,8 @@ library:
   - megaparsec
   - microlens-platform
   - monad-control
-  - morley
-  - morley-client
+  - mavryk-morley
+  - mavryk-morley-client
   - mtl
   - optparse-applicative
   - process
