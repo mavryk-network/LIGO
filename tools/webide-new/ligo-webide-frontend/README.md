@@ -30,4 +30,4 @@ This project is a fork of the Black IDE by Obsidian Labs, available at
 https://github.com/ObsidianLabs/Black-IDE. The project was forked on April 13,
 2022. Therefore, changes prior to April 13, 2022 are copyrighted by the Obisidian
 Labs contributors, licensed under GPL v3. Any changes after April 13, 2022 are
-copyrighted by LIGO. 
+copyrighted by LIGO.
