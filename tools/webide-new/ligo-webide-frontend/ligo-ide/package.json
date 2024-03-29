@@ -11,7 +11,7 @@
   "homepage": "./",
   "main": "build/main/index.js",
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   },
   "scripts": {
     "dev:react": "react-app-rewired start",
