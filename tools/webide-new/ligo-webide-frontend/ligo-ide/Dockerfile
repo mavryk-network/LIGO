@@ -24,6 +24,7 @@ ARG backend_url
 ARG http_protocol
 ENV HTTP_PROTOCOL=$http_protocol
 ENV BACKEND_URL=$backend_url
+ENV NODE_OPTIONS=--openssl-legacy-provider 
 COPY --from=syntaxes . ./src/ligo-components/ligo-project/Project/languages/syntaxes/
 RUN echo $(ls ./src/ligo-components/ligo-project/Project/languages/syntaxes/)
 RUN yarn build:react-prod

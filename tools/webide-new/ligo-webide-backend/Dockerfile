@@ -1,4 +1,4 @@
-FROM tezos/tezos:latest as octez-client
+FROM mavrykdynamics/mavryk:latest as octez-client
 FROM mavrykdynamics/ligo:1.4.0 as ligo-compiler
 FROM ubuntu:20.04 as web-ide-builder
 
