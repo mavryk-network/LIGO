@@ -186,10 +186,10 @@ const config = {
       },
       algolia: {
         // The application ID provided by Algolia
-        appId: "ZJTW93II01",
+        appId: "M23OB8S3C8",
 
         // Public API key: it is safe to commit it
-        apiKey: "666cd6151b57b31964fece17ad094ba9",
+        apiKey: "bca633f86972382356a13c68b81de25f",
 
         indexName: "ligolang",
 
