@@ -679,7 +679,7 @@ let rec compile_expression ~raise (ae : AST.expression) : expression =
     in
     let args = List.tl_exn vals in
     let args = List.map ~f:self args in
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let orig_code = code in
     let code, errs = Micheline_parser.tokenize code in
     (match errs with
@@ -712,7 +712,7 @@ let rec compile_expression ~raise (ae : AST.expression) : expression =
       trace_option ~raise (corner_case ~loc:__LOC__ "could not get a string")
       @@ get_a_string code
     in
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let orig_code = code in
     let code, errs = Micheline_parser.tokenize code in
     (match errs with

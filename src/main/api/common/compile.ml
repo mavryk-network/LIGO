@@ -7,7 +7,7 @@ module Formatter = Ligo_formatter
 let loc = Location.dummy
 
 let no_comment node =
-  Tezos_micheline.Micheline.(
+  Mavryk_micheline.Micheline.(
     inject_locations (fun _ -> Mini_c.dummy_meta) (strip_locations node))
 
 

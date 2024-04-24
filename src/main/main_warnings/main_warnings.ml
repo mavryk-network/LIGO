@@ -22,7 +22,7 @@ type all =
   | `Main_view_ignored of Location.t
   | `Main_entry_ignored of Location.t
   | `Michelson_typecheck_failed_with_different_protocol of
-    Environment.Protocols.t * Tezos_error_monad.Error_monad.error list
+    Environment.Protocols.t * Mavryk_error_monad.Error_monad.error list
   | `Jsligo_deprecated_failwith_no_return of Location.t
   | `Jsligo_deprecated_toplevel_let of Location.t
   | `Jsligo_unreachable_code of Location.t

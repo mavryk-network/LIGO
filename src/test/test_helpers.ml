@@ -231,7 +231,7 @@ let sign_message ~raise (program : Ast_typed.program) (payload : Ast_unified.exp
     : string Lwt.t
   =
   let open Lwt.Let_syntax in
-  let open Tezos_crypto in
+  let open Mavryk_crypto in
   let%map packed_payload = pack_payload ~raise program payload in
   let signed_data = Signature.sign sk packed_payload in
   let signature_str = Signature.to_b58check signed_data in
@@ -252,13 +252,13 @@ let addr id =
 
 
 let gen_keys () =
-  let open Tezos_crypto in
+  let open Mavryk_crypto in
   let raw_pkh, raw_pk, raw_sk = Signature.generate_key () in
   raw_pkh, raw_pk, raw_sk
 
 
 let str_keys (raw_pkh, raw_pk, raw_sk) =
-  let open Tezos_crypto in
+  let open Mavryk_crypto in
   let sk_str = Signature.Secret_key.to_b58check raw_sk in
   let pk_str = Signature.Public_key.to_b58check raw_pk in
   let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in

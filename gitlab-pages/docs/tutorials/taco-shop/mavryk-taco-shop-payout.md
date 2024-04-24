@@ -1,12 +1,12 @@
 ---
-id: tezos-taco-shop-payout
+id: mavryk-taco-shop-payout
 title: Paying out profits from the Taco Shop
 ---
 
 import Syntax from '@theme/Syntax';
 
 In the
-[previous tutorial](tezos-taco-shop-smart-contract.md)
+[previous tutorial](mavryk-taco-shop-smart-contract.md)
 we have learnt how to setup & interact with the LIGO CLI. Followed an
 implementation of a simple Taco Shop smart contract for our
 entrepreneur Pedro.
@@ -15,7 +15,7 @@ In this tutorial we will make sure Pedro has access to tokens that
 people have spent at his shop when buying tacos.
 
 <br/>
-<img src="/img/tutorials/get-started/tezos-taco-shop-payout/get-money.svg" width="50%" />
+<img src="/img/tutorials/get-started/mavryk-taco-shop-payout/get-money.svg" width="50%" />
 
 <div style={{ opacity: 0.7, textAlign: 'center', fontSize: '10px' }}>
 <div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/"                 title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/"                 title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
@@ -424,7 +424,7 @@ ligo run dry-run taco-shop.jsligo --syntax jsligo -m TacoShop --amount 1 --entry
 
 </Syntax>
 
-<img src="/img/tutorials/get-started/tezos-taco-shop-payout/dry-run-1.png" />
+<img src="/img/tutorials/get-started/mavryk-taco-shop-payout/dry-run-1.png" />
 <div style={{ opacity: 0.7, textAlign: 'center', fontSize: '12px', marginTop: '-24px' }}>
 <b>Operation(...bytes)</b> included in the output
 </div>

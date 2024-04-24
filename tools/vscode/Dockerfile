@@ -20,7 +20,7 @@ RUN apt-get -y install xvfb xclip
 
 
 ARG MAVKIT_VERSION="v16.1"
-RUN wget -q https://github.com/serokell/tezos-packaging/releases/download/${MAVKIT_VERSION}-1/mavkit-client -O /usr/bin/mavkit-client
+RUN wget -q https://github.com/serokell/mavryk-packaging/releases/download/${MAVKIT_VERSION}-1/mavkit-client -O /usr/bin/mavkit-client
 RUN chmod +x /usr/bin/mavkit-client
 
 # Some runtime dependency for ligo

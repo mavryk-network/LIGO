@@ -1,7 +1,7 @@
 open Ligo_prim
 module Location = Simple_utils.Location
 
-type tezos_alpha_error = [ `Tezos_alpha_error of Tezos_error_monad.Error_monad.error ]
+type tezos_alpha_error = [ `Mavryk_alpha_error of Mavryk_error_monad.Error_monad.error ]
 
 type all =
   [ `Build_error_tracer of BuildSystem.Errors.t
@@ -22,7 +22,7 @@ type all =
   | `Main_could_not_serialize of tezos_alpha_error list
   | `Check_typed_arguments_tracer of Simple_utils.Runned_result.check_type * all
   | `Main_unknown
-  | `Main_execution_failed of (int, string) Tezos_micheline.Micheline.node
+  | `Main_execution_failed of (int, string) Mavryk_micheline.Micheline.node
   | `Main_cannot_open_global_constants of string
   | `Main_cannot_parse_global_constants of string * string
   | `Unparsing_michelson_tracer of tezos_alpha_error list
@@ -50,9 +50,9 @@ type all =
     `Main_interpret_test_entry_not_found of
     string
   | `Main_interpret_target_lang_error of
-    Location.t * Location.t list * Tezos_error_monad__TzCore.error list
+    Location.t * Location.t list * Mavryk_error_monad__TzCore.error list
   | `Main_interpret_target_lang_failwith of
-    Location.t * Location.t list * (int, string) Tezos_micheline.Micheline.node
+    Location.t * Location.t list * (int, string) Mavryk_micheline.Micheline.node
   | `Main_interpret_boostrap_not_enough of Location.t
   | `Main_interpret_meta_lang_eval of
     Location.t * Location.t list * Ligo_interpreter.Types.value

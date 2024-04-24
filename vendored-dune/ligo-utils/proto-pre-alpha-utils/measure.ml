@@ -1,5 +1,5 @@
 open X_error_monad
-open Tezos_micheline.Micheline
+open Mavryk_micheline.Micheline
 open Memory_proto_pre_alpha.Protocol
 
 let measure michelson =

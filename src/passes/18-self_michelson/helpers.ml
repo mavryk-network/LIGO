@@ -1,6 +1,6 @@
 open Tezos_utils
 open Michelson
-open Tezos_micheline.Micheline
+open Mavryk_micheline.Micheline
 
 let fetch_contract_ty_inputs : _ michelson -> (_ michelson * _ michelson) option
   = function

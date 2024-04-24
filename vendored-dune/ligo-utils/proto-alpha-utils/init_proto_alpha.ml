@@ -1,10 +1,10 @@
 open! Memory_proto_alpha
 module List = Core.List
-module Signature = Tezos_base.TzPervasives.Signature
+module Signature = Mavryk_base.TzPervasives.Signature
 module Data_encoding = Alpha_environment.Data_encoding
 module MBytes = Bytes
 module Error_monad = X_error_monad
-module Proto_env = Tezos_protocol_environment_001_PtAtLas
+module Proto_env = Mavryk_protocol_environment_001_PtAtLas
 open Error_monad
 open Protocol
 
@@ -25,7 +25,7 @@ module Context_init = struct
       (List.range 0 n)
 
   let make_shell ~level ~predecessor ~timestamp ~fitness ~operations_hash =
-    Tezos_base.Block_header.
+    Mavryk_base.Block_header.
       { level
       ; predecessor
       ; timestamp
@@ -75,7 +75,7 @@ module Context_init = struct
       security_deposit_ramp_up_cycles
       no_reward_cycles
     =
-    let open Tezos_base.TzPervasives.Error_monad in
+    let open Mavryk_base.TzPervasives.Error_monad in
     let open Lwt_syntax in
     let open Lwt in
     let bootstrap_accounts =
@@ -105,7 +105,7 @@ module Context_init = struct
     in
     let proto_params = Data_encoding.Binary.to_bytes_exn Data_encoding.json json in
     let* ctxt =
-      Tezos_protocol_environment.(
+      Mavryk_protocol_environment.(
         Context.add Memory_context.empty [ "version" ] (MBytes.of_string "genesis"))
     in
     let* ctxt = Proto_env.Context.(add ctxt protocol_param_key proto_params) in
@@ -135,7 +135,7 @@ module Context_init = struct
       make_shell
         ~level:0l
         ~predecessor:hash
-        ~timestamp:Tezos_base.TzPervasives.Time.Protocol.epoch
+        ~timestamp:Mavryk_base.TzPervasives.Time.Protocol.epoch
         ~fitness:[]
         ~operations_hash:Alpha_environment.Operation_list_list_hash.zero
     in

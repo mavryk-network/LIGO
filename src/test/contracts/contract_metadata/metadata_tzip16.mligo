@@ -156,7 +156,7 @@ let good_storage : storage =
    metadata =
      Big_map.literal
        [
-         ("", Bytes.concat [%bytes "tezos-storage:hello%2F"] [%bytes "world"]);
+         ("", Bytes.concat [%bytes "mavryk-storage:hello%2F"] [%bytes "world"]);
          ("hello/world", json)
        ]
   }
@@ -169,7 +169,7 @@ let bad_storage0 : storage =
        [
          ("",
           Bytes.concat
-            [%bytes "tezos-storage:hello/"]
+            [%bytes "mavryk-storage:hello/"]
             [%bytes "invalid_not_http"]);
          ("hello/world", [%bytes "JSON?"]);
          ("invalid_not_http", [%bytes "https://www.example.com"]);
@@ -196,7 +196,7 @@ let bad_storage2 : storage =
    metadata =
      Big_map.literal
        [
-         ("", [%bytes "tezos-storage:haha"]);
+         ("", [%bytes "mavryk-storage:haha"]);
          ("hello/world", [%bytes "http://www.example.com"])
        ]
   }
@@ -206,7 +206,7 @@ let bad_storage3 : storage =
    data = 42;
    metadata =
      Big_map.literal
-       [("", [%bytes "tezos-storage:haha"]); ("haha", [%bytes "nojson!"])]
+       [("", [%bytes "mavryk-storage:haha"]); ("haha", [%bytes "nojson!"])]
   }
 
 let bad_storage4 : storage =
@@ -215,7 +215,7 @@ let bad_storage4 : storage =
    metadata =
      Big_map.literal
        [
-         ("", Bytes.concat [%bytes "tezos-storage:hello%2F"] [%bytes "world"]);
+         ("", Bytes.concat [%bytes "mavryk-storage:hello%2F"] [%bytes "world"]);
          ("hello/world", json_bad_view_type)
        ]
   }
@@ -288,7 +288,7 @@ let good_tezos_sha256_storage : storage =
        [
          ("",
           [%bytes
-          "sha256://0x1f7c7fde391bc46a28cd98a77733fbe5927190dbe5493fe81244ee29dc624577/tezos-storage:m"]);
+          "sha256://0x1f7c7fde391bc46a28cd98a77733fbe5927190dbe5493fe81244ee29dc624577/mavryk-storage:m"]);
          ("m", hen_metadata)
        ]
   }
@@ -301,7 +301,7 @@ let bad_tezos_sha256_storage : storage =
        [
          ("",
           [%bytes
-          "sha256://0xff7c7fde391bc46a28cd98a77733fbe5927190dbe5493fe81244ee29dc624577/tezos-storage:m"]);
+          "sha256://0xff7c7fde391bc46a28cd98a77733fbe5927190dbe5493fe81244ee29dc624577/mavryk-storage:m"]);
          ("m", hen_metadata)
        ]
   }

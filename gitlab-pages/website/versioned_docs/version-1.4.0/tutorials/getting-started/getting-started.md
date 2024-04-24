@@ -16,7 +16,7 @@ Two choices are offered, ideal if you want to work with Ligo :
 - Install necessary stuff onto your machine
     - [Ligo compiler](https://ligo.mavryk.org/docs/intro/installation) to compile your code.
     - [IDE plugins](https://ligo.mavryk.org/docs/intro/editor-support)
-    - [mavkit-client](https://tezos.gitlab.io/introduction/howtoget.html) used to interact with tezos blockchain. Pre-built binaries are available [here](https://github.com/serokell/tezos-packaging)
+    - [mavkit-client](https://tezos.gitlab.io/introduction/howtoget.html) used to interact with tezos blockchain. Pre-built binaries are available [here](https://github.com/serokell/mavryk-packaging)
 - Use [webide](https://ide.mavryk.network), ideal if you want a quick view of ligo. You'll be able to do, test, dry-run, and deploy the code !
 
 ## Building a smart-contract.
@@ -339,4 +339,4 @@ It can be annoying to deploy you contract onto a node to test it. We advise test
 
 This conclude this part of our tutorial.
 You should now be able to compile, test, publish and call a contract.
-Now you can go to the [tacos shop tutorial](https://ligo.mavryk.org/docs/tutorials/taco-shop/tezos-taco-shop-smart-contract) to know more about programming with LIGO or you can start developing your own contract using the LIGO syntax you are more familiar with.
+Now you can go to the [tacos shop tutorial](https://ligo.mavryk.org/docs/tutorials/taco-shop/mavryk-taco-shop-smart-contract) to know more about programming with LIGO or you can start developing your own contract using the LIGO syntax you are more familiar with.

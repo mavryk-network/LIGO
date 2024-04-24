@@ -42,7 +42,7 @@ const Community = ({ discordMembers, contributors = 78, packages }: CommunityPro
         "The Ligo team and community have exposed some packages that you can reuse when developing your own contracts. Discover them on our registry!",
       cta: {
         label: "see our registry",
-        href: "https://packages.mavryk.network/",
+        href: "https://packages.ligolang.org/",
         rel: "",
       },
     },

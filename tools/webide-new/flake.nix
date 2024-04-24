@@ -4,7 +4,7 @@
   };
   inputs = {
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
-    tezos-packaging.url = "github:serokell/tezos-packaging";
+    mavryk-packaging.url = "github:serokell/mavryk-packaging";
     haskell-nix = {
       inputs.hackage.follows = "hackage";
       inputs.stackage.follows = "stackage";
@@ -16,7 +16,7 @@
       flake = false;
     };
   };
-  outputs = { self, haskell-nix, nix-npm-buildpackage, nixpkgs, flake-utils, tezos-packaging, deploy-rs, ... }@inputs:
+  outputs = { self, haskell-nix, nix-npm-buildpackage, nixpkgs, flake-utils, mavryk-packaging, deploy-rs, ... }@inputs:
   {
     nixosModules.default = { config, pkgs, lib, ... }:
       let system = pkgs.system; in
@@ -112,7 +112,7 @@
         "x86_64-linux" = { url = "https://gitlab.com/mavryk-network/ligo/-/jobs/4687472710/artifacts/raw/ligo"; hash = "sha256-wwxc2Sncq1ojcdVLv1FbFxc4FHbz2t9Fw3oJPCKMVSI="; };
       };
       ligo-syntaxes = pkgs.callPackage ../vscode/syntaxes {};
-      mavryk-client = inputs.tezos-packaging.packages.${system}.mavryk-client;
+      mavryk-client = inputs.mavryk-packaging.packages.${system}.mavryk-client;
       frontend = (pkgs.callPackage ./ligo-webide-frontend/ligo-ide { inherit ligo-syntaxes; }) { git-proxy = "https://ligo-webide-cors-proxy.serokell.team"; };
       backend = haskellPkgs.callPackage ./ligo-webide-backend { };
       swagger-file = backend.swagger-file // {

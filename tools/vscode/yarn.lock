@@ -17,7 +17,7 @@
 
 "@airgap/beacon-blockchain-tezos@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.yarnpkg.com/@airgap/beacon-blockchain-tezos/-/beacon-blockchain-tezos-3.3.4.tgz#8980514deac3063e62c882b5630df08db7c690ad"
+  resolved "https://registry.yarnpkg.com/@airgap/beacon-blockchain-tezos/-/beacon-blockchain-mavryk-3.3.4.tgz#8980514deac3063e62c882b5630df08db7c690ad"
   integrity sha512-sUK2d5pMYjulMPs0Cw/+XuDf5BiBnhkRbA8vDjdNicB9l0rws74iLcjCTBfX6AeO66FPxF4C2sx5nHqSxLwgjw==
   dependencies:
     "@airgap/beacon-types" "^3.3.4"

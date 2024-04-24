@@ -898,7 +898,7 @@
     "opam2json": {
       "inputs": {
         "nixpkgs": [
-          "tezos-packaging",
+          "mavryk-packaging",
           "opam-nix",
           "nixpkgs"
         ]
@@ -926,7 +926,7 @@
         "nix-npm-buildpackage": "nix-npm-buildpackage",
         "nixpkgs": "nixpkgs_4",
         "stackage": "stackage",
-        "tezos-packaging": "tezos-packaging"
+        "mavryk-packaging": "mavryk-packaging"
       }
     },
     "serokell-nix": {
@@ -981,7 +981,7 @@
         "type": "gitlab"
       }
     },
-    "tezos-packaging": {
+    "mavryk-packaging": {
       "inputs": {
         "flake-compat": "flake-compat_3",
         "flake-utils": "flake-utils_3",
@@ -997,13 +997,13 @@
         "lastModified": 1686828111,
         "narHash": "sha256-Rg3EthgDS7jpwDHQw9XPWRLCo+EZFZH/mUZPK0T8Nt8=",
         "owner": "serokell",
-        "repo": "tezos-packaging",
+        "repo": "mavryk-packaging",
         "rev": "05497c69c015c717809c03c8997e3cfa1f6996d0",
         "type": "github"
       },
       "original": {
         "owner": "serokell",
-        "repo": "tezos-packaging",
+        "repo": "mavryk-packaging",
         "type": "github"
       }
     },

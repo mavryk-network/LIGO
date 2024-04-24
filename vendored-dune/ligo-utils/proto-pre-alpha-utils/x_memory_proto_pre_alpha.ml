@@ -69,7 +69,7 @@ let stack_ty_eq
   Lwt_result.return Eq
 
 let ty_eq (type a b) ?tezos_context (a : (a, _) ty) (b : (b, _) ty)
-    : ((_, _) eq, Tezos_base.TzPervasives.tztrace) result Lwt.t
+    : ((_, _) eq, Mavryk_base.TzPervasives.tztrace) result Lwt.t
   =
   let open Lwt_result.Let_syntax in
   let%bind env = dummy_environment_result ?tezos_context () in
@@ -85,7 +85,7 @@ let ty_eq (type a b) ?tezos_context (a : (a, _) ty) (b : (b, _) ty)
 (* should not need lwt *)
 let canonical_of_strings michelson =
   let michelson, errs =
-    Tezos_client_001_PtAtLas.Michelson_v1_macros.expand_rec michelson
+    Mavryk_client_001_PtAtLas.Michelson_v1_macros.expand_rec michelson
   in
   match errs with
   | _ :: _ -> Lwt.return (Error errs)
@@ -93,12 +93,12 @@ let canonical_of_strings michelson =
     Lwt.return
       (alpha_wrap
          (Michelson_v1_primitives.prims_of_strings
-            (Tezos_micheline.Micheline.strip_locations michelson)))
+            (Mavryk_micheline.Micheline.strip_locations michelson)))
 
 let prims_of_strings michelson =
   let open Lwt_result_syntax in
   let* michelson = canonical_of_strings michelson in
-  return (Tezos_micheline.Micheline.root michelson)
+  return (Mavryk_micheline.Micheline.root michelson)
 
 let lazy_expr expr =
   let open Alpha_context in
@@ -123,7 +123,7 @@ let parse_michelson_fail
   >>=? fun michelson ->
   Alpha_context.Global_constants_storage.expand env.tezos_context michelson
   >>=? (fun (tezos_context, michelson) ->
-         let michelson = Tezos_micheline.Micheline.root michelson in
+         let michelson = Mavryk_micheline.Micheline.root michelson in
          let elab_conf =
            Script_ir_translator_config.
              { type_logger; legacy; keep_extra_types_for_interpreter_logging = false }
@@ -174,12 +174,12 @@ let parse_michelson_ty
   >>=?? fun (ty, _) -> Lwt_result_syntax.return ty
 
 let strings_of_prims michelson =
-  let michelson = Tezos_micheline.Micheline.strip_locations michelson in
+  let michelson = Mavryk_micheline.Micheline.strip_locations michelson in
   let michelson = Michelson_v1_primitives.strings_of_prims michelson in
-  Tezos_micheline.Micheline.root michelson
+  Mavryk_micheline.Micheline.root michelson
 
 let node_to_canonical m =
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline.Micheline in
   let x = inject_locations (fun _ -> 0) (strip_locations m) in
   let x = strip_locations x in
   Michelson_v1_primitives.prims_of_strings x
@@ -189,7 +189,7 @@ let unparse_michelson_data ?tezos_context ty value =
   >>=?? fun env ->
   unparse_data env.tezos_context Readable ty value
   >>=?? fun (michelson, _) ->
-  let michelson = Tezos_micheline.Micheline.inject_locations (fun _ -> 0) michelson in
+  let michelson = Mavryk_micheline.Micheline.inject_locations (fun _ -> 0) michelson in
   Lwt_result_syntax.return (strings_of_prims michelson)
 
 let unparse_michelson_ty ?tezos_context ty =
@@ -211,7 +211,7 @@ type options =
   }
 
 let t_unit =
-  Tezos_micheline.Micheline.(
+  Mavryk_micheline.Micheline.(
     strip_locations (Prim (0, Michelson_v1_primitives.T_unit, [], [])))
 
 let default_self =
@@ -235,7 +235,7 @@ let fake_bake tezos_context chain_id now =
   let contents = Init_proto_alpha.Context_init.contents ~predecessor:hash () in
   let protocol_data =
     let open! Alpha_context.Block_header in
-    { contents; signature = Tezos_crypto.Signature.zero }
+    { contents; signature = Mavryk_crypto.Signature.zero }
   in
   let tezos_context =
     Lwt.map
@@ -291,7 +291,7 @@ let make_options
   =
   let open Alpha_context in
   let open Michelson_v1_primitives in
-  let open Tezos_micheline in
+  let open Mavryk_micheline in
   let open Micheline in
   let open Lwt.Let_syntax in
   let%bind env =
@@ -401,7 +401,7 @@ let interpret ?options (instr : ('a, 'b, 'c, 'd) kdescr) bef : (_ * _) tzresult 
   let payer =
     match payer with
     | Implicit hash -> hash
-    | Originated hash -> Tezos_crypto.Signature.Public_key_hash.zero
+    | Originated hash -> Mavryk_crypto.Signature.Public_key_hash.zero
   in
   let sender = Alpha_context.Destination.Contract source in
   let step_constants = { sender; self; payer; amount; chain_id; balance; now; level } in
@@ -431,7 +431,7 @@ let typecheck_contract ?environment contract =
   let ( >>= ) = Lwt_syntax.( let* ) in
   dummy_environment ()
   >>= fun env ->
-  let contract' = Tezos_micheline.Micheline.strip_locations contract in
+  let contract' = Mavryk_micheline.Micheline.strip_locations contract in
   let legacy = false in
   Script_ir_translator.typecheck_code ~show_types:true ~legacy env.tezos_context contract'
   >>= fun x ->
@@ -443,7 +443,7 @@ let typecheck_map_contract ?environment contract =
   let ( >>= ) = Lwt_syntax.( let* ) in
   dummy_environment ()
   >>= fun env ->
-  let contract' = Tezos_micheline.Micheline.strip_locations contract in
+  let contract' = Mavryk_micheline.Micheline.strip_locations contract in
   let legacy = false in
   Script_ir_translator.typecheck_code ~show_types:true ~legacy env.tezos_context contract'
   >>= fun x ->
@@ -477,7 +477,7 @@ let failure_interpret ?options (instr : ('a, 's, 'b, 'u) descr) (bef : 'a) stack
     let payer =
       match payer with
       | Implicit hash -> hash
-      | Originated hash -> Tezos_crypto.Signature.Public_key_hash.zero
+      | Originated hash -> Mavryk_crypto.Signature.Public_key_hash.zero
     in
     let sender = Alpha_context.Destination.Contract source in
     { sender; self; payer; amount; chain_id; balance; now; level }
@@ -512,7 +512,7 @@ let to_bytes michelson =
       (force_ok ~msg:"Internal error: could not serialize Michelson")
       (prims_of_strings michelson)
   in
-  let canonical = Tezos_micheline.Micheline.strip_locations michelson in
+  let canonical = Mavryk_micheline.Micheline.strip_locations michelson in
   Data_encoding.Binary.to_bytes_exn Script_repr.expr_encoding canonical
 
 let to_hex michelson =

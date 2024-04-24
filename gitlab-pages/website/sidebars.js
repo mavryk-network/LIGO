@@ -21,8 +21,8 @@ const sidebars = {
         "type": "category",
         "label": "First contract",
         "items": [
-          "tutorials/taco-shop/tezos-taco-shop-smart-contract",
-          "tutorials/taco-shop/tezos-taco-shop-payout"
+          "tutorials/taco-shop/mavryk-taco-shop-smart-contract",
+          "tutorials/taco-shop/mavryk-taco-shop-payout"
         ]
       },
       "tutorials/start-a-project-from-a-template"
@@ -158,7 +158,7 @@ const sidebars = {
       "advanced/entrypoints-contracts",
       "contract/views",
       "contract/events",
-      "language-basics/tezos-specific"
+      "language-basics/mavryk-specific"
     ],
     "Testing and Debugging": [
       "advanced/testing",
@@ -204,7 +204,7 @@ const sidebars = {
     "Language": [
       "reference/map-reference",
       "reference/toplevel-reference",
-      "reference/tezos-reference",
+      "reference/mavryk-reference",
       "reference/bitwise-reference",
       "reference/option-reference",
       "reference/string-reference",
@@ -399,7 +399,7 @@ const sidebars = {
       "faq/polymorphic-comparison",
       "faq/catch-error-view",
       "faq/cameligo-ocaml-syntax-diff",
-      "faq/tezos-now-advance-time",
+      "faq/mavryk-now-advance-time",
       "faq/layout-comb-how",
       "faq/layout-comb-why"
     ]

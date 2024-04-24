@@ -5,7 +5,7 @@ open Errors
 module Location = Simple_utils.Location
 open Ligo_prim.Literal_types
 module Ligo_string = Simple_utils.Ligo_string
-open Tezos_crypto
+open Mavryk_crypto
 
 (* TODO: for decompilation, might be good to build a map Timestamp <-> (fun _ -> e_timestamp _) *)
 
@@ -62,7 +62,7 @@ let compile ~raise =
       | E_literal (Literal_string lit)
         when is_ty_var ty (to_string Timestamp)
              && Caml.(Ligo_string.get_type lit = `Standard) ->
-        let open Tezos_base.TzPervasives.Time.Protocol in
+        let open Mavryk_base.TzPervasives.Time.Protocol in
         let str = Ligo_string.extract lit in
         let time = trace_option ~raise (bad_timestamp str ae) @@ of_notation str in
         let itime = Z.of_int64 @@ to_seconds time in

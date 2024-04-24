@@ -434,7 +434,7 @@ let build_expression ~raise
 let build_type_expression ~raise
     :  options:Compiler_options.t -> Syntax_types.t -> string
     -> Source_input.file_name option
-    -> (Mini_c.meta, string) Tezos_micheline.Micheline.node
+    -> (Mini_c.meta, string) Mavryk_micheline.Micheline.node
   =
  fun ~options syntax ty_expression file_name_opt ->
   let init_prg =

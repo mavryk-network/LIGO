@@ -20,19 +20,19 @@ let pp_ct : Format.formatter -> constant_val -> unit =
   | C_string s -> Format.fprintf ppf "\"%s\"" s
   | C_bytes b -> Format.fprintf ppf "0x%a" Hex.pp (Hex.of_bytes b)
   | C_address c ->
-    Format.fprintf ppf "%a" Tezos_protocol.Protocol.Alpha_context.Contract.pp c
+    Format.fprintf ppf "%a" Mavryk_protocol.Protocol.Alpha_context.Contract.pp c
   | C_contract c ->
     Format.fprintf
       ppf
       "%a(%a)"
-      Tezos_protocol.Protocol.Alpha_context.Contract.pp
+      Mavryk_protocol.Protocol.Alpha_context.Contract.pp
       c.address
       (PP_helpers.option PP_helpers.string)
       c.entrypoint
   | C_mumav n -> Format.fprintf ppf "%smumav" (Z.to_string n)
-  | C_key_hash c -> Format.fprintf ppf "%a" Tezos_crypto.Signature.Public_key_hash.pp c
-  | C_key c -> Format.fprintf ppf "%a" Tezos_crypto.Signature.Public_key.pp c
-  | C_signature s -> Format.fprintf ppf "%a" Tezos_crypto.Signature.pp s
+  | C_key_hash c -> Format.fprintf ppf "%a" Mavryk_crypto.Signature.Public_key_hash.pp c
+  | C_key c -> Format.fprintf ppf "%a" Mavryk_crypto.Signature.Public_key.pp c
+  | C_signature s -> Format.fprintf ppf "%a" Mavryk_crypto.Signature.pp s
   | C_bls12_381_g1 b ->
     Format.fprintf ppf "%s" (Bytes.to_string (Bls12_381.G1.to_bytes b))
   | C_bls12_381_g2 b ->
@@ -81,5 +81,5 @@ let rec pp_value ~no_colour : Format.formatter -> value -> unit =
     | V_Gen _ -> Format.fprintf ppf "Generator"
     | V_Location _ -> Format.fprintf ppf "Heap location"
     | V_Typed_address c ->
-      Format.fprintf ppf "%a" Tezos_protocol.Protocol.Alpha_context.Contract.pp c
+      Format.fprintf ppf "%a" Mavryk_protocol.Protocol.Alpha_context.Contract.pp c
     | V_Views _ -> Format.fprintf ppf "views"

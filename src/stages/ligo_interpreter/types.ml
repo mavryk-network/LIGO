@@ -1,34 +1,34 @@
 include Ast_aggregated.Types
 open Ligo_prim
 module Z = Simple_utils.Z
-module Tezos_protocol = Memory_proto_alpha
-module Tezos_raw_protocol = Memory_proto_alpha.Raw_protocol
+module Mavryk_protocol = Memory_proto_alpha
+module Mavryk_raw_protocol = Memory_proto_alpha.Raw_protocol
 module Tez = Memory_proto_alpha.Protocol.Alpha_context.Tez
 module Timestamp = Memory_proto_alpha.Protocol.Alpha_context.Timestamp
 
 module Contract = struct
-  include Tezos_protocol.Protocol.Alpha_context.Contract
+  include Mavryk_protocol.Protocol.Alpha_context.Contract
 
   let to_yojson (c : t) = [%to_yojson: string] (to_b58check c)
   let of_yojson _ = failwith "contract_of_yojson: not implemented"
 end
 
 module Public_key_hash = struct
-  include Tezos_crypto.Signature.Public_key_hash
+  include Mavryk_crypto.Signature.Public_key_hash
 
   let to_yojson (pkh : t) = [%to_yojson: string] (to_b58check pkh)
   let of_yojson _ = failwith "public_key_hash_of_yojson: not implemented"
 end
 
 module Public_key = struct
-  include Tezos_crypto.Signature.Public_key
+  include Mavryk_crypto.Signature.Public_key
 
   let to_yojson (pk : t) = [%to_yojson: string] (to_b58check pk)
   let of_yojson _ = failwith "public_key_of_yojson: not implemented"
 end
 
 module Signature = struct
-  include Tezos_crypto.Signature
+  include Mavryk_crypto.Signature
 
   let to_yojson (s : t) = [%to_yojson: string] (to_b58check s)
   let of_yojson _ = failwith "signature_of_yojson: not implemented"
@@ -56,7 +56,7 @@ module Bls12_381_Fr = struct
 end
 
 module Chain_id = struct
-  include Tezos_crypto.Hashed.Chain_id
+  include Mavryk_crypto.Hashed.Chain_id
 
   let to_yojson (c : t) = [%to_yojson: bytes] (to_bytes c)
   let of_yojson _ = failwith "chain_id_of_yojson: not implemented"
@@ -184,8 +184,8 @@ and value =
 type bigmap_state = (value * value) list
 
 type bigmap_data =
-  { key_type : Tezos_raw_protocol.Script_repr.expr
-  ; value_type : Tezos_raw_protocol.Script_repr.expr
+  { key_type : Mavryk_raw_protocol.Script_repr.expr
+  ; value_type : Mavryk_raw_protocol.Script_repr.expr
   ; version : bigmap_state
   }
 

@@ -346,7 +346,7 @@ let comparable_mligo ~raise () : unit =
   (*
   let () = expect_eq ~raise program "sum" (e_constructor ~loc "A" (e_int ~loc 1)) (e_bool ~loc false) in
   *)
-  let open Tezos_crypto in
+  let open Mavryk_crypto in
   let pkh, pk, sk = Signature.generate_key () in
   let key_hash = Signature.Public_key_hash.to_b58check @@ pkh in
   let () =
@@ -361,9 +361,9 @@ let comparable_mligo ~raise () : unit =
     expect_eq ~raise program "signature_" (e_signature ~loc signed) (e_bool ~loc false)
   in
   let chain_id =
-    Tezos_crypto.Base58.simple_encode
-      Tezos_base__TzPervasives.Chain_id.b58check_encoding
-      Tezos_base__TzPervasives.Chain_id.zero
+    Mavryk_crypto.Base58.simple_encode
+      Mavryk_base__TzPervasives.Chain_id.b58check_encoding
+      Mavryk_base__TzPervasives.Chain_id.zero
   in
   let () =
     expect_eq ~raise program "chain_id_" (e_chain_id ~loc chain_id) (e_bool ~loc false)
@@ -1468,7 +1468,7 @@ let addr_test ~raise program =
     Protocol.Alpha_context.Contract.to_b58check
     @@ (List.nth_exn env.identities 0).implicit_contract
   in
-  let open Tezos_crypto in
+  let open Mavryk_crypto in
   let key_hash =
     Signature.Public_key_hash.to_b58check
     @@ (List.nth_exn env.identities 0).public_key_hash
@@ -1522,7 +1522,7 @@ let attributes ~raise f : unit =
 
 
 let key_hash ~raise f : unit =
-  let open Tezos_crypto in
+  let open Mavryk_crypto in
   let raw_pkh, raw_pk, _ = Signature.generate_key () in
   let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
   let pk_str = Signature.Public_key.to_b58check raw_pk in
@@ -1534,7 +1534,7 @@ let key_hash ~raise f : unit =
 
 
 let check_signature ~raise f : unit =
-  let open Tezos_crypto in
+  let open Mavryk_crypto in
   let _, raw_pk, sk = Signature.generate_key () in
   let pk_str = Signature.Public_key.to_b58check raw_pk in
   let signed = Signature.sign sk (Bytes.of_string "hello world") in
@@ -1560,7 +1560,7 @@ let curry ~raise () : unit =
 
 
 let set_delegate ~raise f : unit =
-  let open Tezos_crypto in
+  let open Mavryk_crypto in
   let raw_pkh, _, _ = Signature.generate_key () in
   let pkh_str = Signature.Public_key_hash.to_b58check raw_pkh in
   let program = type_file ~raise f in

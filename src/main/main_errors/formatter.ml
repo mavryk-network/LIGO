@@ -144,7 +144,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -161,7 +161,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           err_l
       in
       Format.fprintf
@@ -177,7 +177,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           err_l
       in
       Format.fprintf
@@ -193,7 +193,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -313,7 +313,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -333,7 +333,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -349,7 +349,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -365,7 +365,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf

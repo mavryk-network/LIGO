@@ -1,4 +1,4 @@
-open Tezos_micheline
+open Mavryk_micheline
 open Micheline
 
 type 'l michelson = ('l, string) node

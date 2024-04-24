@@ -1,6 +1,6 @@
 open Errors
 open Mini_c.Types
-open Tezos_micheline.Micheline
+open Mavryk_micheline.Micheline
 open Simple_utils.Trace
 
 let rec comb prim loc xs =
@@ -57,9 +57,9 @@ let rec decompile_value ~(raise : (stacking_error, _) raise)
   | Prim (_, "nat", [], _), Int (_, n) -> D_nat n
   | Prim (_, "chain_id", _, _), String (_, id) ->
     (* Before EDO :
-      let id = Tezos_base.TzPervasives.Chain_id.of_bytes_exn id in
-      let str = Tezos_crypto.Base58.simple_encode
-      (Tezos_base__TzPervasives.Chain_id.b58check_encoding)
+      let id = Mavryk_base.TzPervasives.Chain_id.of_bytes_exn id in
+      let str = Mavryk_crypto.Base58.simple_encode
+      (Mavryk_base__TzPervasives.Chain_id.b58check_encoding)
       id in
     *)
     D_string id
@@ -68,7 +68,7 @@ let rec decompile_value ~(raise : (stacking_error, _) raise)
   | Prim (_, "signature", [], _), String (_, n) -> D_string n
   | Prim (_, "timestamp", [], _), Int (_, n) -> D_timestamp n
   | Prim (_, "timestamp", [], _), String (_, n) ->
-    let open Tezos_base.TzPervasives.Time.Protocol in
+    let open Mavryk_base.TzPervasives.Time.Protocol in
     let n = Z.of_int64 (to_seconds (of_notation_exn n)) in
     D_timestamp n
   | Prim (_, "mumav", [], _), Int (_, n) -> D_mumav n

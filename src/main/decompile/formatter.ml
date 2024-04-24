@@ -8,7 +8,7 @@ let expression_ppformat ~display_format ~no_colour f runned_result =
   match display_format with
   | Human_readable | Dev ->
     (match runned_result with
-    | Fail (fail_res : (int, string) Tezos_micheline.Micheline.node) ->
+    | Fail (fail_res : (int, string) Mavryk_micheline.Micheline.node) ->
       Format.printf "failed with: %a" Tezos_utils.Michelson.pp fail_res
     | Success typed -> Ast_core.PP.expression f typed)
 

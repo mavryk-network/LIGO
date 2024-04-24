@@ -1,4 +1,4 @@
-module Error_monad = Tezos_error_monad.Error_monad
+module Error_monad = Mavryk_error_monad.Error_monad
 
 let to_string err =
   let json = Error_monad.json_of_error err in

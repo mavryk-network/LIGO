@@ -1,12 +1,12 @@
 open Simple_utils.Trace
 open Ligo_interpreter.Types
-open Tezos_micheline.Micheline
+open Mavryk_micheline.Micheline
 open Ligo_prim
 
 let contract_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse address")
-  @@ Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check s
+  @@ Mavryk_protocol.Protocol.Alpha_context.Contract.of_b58check s
 
 
 let contract_of_bytes ~raise b =
@@ -21,26 +21,26 @@ let contract_of_bytes ~raise b =
 let key_hash_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse key_hash")
-  @@ Tezos_crypto.Signature.Public_key_hash.of_b58check s
+  @@ Mavryk_crypto.Signature.Public_key_hash.of_b58check s
 
 
 let key_hash_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse key_hash")
-  @@ Tezos_crypto.Signature.Public_key_hash.of_bytes s
+  @@ Mavryk_crypto.Signature.Public_key_hash.of_bytes s
 
 
 let key_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse key")
-  @@ Tezos_crypto.Signature.Public_key.of_b58check s
+  @@ Mavryk_crypto.Signature.Public_key.of_b58check s
 
 
 let key_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_option
     ~raise
     (Errors.generic_error Location.generated "Cannot parse key")
-  @@ Tezos_crypto.Signature.Public_key.of_bytes_without_validation s
+  @@ Mavryk_crypto.Signature.Public_key.of_bytes_without_validation s
 
 
 let bls12_381_g1_of_bytes ~raise s =
@@ -67,19 +67,19 @@ let bls12_381_fr_of_bytes ~raise s =
 let signature_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse signature")
-  @@ Tezos_crypto.Signature.of_b58check s
+  @@ Mavryk_crypto.Signature.of_b58check s
 
 
 let chain_id_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse chain_id")
-  @@ Tezos_crypto.Hashed.Chain_id.of_bytes s
+  @@ Mavryk_crypto.Hashed.Chain_id.of_bytes s
 
 
 let chain_id_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse chain_id")
-  @@ Tezos_crypto.Hashed.Chain_id.of_b58check s
+  @@ Mavryk_crypto.Hashed.Chain_id.of_b58check s
 
 
 let wrong_mini_c_value _t _v =
@@ -94,22 +94,22 @@ let corner_case ~loc s =
 let untranspilable t v =
   let v =
     v
-    |> Tezos_micheline.Micheline.map_node
-         (fun _ -> { Tezos_micheline.Micheline_printer.comment = None })
+    |> Mavryk_micheline.Micheline.map_node
+         (fun _ -> { Mavryk_micheline.Micheline_printer.comment = None })
          (fun x -> x)
   in
   let t =
     t
-    |> Tezos_micheline.Micheline.map_node
-         (fun _ -> { Tezos_micheline.Micheline_printer.comment = None })
+    |> Mavryk_micheline.Micheline.map_node
+         (fun _ -> { Mavryk_micheline.Micheline_printer.comment = None })
          (fun x -> x)
   in
   let s =
     Format.asprintf
       " %a %a"
-      Tezos_micheline.Micheline_printer.print_expr
+      Mavryk_micheline.Micheline_printer.print_expr
       t
-      Tezos_micheline.Micheline_printer.print_expr
+      Mavryk_micheline.Micheline_printer.print_expr
       v
   in
   Errors.generic_error Location.generated ("untranspilable" ^ s)
@@ -194,7 +194,7 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
   | Prim (_, "chest_key", [], _), Bytes (_, b) -> V_Ct (C_chest_key b)
   | Prim (_, "timestamp", [], _), Int (_, n) -> V_Ct (C_timestamp n)
   | Prim (_, "timestamp", [], _), String (_, n) ->
-    let open Tezos_base.TzPervasives.Time.Protocol in
+    let open Mavryk_base.TzPervasives.Time.Protocol in
     let n = Z.of_int64 (to_seconds (of_notation_exn n)) in
     V_Ct (C_timestamp n)
   | Prim (_, "mumav", [], _), Int (_, n) -> V_Ct (C_mumav n)
@@ -280,18 +280,18 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
     (* These are temporal types, need to be patched later: *)
     let t_input = t_unit ~loc () in
     let t_output = t_unit ~loc () in
-    let c = Tezos_micheline.Micheline.strip_locations c in
+    let c = Mavryk_micheline.Micheline.strip_locations c in
     let c =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           Errors.generic_error Location.generated "Cannot get instructions")
-      @@ Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings c
+      @@ Mavryk_protocol.Protocol.Michelson_v1_primitives.prims_of_strings c
     in
     let u =
       Format.asprintf
         "%a"
-        Tezos_micheline.Micheline_printer.print_expr
-        (Tezos_micheline.Micheline_printer.printable
-           Tezos_protocol.Protocol.Michelson_v1_primitives.string_of_prim
+        Mavryk_micheline.Micheline_printer.print_expr
+        (Mavryk_micheline.Micheline_printer.printable
+           Mavryk_protocol.Protocol.Michelson_v1_primitives.string_of_prim
            c)
     in
     let code_block = make_e ~loc (e_string (Ligo_string.verbatim u)) (t_string ~loc ()) in
@@ -515,17 +515,17 @@ let rec decompile_value
 let conv
     ~raise
     ~bigmaps
-    (t : Tezos_raw_protocol.Script_repr.expr)
-    (v : Tezos_raw_protocol.Script_repr.expr)
+    (t : Mavryk_raw_protocol.Script_repr.expr)
+    (v : Mavryk_raw_protocol.Script_repr.expr)
   =
   let v =
     v
-    |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
-    |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
+    |> Mavryk_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
+    |> Mavryk_micheline.Micheline.inject_locations (fun _ -> ())
   in
   let t =
     t
-    |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
-    |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
+    |> Mavryk_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
+    |> Mavryk_micheline.Micheline.inject_locations (fun _ -> ())
   in
   decompile_to_untyped_value ~raise ~bigmaps t v

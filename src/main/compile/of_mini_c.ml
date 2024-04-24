@@ -3,7 +3,7 @@ open Mini_c
 open Proto_alpha_utils
 open Trace
 open! Stacking
-open Tezos_micheline
+open Mavryk_micheline
 
 let dummy : Stacking.meta =
   { location = Location.dummy

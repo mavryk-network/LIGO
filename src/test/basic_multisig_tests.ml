@@ -72,7 +72,7 @@ let empty_payload = Ast_unified.e_unit ~loc
 let chain_id_zero =
   Ast_unified.e_bytes_raw
     ~loc
-    (Tezos_crypto.Hashed.Chain_id.to_bytes Tezos_base__TzPervasives.Chain_id.zero)
+    (Mavryk_crypto.Hashed.Chain_id.to_bytes Mavryk_base__TzPervasives.Chain_id.zero)
 
 
 (* sign the message 'msg' with 'keys', if 'is_valid'=false the providid signature will be incorrect *)

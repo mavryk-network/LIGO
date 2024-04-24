@@ -6,7 +6,7 @@
    often.
 *)
 
-open Tezos_micheline.Micheline
+open Mavryk_micheline.Micheline
 open Tezos_utils.Michelson
 include Helpers
 open Peephole
@@ -237,7 +237,7 @@ let eq_type ll lr =
         ~f:(fun v -> Bool.equal true v)
         (List.map ~f:(fun (a, b) -> aux_eq a b) lr)
   and aux_eq l r =
-    let open Tezos_micheline.Micheline in
+    let open Mavryk_micheline.Micheline in
     match l, r with
     | Prim (_, s, l, a), Prim (_, s', l', a')
       when String.equal s s' && List.equal String.equal a a' -> compare_list l l'
@@ -1052,9 +1052,9 @@ let rec optimize_with_types
       .strings_of_prims
         c
     in
-    Tezos_micheline.Micheline.inject_locations (fun x -> x) c
+    Mavryk_micheline.Micheline.inject_locations (fun x -> x) c
   in
-  let canonical, locs = Tezos_micheline.Micheline.extract_locations contract in
+  let canonical, locs = Mavryk_micheline.Micheline.extract_locations contract in
   let recover_loc l = List.Assoc.find_exn locs ~equal:Int.equal l in
   let canonical =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
@@ -1064,18 +1064,18 @@ let rec optimize_with_types
          canonical
   in
   let%bind map =
-    typer_oracle @@ Tezos_micheline.Micheline.inject_locations recover_loc canonical
+    typer_oracle @@ Mavryk_micheline.Micheline.inject_locations recover_loc canonical
   in
   let type_map =
     List.map
       ~f:(fun (i, (l, _)) -> i, List.map ~f:(fun c -> node_string_of_canonical c) l)
       map
   in
-  match Tezos_micheline.Micheline.inject_locations (fun x -> x) canonical with
+  match Mavryk_micheline.Micheline.inject_locations (fun x -> x) canonical with
   | Seq (l, parameter :: storage :: code :: rest) ->
     let pre_type l = List.Assoc.find_exn type_map ~equal:Int.equal l in
     let code =
-      Tezos_micheline.Micheline.map_node
+      Mavryk_micheline.Micheline.map_node
         (fun x -> x)
         (fun v ->
           Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives
@@ -1085,7 +1085,7 @@ let rec optimize_with_types
     in
     let changed, code = on_seqs (peephole (peep1 @@ opt_cond ~pre_type)) code in
     let code =
-      Tezos_micheline.Micheline.map_node (fun x -> recover_loc x) (fun x -> x) code
+      Mavryk_micheline.Micheline.map_node (fun x -> recover_loc x) (fun x -> x) code
     in
     let code =
       if changed
@@ -1094,7 +1094,7 @@ let rec optimize_with_types
       else code
     in
     let recover_locs node =
-      Tezos_micheline.Micheline.map_node
+      Mavryk_micheline.Micheline.map_node
         recover_loc
         (fun v ->
           Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives

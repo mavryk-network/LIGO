@@ -8,22 +8,22 @@ open Simple_utils.Runned_result
 module Errors = Main_errors
 
 let parse_constant ~raise code =
-  let open Tezos_micheline in
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline in
+  let open Mavryk_micheline.Micheline in
   let code, errs = Micheline_parser.tokenize code in
   let code =
     match errs with
     | _ :: _ ->
       raise.error
         (Errors.unparsing_michelson_tracer
-        @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+        @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
     | [] ->
       let code, errs = Micheline_parser.parse_expression ~check:false code in
       (match errs with
       | _ :: _ ->
         raise.error
           (Errors.unparsing_michelson_tracer
-          @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+          @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
       | [] -> map_node (fun _ -> ()) (fun x -> x) code)
   in
   Trace.trace_alpha_tzresult ~raise Errors.unparsing_michelson_tracer
@@ -33,7 +33,7 @@ let parse_constant ~raise code =
 type options = Memory_proto_alpha.options
 
 type dry_run_options =
-  { parameter_ty : (Stacking.Program.meta, string) Tezos_micheline.Micheline.node option
+  { parameter_ty : (Stacking.Program.meta, string) Mavryk_micheline.Micheline.node option
         (* added to allow dry-running contract using `Mavryk.self` *)
   ; amount : string
   ; balance : string
@@ -99,7 +99,7 @@ let make_dry_run_options ~raise ?tezos_context ?(constants = []) (opts : dry_run
         Lwt.map (Trace.trace_tzresult ~raise Errors.parsing_payload_tracer)
         @@ Memory_proto_alpha.prims_of_strings x
       in
-      let x = Tezos_micheline.Micheline.strip_locations x in
+      let x = Mavryk_micheline.Micheline.strip_locations x in
       Some x
     | None -> Lwt.return None
   in
@@ -186,7 +186,7 @@ let run_contract
         if List.is_empty ys
         then y
         else
-          Tezos_micheline.Micheline.Prim (-1, Michelson_v1_primitives.T_pair, y :: ys, [])
+          Mavryk_micheline.Micheline.Prim (-1, Michelson_v1_primitives.T_pair, y :: ys, [])
       in
       x, y
     | _ -> failwith ("Internal error: input_ty was not a pair " ^ __LOC__)
@@ -250,7 +250,7 @@ let run_contract
     Success (ty, value)
   | Memory_proto_alpha.Fail expr ->
     let expr =
-      Tezos_micheline.Micheline.root
+      Mavryk_micheline.Micheline.root
       @@ Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims expr
     in
     Lwt.return @@ Fail expr
@@ -322,7 +322,7 @@ let run_function
     Success (ty, value)
   | Memory_proto_alpha.Fail expr ->
     let expr =
-      Tezos_micheline.Micheline.root
+      Mavryk_micheline.Micheline.root
       @@ Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims expr
     in
     Lwt.return @@ Fail expr
@@ -377,14 +377,14 @@ let run_expression
     Success (ty, value)
   | Memory_proto_alpha.Fail expr ->
     let expr =
-      Tezos_micheline.Micheline.root
+      Mavryk_micheline.Micheline.root
       @@ Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims expr
     in
     Lwt.return @@ Fail expr
 
 
 let run_failwith ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t)
-    : (int, string) Tezos_micheline.Micheline.node Lwt.t
+    : (int, string) Mavryk_micheline.Micheline.node Lwt.t
   =
   let open Lwt.Let_syntax in
   let%map expr = run_expression ~raise ?options exp exp_type in
@@ -416,7 +416,7 @@ let evaluate_expression ~raise ?options exp exp_type : int Michelson.michelson L
 
 
 let evaluate_constant ~raise ?options exp exp_type
-    : (Tezos_raw_protocol_001_PtAtLas.Script_expr_hash.t * int Michelson.michelson) Lwt.t
+    : (Mavryk_raw_protocol_001_PtAtLas.Script_expr_hash.t * int Michelson.michelson) Lwt.t
   =
   let open Lwt.Let_syntax in
   let%bind etv = run_expression ~raise ?options exp exp_type in
@@ -436,13 +436,13 @@ let evaluate_constant ~raise ?options exp exp_type
 
 
 let clean_expression exp =
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline.Micheline in
   inject_locations (fun v -> v) (strip_locations exp)
 
 
 let clean_constant ~raise exp =
   let open Lwt.Let_syntax in
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline.Micheline in
   let value = inject_locations (fun v -> v) (strip_locations exp) in
   let value_ =
     Trace.trace_alpha_tzresult ~raise Errors.unparsing_michelson_tracer
@@ -483,7 +483,7 @@ module Checks = struct
   let michelsonStorageView_check ~loc ~name ~storage_type (json : Yojson.Basic.t)
       : _ Lwt_result.t
     =
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let open Lwt_result.Let_syntax in
     try%lwt
       let decode_json json =
@@ -509,7 +509,7 @@ module Checks = struct
         | None ->
           Lwt_result.return
             (Micheline.Prim
-               (0, Tezos_raw_protocol_001_PtAtLas.Michelson_v1_primitives.T_unit, [], []))
+               (0, Mavryk_raw_protocol_001_PtAtLas.Michelson_v1_primitives.T_unit, [], []))
       in
       let%bind storage_type =
         Lwt_result.map_error
@@ -588,7 +588,7 @@ module Checks = struct
     let open Yojson.Basic.Util in
     try%lwt
       let computed_hash =
-        Hex.(show @@ of_bytes (Tezos_crypto.Hacl.Hash.SHA256.digest Bytes.(of_string s)))
+        Hex.(show @@ of_bytes (Mavryk_crypto.Hacl.Hash.SHA256.digest Bytes.(of_string s)))
       in
       let%bind () =
         match sha256hash with
@@ -620,7 +620,7 @@ module Checks = struct
     }
 
   let uri_check (b : bytes) =
-    let valid_protocols = [ "http"; "https"; "ipfs"; "tezos-storage" ] in
+    let valid_protocols = [ "http"; "https"; "ipfs"; "mavryk-storage" ] in
     let open Simple_utils.Option in
     let s = Bytes.to_string b in
     let uri = Uri.of_string @@ s in
@@ -640,13 +640,13 @@ module Checks = struct
     else None
 
 
-  let convert_item (item : (int, string) Tezos_micheline.Micheline.node) =
+  let convert_item (item : (int, string) Mavryk_micheline.Micheline.node) =
     match item with
     | Prim (_, "Elt", [ String (_, k); Bytes (_, v) ], _) -> Some (k, v)
     | _ -> None
 
 
-  let convert (metadata : (int, string) Tezos_micheline.Micheline.node) =
+  let convert (metadata : (int, string) Mavryk_micheline.Micheline.node) =
     match metadata with
     | Seq (_, bigmap) -> Option.all (List.map ~f:convert_item bigmap)
     | _ -> None
@@ -671,7 +671,7 @@ module Checks = struct
       ~loc
       ?json_download
       ~storage_type
-      (metadata : (int, string) Tezos_micheline.Micheline.node)
+      (metadata : (int, string) Mavryk_micheline.Micheline.node)
     =
     let open Lwt_result.Let_syntax in
     let of_option opt ~error = Lwt.return @@ Simple_utils.Result.of_option opt ~error in
@@ -685,7 +685,7 @@ module Checks = struct
       @@ uri_check root
     in
     match scheme with
-    | "tezos-storage" ->
+    | "mavryk-storage" ->
       (match Uri.host uri with
       | None ->
         (* In case of empty host, the context is current contract (and thus current storage value) *)
@@ -726,9 +726,9 @@ module Checks = struct
 
   let is_annoted_element
       annot
-      (type_ : (Mini_c.meta, string) Tezos_micheline.Micheline.node)
+      (type_ : (Mini_c.meta, string) Mavryk_micheline.Micheline.node)
     =
-    let open Tezos_micheline.Micheline in
+    let open Mavryk_micheline.Micheline in
     match type_ with
     | Prim (_, _, _, ss) -> List.mem ~equal:String.equal ss annot
     | _ -> false
@@ -736,10 +736,10 @@ module Checks = struct
 
   let rec find_annoted_element
       annot
-      (type_ : (Mini_c.meta, string) Tezos_micheline.Micheline.node)
-      (value : (int, string) Tezos_micheline.Micheline.node)
+      (type_ : (Mini_c.meta, string) Mavryk_micheline.Micheline.node)
+      (value : (int, string) Mavryk_micheline.Micheline.node)
     =
-    let open Tezos_micheline.Micheline in
+    let open Mavryk_micheline.Micheline in
     match type_, value with
     | Prim (_, "pair", types, _), Prim (_, "Pair", values, _) ->
       (match List.findi types ~f:(fun _ type_ -> is_annoted_element annot type_) with
@@ -755,8 +755,8 @@ module Checks = struct
     | _ -> None
 
 
-  let get_bigmap_value key (value : (int, string) Tezos_micheline.Micheline.node) =
-    let open Tezos_micheline.Micheline in
+  let get_bigmap_value key (value : (int, string) Mavryk_micheline.Micheline.node) =
+    let open Mavryk_micheline.Micheline in
     match value with
     | Prim (_, "Elt", [ String (_, k); v ], _) when String.equal key k -> Some v
     | _ -> None
@@ -767,7 +767,7 @@ module Checks = struct
       ~(options : Compiler_options.t)
       ~type_
       ~loc
-      (exp : (int, string) Tezos_micheline.Micheline.node)
+      (exp : (int, string) Mavryk_micheline.Micheline.node)
       : unit Lwt.t
     =
     let open Lwt.Let_syntax in

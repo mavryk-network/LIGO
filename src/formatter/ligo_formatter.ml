@@ -154,7 +154,7 @@ module Michelson_formatter = struct
 
   type shrunk_result =
     { types : shrunk_type_expression list
-    ; michelson : (shrunk_meta, string) Tezos_micheline.Micheline.node
+    ; michelson : (shrunk_meta, string) Mavryk_micheline.Micheline.node
     }
 
   let comment michelson_comments =
@@ -264,7 +264,7 @@ module Michelson_formatter = struct
   end
 
   module TypeSet = Stdlib.Set.Make (TypeOrd)
-  open Tezos_micheline
+  open Mavryk_micheline
 
   let rec fold_micheline
       (node : _ Micheline.node)
@@ -295,14 +295,14 @@ module Michelson_formatter = struct
     make_variable_name_from_string_and_loc name @@ Value_var.get_location v
 
 
-  let shrink (node : (Mini_c.meta, 'p) Tezos_micheline.Micheline.node) : shrunk_result =
+  let shrink (node : (Mini_c.meta, 'p) Mavryk_micheline.Micheline.node) : shrunk_result =
     (* first collect all source types *)
     let type_set : TypeSet.t =
       fold_micheline
         node
         ~f:(fun init node ->
           let Mini_c.{ location = _; env; binder = _; source_type; application = _ } =
-            Tezos_micheline.Micheline.location node
+            Mavryk_micheline.Micheline.location node
           in
           let init =
             match source_type with

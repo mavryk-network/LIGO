@@ -22,7 +22,7 @@ let corner_case_msg () =
 
 
 let untranspilable m_type m_data =
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline.Micheline in
   let m_type = root (strip_locations m_type) in
   let m_data = root (strip_locations m_data) in
   `Stacking_untranspilable (m_type, m_data)

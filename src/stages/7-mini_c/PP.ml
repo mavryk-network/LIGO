@@ -248,13 +248,13 @@ and expression_content ppf (e : expression_content) =
       expression
       body
   | E_raw_michelson code ->
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let code = Micheline.Seq (Location.generated, code) in
     let code = Micheline.strip_locations code in
     let code = Micheline_printer.printable (fun prim -> prim) code in
     fprintf ppf "%a" Micheline_printer.print_expr code
   | E_inline_michelson (code, _) ->
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let code = Micheline.Seq (Location.generated, code) in
     let code = Micheline.strip_locations code in
     let code = Micheline_printer.printable (fun prim -> prim) code in

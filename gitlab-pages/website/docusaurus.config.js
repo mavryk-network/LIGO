@@ -86,7 +86,7 @@ const config = {
           { to: "docs/intro/introduction", label: "Docs", position: "left", target: "_self" },
           { to: "docs/reference/toplevel-reference", label: "API", position: "left" },
           { to: "docs/faq/intro", label: "FAQ", position: "left" },
-          { to: "https://packages.mavryk.network/packages", label: "Registry", position: "right" },
+          { to: "https://packages.ligolang.org/packages", label: "Registry", position: "right" },
           { to: "https://ide.mavryk.network/", label: "Web IDE", position: "right" },
         ],
       },
@@ -109,7 +109,7 @@ const config = {
               },
               {
                 label: "Registry",
-                href: "https://packages.mavryk.network/packages",
+                href: "https://packages.ligolang.org/packages",
               },
               {
                 label: "Ligo CLI",

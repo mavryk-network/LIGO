@@ -2,8 +2,8 @@
  (name memory_proto_alpha)
  (public_name tezos-memory-proto-alpha)
  (libraries
-  tezos-protocol-001-PtAtLas.protocol
+  mavryk-protocol-001-PtAtLas.protocol
   mavkit-protocol-001-PtAtLas-libs.client
-  tezos-protocol-001-PtAtLas.parameters
-  tezos-protocol-001-PtAtLas.protocol.environment
+  mavryk-protocol-001-PtAtLas.parameters
+  mavryk-protocol-001-PtAtLas.protocol.environment
   mavkit-protocol-001-PtAtLas-libs.test-helpers))

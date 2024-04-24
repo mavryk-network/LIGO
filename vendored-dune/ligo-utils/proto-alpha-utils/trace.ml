@@ -1,11 +1,11 @@
 include Simple_utils.Trace
 module List = Simple_utils.List
 module AE = Memory_proto_alpha.Alpha_environment
-module TP = Tezos_error_monad.Error_monad
+module TP = Mavryk_error_monad.Error_monad
 
-type tezos_alpha_error = [ `Tezos_alpha_error of TP.error ]
+type tezos_alpha_error = [ `Mavryk_alpha_error of TP.error ]
 
-let of_tz_error (err : X_error_monad.error) : tezos_alpha_error = `Tezos_alpha_error err
+let of_tz_error (err : X_error_monad.error) : tezos_alpha_error = `Mavryk_alpha_error err
 
 let trace_decoding_error
     :  (Data_encoding.Binary.read_error -> 'err)

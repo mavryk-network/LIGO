@@ -47,12 +47,12 @@ by simply placing a manifest file, `ligo.json` over there.
 
 ## LIGO registry
 
-The [LIGO registry](https://packages.mavryk.network/) is used to host LIGO packages. The LIGO registry contains the contracts/libraries along with their metadata. The packages which reside on the LIGO registry can be installed using the `ligo install` command.
+The [LIGO registry](https://packages.ligolang.org/) is used to host LIGO packages. The LIGO registry contains the contracts/libraries along with their metadata. The packages which reside on the LIGO registry can be installed using the `ligo install` command.
 
 ## Consuming
 
 To fetch (download) & maintain different versions of external libraries we need a package manager.
-LIGO libraries can be published to the [LIGO registry](https://packages.mavryk.network/) as well as [npm](https://www.npmjs.com/).
+LIGO libraries can be published to the [LIGO registry](https://packages.ligolang.org/) as well as [npm](https://www.npmjs.com/).
 Using `ligo install` command we can fetch these ligo libraries.
 
 Note:
@@ -455,7 +455,7 @@ This would create a `.ligorc` in the home directory.
 ### Publishing
 
 LIGO packages can be published to a central repository at
-[`packages.ligo.mavryk.org`](https://packages.mavryk.network/) with the `ligo publish` command.
+[`packages.ligolang.org`](https://packages.ligolang.org/) with the `ligo publish` command.
 
 ```bash
 $ ligo publish

@@ -11,7 +11,7 @@ let check_view_restrictions ~raise : Stacking.compiled_expression list -> unit =
     view because they are stateful, and SELF because the entry-point does not make sense in a view.
     However, CREATE_CONTRACT, SET_DELEGATE and TRANSFER_TOKENS remain available in lambdas defined inside a view. (MR !3737)
   *)
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline.Micheline in
   let rec iter_prim_mich
       :  inside_lambda:bool -> (inside_lambda:bool -> 'loc * 'p -> unit)
       -> ('loc, 'p) node -> unit
@@ -38,20 +38,20 @@ let check_view_restrictions ~raise : Stacking.compiled_expression list -> unit =
 
 
 let parse_constant ~raise code =
-  let open Tezos_micheline in
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline in
+  let open Mavryk_micheline.Micheline in
   let code, errs = Micheline_parser.tokenize code in
   let code =
     match errs with
     | _ :: _ ->
       raise.error
-        (unparsing_michelson_tracer @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+        (unparsing_michelson_tracer @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
     | [] ->
       let code, errs = Micheline_parser.parse_expression ~check:false code in
       (match errs with
       | _ :: _ ->
         raise.error
-          (unparsing_michelson_tracer @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+          (unparsing_michelson_tracer @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
       | [] -> map_node (fun _ -> ()) (fun x -> x) code)
   in
   Trace.trace_alpha_tzresult ~raise unparsing_michelson_tracer
@@ -59,20 +59,20 @@ let parse_constant ~raise code =
 
 
 let parse_constant_pre ~raise code =
-  let open Tezos_micheline in
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline in
+  let open Mavryk_micheline.Micheline in
   let code, errs = Micheline_parser.tokenize code in
   let code =
     match errs with
     | _ :: _ ->
       raise.error
-        (unparsing_michelson_tracer @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+        (unparsing_michelson_tracer @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
     | [] ->
       let code, errs = Micheline_parser.parse_expression ~check:false code in
       (match errs with
       | _ :: _ ->
         raise.error
-          (unparsing_michelson_tracer @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+          (unparsing_michelson_tracer @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
       | [] -> map_node (fun _ -> ()) (fun x -> x) code)
   in
   Proto_pre_alpha_utils.(

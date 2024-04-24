@@ -1,5 +1,5 @@
 ---
-id: tezos-specific
+id: mavryk-specific
 title: Mavryk Domain-Specific Operations
 ---
 

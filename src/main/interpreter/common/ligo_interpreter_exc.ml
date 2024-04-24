@@ -5,7 +5,7 @@ let throw_obj_exc loc calltrace x =
     List.map
       ~f:(fun e ->
         match e with
-        | `Tezos_alpha_error a -> a)
+        | `Mavryk_alpha_error a -> a)
       x
   in
   Errors.target_lang_error loc calltrace errs

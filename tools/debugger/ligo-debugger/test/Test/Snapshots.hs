@@ -1504,7 +1504,7 @@ test_Snapshots = testGroup "Snapshots collection"
             snap -> unexpectedSnapshot snap
 
     , testCaseSteps "Types from Tezos" \step -> do
-        let file = contractsDir </> "tezos-types.mligo"
+        let file = contractsDir </> "mavryk-types.mligo"
         let runData = ContractRunData
               { crdProgram = file
               , crdModuleName = Nothing

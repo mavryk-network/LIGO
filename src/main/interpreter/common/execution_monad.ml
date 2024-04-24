@@ -7,9 +7,9 @@ open Simple_utils.Trace
 module LT = Ligo_interpreter.Types
 module LC = Ligo_interpreter.Combinators
 module Exc = Ligo_interpreter_exc
-module Tezos_protocol = Memory_proto_alpha
-module Tezos_protocol_env = Memory_proto_alpha.Alpha_environment
-module Tezos_client = Memory_proto_alpha.Client
+module Mavryk_protocol = Memory_proto_alpha
+module Mavryk_protocol_env = Memory_proto_alpha.Alpha_environment
+module Mavryk_client = Memory_proto_alpha.Client
 module Location = Simple_utils.Location
 module ModRes = Preprocessor.ModRes
 open Ligo_prim
@@ -79,9 +79,9 @@ let make_state ~raise ~(options : Compiler_options.t) =
 
 
 let clean_locations ty =
-  Tezos_micheline.Micheline.inject_locations
+  Mavryk_micheline.Micheline.inject_locations
     (fun _ -> ())
-    (Tezos_micheline.Micheline.strip_locations ty)
+    (Mavryk_micheline.Micheline.strip_locations ty)
 
 
 (* Command should _only_ contains instruction that needs or modify the *tezos* state *)
@@ -95,10 +95,10 @@ module Command = struct
         -> unit tezos_command
     | Nth_bootstrap_contract :
         int
-        -> Tezos_protocol.Protocol.Alpha_context.Contract.t tezos_command
+        -> Mavryk_protocol.Protocol.Alpha_context.Contract.t tezos_command
     | Nth_bootstrap_typed_address :
         Location.t * int
-        -> (Tezos_protocol.Protocol.Alpha_context.Contract.t
+        -> (Mavryk_protocol.Protocol.Alpha_context.Contract.t
            * Ast_aggregated.type_expression
            * Ast_aggregated.type_expression)
            tezos_command
@@ -110,7 +110,7 @@ module Command = struct
         Location.t
         * Ligo_interpreter.Types.calltrace
         * LT.contract
-        * (execution_trace, string) Tezos_micheline.Micheline.node
+        * (execution_trace, string) Mavryk_micheline.Micheline.node
         * Z.t
         -> [ `Exec_failed of Tezos_state.state_error | `Exec_ok of Z.t ] tezos_command
     | State_error_to_value : Tezos_state.state_error -> LT.value tezos_command
@@ -134,7 +134,7 @@ module Command = struct
     | Run_Michelson :
         Location.t
         * LT.calltrace
-        * (execution_trace, string) Tezos_micheline.Micheline.node
+        * (execution_trace, string) Mavryk_micheline.Micheline.node
         * Ast_aggregated.type_expression
         * (LT.value * Ast_aggregated.type_expression) list
         -> LT.value tezos_command
@@ -148,7 +148,7 @@ module Command = struct
         -> LT.value tezos_command
     | Check_storage_address :
         Location.t
-        * Tezos_protocol.Protocol.Alpha_context.Contract.t
+        * Mavryk_protocol.Protocol.Alpha_context.Contract.t
         * Ast_aggregated.type_expression
         -> unit tezos_command
     | Inject_script :
@@ -159,7 +159,7 @@ module Command = struct
     | Get_voting_power :
         Location.t
         * Ligo_interpreter.Types.calltrace
-        * Tezos_protocol.Protocol.Alpha_context.public_key_hash
+        * Mavryk_protocol.Protocol.Alpha_context.public_key_hash
         -> LT.value tezos_command
     | Get_total_voting_power :
         Location.t * Ligo_interpreter.Types.calltrace
@@ -173,19 +173,19 @@ module Command = struct
         Location.t
         * LT.calltrace
         * string
-        * Tezos_protocol.Protocol.Alpha_context.public_key
+        * Mavryk_protocol.Protocol.Alpha_context.public_key
         -> unit tezos_command
     | New_account : unit -> LT.value tezos_command
     | Baker_account : LT.value * LT.value -> unit tezos_command
     | Register_delegate :
         Location.t
         * Ligo_interpreter.Types.calltrace
-        * Tezos_protocol.Protocol.Alpha_context.public_key_hash
+        * Mavryk_protocol.Protocol.Alpha_context.public_key_hash
         -> LT.value tezos_command
     | Stake :
         Location.t
         * Ligo_interpreter.Types.calltrace
-        * Tezos_protocol.Protocol.Alpha_context.public_key_hash
+        * Mavryk_protocol.Protocol.Alpha_context.public_key_hash
         * Z.t
         -> LT.value tezos_command
     | Bake_until_n_cycle_end :
@@ -324,14 +324,14 @@ module Command = struct
       | Success (ctxt', gas_consumed) -> `Exec_ok gas_consumed, ctxt'
       | Fail errs -> `Exec_failed errs, ctxt)
     | State_error_to_value errs ->
-      let open Tezos_protocol.Protocol in
-      let open Tezos_protocol_env in
+      let open Mavryk_protocol.Protocol in
+      let open Mavryk_protocol_env in
       let fail_ctor arg = LC.v_ctor "Fail" arg in
       let fail_other () =
         let errs_as_str =
           Format.asprintf
             "%a"
-            (Tezos_client.Michelson_v1_error_reporter.report_errors
+            (Mavryk_client.Michelson_v1_error_reporter.report_errors
                ~details:true
                ~show_source:true
                ?parsed:None)
@@ -392,8 +392,8 @@ module Command = struct
       let%map storage', ty = Tezos_state.get_storage ~raise ~loc ~calltrace ctxt addr in
       let storage =
         storage'
-        |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
-        |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
+        |> Mavryk_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
+        |> Mavryk_micheline.Micheline.inject_locations (fun _ -> ())
       in
       let ret =
         match
@@ -427,10 +427,10 @@ module Command = struct
     | Read_contract_from_file (loc, calltrace, source_file) ->
       (try%lwt
          let s = In_channel.(with_file source_file ~f:input_all) in
-         let t, _ = Tezos_micheline.Micheline_parser.tokenize s in
-         let m, _ = Tezos_micheline.Micheline_parser.parse_expression t in
+         let t, _ = Mavryk_micheline.Micheline_parser.tokenize s in
+         let m, _ = Mavryk_micheline.Micheline_parser.parse_expression t in
          let contract_code =
-           Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) m
+           Mavryk_micheline.Micheline.map_node (fun _ -> ()) (fun x -> x) m
          in
          let contract = LT.V_Michelson_contract contract_code in
          Lwt.return (contract, ctxt)
@@ -722,7 +722,7 @@ module Command = struct
     | Get_last_events (rq_tag, rq_p_ast_ty) ->
       let rq_p_ty = Michelson_backend.compile_type ~raise rq_p_ast_ty in
       let rq_p_ty =
-        Tezos_micheline.Micheline.(
+        Mavryk_micheline.Micheline.(
           inject_locations (fun _ -> ()) (strip_locations rq_p_ty))
       in
       let aux (src, _tag, payload, ty) =
@@ -754,7 +754,7 @@ module Command = struct
       let v = LT.V_List (List.map ~f:aux x) in
       Lwt.return (v, ctxt)
     | Add_account (loc, calltrace, sk, pk) ->
-      let pkh = Tezos_protocol_env.Signature.Public_key.hash pk in
+      let pkh = Mavryk_protocol_env.Signature.Public_key.hash pk in
       Tezos_state.add_account ~raise ~loc ~calltrace sk pk pkh;
       Lwt.return ((), ctxt)
     | New_account () ->

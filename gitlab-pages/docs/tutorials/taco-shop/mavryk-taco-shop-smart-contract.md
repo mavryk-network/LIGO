@@ -1,5 +1,5 @@
 ---
-id: tezos-taco-shop-smart-contract
+id: mavryk-taco-shop-smart-contract
 title: The Taco Shop Smart Contract
 ---
 
@@ -18,7 +18,7 @@ contract that will manage supply, pricing & sales of his tacos to the
 consumers.
 
 <br/>
-<img src="/img/tutorials/get-started/tezos-taco-shop-smart-contract/taco-stand.svg" width="50%" />
+<img src="/img/tutorials/get-started/mavryk-taco-shop-smart-contract/taco-stand.svg" width="50%" />
 <div style={{ opacity: 0.7, textAlign: 'center', fontSize: '10px' }}>Made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/"    title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
 </div>
 
@@ -206,7 +206,7 @@ When deploying contract, it is crucial to provide a correct
 initial storage value.  In our case the storage is type-checked as
 `taco_shop_storage`, because the default storage is not directly used in the code, 
 we encourage to declare the type, if your storage mutate, your default_storage will be in error. 
-Reflecting [Pedro's daily offer](tezos-taco-shop-smart-contract.md#daily-offer),
+Reflecting [Pedro's daily offer](mavryk-taco-shop-smart-contract.md#daily-offer),
 our storage's value will be defined as follows:
 
 <Syntax syntax="cameligo">
@@ -335,7 +335,7 @@ accessible within LIGO as `Mavryk.get_amount`.
 To make sure we get paid, we will:
 
 - calculate a `current_purchase_price` based on the
-  [equation specified earlier](tezos-taco-shop-smart-contract.md#calculating-the-current-purchase-price)
+  [equation specified earlier](mavryk-taco-shop-smart-contract.md#calculating-the-current-purchase-price)
 - check if the sent amount matches the `current_purchase_price`:
   - if not, then our contract will fail (`failwith`)
   - otherwise, stock for the given `taco_kind` will be decreased and
@@ -412,7 +412,7 @@ For that, we will have another file in which will describe our test:
 <Syntax syntax="cameligo">
 
 ```cameligo test-ligo group=test
-#import "gitlab-pages/docs/tutorials/taco-shop/src/tezos-taco-shop-smart-contract/TacoShop.mligo" "TacoShop"
+#import "gitlab-pages/docs/tutorials/taco-shop/src/mavryk-taco-shop-smart-contract/TacoShop.mligo" "TacoShop"
 
 let assert_string_failure (res : test_exec_result) (expected : string) =
   let expected = Test.eval expected in
@@ -464,7 +464,7 @@ let test =
 <Syntax syntax="jsligo">
 
 ```jsligo test-ligo group=test
-#import "gitlab-pages/docs/tutorials/taco-shop/src/tezos-taco-shop-smart-contract/TacoShop.jsligo" "TacoShop"
+#import "gitlab-pages/docs/tutorials/taco-shop/src/mavryk-taco-shop-smart-contract/TacoShop.jsligo" "TacoShop"
 
 function assert_string_failure (res: test_exec_result, expected: string) {
   const expected_bis = Test.eval(expected);
@@ -591,7 +591,7 @@ with `"test"`:
 <Syntax syntax="cameligo">
 
 ```zsh
-ligo run test gitlab-pages/docs/tutorials/taco-shop/src/tezos-taco-shop-smart-contract/test.mligo
+ligo run test gitlab-pages/docs/tutorials/taco-shop/src/mavryk-taco-shop-smart-contract/test.mligo
 # Output:
 #
 # Everything at the top-level was executed.
@@ -603,7 +603,7 @@ ligo run test gitlab-pages/docs/tutorials/taco-shop/src/tezos-taco-shop-smart-co
 <Syntax syntax="jsligo">
 
 ```zsh
-ligo run test gitlab-pages/docs/tutorials/taco-shop/src/tezos-taco-shop-smart-contract/test.jsligo
+ligo run test gitlab-pages/docs/tutorials/taco-shop/src/mavryk-taco-shop-smart-contract/test.jsligo
 # Output:
 #
 # Everything at the top-level was executed.

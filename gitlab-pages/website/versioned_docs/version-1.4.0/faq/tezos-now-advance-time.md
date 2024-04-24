@@ -1,5 +1,5 @@
 ---
-id: tezos-now-advance-time
+id: mavryk-now-advance-time
 title: Is there a way to advance time in LIGO tests ?
 ---
 

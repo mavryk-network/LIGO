@@ -1,4 +1,4 @@
-open Tezos_micheline.Micheline
+open Mavryk_micheline.Micheline
 module Location = Simple_utils.Location
 
 type meta = Mini_c.meta
@@ -11,7 +11,7 @@ type compiled_expression =
 let null = Mini_c.dummy_meta
 let rec repeat x n = if n <= 0 then [] else x :: repeat x (n - 1)
 
-type base_type = (meta, string) Tezos_micheline.Micheline.node
+type base_type = (meta, string) Mavryk_micheline.Micheline.node
 type oty = (meta, base_type) Ligo_coq_ocaml.Compiler.ty
 
 let get_ty_meta : oty -> meta =

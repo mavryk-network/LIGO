@@ -1,6 +1,6 @@
 module List = Core.List
 module Location = Simple_utils.Location
-open Tezos_micheline.Micheline
+open Mavryk_micheline.Micheline
 module Compiler = Ligo_coq_ocaml.Compiler
 module Datatypes = Ligo_coq_ocaml.Datatypes
 open Ligo_prim

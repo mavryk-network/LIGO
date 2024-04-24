@@ -1,14 +1,14 @@
 open Simple_utils.Trace
 open Proto_alpha_utils
-module Tezos_alpha_test_helpers = Memory_proto_alpha.Test_helpers
+module Mavryk_alpha_test_helpers = Memory_proto_alpha.Test_helpers
 open Errors
 open Ligo_interpreter_exc
 open Ligo_interpreter.Types
 open Ligo_interpreter.Combinators
-module Tezos_protocol = Memory_proto_alpha
-module Tezos_protocol_env = Memory_proto_alpha.Alpha_environment
-module Tezos_raw_protocol = Memory_proto_alpha.Raw_protocol
-module Tezos_protocol_parameters = Memory_proto_alpha.Parameters
+module Mavryk_protocol = Memory_proto_alpha
+module Mavryk_protocol_env = Memory_proto_alpha.Alpha_environment
+module Mavryk_raw_protocol = Memory_proto_alpha.Raw_protocol
+module Mavryk_protocol_parameters = Memory_proto_alpha.Parameters
 
 type r = (Errors.interpreter_error, Main_warnings.all) raise
 
@@ -19,8 +19,8 @@ type bootstrap_contract =
   * Ast_aggregated.type_expression
   * Ast_aggregated.type_expression
 
-type baker_account = string * Tezos_crypto.Signature.Public_key.t * int64 option
-type block = Tezos_alpha_test_helpers.Block.t
+type baker_account = string * Mavryk_crypto.Signature.Public_key.t * int64 option
+type block = Mavryk_alpha_test_helpers.Block.t
 
 type last_originations =
   (Memory_proto_alpha.Protocol.Alpha_context.Contract.t
@@ -28,13 +28,13 @@ type last_originations =
   list
 
 type storage_tys =
-  (Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression) list
+  (Mavryk_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression) list
 
 type parameter_tys =
-  (Tezos_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression) list
+  (Mavryk_protocol.Protocol.Alpha_context.Contract.t * Ast_aggregated.type_expression) list
 
-type state_error = Tezos_error_monad.TzCore.error list
-type tezos_op = Tezos_raw_protocol.Alpha_context.packed_operation
+type state_error = Mavryk_error_monad.TzCore.error list
+type tezos_op = Mavryk_raw_protocol.Alpha_context.packed_operation
 
 type last_events =
   (Memory_proto_alpha.Protocol.Alpha_context.Contract.t * string * mcode * mcode) list
@@ -63,7 +63,7 @@ and transduced =
 
 and internals =
   { protocol_version : Environment.Protocols.t
-  ; baker_policy : Tezos_alpha_test_helpers.Block.baker_policy
+  ; baker_policy : Mavryk_alpha_test_helpers.Block.baker_policy
         (* baker to be used for the next transfer/origination *)
   ; source : Memory_proto_alpha.Protocol.Alpha_context.Contract.t
         (* source to be used for the next transfer/origination *)
@@ -81,21 +81,21 @@ and internals =
 
 let contexts : context list ref = ref []
 
-(* Some getters    TODO: might be moved to tezos-X-test-helpers ? *)
+(* Some getters    TODO: might be moved to mavryk-X-test-helpers ? *)
 let get_timestamp (ctxt : context) = ctxt.raw.header.shell.timestamp
 
 let get_balance ~raise ~loc ~calltrace (ctxt : context) addr =
   Lwt.map (Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace))
-  @@ Tezos_alpha_test_helpers.Context.Contract.balance (B ctxt.raw) addr
+  @@ Mavryk_alpha_test_helpers.Context.Contract.balance (B ctxt.raw) addr
 
 
 let get_voting_power ~raise ~loc ~calltrace (ctxt : context) key_hash =
-  let vp = Tezos_alpha_test_helpers.Context.get_voting_power (B ctxt.raw) key_hash in
+  let vp = Mavryk_alpha_test_helpers.Context.get_voting_power (B ctxt.raw) key_hash in
   Lwt.map (Trace.trace_alpha_shell_tzresult ~raise (throw_obj_exc loc calltrace)) vp
 
 
 let get_total_voting_power ~raise ~loc ~calltrace (ctxt : context) =
-  let tvp = Tezos_alpha_test_helpers.Context.get_total_voting_power (B ctxt.raw) in
+  let tvp = Mavryk_alpha_test_helpers.Context.get_total_voting_power (B ctxt.raw) in
   Lwt.map (Trace.trace_alpha_shell_tzresult ~raise (throw_obj_exc loc calltrace)) tvp
 
 
@@ -123,11 +123,11 @@ let originated_account
   | Originated x -> x
 
 
-let contract_of_hash ~raise : Tezos_raw_protocol.Contract_hash.t -> Contract.t =
+let contract_of_hash ~raise : Mavryk_raw_protocol.Contract_hash.t -> Contract.t =
  fun x ->
   Trace.trace_alpha_tzresult ~raise (fun _ -> corner_case ())
-  @@ Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check
-       (Tezos_raw_protocol.Contract_hash.to_b58check x)
+  @@ Mavryk_protocol.Protocol.Alpha_context.Contract.of_b58check
+       (Mavryk_raw_protocol.Contract_hash.to_b58check x)
 
 
 let equal_account = Memory_proto_alpha.Protocol.Alpha_context.Contract.equal
@@ -136,63 +136,63 @@ let compare_account = Memory_proto_alpha.Protocol.Alpha_context.Contract.compare
 type ligo_repr = unit Tezos_utils.Michelson.michelson
 
 type canonical_repr =
-  Tezos_raw_protocol.Michelson_v1_primitives.prim Tezos_micheline.Micheline.canonical
+  Mavryk_raw_protocol.Michelson_v1_primitives.prim Mavryk_micheline.Micheline.canonical
 
 let ligo_to_canonical
     :  raise:r -> loc:Location.t -> calltrace:calltrace -> ligo_repr
     -> canonical_repr Data_encoding.lazy_t
   =
  fun ~raise ~loc ~calltrace x ->
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline.Micheline in
   let x = inject_locations (fun _ -> 0) (strip_locations x) in
   let x = strip_locations x in
   let x =
     Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace)
-    @@ Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings x
+    @@ Mavryk_protocol.Protocol.Michelson_v1_primitives.prims_of_strings x
   in
-  Tezos_protocol.Protocol.Alpha_context.Script.lazy_expr x
+  Mavryk_protocol.Protocol.Alpha_context.Script.lazy_expr x
 
 
 let canonical_to_ligo : canonical_repr -> ligo_repr =
  fun x ->
   x
-  |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
-  |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
+  |> Mavryk_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
+  |> Mavryk_micheline.Micheline.inject_locations (fun _ -> ())
 
 
 let parse_constant ~raise ~loc ~calltrace code =
-  let open Tezos_micheline in
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline in
+  let open Mavryk_micheline.Micheline in
   let code, errs = Micheline_parser.tokenize code in
   let code =
     match errs with
     | _ :: _ ->
       raise.error
-        (throw_obj_exc loc calltrace @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+        (throw_obj_exc loc calltrace @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
     | [] ->
       let code, errs = Micheline_parser.parse_expression ~check:false code in
       (match errs with
       | _ :: _ ->
         raise.error
-          (throw_obj_exc loc calltrace @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+          (throw_obj_exc loc calltrace @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
       | [] -> map_node (fun _ -> ()) (fun x -> x) code)
   in
   code
 
 
 let set_big_map ~raise (ctxt : context) id version k_ty v_ty =
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline.Micheline in
   let key_type = strip_locations k_ty in
   let key_type =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
         generic_error Location.generated "Cannot extract key type")
-    @@ Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings key_type
+    @@ Mavryk_protocol.Protocol.Michelson_v1_primitives.prims_of_strings key_type
   in
   let value_type = strip_locations v_ty in
   let value_type =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
         generic_error Location.generated "Cannot extract value type")
-    @@ Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings value_type
+    @@ Mavryk_protocol.Protocol.Michelson_v1_primitives.prims_of_strings value_type
   in
   let data : Ligo_interpreter.Types.bigmap_data = { key_type; value_type; version } in
   let transduced =
@@ -208,15 +208,15 @@ let get_storage ~raise ~loc ~calltrace ctxt (m : Contract.t) =
   let addr = originated_account ~raise ~loc ~calltrace "Trying to get a contract" m in
   let%bind st_v =
     Lwt.map (Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace))
-    @@ Tezos_protocol.Protocol.Alpha_services.Contract.storage
-         Tezos_alpha_test_helpers.Block.rpc_ctxt
+    @@ Mavryk_protocol.Protocol.Alpha_services.Contract.storage
+         Mavryk_alpha_test_helpers.Block.rpc_ctxt
          ctxt.raw
          addr
   in
   let%bind st_ty =
     Lwt.map (Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace))
-    @@ Tezos_protocol.Protocol.Alpha_services.Contract.script
-         Tezos_alpha_test_helpers.Block.rpc_ctxt
+    @@ Mavryk_protocol.Protocol.Alpha_services.Contract.script
+         Mavryk_alpha_test_helpers.Block.rpc_ctxt
          ctxt.raw
          addr
   in
@@ -224,10 +224,10 @@ let get_storage ~raise ~loc ~calltrace ctxt (m : Contract.t) =
     Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace)
     @@ Memory_proto_alpha.Protocol.Script_repr.force_decode st_ty.code
   in
-  let%map ({ storage_type; _ } : Tezos_protocol.Protocol.Script_ir_translator.toplevel) =
+  let%map ({ storage_type; _ } : Mavryk_protocol.Protocol.Script_ir_translator.toplevel) =
     (* Feels wrong :'( *)
     let%bind alpha_context, _, _ =
-      let open Tezos_raw_protocol in
+      let open Mavryk_raw_protocol in
       Lwt.map (Trace.trace_alpha_tzresult ~raise (fun _ -> corner_case ()))
       @@ Alpha_context.prepare
            ~level:ctxt.raw.header.shell.level
@@ -238,13 +238,13 @@ let get_storage ~raise ~loc ~calltrace ctxt (m : Contract.t) =
     Lwt.map
       Simple_utils.Function.(
         fst <@ Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace))
-    @@ Tezos_protocol.Protocol.Script_ir_translator.parse_toplevel alpha_context x
+    @@ Mavryk_protocol.Protocol.Script_ir_translator.parse_toplevel alpha_context x
   in
   let storage_type =
-    Tezos_micheline.Micheline.(
+    Mavryk_micheline.Micheline.(
       inject_locations (fun _ -> ()) (strip_locations storage_type))
   in
-  let storage_type = Tezos_micheline.Micheline.strip_locations storage_type in
+  let storage_type = Mavryk_micheline.Micheline.strip_locations storage_type in
   let storage_type = canonical_to_ligo storage_type in
   st_v, storage_type
 
@@ -252,7 +252,7 @@ let get_storage ~raise ~loc ~calltrace ctxt (m : Contract.t) =
 let get_alpha_context ~raise ctxt =
   let open Lwt.Let_syntax in
   let%map alpha_context, _, _ =
-    let open Tezos_raw_protocol in
+    let open Mavryk_raw_protocol in
     Lwt.map (Trace.trace_alpha_tzresult ~raise (fun _ -> corner_case ()))
     @@ Alpha_context.prepare
          ~level:ctxt.raw.header.shell.level
@@ -270,7 +270,7 @@ let unwrap_baker ~raise ~loc ~calltrace
 
 
 let baker_policy ~raise ~loc ~calltrace baker_policy =
-  let open Tezos_alpha_test_helpers.Block in
+  let open Mavryk_alpha_test_helpers.Block in
   match baker_policy with
   | `By_round i -> By_round i
   | `By_account a -> By_account (unwrap_baker ~raise ~loc ~calltrace a)
@@ -299,9 +299,9 @@ let script_of_compiled_code
     ~calltrace
     (contract : unit Tezos_utils.Michelson.michelson)
     (storage : unit Tezos_utils.Michelson.michelson)
-    : Tezos_protocol.Protocol.Alpha_context.Script.t
+    : Mavryk_protocol.Protocol.Alpha_context.Script.t
   =
-  let open! Tezos_protocol.Protocol.Alpha_context.Script in
+  let open! Mavryk_protocol.Protocol.Alpha_context.Script in
   let code = ligo_to_canonical ~raise ~loc ~calltrace contract in
   let storage = ligo_to_canonical ~raise ~loc ~calltrace storage in
   { code; storage }
@@ -311,11 +311,11 @@ let extract_origination_from_result
     : type a.
       raise:_
       -> Memory_proto_alpha.Protocol.Alpha_context.Contract.t
-      -> a Tezos_protocol.Protocol.Apply_results.contents_result
+      -> a Mavryk_protocol.Protocol.Apply_results.contents_result
       -> last_originations
   =
  fun ~raise src x ->
-  let open Tezos_raw_protocol in
+  let open Mavryk_raw_protocol in
   match x with
   | Manager_operation_result
       { operation_result = Applied (Transaction_result _)
@@ -347,10 +347,10 @@ let extract_origination_from_result
 
 
 let extract_event_from_result
-    : type a. a Tezos_protocol.Protocol.Apply_results.contents_result -> last_events
+    : type a. a Mavryk_protocol.Protocol.Apply_results.contents_result -> last_events
   =
  fun x ->
-  let open Tezos_raw_protocol in
+  let open Mavryk_raw_protocol in
   match x with
   | Manager_operation_result
       { operation_result = Applied (Transaction_result _)
@@ -375,11 +375,11 @@ let extract_event_from_result
 
 let extract_lazy_storage_diff_from_result
     : type a.
-      a Tezos_raw_protocol.Apply_results.contents_result
-      -> Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs option list
+      a Mavryk_raw_protocol.Apply_results.contents_result
+      -> Mavryk_raw_protocol.Alpha_context.Lazy_storage.diffs option list
   =
  fun x ->
-  let open Tezos_raw_protocol in
+  let open Mavryk_raw_protocol in
   match x with
   | Manager_operation_result
       { operation_result = Applied (Transaction_result (Transaction_to_contract_result y))
@@ -407,10 +407,10 @@ let extract_lazy_storage_diff_from_result
 
 let get_last_originations ~raise
     :  Memory_proto_alpha.Protocol.Alpha_context.Contract.t
-    -> Tezos_protocol.Protocol.operation_receipt -> last_originations
+    -> Mavryk_protocol.Protocol.operation_receipt -> last_originations
   =
  fun top_src x ->
-  let open Tezos_raw_protocol in
+  let open Mavryk_raw_protocol in
   match x with
   | No_operation_metadata -> []
   | Operation_metadata { contents } ->
@@ -424,11 +424,11 @@ let get_last_originations ~raise
 
 
 let get_lazy_storage_diffs
-    :  Tezos_protocol.Protocol.operation_receipt
-    -> Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs option list
+    :  Mavryk_protocol.Protocol.operation_receipt
+    -> Mavryk_raw_protocol.Alpha_context.Lazy_storage.diffs option list
   =
  fun x ->
-  let open Tezos_raw_protocol in
+  let open Mavryk_raw_protocol in
   match x with
   | No_operation_metadata -> []
   | Operation_metadata { contents } ->
@@ -441,9 +441,9 @@ let get_lazy_storage_diffs
     aux contents
 
 
-let get_last_events : Tezos_protocol.Protocol.operation_receipt -> last_events =
+let get_last_events : Mavryk_protocol.Protocol.operation_receipt -> last_events =
  fun x ->
-  let open Tezos_raw_protocol in
+  let open Mavryk_raw_protocol in
   match x with
   | No_operation_metadata -> []
   | Operation_metadata { contents } ->
@@ -457,18 +457,18 @@ let get_last_events : Tezos_protocol.Protocol.operation_receipt -> last_events =
 
 
 let convert_lazy_storage_diffs
-    (lazy_storage_diffs : Tezos_raw_protocol.Alpha_context.Lazy_storage.diffs)
+    (lazy_storage_diffs : Mavryk_raw_protocol.Alpha_context.Lazy_storage.diffs)
   =
   let enc =
     Data_encoding.Binary.to_bytes_exn
-      Tezos_raw_protocol.Alpha_context.Lazy_storage.encoding
+      Mavryk_raw_protocol.Alpha_context.Lazy_storage.encoding
       lazy_storage_diffs
   in
-  Data_encoding.Binary.of_bytes_exn Tezos_raw_protocol.Lazy_storage_diff.encoding enc
+  Data_encoding.Binary.of_bytes_exn Mavryk_raw_protocol.Lazy_storage_diff.encoding enc
 
 
 let upd_bigmaps
-    :  raise:r -> bigmaps -> Tezos_raw_protocol.Apply_results.packed_operation_metadata
+    :  raise:r -> bigmaps -> Mavryk_raw_protocol.Apply_results.packed_operation_metadata
     -> bigmaps
   =
  fun ~raise bigmaps op ->
@@ -476,7 +476,7 @@ let upd_bigmaps
   let lazy_storage_diffs = List.concat @@ List.filter_opt lazy_storage_diffs in
   let lazy_storage_diffs = convert_lazy_storage_diffs lazy_storage_diffs in
   let get_id id =
-    Z.to_int (Tezos_raw_protocol.Lazy_storage_kind.Big_map.Id.unparse_to_z id)
+    Z.to_int (Mavryk_raw_protocol.Lazy_storage_kind.Big_map.Id.unparse_to_z id)
   in
   List.fold_left lazy_storage_diffs ~init:bigmaps ~f:(fun bigmaps it ->
       match it with
@@ -540,7 +540,7 @@ let upd_bigmaps
 
 (* upd_context_of_receipts *)
 let upd_transduced_data
-    :  raise:r -> context -> Tezos_raw_protocol.Apply_results.packed_operation_metadata
+    :  raise:r -> context -> Mavryk_raw_protocol.Apply_results.packed_operation_metadata
     -> transduced
   =
  fun ~raise ctxt op_data ->
@@ -555,19 +555,19 @@ type add_operation_outcome =
   | Success of (context * Z.t (* gas consumed *))
   | Fail of state_error
 
-let get_last_operations_result (incr : Tezos_alpha_test_helpers.Incremental.t) =
-  match Tezos_alpha_test_helpers.Incremental.rev_tickets incr with
+let get_last_operations_result (incr : Mavryk_alpha_test_helpers.Incremental.t) =
+  match Mavryk_alpha_test_helpers.Incremental.rev_tickets incr with
   | [] -> failwith "Tried to get last operation result in empty block"
   | xs -> xs
 
 
 let get_single_tx_result_gas
-    (x : Tezos_raw_protocol.Apply_results.packed_operation_metadata)
+    (x : Mavryk_raw_protocol.Apply_results.packed_operation_metadata)
   =
   match x with
   | Operation_metadata
       ({ contents = Single_result y } :
-        _ Tezos_raw_protocol.Apply_results.operation_metadata) ->
+        _ Mavryk_raw_protocol.Apply_results.operation_metadata) ->
     (match y with
     | Manager_operation_result
         { operation_result =
@@ -602,12 +602,12 @@ let get_consumed_gas x =
 
 let bake_ops
     :  raise:r -> loc:Location.t -> calltrace:calltrace -> context
-    -> (Tezos_alpha_test_helpers.Incremental.t -> tezos_op) list
+    -> (Mavryk_alpha_test_helpers.Incremental.t -> tezos_op) list
     -> add_operation_outcome Lwt.t
   =
  fun ~raise ~loc ~calltrace ctxt operation ->
   let open Lwt.Let_syntax in
-  let open Tezos_alpha_test_helpers in
+  let open Mavryk_alpha_test_helpers in
   (* First check if baker is going to be successfully selected *)
   let%bind _ =
     Lwt.map
@@ -659,7 +659,7 @@ let bake_op
 
 let bake_until_n_cycle_end ~raise ~loc ~calltrace (ctxt : context) n =
   let open Lwt.Let_syntax in
-  let open Tezos_alpha_test_helpers in
+  let open Mavryk_alpha_test_helpers in
   let%map raw =
     Lwt.map (Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace))
     @@ Block.bake_until_n_cycle_end ~policy:ctxt.internals.baker_policy n ctxt.raw
@@ -669,8 +669,8 @@ let bake_until_n_cycle_end ~raise ~loc ~calltrace (ctxt : context) n =
 
 let register_delegate ~raise ~loc ~calltrace (ctxt : context) pkh =
   let open Lwt.Let_syntax in
-  let open Tezos_alpha_test_helpers in
-  let contract = Tezos_raw_protocol.Alpha_context.Contract.Implicit pkh in
+  let open Mavryk_alpha_test_helpers in
+  let contract = Mavryk_raw_protocol.Alpha_context.Contract.Implicit pkh in
   let%bind operation =
     Lwt.map (Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace))
     @@ Op.delegation ~gas_limit:Max ~force_reveal:true (B ctxt.raw) contract (Some pkh)
@@ -682,12 +682,12 @@ let register_delegate ~raise ~loc ~calltrace (ctxt : context) pkh =
 
 let stake ~raise ~loc ~calltrace (ctxt : context) pkh amt =
   let open Lwt.Let_syntax in
-  let open Tezos_alpha_test_helpers in
-  let contract = Tezos_raw_protocol.Alpha_context.Contract.Implicit pkh in
+  let open Mavryk_alpha_test_helpers in
+  let contract = Mavryk_raw_protocol.Alpha_context.Contract.Implicit pkh in
   let amt = Int64.of_int (Z.to_int amt) in
   let source = unwrap_source ~raise ~loc ~calltrace contract in
-  let entrypoint = Tezos_raw_protocol.Entrypoint_repr.stake in
-  let%bind (operation : Tezos_raw_protocol.Alpha_context.packed_operation) =
+  let entrypoint = Mavryk_raw_protocol.Entrypoint_repr.stake in
+  let%bind (operation : Mavryk_raw_protocol.Alpha_context.packed_operation) =
     Lwt.map (Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace))
     @@ (* TODO: might let user choose here *)
     Op.transaction
@@ -707,14 +707,14 @@ let stake ~raise ~loc ~calltrace (ctxt : context) pkh amt =
 
 let register_constant ~raise ~loc ~calltrace (ctxt : context) ~source ~value =
   let open Lwt.Let_syntax in
-  let open Tezos_alpha_test_helpers in
+  let open Mavryk_alpha_test_helpers in
   let value = ligo_to_canonical ~raise ~loc ~calltrace value in
   let hash =
     Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace)
-    @@ Tezos_protocol.Protocol.Script_repr.force_bytes value
+    @@ Mavryk_protocol.Protocol.Script_repr.force_bytes value
   in
-  let hash = Tezos_protocol.Protocol.Script_expr_hash.hash_bytes [ hash ] in
-  let hash = Format.asprintf "%a" Tezos_protocol.Protocol.Script_expr_hash.pp hash in
+  let hash = Mavryk_protocol.Protocol.Script_expr_hash.hash_bytes [ hash ] in
+  let hash = Format.asprintf "%a" Mavryk_protocol.Protocol.Script_expr_hash.pp hash in
   let%bind operation =
     Lwt.map (Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace))
     @@ Op.register_global_constant
@@ -741,7 +741,7 @@ let read_file_constants ~raise fn =
 
 let register_file_constants ~raise ~loc ~calltrace fn (ctxt : context) ~source =
   let open Lwt.Let_syntax in
-  let open Tezos_alpha_test_helpers in
+  let open Mavryk_alpha_test_helpers in
   let string_to_constant constant =
     let constant = parse_constant ~raise ~loc ~calltrace constant in
     ligo_to_canonical ~raise ~loc ~calltrace constant
@@ -749,10 +749,10 @@ let register_file_constants ~raise ~loc ~calltrace fn (ctxt : context) ~source =
   let constant_to_hash constant =
     let hash =
       Trace.trace_alpha_tzresult ~raise (throw_obj_exc loc calltrace)
-      @@ Tezos_protocol.Protocol.Script_repr.force_bytes constant
+      @@ Mavryk_protocol.Protocol.Script_repr.force_bytes constant
     in
-    let hash = Tezos_protocol.Protocol.Script_expr_hash.hash_bytes [ hash ] in
-    Format.asprintf "%a" Tezos_protocol.Protocol.Script_expr_hash.pp hash
+    let hash = Mavryk_protocol.Protocol.Script_expr_hash.hash_bytes [ hash ] in
+    Format.asprintf "%a" Mavryk_protocol.Protocol.Script_expr_hash.pp hash
   in
   let constants = read_file_constants ~raise fn in
   let constants = List.map ~f:string_to_constant constants in
@@ -776,44 +776,44 @@ let register_file_constants ~raise ~loc ~calltrace fn (ctxt : context) ~source =
 
 
 let add_account ~raise ~loc ~calltrace sk pk pkh : unit =
-  let open Tezos_alpha_test_helpers in
+  let open Mavryk_alpha_test_helpers in
   let sk =
     Trace.trace_tzresult ~raise (fun _ ->
         Errors.generic_error ~calltrace loc "Cannot parse secret key")
-    @@ Tezos_crypto.Signature.Secret_key.of_b58check sk
+    @@ Mavryk_crypto.Signature.Secret_key.of_b58check sk
   in
   let account = Account.{ sk; pk; pkh } in
   Account.add_account account
 
 
 let get_account ~raise ~loc ~calltrace mc
-    : (string * Tezos_crypto.Signature.public_key) Lwt.t
+    : (string * Mavryk_crypto.Signature.public_key) Lwt.t
   =
   let open Lwt.Let_syntax in
-  let open Tezos_alpha_test_helpers in
+  let open Mavryk_alpha_test_helpers in
   let%map account =
     Lwt.map
       (Trace.trace_tzresult ~raise (fun _ ->
            Errors.generic_error ~calltrace loc "Cannot find account"))
     @@ Account.find mc
   in
-  let sk = Tezos_crypto.Signature.Secret_key.to_b58check account.sk in
+  let sk = Mavryk_crypto.Signature.Secret_key.to_b58check account.sk in
   let pk = account.pk in
   sk, pk
 
 
-let new_account : unit -> string * Tezos_crypto.Signature.public_key =
+let new_account : unit -> string * Mavryk_crypto.Signature.public_key =
  fun () ->
-  let open Tezos_alpha_test_helpers.Account in
+  let open Mavryk_alpha_test_helpers.Account in
   let account = new_account () in
-  let sk = Tezos_crypto.Signature.Secret_key.to_b58check account.sk in
+  let sk = Mavryk_crypto.Signature.Secret_key.to_b58check account.sk in
   sk, account.pk
 
 
 let sign_message ~raise ~loc ~calltrace (packed_payload : bytes) sk
-    : Tezos_crypto.Signature.t
+    : Mavryk_crypto.Signature.t
   =
-  let open Tezos_crypto in
+  let open Mavryk_crypto in
   let sk =
     Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace)
     @@ Signature.Secret_key.of_b58check sk
@@ -826,10 +826,10 @@ let transfer ~raise ~loc ~calltrace (ctxt : context) ?entrypoint dst parameter a
     : add_operation_outcome Lwt.t
   =
   let open Lwt.Let_syntax in
-  let open Tezos_alpha_test_helpers in
+  let open Mavryk_alpha_test_helpers in
   let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
   let parameters = ligo_to_canonical ~raise ~loc ~calltrace parameter in
-  let%bind operation : Tezos_raw_protocol.Alpha_context.packed_operation Lwt.t =
+  let%bind operation : Mavryk_raw_protocol.Alpha_context.packed_operation Lwt.t =
     Lwt.map (Trace.trace_tzresult ~raise (throw_obj_exc loc calltrace))
     @@
     (* TODO: fee? *)
@@ -861,7 +861,7 @@ let originate_contract
   let storage, ligo_ty =
     trace_option ~raise (corner_case ~loc ()) @@ get_michelson_code_and_type storage
   in
-  let open Tezos_alpha_test_helpers in
+  let open Mavryk_alpha_test_helpers in
   let source = unwrap_source ~raise ~loc ~calltrace ctxt.internals.source in
   let amt =
     try Some (Test_tez.of_mumav_exn (Int64.of_int (Z.to_int amt))) with
@@ -898,18 +898,18 @@ let get_bootstrapped_contract ~raise (n : int) =
     | 0 -> e
     | k -> foldnat s (s e) (k - 1)
   in
-  let open Tezos_raw_protocol.Contract_repr in
+  let open Mavryk_raw_protocol.Contract_repr in
   let origination_nonce =
     let open Memory_proto_alpha.Protocol.Origination_nonce in
     let initial =
       initial
-        (Tezos_crypto.Hashed.Operation_hash.hash_bytes
+        (Mavryk_crypto.Hashed.Operation_hash.hash_bytes
            [ Bytes.of_string "Un festival de GADT." ])
     in
     foldnat incr initial n
   in
   let contract = to_b58check (originated_contract origination_nonce) in
-  let contract = Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check contract in
+  let contract = Mavryk_protocol.Protocol.Alpha_context.Contract.of_b58check contract in
   Trace.trace_alpha_tzresult ~raise (fun _ ->
       generic_error Location.generated "Error parsing address")
   @@ contract
@@ -933,7 +933,7 @@ let init
     ?initial_timestamp
     n
   =
-  let open Tezos_alpha_test_helpers in
+  let open Mavryk_alpha_test_helpers in
   let accounts =
     Trace.trace_tzresult ~raise (fun _ ->
         Errors.generic_error ~calltrace loc "Cannot parse secret key")
@@ -941,7 +941,7 @@ let init
   in
   let contracts =
     List.map
-      ~f:(fun a -> Tezos_raw_protocol.Alpha_context.Contract.Implicit Account.(a.pkh))
+      ~f:(fun a -> Mavryk_raw_protocol.Alpha_context.Contract.Implicit Account.(a.pkh))
       accounts
   in
   let initial_balances =
@@ -959,7 +959,7 @@ let init
   in
   let baker_accounts =
     List.map baker_accounts ~f:(fun (sk, pk, amt) ->
-        let pkh = Tezos_crypto.Signature.Public_key.hash pk in
+        let pkh = Mavryk_crypto.Signature.Public_key.hash pk in
         let balance =
           match amt with
           | None -> Tez.of_mumav_exn 4_000_000_000_000L
@@ -999,7 +999,7 @@ let init_ctxt
     bootstrapped_contracts
   =
   let open Lwt.Let_syntax in
-  let open Tezos_raw_protocol in
+  let open Mavryk_raw_protocol in
   let rng_state = Caml.Random.State.make (Caml.Array.make 1 0) in
   let () =
     (* check baker initial balance if the default amount is changed *)
@@ -1007,7 +1007,7 @@ let init_ctxt
     | [] -> () (* if empty list: will be defaulted with coherent values*)
     | baker :: _ ->
       let max =
-        Tezos_protocol_parameters.Default_parameters.constants_test.minimal_stake
+        Mavryk_protocol_parameters.Default_parameters.constants_test.minimal_stake
       in
       if Tez.( < ) (Alpha_context.Tez.of_mumav_exn baker) max
       then raise.error (Errors.not_enough_initial_accounts loc max)
@@ -1033,7 +1033,7 @@ let init_ctxt
         let sk =
           Trace.trace_tzresult ~raise (fun _ ->
               Errors.generic_error ~calltrace loc "Cannot parse secret key")
-          @@ Tezos_crypto.Signature.Secret_key.of_b58check sk
+          @@ Mavryk_crypto.Signature.Secret_key.of_b58check sk
         in
         sk, pk, amt)
       baker_accounts

@@ -7,7 +7,7 @@ open Simple_utils
 open Simple_utils.Function
 
 (** FIXME see
-    https://tezos-dev.slack.com/archives/GQ635HR0U/p1708798904488879?thread_ts=1708795057.966149&cid=GQ635HR0U
+    https://mavryk-dev.slack.com/archives/GQ635HR0U/p1708798904488879?thread_ts=1708795057.966149&cid=GQ635HR0U
     *)
 (* let link ~text ~target = string @@ Format.sprintf {|<a href="%s">%s</a>|} target text *)
 

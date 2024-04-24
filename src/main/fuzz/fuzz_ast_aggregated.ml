@@ -9,9 +9,9 @@ type mutation = Location.t * expression * string
 let get_mutation_id (loc, expr, _) =
   let s = Format.asprintf "%a%a" Location.pp loc Ast_aggregated.PP.expression expr in
   let hash =
-    Tezos_crypto.Base58.raw_encode
+    Mavryk_crypto.Base58.raw_encode
     @@ Bytes.to_string
-    @@ Tezos_crypto.Hacl.Hash.Keccak_256.digest (Bytes.of_string s)
+    @@ Mavryk_crypto.Hacl.Hash.Keccak_256.digest (Bytes.of_string s)
   in
   String.sub hash ~pos:0 ~len:8
 

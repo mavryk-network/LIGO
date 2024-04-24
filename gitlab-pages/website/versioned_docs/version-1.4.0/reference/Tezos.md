@@ -1,5 +1,5 @@
 ---
-id: tezos-reference
+id: mavryk-reference
 title: Mavryk
 hide_table_of_contents: true
 ---

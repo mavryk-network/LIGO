@@ -14,7 +14,7 @@ type spilling_error =
   | `Spilling_bad_decompile of Mini_c.value
   | `Spilling_could_not_parse_raw_michelson of Location.t * string
   | `Spilling_raw_michelson_must_be_seq of
-    Location.t * (Location.t, string) Tezos_micheline.Micheline.node
+    Location.t * (Location.t, string) Mavryk_micheline.Micheline.node
   ]
 [@@deriving poly_constructor { prefix = "spilling_" }]
 
@@ -90,8 +90,8 @@ let error_ppformat
         loc
         code
     | `Spilling_raw_michelson_must_be_seq (loc, code) ->
-      let open Tezos_micheline.Micheline in
-      let open Tezos_micheline.Micheline_printer in
+      let open Mavryk_micheline.Micheline in
+      let open Mavryk_micheline.Micheline_printer in
       Format.fprintf
         f
         "@[<hv>%a@.Raw Michelson must be seq (with curly braces {}), got: %a.@]"
@@ -157,7 +157,7 @@ let error_json : spilling_error -> Simple_utils.Error.t =
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Spilling_raw_michelson_must_be_seq (location, code) ->
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let message =
       Format.asprintf
         "Raw Michelson must be seq (with curly braces {}), got: %a."
