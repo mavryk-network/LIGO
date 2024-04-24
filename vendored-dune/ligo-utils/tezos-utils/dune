@@ -2,8 +2,8 @@
  (name tezos_utils)
  (public_name tezos-utils)
  (libraries
-  octez-libs.micheline
-  octez-libs.base
+  mavkit-libs.micheline
+  mavkit-libs.base
   data-encoding
   simple-utils
   base)

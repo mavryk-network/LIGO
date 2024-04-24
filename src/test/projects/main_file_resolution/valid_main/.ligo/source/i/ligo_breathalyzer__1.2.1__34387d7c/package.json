@@ -1,7 +1,7 @@
 {
     "name": "ligo-breathalyzer",
     "description": "A simple test framework for Ligo Lang",
-    "keywords": [ "ligo", "tezos", "tezos-ligo", "cameligo" ],
+    "keywords": [ "ligo", "tezos", "mavryk-ligo", "cameligo" ],
     "directories": { "lib": "lib", "test": "test" },
     "repository": {
         "type": "git",

@@ -190,7 +190,7 @@ export async function executeGenerateDeployScript(context: LigoContext, client: 
 
       ligoOutput.appendLine(`Generated deploy script for '${name}' contract:`);
       const res = [
-        'octez-client',
+        'mavkit-client',
         'originate',
         'contract',
         name,

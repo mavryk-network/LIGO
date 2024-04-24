@@ -169,6 +169,6 @@ ligo compile parameter ./gitlab-pages/docs/advanced/src/first-contract/counter.m
 ```
 
 Now we can use `(Right 5)` which is a Michelson value, to invoke our
-contract - e.g., via `tezos-client`
+contract - e.g., via `mavryk-client`
 
 <!-- updated use of entry -->

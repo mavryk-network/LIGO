@@ -1,4 +1,4 @@
-FROM mavrykdynamics/mavryk:latest as octez-client
+FROM mavrykdynamics/mavryk:latest as mavkit-client
 FROM mavrykdynamics/ligo:1.4.0 as ligo-compiler
 FROM ubuntu:20.04 as web-ide-builder
 
@@ -101,13 +101,13 @@ FROM ubuntu:20.04
 
 RUN mkdir /webide_bin/
 
-COPY --from=octez-client /usr/lib/ /usr/lib/
-COPY --from=octez-client /lib/ /lib/
-COPY --from=octez-client /usr/local/bin/octez-client /usr/local/bin/octez-client
-COPY --from=octez-client /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=mavkit-client /usr/lib/ /usr/lib/
+COPY --from=mavkit-client /lib/ /lib/
+COPY --from=mavkit-client /usr/local/bin/mavkit-client /usr/local/bin/mavkit-client
+COPY --from=mavkit-client /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=web-ide-builder /lib/ /lib/
 COPY --from=web-ide-builder /webide_bin /webide_bin/
 COPY --from=ligo-compiler /root/ligo /usr/local/bin/ligo
 
-ENTRYPOINT [ "/webide_bin/ligo-webide-backend", "-p", "8080", "--ligo-path", "/usr/local/bin/ligo", "--octez-client-path", "/usr/local/bin/octez-client", "--verbosity", "2" ]
+ENTRYPOINT [ "/webide_bin/ligo-webide-backend", "-p", "8080", "--ligo-path", "/usr/local/bin/ligo", "--mavkit-client-path", "/usr/local/bin/mavkit-client", "--verbosity", "2" ]
 EXPOSE 8080

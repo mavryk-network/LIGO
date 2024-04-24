@@ -16,7 +16,7 @@ Two choices are offered, ideal if you want to work with Ligo :
 - Install necessary stuff onto your machine
     - [Ligo compiler](https://ligo.mavryk.org/docs/intro/installation) to compile your code.
     - [IDE plugins](https://ligo.mavryk.org/docs/intro/editor-support)
-    - [octez-client](https://tezos.gitlab.io/introduction/howtoget.html) used to interact with tezos blockchain. Pre-built binaries are available [here](https://github.com/serokell/tezos-packaging)
+    - [mavkit-client](https://tezos.gitlab.io/introduction/howtoget.html) used to interact with tezos blockchain. Pre-built binaries are available [here](https://github.com/serokell/tezos-packaging)
 - Use [webide](https://ide.mavryk.network), ideal if you want a quick view of ligo. You'll be able to do, test, dry-run, and deploy the code !
 
 ## Building a smart-contract.
@@ -84,7 +84,7 @@ A namespace is the jsligo keyword to declare a Module in Ligo it provides a scop
 
 Storage is the datas stored in your smart-contract, in michelson and on-chain. When you deploy your contract you will pay for the storage, so keep it as light as possible and use it only for data which has to be in blockchain. See [Optimisation section](https://ligo.mavryk.org/docs/tutorials/optimisation/) for more details.
 
-When you will need to deploy a contract, the storage will need an init value (flag `--init` onto `octez-client`) defined in `Michelson`. It's possible to express it in Ligo using [compile storage command](https://ligo.mavryk.org/docs/manpages/compile%20storage).
+When you will need to deploy a contract, the storage will need an init value (flag `--init` onto `mavkit-client`) defined in `Michelson`. It's possible to express it in Ligo using [compile storage command](https://ligo.mavryk.org/docs/manpages/compile%20storage).
 
 ```
 ligo compile storage <your_main_file> <ligo_expression> -m <your_module_in_main_file>
@@ -271,7 +271,7 @@ and more on how to write and test namespace/module contracts
 
 # Publishing the contract
 
-For deploying the contract on Mavryk, we will use the `octez-client` interface as we did on the previous section.
+For deploying the contract on Mavryk, we will use the `mavkit-client` interface as we did on the previous section.
 
 First, you will need an account address. You can get one using any wallet listed [here](https://tezos.com/learn/store-and-use/).
 Once you have your first account configured, go to a [faucet](https://faucet.marigold.dev/), select the `ghostnet` testnet and claim `XTZ` tokens. clikc on the faucet and you will receive some tokens to play with.
@@ -279,7 +279,7 @@ Once you have your first account configured, go to a [faucet](https://faucet.mar
 Then we are going to point the Mavryk client to a Ghostnet testnet node
 
 ```zsh
-octez-client --endpoint https://ghostnet.tezos.marigold.dev/ config update
+mavkit-client --endpoint https://ghostnet.tezos.marigold.dev/ config update
 ```
 
 Ghostnet is a testnet, which is a separate network from the Mavryk mainnet, which can be used for testing.
@@ -287,7 +287,7 @@ Ghostnet is a testnet, which is a separate network from the Mavryk mainnet, whic
 Export the mnemonic from your wallet (almost every wallet does it, look on settings or read wallet documentation to see how to do it), then import your account locally. Type on the terminal
 
 ```bash
-octez-client import keys from mnemonic myWallet
+mavkit-client import keys from mnemonic myWallet
 ```
 
 Paste the mnemonic when prompt appears
@@ -295,7 +295,7 @@ Paste the mnemonic when prompt appears
 You are now ready to originate your contract with your user. On your wallet, copy your public hash key address `mv1...` or `mv2...` and replace the placeholder `<my_mv_address...>` on the command you need to run :
 
 ```zsh
-octez-client originate contract counter \
+mavkit-client originate contract counter \
               transferring 0 from <my_mv_address...> \
               running counter.mv \
               --init 10 --burn-cap 0.1 --force
@@ -306,7 +306,7 @@ Again, you will receive several messages from the node and you should get the co
 You can know call your contract with
 
 ```zsh
-octez-client call counter from <my_mv_address...> \
+mavkit-client call counter from <my_mv_address...> \
              --arg "(Left (Right 32))" \
              --burn-cap 0.1
 ```

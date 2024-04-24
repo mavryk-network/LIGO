@@ -3,7 +3,7 @@
  (public_name tezos-memory-proto-alpha)
  (libraries
   tezos-protocol-001-PtAtLas.protocol
-  octez-protocol-001-PtAtLas-libs.client
+  mavkit-protocol-001-PtAtLas-libs.client
   tezos-protocol-001-PtAtLas.parameters
   tezos-protocol-001-PtAtLas.protocol.environment
-  octez-protocol-001-PtAtLas-libs.test-helpers))
+  mavkit-protocol-001-PtAtLas-libs.test-helpers))

@@ -63,7 +63,7 @@
         skip_price=333mumav
       }
   generateDeployScript:
-    tool: tezos-client
+    tool: mavryk-client
     entrypoint: main
     storage: |
       {

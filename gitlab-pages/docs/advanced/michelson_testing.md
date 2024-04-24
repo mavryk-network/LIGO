@@ -15,13 +15,13 @@ test contracts in Michelson:
 
 * [Cleveland](https://gitlab.com/morley-framework/morley/-/blob/9455cd384b2ab897fb7b31822abca3730a4ad08b/code/cleveland/testingEDSL.md)
 
-Another alternative is to use Mavryk's binary `tezos-client`
+Another alternative is to use Mavryk's binary `mavryk-client`
 directly. There's a new
 [mockup](https://tezos.gitlab.io/user/mockup.html) mode which is does
 not need a Mavryk node to be running (albeit this is less similar to
 mainnet than running a Mavryk sandbox node).
 
-### Testing with `tezos-client`'s mockup
+### Testing with `mavryk-client`'s mockup
 
 We show the main steps that need to be done to use the mockup mode to
 test our LIGO contracts. As a first step, we need to compile our LIGO
@@ -109,16 +109,16 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 Now it is time to test this Michelson code we obtained: we want to
 execute it using the mockup mode.
 
-Before anything, make sure you have installed `tezos-client`, a simple
-way to do so is by using opam (`opam install tezos-client`).
+Before anything, make sure you have installed `mavryk-client`, a simple
+way to do so is by using opam (`opam install mavryk-client`).
 
-We can list all the protocols available using `tezos-client list
+We can list all the protocols available using `mavryk-client list
 mockup protocols`. In this example, we will use Edo for testing, so
 the command we use for creating a mockup instance on the directory
 `/tmp/mockup/` is:
 
 ```shell skip
-tezos-client \
+mavryk-client \
   --protocol PtEdoTezd3RHSC31mpxxo1npxFjoWWcFgQtxapi51Z8TLu6v6Uq \
   --base-dir /tmp/mockup \
   --mode mockup \
@@ -130,7 +130,7 @@ the client in subsequent commands. As recommended in the Mavryk
 documentation, we can add a shell alias to avoid mistakes:
 
 ```shell
-alias mockup-client='tezos-client --mode mockup --base-dir /tmp/mockup'
+alias mockup-client='mavryk-client --mode mockup --base-dir /tmp/mockup'
 ```
 
 We can list the addresses returned above by running:

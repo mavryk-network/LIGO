@@ -21,4 +21,4 @@
 
 (dirs :standard \ jsoo)
 
-(copy_files vendors/tezos-ligo/*.sexp)
+(copy_files vendors/mavryk-ligo/*.sexp)

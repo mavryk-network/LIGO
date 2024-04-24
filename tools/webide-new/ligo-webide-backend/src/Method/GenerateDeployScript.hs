@@ -107,14 +107,14 @@ generateDeployScript request = do
   let originationData :: OriginationData
       originationData = mkOriginationData typeCheckResult
 
-  octezClientPath <- lift (asks scOctezClientPath) >>= \case
+  mavkitClientPath <- lift (asks scMavkitClientPath) >>= \case
     Nothing -> throwM NoLigoBinary
     Just p -> pure p
 
   let morleyConfig :: MorleyClientConfig
       morleyConfig = MorleyClientConfig
         { mccEndpointUrl = Just (BaseUrl Https "rpc.mavryk.network" 443 "/atlasnet")
-        , mccMavrykClientPath = octezClientPath
+        , mccMavrykClientPath = mavkitClientPath
         , mccMbMavrykClientDataDir = Nothing
         , mccVerbosity = 0
         , mccSecretKey = Nothing
@@ -131,7 +131,7 @@ generateDeployScript request = do
   let burnFee = fromIntegral costPerByte * storageLimit
 
   let script = Text.pack $
-          "octez-client \\\
+          "mavkit-client \\\
         \ originate \\\
         \ contract \\\
         \ " ++ Text.unpack (gdsrName request) ++ " \\\

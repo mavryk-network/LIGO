@@ -58,7 +58,7 @@ suite('LIGO: Commands work', () => {
     generateDeployScript: {
       storage: 'unit',
       network: 'ghostnet',
-      output: /Generated deploy script for 'simple' contract:\noctez-client originate contract simple transferring 0 from baker running { parameter unit ; storage unit ; code { CAR ; NIL operation ; PAIR } }\n\n --init Unit\n\n --burn-cap 0.07375/,
+      output: /Generated deploy script for 'simple' contract:\nmavkit-client originate contract simple transferring 0 from baker running { parameter unit ; storage unit ; code { CAR ; NIL operation ; PAIR } }\n\n --init Unit\n\n --burn-cap 0.07375/,
     },
   }))
   runTestsForFile(({
@@ -71,7 +71,7 @@ suite('LIGO: Commands work', () => {
     generateDeployScript: {
       storage: 'unit',
       network: 'ghostnet',
-      output: /Generated deploy script for 'simple' contract:\noctez-client originate contract simple transferring 0 from baker running { parameter unit ; storage unit ; code { CAR ; NIL operation ; PAIR } }\n\n --init Unit\n\n --burn-cap 0.07375/,
+      output: /Generated deploy script for 'simple' contract:\nmavkit-client originate contract simple transferring 0 from baker running { parameter unit ; storage unit ; code { CAR ; NIL operation ; PAIR } }\n\n --init Unit\n\n --burn-cap 0.07375/,
     },
   }))
   runTestsForFile(({
@@ -86,7 +86,7 @@ suite('LIGO: Commands work', () => {
       entrypoint: 'First',
       storage: '42',
       network: 'ghostnet',
-      output: /Generated deploy script for 'two-entrypoints' contract:\noctez-client originate contract two-entrypoints transferring 0 from baker running { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } }\n\n --init 42\n\n --burn-cap 0.07375/,
+      output: /Generated deploy script for 'two-entrypoints' contract:\nmavkit-client originate contract two-entrypoints transferring 0 from baker running { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } }\n\n --init 42\n\n --burn-cap 0.07375/,
     },
   }))
 })

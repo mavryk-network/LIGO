@@ -334,7 +334,7 @@ const subtract = (i : int, s : storage) : result => [list([]), s - i]
 
 Mavryk has special support for parameters encoded with variant types. If the parameter is a variant type, Mavryk will treat each constructor as a separate entrypoint (with the first letter lowercased). It is important when we want to call a contract but do not know the full type of its parameter. For example, we can call our counter contract with the following CLI command:
 
-`tezos-client call contract counter from alice --entrypoint '%subtract' --arg 100`
+`mavryk-client call contract counter from alice --entrypoint '%subtract' --arg 100`
 
 Truffle (and Taquito library, which Truffle for Mavryk uses under the hood), also treats entrypoints specially. We can call our `add` entrypoint as follows:
 ```solidity
@@ -388,7 +388,7 @@ let doMultiplyBy4 = (store : storage) : int => doMultiplyBy2(doMultiplyBy2(store
 Here:
 1. `multiplyBy2` is _private_ (in Solidity terms): we cannot call it directly from outside of the contract.
 2. `multiplyBy4` is _public:_ we can call it both from inside the contract and using the `%multiplyBy4` entrypoint.
-3. `%multiplyBy16` is _external:_ there is no function `multiplyBy16` in the contract so we cannot call it from inside the source code, but there is an entrypoint `%multiplyBy16` encoded in the parameter, so we can use tezos-client or Taquito to call it externally.
+3. `%multiplyBy16` is _external:_ there is no function `multiplyBy16` in the contract so we cannot call it from inside the source code, but there is an entrypoint `%multiplyBy16` encoded in the parameter, so we can use mavryk-client or Taquito to call it externally.
 
 There is no analogue of `internal` methods in LIGO because LIGO contracts do not support inheritance.
 

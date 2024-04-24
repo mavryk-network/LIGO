@@ -48,9 +48,9 @@
             type = types.path;
             default = self.packages.x86_64-linux.ligo-bin;
           };
-          tezos-client-package = mkOption {
+          mavryk-client-package = mkOption {
             type = types.path;
-            default = self.packages.x86_64-linux.tezos-client;
+            default = self.packages.x86_64-linux.mavryk-client;
           };
           gist-token = mkOption {
             type = types.path;
@@ -68,12 +68,12 @@
             after = [ "network.target" ];
             wantedBy = [ "multi-user.target" ];
             # Don't attempt to start
-            unitConfig.ConditionPathExists = [ webide-cfg.package webide-cfg.ligo-package webide-cfg.tezos-client-package ];
+            unitConfig.ConditionPathExists = [ webide-cfg.package webide-cfg.ligo-package webide-cfg.mavryk-client-package ];
             script =
               ''
                 ${webide-cfg.package}/bin/ligo-webide-backend \
                   --ligo-path ${webide-cfg.ligo-package}/bin/ligo \
-                  --octez-client-path ${webide-cfg.tezos-client-package}/bin/octez-client \
+                  --mavkit-client-path ${webide-cfg.mavryk-client-package}/bin/mavkit-client \
                   --gist-token "$(cat ${webide-cfg.gist-token})"
               '';
           };
@@ -112,7 +112,7 @@
         "x86_64-linux" = { url = "https://gitlab.com/mavryk-network/ligo/-/jobs/4687472710/artifacts/raw/ligo"; hash = "sha256-wwxc2Sncq1ojcdVLv1FbFxc4FHbz2t9Fw3oJPCKMVSI="; };
       };
       ligo-syntaxes = pkgs.callPackage ../vscode/syntaxes {};
-      tezos-client = inputs.tezos-packaging.packages.${system}.tezos-client;
+      mavryk-client = inputs.tezos-packaging.packages.${system}.mavryk-client;
       frontend = (pkgs.callPackage ./ligo-webide-frontend/ligo-ide { inherit ligo-syntaxes; }) { git-proxy = "https://ligo-webide-cors-proxy.serokell.team"; };
       backend = haskellPkgs.callPackage ./ligo-webide-backend { };
       swagger-file = backend.swagger-file // {
@@ -133,7 +133,7 @@
         ligo-bin = pkgs.runCommand "ligo-bin" { } ''
           install -Dm777 ${pkgs.fetchurl ligo-binary.${system}} $out/bin/ligo
         '';
-        inherit tezos-client swagger-file;
+        inherit mavryk-client swagger-file;
         frontend = frontend.package;
         backend = backend.ligo-webide-backend.components.exes.ligo-webide-backend;
         openapi-client = frontend.openapi-client swagger-file;

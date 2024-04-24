@@ -89,12 +89,12 @@ ligo compile contract ./gitlab-pages/docs/advanced/src/global-constants/global_c
 
 </Syntax>
 
-## Registering global constants with `tezos-client`
+## Registering global constants with `mavryk-client`
 
-Global constants can be registered on the chain by using `tezos-client` as follows:
+Global constants can be registered on the chain by using `mavryk-client` as follows:
 
 ```
-tezos-client register global constant "{ PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }" from bootstrap1
+mavryk-client register global constant "{ PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }" from bootstrap1
 ```
 
 which will register the global constant with source `bootstrap1`.
@@ -105,19 +105,19 @@ In general, we can compile a constant doing the following steps:
 
 - Use `compile expression` sub-command to compile the expression we are interested in capturing in a constant.
 
-- Register the output of `compile expression` using `tezos-client`.
+- Register the output of `compile expression` using `mavryk-client`.
 
-- Capture the constant hash given by `tezos-client` and use it in the code with `Mavryk.constant`.
+- Capture the constant hash given by `mavryk-client` and use it in the code with `Mavryk.constant`.
 
 - Compile the contract that uses the hash constant by passing the argument `--constants`.
 
-In case that `tezos-client` is not available, LIGO provides a custom
+In case that `mavryk-client` is not available, LIGO provides a custom
 sub-command to compile constants, which works similar to the `compile
 expression` sub-command, but has the following differences:
 
 - The output is given as a escaped JSON string that can be given directly to the `--constants` argument of `compile contract` (or put in a JSON list in a file passed to `--file-constants`).
 
-- The hash of the constant is also given in output, so that it can be used without need to call `tezos-client`.
+- The hash of the constant is also given in output, so that it can be used without need to call `mavryk-client`.
 
 :::info
 For LIGO users, we recommend to use `compile constant` as it
@@ -167,7 +167,7 @@ ligo compile constant cameligo "helper" --init-file ./gitlab-pages/docs/advanced
 # This string can be passed in `--constants` argument when compiling a contract.
 # 
 # Remember to register it in the network, e.g.:
-# > tezos-client register global constant "{ UNPAIR ;
+# > mavryk-client register global constant "{ UNPAIR ;
 #   PUSH int 2 ;
 #   PUSH int 3 ;
 #   DIG 3 ;
@@ -193,7 +193,7 @@ ligo compile constant jsligo "helper" --init-file ./gitlab-pages/docs/advanced/s
 # This string can be passed in `--constants` argument when compiling a contract.
 # 
 # Remember to register it in the network, e.g.:
-# > tezos-client register global constant "{ UNPAIR ;
+# > mavryk-client register global constant "{ UNPAIR ;
 #   PUSH int 2 ;
 #   PUSH int 3 ;
 #   DIG 3 ;

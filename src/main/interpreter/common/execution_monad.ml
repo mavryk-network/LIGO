@@ -357,7 +357,7 @@ module Command = struct
         | Ecoproto_error (Script_interpreter.Bad_contract_parameter _addr) :: _ ->
           fail_other (), ctxt
         | _ -> fail_other (), ctxt)
-      (* this error is only caught because we have local modifications in tezos-ligo *)
+      (* this error is only caught because we have local modifications in mavryk-ligo *)
       | Ecoproto_error
           (Contract_storage.Balance_too_low
             (contract_too_low, contract_balance, spend_request))

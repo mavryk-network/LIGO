@@ -26,9 +26,9 @@ webide-backend-checks:
   script:
     - cd ./tools/webide-new
     - nix build .#packages.x86_64-linux.ligo-bin --out-link ligo
-    - nix build .#packages.x86_64-linux.tezos-client --out-link tezos-client
+    - nix build .#packages.x86_64-linux.mavryk-client --out-link mavryk-client
     - export LIGO_PATH=$PWD/ligo/bin/ligo
-    - export OCTEZ_CLIENT_PATH=$PWD/tezos-client/bin/octez-client
+    - export MAVKIT_CLIENT_PATH=$PWD/mavryk-client/bin/mavkit-client
     # These tests need docker, so they cannot be easily run as a flake check :(
     - nix build .#tests.x86_64-linux.ligo-webide-backend-test
     - cd ligo-webide-backend && ../result/bin/ligo-webide-backend-test

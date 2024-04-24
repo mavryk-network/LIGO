@@ -73,8 +73,8 @@
  (libraries
   ast_unified
   syntax_types
-  octez-libs.crypto
-  octez-libs.base
+  mavkit-libs.crypto
+  mavkit-libs.base
   compiler_options
   main_warnings)
  (inline_tests

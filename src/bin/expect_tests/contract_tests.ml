@@ -2088,7 +2088,7 @@ let%expect_test _ =
     This string can be passed in `--constants` argument when compiling a contract.
 
     Remember to register it in the network, e.g.:
-    > tezos-client register global constant "{ PUSH int 3 ;
+    > mavryk-client register global constant "{ PUSH int 3 ;
       DUP 2 ;
       COMPARE ;
       GT ;

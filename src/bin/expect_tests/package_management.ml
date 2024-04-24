@@ -42,10 +42,10 @@ let%expect_test _ =
   [%expect
     {|
     File "originate_contract/main.mligo", line 1, characters 0-30:
-      1 | #import "tezos-ligo-fa2" "FA2"
+      1 | #import "mavryk-ligo-fa2" "FA2"
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       2 |
-    File "tezos-ligo-fa2" not found. |}]
+    File "mavryk-ligo-fa2" not found. |}]
 
 let () = Caml.Sys.chdir "using_scope_pkg_project"
 

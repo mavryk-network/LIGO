@@ -670,7 +670,7 @@ module Michelson_formatter = struct
         f
         "Michelson constant as JSON string:@.%s@.This string can be passed in \
          `--constants` argument when compiling a contract.@.@.Remember to register it in \
-         the network, e.g.:@.> tezos-client register global constant %s from \
+         the network, e.g.:@.> mavryk-client register global constant %s from \
          bootstrap1@.@.Constant hash:@.%s"
         code
         code_no_newlines

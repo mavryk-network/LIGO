@@ -311,7 +311,7 @@ let setpaused (paused : bool) (s : storage) : result =
 
 You may notice that we can abuse the `IsWhitelisted` entrypoint to pause and unpause the token, even if we are not among the whitelisted senders. Try it out:
 
-`tezos-client call "$ACCESS_CONTROLLER" from "$EVA" --entrypoint "%isWhitelisted" --arg "Pair ($WHITELISTED_ADDRESS, $TARGET %setPaused)"`
+`mavryk-client call "$ACCESS_CONTROLLER" from "$EVA" --entrypoint "%isWhitelisted" --arg "Pair ($WHITELISTED_ADDRESS, $TARGET %setPaused)"`
 
 ## Contract factories
 

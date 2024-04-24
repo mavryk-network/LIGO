@@ -56,7 +56,7 @@
         }
       ]
   generateDeployScript:
-    tool: tezos-client
+    tool: mavryk-client
     entrypoint: main
     storage: |
       {

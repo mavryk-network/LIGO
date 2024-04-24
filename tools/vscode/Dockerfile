@@ -19,9 +19,9 @@ RUN ln -s /vscode/test-resources/VSCode-linux-x64 /vscode/.vscode-test/vscode-li
 RUN apt-get -y install xvfb xclip
 
 
-ARG OCTEZ_VERSION="v16.1"
-RUN wget -q https://github.com/serokell/tezos-packaging/releases/download/${OCTEZ_VERSION}-1/octez-client -O /usr/bin/octez-client
-RUN chmod +x /usr/bin/octez-client
+ARG MAVKIT_VERSION="v16.1"
+RUN wget -q https://github.com/serokell/tezos-packaging/releases/download/${MAVKIT_VERSION}-1/mavkit-client -O /usr/bin/mavkit-client
+RUN chmod +x /usr/bin/mavkit-client
 
 # Some runtime dependency for ligo
 RUN yarn global add esy

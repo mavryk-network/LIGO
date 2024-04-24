@@ -44,7 +44,7 @@ depends: [
   "tezos-stdlib-unix"
   "tpe"
   "tezos-protocol-011-PtHangzH"
-  "tezos-client-011-PtHangzH"
+  "mavryk-client-011-PtHangzH"
   "tezos-memory-proto-alpha"
   "simple-utils"
   "tezos-utils"
