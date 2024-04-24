@@ -1,5 +1,5 @@
-[submodule "vendors/tezos-ligo"]
-	path = vendors/tezos-ligo
+[submodule "vendors/mavryk-ligo"]
+	path = vendors/mavryk-ligo
 	url = https://gitlab.com/mavryk-network/mavryk-protocol.git
 	branch = atlas-ligo
 [submodule "tools/lsp/squirrel/bench/submodules/baseDAO"]
