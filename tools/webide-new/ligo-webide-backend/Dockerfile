@@ -1,5 +1,5 @@
 FROM mavrykdynamics/mavryk:latest as mavkit-client
-FROM mavrykdynamics/ligo:1.4.0 as ligo-compiler
+FROM mavrykdynamics/ligo:atlas as ligo-compiler
 FROM ubuntu:20.04 as web-ide-builder
 
 LABEL maintainer="infra@marigold.dev"
