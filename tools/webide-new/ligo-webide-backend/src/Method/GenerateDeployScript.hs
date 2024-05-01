@@ -113,7 +113,7 @@ generateDeployScript request = do
 
   let morleyConfig :: MorleyClientConfig
       morleyConfig = MorleyClientConfig
-        { mccEndpointUrl = Just (BaseUrl Https "rpc.mavryk.network" 443 "/atlasnet")
+        { mccEndpointUrl = Just (BaseUrl Https "atlasnet.rpc.mavryk.network" 443 )
         , mccMavrykClientPath = mavkitClientPath
         , mccMbMavrykClientDataDir = Nothing
         , mccVerbosity = 0

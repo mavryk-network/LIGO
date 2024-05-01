@@ -15,11 +15,11 @@
          "group":"Tezos",
          "name":"Atlasnet",
          "fullName":"Atlasnet Testnet",
-         "url":"https://rpc.mavryk.network/atlasnet",
-         "explorerUrl":"https://api.mavryk.network/atlasnet",
+         "url":"https://atlasnet.rpc.mavryk.network",
+         "explorerUrl":"https://atlasnet.api.mavryk.network",
          "symbol":"MAV",
          "icon":"mavrykmain",
-         "faucetUrl": "https://atlasnet-faucet.mavryk.network/",
+         "faucetUrl": "https://atlasnet.faucet.mavryk.network",
          "type":"atlasnet"
        }
     ]

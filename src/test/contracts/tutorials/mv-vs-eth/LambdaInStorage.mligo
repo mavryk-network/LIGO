@@ -1,0 +1,1 @@
+../../../../../gitlab-pages/docs/tutorials/mv-vs-eth/examples/contracts/mligo/LambdaInStorage.mligo

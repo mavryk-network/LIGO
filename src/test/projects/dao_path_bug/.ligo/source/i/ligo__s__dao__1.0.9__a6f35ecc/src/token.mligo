@@ -1,4 +1,4 @@
-#import "mavryk-ligo-fa2/lib/fa2/asset/single_asset.mligo" "FA2"
+#import "tezos-ligo-fa2/lib/fa2/asset/single_asset.mligo" "FA2"
 
 type t = address
 

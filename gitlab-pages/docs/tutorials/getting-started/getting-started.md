@@ -301,7 +301,7 @@ mavkit-client originate contract counter \
               --init 10 --burn-cap 0.1 --force
 ```
 
-Again, you will receive several messages from the node and you should get the confirmation that the contract has been published. Note the `KT1...` address available in logs, you'll be able to find your contract onto an indexer like `mvkt` through url like `https://api.mavryk.io/basenet/v1/KT1.../` don't forget to put your `KT1` address
+Again, you will receive several messages from the node and you should get the confirmation that the contract has been published. Note the `KT1...` address available in logs, you'll be able to find your contract onto an indexer like `mvkt` through url like `https://basenet.api.mavryk.network/v1/KT1.../` don't forget to put your `KT1` address
 
 You can know call your contract with
 
