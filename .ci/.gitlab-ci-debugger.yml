@@ -83,6 +83,8 @@ debugger-danger-premerge-checks:
 
 debugger-build:
   stage: tools-build
+  tags:
+    - saas-linux-2xlarge-amd64
   rules: &debugger_mr_dev
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
