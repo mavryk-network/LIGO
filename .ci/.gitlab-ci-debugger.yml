@@ -37,6 +37,7 @@ debugger-danger-instant-checks:
   interruptible: true
   tags:
     - docker
+    - saas-linux-2xlarge-amd64
   image: ruby:3.2.2
   before_script: &install_danger
     - gem install --quiet danger-gitlab
@@ -52,6 +53,7 @@ debugger-danger-hlint:
   interruptible: true
   tags:
     - docker
+    - saas-linux-2xlarge-amd64
   image: ruby:3.2.2
   before_script:
     - gem install --quiet danger-gitlab
@@ -70,6 +72,7 @@ debugger-danger-premerge-checks:
   interruptible: true
   tags:
     - docker
+    - saas-linux-2xlarge-amd64
   image: ruby:3.2.2
   before_script: *install_danger
   script:

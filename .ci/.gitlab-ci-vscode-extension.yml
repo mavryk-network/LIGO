@@ -43,6 +43,7 @@ emacs-lsp-client-test:
   stage: tools-check
   tags:
     - docker
+    - saas-linux-2xlarge-amd64
   image: silex/emacs:27.2-ci-cask
   variables:
     EMACS: "emacs-27.2"
@@ -68,6 +69,7 @@ vscode-extension:
   needs: [debugger-build, debugger-build-macos]
   tags:
     - docker
+    - saas-linux-2xlarge-amd64
   image: node:18-buster
   script:
     - mkdir -p tools/vscode/bin
@@ -87,6 +89,7 @@ vscode-extension-publish:
   needs: [vscode-extension]
   tags:
     - docker
+    - saas-linux-2xlarge-amd64
   image: node:18-buster
   when: manual
   script:
