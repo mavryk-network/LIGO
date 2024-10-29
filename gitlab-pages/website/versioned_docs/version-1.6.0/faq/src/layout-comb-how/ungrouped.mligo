@@ -18,7 +18,7 @@ module Bar = struct
   [@entry]
   let bar (addr : address) (s : unit) : operation list * unit =
     let arg : foo = {foo = 1n; bar = 2; baz = "three"} in
-    let amt : mav = 0tz in
+    let amt : mav = 0mv in
     let dst : foo contract = Mavryk.get_entrypoint "%foo" addr in
     let tx = Mavryk.transaction arg amt dst in
     ([tx], s)
@@ -30,10 +30,10 @@ module Bar = struct
 end
 
 let test_interaction () =
-  let orig_foo = Test.originate (contract_of Foo) () 0tz in
+  let orig_foo = Test.originate (contract_of Foo) () 0mv in
   let foo_addr = Test.to_address orig_foo.addr in
-  let orig_bar = Test.originate (contract_of Bar) () 0tz in
-  Test.transfer_exn orig_bar.addr (Bar foo_addr) 0tz
+  let orig_bar = Test.originate (contract_of Bar) () 0mv in
+  Test.transfer_exn orig_bar.addr (Bar foo_addr) 0mv
 type tree_record =
   [@layout tree]
   { foo : nat ;

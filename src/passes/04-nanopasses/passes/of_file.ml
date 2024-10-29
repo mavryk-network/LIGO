@@ -91,10 +91,10 @@ let compile ~raise =
         let storage = Variable.fresh ~loc ~name:"storage" () in
         let expr_storage = e_variable ~loc storage in
         let mav = Variable.fresh ~loc ~name:"mav" () in
-        let expr_tez = e_variable ~loc mav in
+        let expr_mav = e_variable ~loc mav in
         let key_hash = Variable.fresh ~loc ~name:"key_hash" () in
         let expr_key_hash = make_e ~loc (E_variable key_hash) in
-        let args = e_tuple ~loc Nonempty_list.[ expr_key_hash; expr_tez; expr_storage ] in
+        let args = e_tuple ~loc Nonempty_list.[ expr_key_hash; expr_mav; expr_storage ] in
         let code = e_application ~loc { lamb = code; args } in
         let code =
           e_lambda

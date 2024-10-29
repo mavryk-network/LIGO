@@ -52,13 +52,13 @@ let rec decompile
     | Bytes, [] ->
       let n = Trace.trace_option ~raise (Errors.wrong_mini_c_value t v) @@ get_bytes v in
       return (E_literal (Literal_bytes n))
-    | Bls12_381_g1, [] ->
+    | Mavryk_bls12_381_g1, [] ->
       let n = Trace.trace_option ~raise (Errors.wrong_mini_c_value t v) @@ get_bytes v in
       return (E_literal (Literal_bls12_381_g1 n))
-    | Bls12_381_g2, [] ->
+    | Mavryk_bls12_381_g2, [] ->
       let n = Trace.trace_option ~raise (Errors.wrong_mini_c_value t v) @@ get_bytes v in
       return (E_literal (Literal_bls12_381_g2 n))
-    | Bls12_381_fr, [] ->
+    | Mavryk_bls12_381_fr, [] ->
       let n = Trace.trace_option ~raise (Errors.wrong_mini_c_value t v) @@ get_bytes v in
       return (E_literal (Literal_bls12_381_fr n))
     | Chest, [] ->
@@ -158,9 +158,9 @@ let rec decompile
         | Nat
         | Mav
         | Bytes
-        | Bls12_381_g1
-        | Bls12_381_g2
-        | Bls12_381_fr
+        | Mavryk_bls12_381_g1
+        | Mavryk_bls12_381_g2
+        | Mavryk_bls12_381_fr
         | Address
         | Key
         | Chain_id

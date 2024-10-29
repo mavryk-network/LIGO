@@ -44,11 +44,11 @@ with prev; {
   coq_8_13 = coq_8_13.override {
     customOCamlPackages = final.ocaml-ng.ocamlPackages_4_14;
   };
-  mavryk-rust-libs = prev.mavryk-rust-libs.overrideAttrs (_: {
+  tezos-rust-libs = prev.tezos-rust-libs.overrideAttrs (_: {
     version = "1.7";
     src = fetchFromGitLab {
       owner = "mavryk";
-      repo = "mavryk-rust-libs";
+      repo = "tezos-rust-libs";
       rev = "v1.7";
       sha256 = "sha256-L+8qu3DXqru5AeQWSC8Eeii+OTZnYbpw6X05K+EapNE=";
     };
@@ -74,14 +74,14 @@ with prev; {
     installPhase = ''
       runHook preInstall
 
-      mkdir -p $out/lib/mavryk-rust-libs/rust
+      mkdir -p $out/lib/tezos-rust-libs/rust
       cp "librustzcash/include/librustzcash.h" \
           "target-librustzcash/release/librustzcash.a" \
           "wasmer-3.3.0/lib/c-api/wasm.h" \
           "wasmer-3.3.0/lib/c-api/wasmer.h" \
           "target-wasmer/release/libwasmer.a" \
-          "$out/lib/mavryk-rust-libs"
-      cp -r "librustzcash/include/rust" "$out/lib/mavryk-rust-libs"
+          "$out/lib/tezos-rust-libs"
+      cp -r "librustzcash/include/rust" "$out/lib/tezos-rust-libs"
 
       runHook postInstall
     '';

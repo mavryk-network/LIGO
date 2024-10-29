@@ -34,11 +34,11 @@ let pp_ct : Format.formatter -> constant_val -> unit =
   | C_key c -> Format.fprintf ppf "%a" Mavryk_crypto.Signature.Public_key.pp c
   | C_signature s -> Format.fprintf ppf "%a" Mavryk_crypto.Signature.pp s
   | C_bls12_381_g1 b ->
-    Format.fprintf ppf "%s" (Bytes.to_string (Bls12_381.G1.to_bytes b))
+    Format.fprintf ppf "%s" (Bytes.to_string (Mavryk_bls12_381.G1.to_bytes b))
   | C_bls12_381_g2 b ->
-    Format.fprintf ppf "%s" (Bytes.to_string (Bls12_381.G2.to_bytes b))
+    Format.fprintf ppf "%s" (Bytes.to_string (Mavryk_bls12_381.G2.to_bytes b))
   | C_bls12_381_fr b ->
-    Format.fprintf ppf "%s" (Bytes.to_string (Bls12_381.Fr.to_bytes b))
+    Format.fprintf ppf "%s" (Bytes.to_string (Mavryk_bls12_381.Fr.to_bytes b))
   | C_chain_id c -> Format.fprintf ppf "%s" (Bytes.to_string (Chain_id.to_bytes c))
   | C_chest b -> Format.fprintf ppf "%s" (Bytes.to_string b)
   | C_chest_key b -> Format.fprintf ppf "%s" (Bytes.to_string b)

@@ -1009,7 +1009,7 @@ let init_ctxt
       let max =
         Mavryk_protocol_parameters.Default_parameters.constants_test.minimal_stake
       in
-      if Mav.( < ) (Alpha_context.Mav.of_mumav_exn baker) max
+      if Mav.( < ) (Alpha_context.Tez.of_mumav_exn baker) max
       then raise.error (Errors.not_enough_initial_accounts loc max)
       else ()
   in

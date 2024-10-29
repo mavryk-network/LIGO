@@ -930,9 +930,9 @@ and check_literal const_error_recovery ~type_ lit ~constructor =
     let lit = Ligo_string.extract lit in
     (* TODO: bad address? *)
     check @@ I.(e_address ~loc lit)
-  | Literal_bytes lit, Bls12_381_g1 -> check @@ I.(e_bls12_381_g1 ~loc lit)
-  | Literal_bytes lit, Bls12_381_g2 -> check @@ I.(e_bls12_381_g2 ~loc lit)
-  | Literal_bytes lit, Bls12_381_fr -> check @@ I.(e_bls12_381_fr ~loc lit)
+  | Literal_bytes lit, Mavryk_bls12_381_g1 -> check @@ I.(e_bls12_381_g1 ~loc lit)
+  | Literal_bytes lit, Mavryk_bls12_381_g2 -> check @@ I.(e_bls12_381_g2 ~loc lit)
+  | Literal_bytes lit, Mavryk_bls12_381_fr -> check @@ I.(e_bls12_381_fr ~loc lit)
   | Literal_bytes lit, Chest -> check @@ I.(e_chest ~loc lit)
   | Literal_bytes lit, Chest_key -> check @@ I.(e_chest_key ~loc lit)
   | Literal_string lit, Bytes ->

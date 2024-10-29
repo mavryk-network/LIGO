@@ -5,7 +5,7 @@ module Ligo_string = Simple_utils.Ligo_string
 module Ligo_option = Simple_utils.Ligo_option
 
 let int_of_mumav t =
-  Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Mav.to_mumav t
+  Z.of_int64 @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.to_mumav t
 
 
 let mav_to_z : Memory_proto_alpha.Protocol.Tez_repr.t -> Z.t =
@@ -14,7 +14,7 @@ let mav_to_z : Memory_proto_alpha.Protocol.Tez_repr.t -> Z.t =
   let c = Data_encoding.Binary.to_bytes_exn enc t in
   int_of_mumav
   @@ Data_encoding.Binary.of_bytes_exn
-       Memory_proto_alpha.Protocol.Alpha_context.Mav.encoding
+       Memory_proto_alpha.Protocol.Alpha_context.Tez.encoding
        c
 
 
@@ -40,9 +40,9 @@ let string_of_key_hash t =
 
 let string_of_key t = Format.asprintf "%a" Mavryk_crypto.Signature.Public_key.pp t
 let string_of_signature t = Format.asprintf "%a" Mavryk_crypto.Signature.pp t
-let bytes_of_bls12_381_g1 t = Bls12_381.G1.to_bytes t
-let bytes_of_bls12_381_g2 t = Bls12_381.G2.to_bytes t
-let bytes_of_bls12_381_fr t = Bls12_381.Fr.to_bytes t
+let bytes_of_bls12_381_g1 t = Mavryk_bls12_381.G1.to_bytes t
+let bytes_of_bls12_381_g2 t = Mavryk_bls12_381.G2.to_bytes t
+let bytes_of_bls12_381_fr t = Mavryk_bls12_381.Fr.to_bytes t
 let string_of_chain_id t = Mavryk_crypto.Hashed.Chain_id.to_b58check t
 
 module Mavryk_eq = struct
@@ -87,7 +87,7 @@ module Mavryk_eq = struct
 
   let mumav_add : Z.t -> Z.t -> Z.t option =
    fun x y ->
-    let open Memory_proto_alpha.Protocol.Alpha_context.Mav in
+    let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
     let open Ligo_option in
     try
       let x = Z.to_int64 x in
@@ -103,7 +103,7 @@ module Mavryk_eq = struct
 
   let mumav_sub : Z.t -> Z.t -> Z.t option =
    fun x y ->
-    let open Memory_proto_alpha.Protocol.Alpha_context.Mav in
+    let open Memory_proto_alpha.Protocol.Alpha_context.Tez in
     let open Ligo_option in
     try
       let x = Z.to_int64 x in
@@ -190,7 +190,7 @@ let make_options ~raise ?param ctxt =
   | None -> make_dry_run_options ~raise default
   | Some (ctxt : Mavryk_state.context) ->
     let source = ctxt.internals.source in
-    let%map Mavryk_context = Mavryk_state.get_alpha_context ~raise ctxt in
+    let%map mavryk_context = Mavryk_state.get_alpha_context ~raise ctxt in
     let mavryk_context =
       Memory_proto_alpha.Protocol.Alpha_context.Gas.set_limit
         mavryk_context
@@ -214,9 +214,9 @@ let make_options ~raise ?param ctxt =
       ; source
       ; payer = source
       ; self = source
-      ; amount = Memory_proto_alpha.Protocol.Alpha_context.Mav.of_mumav_exn 100000000L
+      ; amount = Memory_proto_alpha.Protocol.Alpha_context.Tez.of_mumav_exn 100000000L
       ; chain_id = Memory_proto_alpha.Alpha_environment.Chain_id.zero
-      ; balance = Memory_proto_alpha.Protocol.Alpha_context.Mav.zero
+      ; balance = Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
       ; now = timestamp
       ; level
       }

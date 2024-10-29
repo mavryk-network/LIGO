@@ -68,9 +68,9 @@ let rec compile_type ~(raise : _ Trace.raise) (t : AST.type_expression) : type_e
     | Pvss_key, [] -> return (T_base TB_pvss_key)
     | Tx_rollup_l2_address, [] -> return (T_base TB_tx_rollup_l2_address)
     | Baker_operation, [] -> return (T_base TB_baker_operation)
-    | Bls12_381_g1, [] -> return (T_base TB_bls12_381_g1)
-    | Bls12_381_g2, [] -> return (T_base TB_bls12_381_g2)
-    | Bls12_381_fr, [] -> return (T_base TB_bls12_381_fr)
+    | Mavryk_bls12_381_g1, [] -> return (T_base TB_bls12_381_g1)
+    | Mavryk_bls12_381_g2, [] -> return (T_base TB_bls12_381_g2)
+    | Mavryk_bls12_381_fr, [] -> return (T_base TB_bls12_381_fr)
     | Never, [] -> return (T_base TB_never)
     | Dynamic_entrypoint, [ _p; _s ] -> return (T_base TB_nat)
     | Chest, [] -> return (T_base TB_chest)
@@ -189,7 +189,7 @@ let rec compile_type ~(raise : _ Trace.raise) (t : AST.type_expression) : type_e
         | Gen
         | Address
         | Operation
-        | Bls12_381_fr
+        | Mavryk_bls12_381_fr
         | Key_hash
         | Chain_id
         | Sapling_transaction
@@ -197,8 +197,8 @@ let rec compile_type ~(raise : _ Trace.raise) (t : AST.type_expression) : type_e
         | Pvss_key
         | Michelson_contract
         | Int
-        | Bls12_381_g1
-        | Bls12_381_g2
+        | Mavryk_bls12_381_g1
+        | Mavryk_bls12_381_g2
         | Key
         | Michelson_program
         | Ticket

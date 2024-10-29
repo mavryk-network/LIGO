@@ -387,7 +387,7 @@ let rec error_ppformat
         "@[<hv>%a@. baker account initial balance must at least reach %a mav @]"
         snippet_pp
         loc
-        Memory_proto_alpha.Protocol.Alpha_context.Mav.pp
+        Memory_proto_alpha.Protocol.Alpha_context.Tez.pp
         max
     | `Main_interpret_test_entry_not_found s ->
       Format.fprintf f "Test entry '%s' not found" s

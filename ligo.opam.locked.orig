@@ -250,7 +250,7 @@ depends: [
   "tar-unix" {= "2.5.1"}
   "terminal" {= "0.2.2"}
   "terminal_size" {= "0.2.0"}
-  "mavryk-rust-libs" {= "1.6"}
+  "tezos-rust-libs" {= "1.6"}
   "tezt" {= "4.0.0"}
   "time_now" {= "v0.15.0"}
   "timezone" {= "v0.15.0"}

@@ -516,7 +516,7 @@ and print_P_Mumav state (node : (lexeme * Int64.t) wrap) =
   Tree.make_mumav "P_Mumav" state node
 
 and print_P_Mav state (node : (lexeme * Q.t) wrap) =
-    Tree.make_tez "P_Mav" state node
+    Tree.make_mav "P_Mav" state node
 
 (* Natural numbers in patterns *)
 
@@ -984,7 +984,7 @@ and print_E_Mumav state (node : (lexeme * Int64.t) wrap) =
 (* Mav literals *)
 
 and print_E_Mav state (node : (lexeme * Q.t) wrap) =
-  Tree.make_tez "E_Mav" state node
+  Tree.make_mav "E_Mav" state node
 
 (* Natural numbers *)
 

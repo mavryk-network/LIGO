@@ -501,14 +501,14 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_NOT, _ -> fail @@ error_type ()
   | C_NEG, [ V_Ct (C_int a') ] -> return @@ v_int (Z.neg a')
   | C_NEG, [ V_Ct (C_bls12_381_g1 a') ] ->
-    return @@ v_bls12_381_g1 (Bls12_381.G1.negate a')
+    return @@ v_bls12_381_g1 (Mavryk_bls12_381.G1.negate a')
   | C_NEG, [ V_Ct (C_bls12_381_g2 a') ] ->
-    return @@ v_bls12_381_g2 (Bls12_381.G2.negate a')
+    return @@ v_bls12_381_g2 (Mavryk_bls12_381.G2.negate a')
   | C_NEG, [ V_Ct (C_bls12_381_fr a') ] ->
-    return @@ v_bls12_381_fr (Bls12_381.Fr.negate a')
+    return @@ v_bls12_381_fr (Mavryk_bls12_381.Fr.negate a')
   | C_NEG, _ -> fail @@ error_type ()
   | C_INT, [ V_Ct (C_nat a') ] -> return @@ v_int a'
-  | C_INT, [ V_Ct (C_bls12_381_fr a') ] -> return @@ v_int (Bls12_381.Fr.to_z a')
+  | C_INT, [ V_Ct (C_bls12_381_fr a') ] -> return @@ v_int (Mavryk_bls12_381.Fr.to_z a')
   | C_INT, _ -> fail @@ error_type ()
   | C_ABS, [ V_Ct (C_int a') ] -> return @@ v_nat (Z.abs a')
   | C_ABS, _ -> fail @@ error_type ()
@@ -575,13 +575,13 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     | None ->
       fail (Errors.meta_lang_eval loc calltrace (v_string "Mumav underflow/overflow")))
   | C_ADD, [ V_Ct (C_bls12_381_g1 a); V_Ct (C_bls12_381_g1 b) ] ->
-    let r = Bls12_381.G1.(add a b) in
+    let r = Mavryk_bls12_381.G1.(add a b) in
     return (v_bls12_381_g1 r)
   | C_ADD, [ V_Ct (C_bls12_381_g2 a); V_Ct (C_bls12_381_g2 b) ] ->
-    let r = Bls12_381.G2.(add a b) in
+    let r = Mavryk_bls12_381.G2.(add a b) in
     return (v_bls12_381_g2 r)
   | C_ADD, [ V_Ct (C_bls12_381_fr a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.Fr.(a + b) in
+    let r = Mavryk_bls12_381.Fr.(a + b) in
     return (v_bls12_381_fr r)
   | C_ADD, _ -> fail @@ error_type ()
   | C_MUL, [ V_Ct (C_int64 a); V_Ct (C_int64 b) ] -> return @@ v_int64 Int64.(a * b)
@@ -600,25 +600,25 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let r = Z.mul a b in
     return (v_mumav r)
   | C_MUL, [ V_Ct (C_bls12_381_g1 a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.G1.(mul a b) in
+    let r = Mavryk_bls12_381.G1.(mul a b) in
     return (v_bls12_381_g1 r)
   | C_MUL, [ V_Ct (C_bls12_381_g2 a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.G2.(mul a b) in
+    let r = Mavryk_bls12_381.G2.(mul a b) in
     return (v_bls12_381_g2 r)
   | C_MUL, [ V_Ct (C_bls12_381_fr a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.Fr.(a * b) in
+    let r = Mavryk_bls12_381.Fr.(a * b) in
     return (v_bls12_381_fr r)
   | C_MUL, [ V_Ct (C_nat a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.Fr.(b ** a) in
+    let r = Mavryk_bls12_381.Fr.(b ** a) in
     return (v_bls12_381_fr r)
   | C_MUL, [ V_Ct (C_int a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.Fr.(b ** a) in
+    let r = Mavryk_bls12_381.Fr.(b ** a) in
     return (v_bls12_381_fr r)
   | C_MUL, [ V_Ct (C_bls12_381_fr a); V_Ct (C_nat b) ] ->
-    let r = Bls12_381.Fr.(a ** b) in
+    let r = Mavryk_bls12_381.Fr.(a ** b) in
     return (v_bls12_381_fr r)
   | C_MUL, [ V_Ct (C_bls12_381_fr a); V_Ct (C_int b) ] ->
-    let r = Bls12_381.Fr.(a ** b) in
+    let r = Mavryk_bls12_381.Fr.(a ** b) in
     return (v_bls12_381_fr r)
   | C_MUL, _ -> fail @@ error_type ()
   | C_DIV, [ V_Ct (C_int a'); V_Ct (C_int b') ]
@@ -1615,15 +1615,15 @@ and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t =
     | Ok t -> Monad.return @@ v_address t
     | Error _ -> Monad.fail @@ Errors.literal Location.generated (Literal_address s))
   | Literal_bls12_381_g1 b ->
-    (match Bls12_381.G1.of_bytes_opt b with
+    (match Mavryk_bls12_381.G1.of_bytes_opt b with
     | Some t -> Monad.return @@ v_bls12_381_g1 t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_bls12_381_g1 b))
   | Literal_bls12_381_g2 b ->
-    (match Bls12_381.G2.of_bytes_opt b with
+    (match Mavryk_bls12_381.G2.of_bytes_opt b with
     | Some t -> Monad.return @@ v_bls12_381_g2 t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_bls12_381_g2 b))
   | Literal_bls12_381_fr b ->
-    (match Bls12_381.Fr.of_bytes_opt b with
+    (match Mavryk_bls12_381.Fr.of_bytes_opt b with
     | Some t -> Monad.return @@ v_bls12_381_fr t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_bls12_381_fr b))
   | Literal_chain_id c ->

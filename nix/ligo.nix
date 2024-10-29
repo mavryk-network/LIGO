@@ -6,7 +6,7 @@
   tree-sitter,
   tree-sitter-typescript
 }: let
-  inherit (pkgs) darwin ocamlPackages python3Packages coq_8_13 mavryk-rust-libs;
+  inherit (pkgs) darwin ocamlPackages python3Packages coq_8_13 tezos-rust-libs;
 in
   with ocamlPackages;
     buildDunePackage rec {
@@ -14,7 +14,7 @@ in
       version = "dev";
       src = ./..;
 
-      OPAM_SWITCH_PREFIX = "${mavryk-rust-libs}";
+      OPAM_SWITCH_PREFIX = "${tezos-rust-libs}";
       TREE_SITTER = "${tree-sitter}";
       TREE_SITTER_TYPESCRIPT = "${tree-sitter-typescript}";
 
@@ -77,7 +77,7 @@ in
           pure-splitmix
           cohttp-server-lwt-unix
           resto-cohttp-self-serving-client
-          mavryk-rust-libs
+          tezos-rust-libs
           crunch
           class_group_vdf
           hex

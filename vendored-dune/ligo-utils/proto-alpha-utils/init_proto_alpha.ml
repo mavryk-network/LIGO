@@ -15,8 +15,8 @@ module Context_init = struct
     ; sk : Signature.secret_key
     }
 
-  let generate_accounts n : (account * Alpha_context.Mav.t) list =
-    let amount = Alpha_context.Mav.of_mumav_exn 4_000_000_000_000L in
+  let generate_accounts n : (account * Alpha_context.Tez.t) list =
+    let amount = Alpha_context.Tez.of_mumav_exn 4_000_000_000_000L in
     List.map
       ~f:(fun _ ->
         let pkh, pk, sk = Signature.generate_key () in
@@ -67,7 +67,7 @@ module Context_init = struct
       constants
       header
       commitments
-      (initial_accounts : (account * Alpha_context.Mav.t) trace)
+      (initial_accounts : (account * Alpha_context.Tez.t) trace)
       security_deposit_ramp_up_cycles
       no_reward_cycles
     =
@@ -115,7 +115,7 @@ module Context_init = struct
       ?(commitments = [])
       ?(security_deposit_ramp_up_cycles = None)
       ?(no_reward_cycles = None)
-      (initial_accounts : (account * Alpha_context.Mav.t) list)
+      (initial_accounts : (account * Alpha_context.Tez.t) list)
     =
     let open Lwt_result_syntax in
     if initial_accounts = []

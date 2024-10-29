@@ -49,7 +49,7 @@ let buy_id ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.one
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.one
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -122,7 +122,7 @@ let buy_id_sender_addr ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.one
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.one
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -192,7 +192,7 @@ let buy_id_wrong_amount ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.fifty_cents
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.fifty_cents
         ())
   in
   let param =
@@ -237,7 +237,7 @@ let update_details_owner ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.zero
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -321,7 +321,7 @@ let update_details_controller ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.zero
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -406,7 +406,7 @@ let update_details_nonexistent ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.zero
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -470,7 +470,7 @@ let update_details_wrong_addr ~raise () =
   let new_addr = first_owner in
   let%map options =
     Proto_alpha_utils.Memory_proto_alpha.(
-      make_options ~env ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.zero ())
+      make_options ~env ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
   let id_details_2 =
@@ -536,7 +536,7 @@ let update_details_unchanged ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.zero
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -598,7 +598,7 @@ let update_owner ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.zero
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -677,7 +677,7 @@ let update_owner_nonexistent ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.zero
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -738,7 +738,7 @@ let update_owner_wrong_addr ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.zero
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.zero
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -798,7 +798,7 @@ let skip ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.one
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.one
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in
@@ -866,7 +866,7 @@ let skip_wrong_amount ~raise () =
       make_options
         ~env
         ~sender:first_contract
-        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.fifty_cents
+        ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.fifty_cents
         ())
   in
   let new_website = e_bytes_string ~loc "ligo.mavryk.org" in

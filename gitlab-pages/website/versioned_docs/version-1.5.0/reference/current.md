@@ -136,7 +136,7 @@ transaction.
 <Syntax syntax="cameligo">
 
 ```cameligo
-let threshold (p : unit) = if Mavryk.get_amount () = 100tz then 42 else 0
+let threshold (p : unit) = if Mavryk.get_amount () = 100mv then 42 else 0
 ```
 
 </Syntax>

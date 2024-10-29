@@ -189,7 +189,7 @@ let print_mumav (node : (lexeme * Int64.t) wrap) =
                ^/^ (Int64.to_string (snd node#payload) ^ "mumav" |> string)
   in print_line_comment_opt prefix node#line_comment
 
-  let print_tez (node : (lexeme * Q.t) wrap) =
+  let print_mav (node : (lexeme * Q.t) wrap) =
     let payload = snd node#payload in
     let numerator = Q.num payload in
     let denominator = Q.den payload in
@@ -777,7 +777,7 @@ and print_P_Mumav (node : (lexeme * Int64.t) wrap) = print_mumav node
 
 (* Mav in patterns *)
 
-and print_P_Mav (node : (lexeme * Q.t) wrap) = print_tez node
+and print_P_Mav (node : (lexeme * Q.t) wrap) = print_mav node
 
 (* Natural numbers in patterns *)
 
@@ -1191,7 +1191,7 @@ and print_E_Mumav (node : (lexeme * Int64.t) wrap) =
   print_mumav node
 
 and print_E_Mav (node : (lexeme * Q.t) wrap) =
-    print_tez node
+    print_mav node
 
 (* Natural numbers in expressions *)
 

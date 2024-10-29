@@ -67,9 +67,9 @@ let%expect_test _ =
     ];
   [%expect
     {|
-    File "originate_contract/main.mligo", line 1, characters 0-30:
+    File "originate_contract/main.mligo", line 1, characters 0-31:
       1 | #import "mavryk-ligo-fa2" "FA2"
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       2 |
     File "mavryk-ligo-fa2" not found. |}]
 

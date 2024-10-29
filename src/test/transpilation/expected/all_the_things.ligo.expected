@@ -2309,13 +2309,13 @@ function main (const p : action; const s : int) : return is
      Increment (n) -> s + n | Decrement (n) -> s - n
    ])
 
-const add_tez : mav = 21mumav + 21mumav
+const add_mav : mav = 21mumav + 21mumav
 
-const sub_tez : mav = 21mumav - 20mumav
+const sub_mav : mav = 21mumav - 20mumav
 
-const not_enough_tez : mav = 4611686018427387903mumav
+const not_enough_mav : mav = 4611686018427387903mumav
 
-const nat_mul_tez : mav = 1n * 100mumav
+const nat_mul_mav : mav = 1n * 100mumav
 
 const mav_mul_nat : mav = 100mumav * 10n
 

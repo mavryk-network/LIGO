@@ -220,9 +220,9 @@ type options =
   ; source : Alpha_context.Contract.t
   ; payer : Alpha_context.Contract.t
   ; self : Alpha_context.Contract.t
-  ; amount : Alpha_context.Mav.t
+  ; amount : Alpha_context.Tez.t
   ; chain_id : Environment.Chain_id.t
-  ; balance : Alpha_context.Mav.t
+  ; balance : Alpha_context.Tez.t
   ; now : Script_timestamp.t
   ; level : Script_int.n Script_int.num
   }
@@ -300,8 +300,8 @@ let make_options
     ?(self = default_self)
     ?(parameter_ty = t_unit)
     ?(source : Alpha_context.Contract.t option)
-    ?(amount = Alpha_context.Mav.one)
-    ?(balance = Alpha_context.Mav.zero)
+    ?(amount = Alpha_context.Tez.one)
+    ?(balance = Alpha_context.Tez.zero)
     ?(chain_id = Environment.Chain_id.zero)
     ()
     : options Lwt.t

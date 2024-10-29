@@ -9,7 +9,7 @@
       "source": {
         "type": "install",
         "source": [
-          "archive:https://packages.ligo.mavryk.org/-/api/ligo-breathalyzer/-/ligo-breathalyzer-1.2.1.tgz#sha1:7ea3b0061b1d05b5a5909f1ecbb21391cb15e983"
+          "archive:https://packages.ligolang.org/-/api/ligo-breathalyzer/-/ligo-breathalyzer-1.2.1.tgz#sha1:7ea3b0061b1d05b5a5909f1ecbb21391cb15e983"
         ]
       },
       "overrides": [],

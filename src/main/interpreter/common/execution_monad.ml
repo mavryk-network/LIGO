@@ -363,8 +363,8 @@ module Command = struct
         in
         let contract_too_low = LT.V_Ct (C_address contract_too_low) in
         let contract_balance, spend_request =
-          let contract_balance = Michelson_backend.tez_to_z contract_balance in
-          let spend_request = Michelson_backend.tez_to_z spend_request in
+          let contract_balance = Michelson_backend.mav_to_z contract_balance in
+          let spend_request = Michelson_backend.mav_to_z spend_request in
           LT.V_Ct (C_mumav contract_balance), LT.V_Ct (C_mumav spend_request)
         in
         let rej_data =

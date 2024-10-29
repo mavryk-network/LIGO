@@ -13,9 +13,9 @@ ways to write literal values of type `mav`:
 
   * units of millionth of `mav`, using the suffix `mumav` after a
     natural number, like `10000mumav` or `0mumav`;
-  * units of `mav`, using the suffix `tz` or `mav`, like `3tz` or
+  * units of `mav`, using the suffix `tz` or `mav`, like `3mv` or
     `3mav`;
-  * decimal amounts of `tz` or `mav`, like `12.3tz` or `12.4mav`.
+  * decimal amounts of `tz` or `mav`, like `12.3mv` or `12.4mav`.
 
 > The type is `mav`, *not* `mumav` --- which is a suffix to write
 > literals.
@@ -126,7 +126,7 @@ remainder)`, unless `y` is zero, in which case it returns `None`. The
 function `ediv` is overloaded to accept mav, beyond all the
 combinations of natural and integer numbers:
 
-```cameligo group=tez_euclidean
+```cameligo group=mav_euclidean
 // Some (7, 2mumav)
 let ediv1 : (nat * mav) option = ediv 37mumav 5mumav
 
@@ -144,7 +144,7 @@ remainder)`, unless `y` is zero, in which case it returns `None`. The
 function `ediv` is overloaded to accept mav, beyond all the
 combinations of natural and integer numbers:
 
-```jsligo group=tez_euclidean
+```jsligo group=mav_euclidean
 // Some (7, 2mumav)
 const ediv1: option<[nat, mav]> = ediv(37mumav, 5mumav);
 

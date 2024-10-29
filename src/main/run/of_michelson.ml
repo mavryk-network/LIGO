@@ -57,12 +57,12 @@ let make_dry_run_options
   let open Protocol.Alpha_context in
   let open Lwt.Let_syntax in
   let balance =
-    match Mav.of_string opts.balance with
+    match Tez.of_string opts.balance with
     | None -> raise.error @@ Errors.main_invalid_balance opts.balance
     | Some balance -> balance
   in
   let amount =
-    match Mav.of_string opts.amount with
+    match Tez.of_string opts.amount with
     | None -> raise.error @@ Errors.main_invalid_amount opts.amount
     | Some amount -> amount
   in

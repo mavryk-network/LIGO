@@ -1349,13 +1349,13 @@ let website2_ligo ~raise f : unit =
 
 let mav_mligo ~raise () : unit =
   let program = type_file ~raise "./contracts/mav.mligo" in
-  let _ = expect_eq_evaluate ~raise program "add_tez" (e_mumav ~loc 42) in
-  let _ = expect_eq_evaluate ~raise program "sub_tez" (e_some ~loc (e_mumav ~loc 1)) in
-  let _ = expect_eq_evaluate ~raise program "sub_tez_none" (e_none ~loc) in
+  let _ = expect_eq_evaluate ~raise program "add_mav" (e_mumav ~loc 42) in
+  let _ = expect_eq_evaluate ~raise program "sub_mav" (e_some ~loc (e_mumav ~loc 1)) in
+  let _ = expect_eq_evaluate ~raise program "sub_mav_none" (e_none ~loc) in
   let _ =
-    expect_eq_evaluate ~raise program "not_enough_tez" (e_mumav ~loc 4611686018427387903)
+    expect_eq_evaluate ~raise program "not_enough_mav" (e_mumav ~loc 4611686018427387903)
   in
-  let _ = expect_eq_evaluate ~raise program "add_more_tez" (e_mumav ~loc 111111000) in
+  let _ = expect_eq_evaluate ~raise program "add_more_mav" (e_mumav ~loc 111111000) in
   ()
 
 
@@ -1424,7 +1424,7 @@ let balance_test_options ~raise () =
   let open Lwt.Let_syntax in
   let balance =
     Trace.trace_option ~raise (test_internal "could not convert balance")
-    @@ Memory_proto_alpha.Protocol.Alpha_context.Mav.of_string "0"
+    @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string "0"
   in
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   Proto_alpha_utils.Memory_proto_alpha.make_options ~env ~balance ()
@@ -1445,9 +1445,9 @@ let amount ~raise f : unit =
   let input = e_unit ~loc in
   let expected = e_int ~loc 42 in
   let amount =
-    match Memory_proto_alpha.Protocol.Alpha_context.Mav.of_string "100" with
+    match Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string "100" with
     | Some t -> t
-    | None -> Memory_proto_alpha.Protocol.Alpha_context.Mav.one
+    | None -> Memory_proto_alpha.Protocol.Alpha_context.Tez.one
   in
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let%map options = Proto_alpha_utils.Memory_proto_alpha.make_options ~env ~amount () in

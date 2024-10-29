@@ -91,7 +91,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_timestamp_contract.mligo" ];
   [%expect
     {|
-    Success (1279n)
+    Success (1278n)
     Everything at the top-level was executed.
     - test_timestamp exited with value (). |}]
 
@@ -994,10 +994,10 @@ let%expect_test _ =
     3800000000000mumav
     4000000000000n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    3800004166666mumav
+    3800003416666mumav
     4000000000000n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    3800008333332mumav
+    3800006833332mumav
     4000000000000n
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -1013,10 +1013,10 @@ let%expect_test _ =
     950000000000mumav
     1000000000000n
     "BALANCE AND VOTING POWER AFTER ORIGINATE"
-    950004166666mumav
+    950003416666mumav
     1000000000000n
     "BALANCE AND VOTING POWER AFTER TRANSFER"
-    950008333332mumav
+    950006833332mumav
     1000000000000n
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -1186,7 +1186,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_get_account.mligo" ];
   [%expect
     {|
-    (tz1MBWU1WkszFfkEER2pgn4ATKXE9ng7x1sR , edpkusHqa6fxkGPPL9YpgbcakvSTvcTBcwnLAmCdcevmws4Mh2MdHB , "edsk41aRaPPBpidY7w5xu54edk76uJJtJ6myTwYDEWhAwNHce9gKNo")
+    (mv19Yymbq8BLpwXTNjbfvbkBcLPCiBCyY397 , edpkusHqa6fxkGPPL9YpgbcakvSTvcTBcwnLAmCdcevmws4Mh2MdHB , "edsk41aRaPPBpidY7w5xu54edk76uJJtJ6myTwYDEWhAwNHce9gKNo")
     3800000000000mumav
     Everything at the top-level was executed.
     - test exited with value (). |}]
@@ -1305,7 +1305,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
   [%expect
     {|
-    Success (2672n)
+    Success (2671n)
     Everything at the top-level was executed.
     - test_one exited with value (). |}]
 
@@ -1608,7 +1608,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "contract_with_ticket_param.mligo" ];
   [%expect
     {|
-    File "./contract_with_ticket_param.mligo", line 7, characters 24-41:
+    File "./contract_with_ticket_param.mligo", line 7, characters 24-42:
       6 |     let (_,ticket) = p in
       7 |     let (_,(v,_)) , _ = Mavryk.read_ticket ticket in
                                   ^^^^^^^^^^^^^^^^^^
@@ -2317,7 +2317,7 @@ let%expect_test _ =
   run_ligo_bad [ "run"; "test"; bad_test "get_contract.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 21, characters 10-66:
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 21, characters 10-67:
      20 |   let _ = (Mavryk.get_contract a : (C parameter_of contract)) in
      21 |   let _ = (Mavryk.get_contract_with_error a "foo" : (int contract)) in
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2326,5 +2326,5 @@ let%expect_test _ =
     An uncaught error occured:
     Failwith: "foo"
     Trace:
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 21, characters 10-66 ,
-    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 21, characters 10-66 |}]
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 21, characters 10-67 ,
+    File "../../test/contracts/negative//interpreter_tests/get_contract.mligo", line 21, characters 10-67 |}]

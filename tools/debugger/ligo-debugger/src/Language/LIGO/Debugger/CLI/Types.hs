@@ -131,11 +131,11 @@ data LigoTypeLiteralValue
   | LTLVOperation Text
     -- ^ Operation type.
   | LTLVBls_381G1 Text
-    -- ^ Bls12_381_g1 type.
+    -- ^ Mavryk_bls12_381_g1 type.
   | LTLVBls_381G2 Text
-    -- ^ Bls12_381_g2 type.
+    -- ^ Mavryk_bls12_381_g2 type.
   | LTLVBls_381Fr Text
-    -- ^ Bls12_381_fr type.
+    -- ^ Mavryk_bls12_381_fr type.
   deriving stock (Generic, Show, Eq, Data)
   deriving anyclass (NFData, Hashable)
 

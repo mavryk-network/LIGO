@@ -98,10 +98,10 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "rollup_address.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/rollup_address.mligo", line 4, characters 4-21:
+    File "../../test/contracts/rollup_address.mligo", line 4, characters 4-22:
       3 |   let sr_cont = Mavryk.get_contract_with_error sr_address "Err" in
       4 |   [ Mavryk.transaction () 0mumav sr_cont ], ()
-              ^^^^^^^^^^^^^^^^^
+              ^^^^^^^^^^^^^^^^^^
     :
     Warning: deprecated value.
     In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.

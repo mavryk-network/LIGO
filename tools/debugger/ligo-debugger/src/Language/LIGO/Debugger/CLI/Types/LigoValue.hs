@@ -132,12 +132,12 @@ data LigoConstant
     -- ^ Key value.
   | LCSignature Text
     -- ^ Signature value.
-  | LCBls12_381Fr Text
-    -- ^ Bls12_381_fr value.
-  | LCBls12_381G1 Text
-    -- ^ Bls12_381_g1 value.
-  | LCBls12_381G2 Text
-    -- ^ Bls12_381_g2 value.
+  | LCMavryk_bls12_381Fr Text
+    -- ^ Mavryk_bls12_381_fr value.
+  | LCMavryk_bls12_381G1 Text
+    -- ^ Mavryk_bls12_381_g1 value.
+  | LCMavryk_bls12_381G2 Text
+    -- ^ Mavryk_bls12_381_g2 value.
   | LCChainId Text
     -- ^ Chain ID value.
   | LCInt Text
@@ -239,9 +239,9 @@ tryDecompilePrimitive (SomeValue val) = case val of
     mkConstant
       (LCContract $ LigoContract (pretty eaAddress)
       (guard (not $ U.isDefEpName eaEntrypoint) >> pure (pretty eaEntrypoint)))
-  T.VBls12381Fr bls -> mkConstant (LCBls12_381Fr $ [int||0x#{hexF $ toMichelsonBytes bls}|])
-  T.VBls12381G1 bls -> mkConstant (LCBls12_381G1 $ [int||0x#{hexF $ toMichelsonBytes bls}|])
-  T.VBls12381G2 bls -> mkConstant (LCBls12_381G2 $ [int||0x#{hexF $ toMichelsonBytes bls}|])
+  T.VBls12381Fr bls -> mkConstant (LCMavryk_bls12_381Fr $ [int||0x#{hexF $ toMichelsonBytes bls}|])
+  T.VBls12381G1 bls -> mkConstant (LCMavryk_bls12_381G1 $ [int||0x#{hexF $ toMichelsonBytes bls}|])
+  T.VBls12381G2 bls -> mkConstant (LCMavryk_bls12_381G2 $ [int||0x#{hexF $ toMichelsonBytes bls}|])
   _ -> Nothing
   where
     mkConstant :: LigoConstant -> Maybe LigoValue
@@ -461,9 +461,9 @@ buildConstant' lang mode = \case
     (DpmNormal, _) -> build sign
     (DpmEvaluated, Caml) ->  [int||("#{sign}" : signature)|]
     (DpmEvaluated, Js) ->  [int||("#{sign}" as signature)|]
-  LCBls12_381G1 bls -> build bls
-  LCBls12_381G2 bls -> build bls
-  LCBls12_381Fr bls -> build bls
+  LCMavryk_bls12_381G1 bls -> build bls
+  LCMavryk_bls12_381G2 bls -> build bls
+  LCMavryk_bls12_381Fr bls -> build bls
   LCChainId chainId -> build chainId
   LCInt n -> build n
   LCInt64 n -> build n

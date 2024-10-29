@@ -79,7 +79,7 @@
   pure-splitmix
   cohttp-server-lwt-unix
   resto-cohttp-self-serving-client
-  mavryk-rust-libs
+  tezos-rust-libs
   crunch
   class_group_vdf
   hex

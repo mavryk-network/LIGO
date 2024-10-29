@@ -109,10 +109,10 @@ let%expect_test _ =
   Warning: deprecated value.
   Use `Option.value_with_error` instead.
 
-  File "../../test/contracts/duplicate_ticket_local_module.mligo", line 8, characters 31-50:
+  File "../../test/contracts/duplicate_ticket_local_module.mligo", line 8, characters 31-51:
     7 |   module B = struct
     8 |     let ticket = Option.unopt (Mavryk.create_ticket 10n 10n)
-                                       ^^^^^^^^^^^^^^^^^^^
+                                       ^^^^^^^^^^^^^^^^^^^^
     9 |
   :
   Warning: deprecated value.
@@ -126,10 +126,10 @@ let%expect_test _ =
   Warning: deprecated value.
   Use `Option.value_with_error` instead.
 
-  File "../../test/contracts/duplicate_ticket_local_module.mligo", line 13, characters 20-38:
+  File "../../test/contracts/duplicate_ticket_local_module.mligo", line 13, characters 20-39:
    12 |   end in
    13 |   [], Option.unopt (Mavryk.join_tickets (fst B.y, snd B.y))
-                            ^^^^^^^^^^^^^^^^^^
+                            ^^^^^^^^^^^^^^^^^^^
   :
   Warning: deprecated value.
   In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Ticket.join` from `Mavryk.Next` is encouraged for a smoother migration.

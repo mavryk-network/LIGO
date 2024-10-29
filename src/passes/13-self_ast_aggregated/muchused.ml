@@ -42,9 +42,9 @@ let rec is_dup ~(raise : _ Trace.raise) (t : type_expression) =
           | Timestamp
           | Address
           | Operation
-          | Bls12_381_g1
-          | Bls12_381_g2
-          | Bls12_381_fr
+          | Mavryk_bls12_381_g1
+          | Mavryk_bls12_381_g2
+          | Mavryk_bls12_381_fr
           | Sapling_transaction
           | Sapling_state
           | Chest

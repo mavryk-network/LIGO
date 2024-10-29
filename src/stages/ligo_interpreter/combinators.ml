@@ -27,9 +27,9 @@ let v_int : Z.t -> value = fun v -> V_Ct (C_int v)
 let v_int64 : int64 -> value = fun v -> V_Ct (C_int64 v)
 let v_mumav : Z.t -> value = fun v -> V_Ct (C_mumav v)
 let v_timestamp : Z.t -> value = fun v -> V_Ct (C_timestamp v)
-let v_bls12_381_g1 : Bls12_381.G1.t -> value = fun v -> V_Ct (C_bls12_381_g1 v)
-let v_bls12_381_g2 : Bls12_381.G2.t -> value = fun v -> V_Ct (C_bls12_381_g2 v)
-let v_bls12_381_fr : Bls12_381.Fr.t -> value = fun v -> V_Ct (C_bls12_381_fr v)
+let v_bls12_381_g1 : Mavryk_bls12_381.G1.t -> value = fun v -> V_Ct (C_bls12_381_g1 v)
+let v_bls12_381_g2 : Mavryk_bls12_381.G2.t -> value = fun v -> V_Ct (C_bls12_381_g2 v)
+let v_bls12_381_fr : Mavryk_bls12_381.Fr.t -> value = fun v -> V_Ct (C_bls12_381_fr v)
 let v_chain_id : Chain_id.t -> value = fun c -> V_Ct (C_chain_id c)
 let v_chest : bytes -> value = fun b -> V_Ct (C_chest b)
 let v_chest_key : bytes -> value = fun b -> V_Ct (C_chest_key b)
@@ -262,11 +262,11 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
   | C_key k, C_key k' -> Mavryk_crypto.Signature.Public_key.compare k k'
   | C_signature s, C_signature s' -> Mavryk_crypto.Signature.compare s s'
   | C_bls12_381_g1 b, C_bls12_381_g1 b' ->
-    Bytes.compare (Bls12_381.G1.to_bytes b) (Bls12_381.G1.to_bytes b')
+    Bytes.compare (Mavryk_bls12_381.G1.to_bytes b) (Mavryk_bls12_381.G1.to_bytes b')
   | C_bls12_381_g2 b, C_bls12_381_g2 b' ->
-    Bytes.compare (Bls12_381.G2.to_bytes b) (Bls12_381.G2.to_bytes b')
+    Bytes.compare (Mavryk_bls12_381.G2.to_bytes b) (Mavryk_bls12_381.G2.to_bytes b')
   | C_bls12_381_fr b, C_bls12_381_fr b' ->
-    Bytes.compare (Bls12_381.Fr.to_bytes b) (Bls12_381.Fr.to_bytes b')
+    Bytes.compare (Mavryk_bls12_381.Fr.to_bytes b) (Mavryk_bls12_381.Fr.to_bytes b')
   | C_int64 i, C_int64 i' -> Int64.compare i i'
   | C_chain_id i, C_chain_id i' -> Chain_id.compare i i'
   | C_chest c, C_chest c' -> Bytes.compare c c'
@@ -421,15 +421,15 @@ let constant_val_to_debugger_yojson : constant_val -> Yojson.Safe.t = function
     let hex_str = Format.asprintf "0x%a" Hex.pp (Hex.of_bytes bts) in
     `List [ `String "bytes"; `String hex_str ]
   | C_bls12_381_g1 bls ->
-    let open Bls12_381.G1 in
+    let open Mavryk_bls12_381.G1 in
     let hex_str = Format.asprintf "0x%a" Hex.pp (Hex.of_bytes @@ to_bytes bls) in
     `List [ `String "bls12_381_g1"; `String hex_str ]
   | C_bls12_381_g2 bls ->
-    let open Bls12_381.G2 in
+    let open Mavryk_bls12_381.G2 in
     let hex_str = Format.asprintf "0x%a" Hex.pp (Hex.of_bytes @@ to_bytes bls) in
     `List [ `String "bls12_381_g2"; `String hex_str ]
   | C_bls12_381_fr bls ->
-    let open Bls12_381.Fr in
+    let open Mavryk_bls12_381.Fr in
     let hex_str = Format.asprintf "0x%a" Hex.pp (Hex.of_bytes @@ to_bytes bls) in
     `List [ `String "bls12_381_fr"; `String hex_str ]
   | C_chain_id chain_id ->

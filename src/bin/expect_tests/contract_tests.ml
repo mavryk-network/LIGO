@@ -351,7 +351,7 @@ let%expect_test _ =
     [ "compile"; "contract"; contract "FA1.2.interface.mligo"; "-m"; "FA12_ENTRIES" ];
   [%expect
     {|
-    File "../../test/contracts/FA1.2.entries.mligo", line 108, characters 3-20:
+    File "../../test/contracts/FA1.2.entries.mligo", line 108, characters 3-21:
     107 |     | None -> 0n in
     108 |   [Mavryk.transaction value 0mumav param.callback], storage
              ^^^^^^^^^^^^^^^^^^
@@ -360,7 +360,7 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
 
-    File "../../test/contracts/FA1.2.entries.mligo", line 116, characters 3-20:
+    File "../../test/contracts/FA1.2.entries.mligo", line 116, characters 3-21:
     115 |     | None -> 0n in
     116 |   [Mavryk.transaction value 0mumav param.callback], storage
              ^^^^^^^^^^^^^^^^^^
@@ -369,7 +369,7 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
 
-    File "../../test/contracts/FA1.2.entries.mligo", line 121, characters 3-20:
+    File "../../test/contracts/FA1.2.entries.mligo", line 121, characters 3-21:
     120 |   let total = storage.total_supply in
     121 |   [Mavryk.transaction total 0mumav param.callback],storage
              ^^^^^^^^^^^^^^^^^^
@@ -1526,7 +1526,7 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "self_annotations.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/self_annotations.mligo", line 8, characters 11-28:
+    File "../../test/contracts/self_annotations.mligo", line 8, characters 11-29:
       7 |   let c = (Mavryk.self ("%foo") : unit contract) in
       8 |   let op = Mavryk.transaction () 0mumav c in
                      ^^^^^^^^^^^^^^^^^^
@@ -2171,7 +2171,7 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "get_capitalized_entrypoint.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/get_capitalized_entrypoint.mligo", line 7, characters 25-42:
+    File "../../test/contracts/get_capitalized_entrypoint.mligo", line 7, characters 25-43:
       6 |   | Some dst ->
       7 |     let op : operation = Mavryk.transaction () 0mumav dst in
                                    ^^^^^^^^^^^^^^^^^^
@@ -2685,7 +2685,7 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "storage"; contract "self_annotations.mligo"; "()" ];
   [%expect
     {|
-    File "../../test/contracts/self_annotations.mligo", line 8, characters 11-28:
+    File "../../test/contracts/self_annotations.mligo", line 8, characters 11-29:
       7 |   let c = (Mavryk.self ("%foo") : unit contract) in
       8 |   let op = Mavryk.transaction () 0mumav c in
                      ^^^^^^^^^^^^^^^^^^
@@ -2987,7 +2987,7 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "FA1.2.entries.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/FA1.2.entries.mligo", line 108, characters 3-20:
+    File "../../test/contracts/FA1.2.entries.mligo", line 108, characters 3-21:
     107 |     | None -> 0n in
     108 |   [Mavryk.transaction value 0mumav param.callback], storage
              ^^^^^^^^^^^^^^^^^^
@@ -2996,7 +2996,7 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
 
-    File "../../test/contracts/FA1.2.entries.mligo", line 116, characters 3-20:
+    File "../../test/contracts/FA1.2.entries.mligo", line 116, characters 3-21:
     115 |     | None -> 0n in
     116 |   [Mavryk.transaction value 0mumav param.callback], storage
              ^^^^^^^^^^^^^^^^^^
@@ -3005,7 +3005,7 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
 
-    File "../../test/contracts/FA1.2.entries.mligo", line 121, characters 3-20:
+    File "../../test/contracts/FA1.2.entries.mligo", line 121, characters 3-21:
     120 |   let total = storage.total_supply in
     121 |   [Mavryk.transaction total 0mumav param.callback],storage
              ^^^^^^^^^^^^^^^^^^
@@ -3182,7 +3182,7 @@ let%expect_test _ =
     ];
   [%expect
     {|
-      File "../../test/contracts/FA1.2.entries.mligo", line 108, characters 3-20:
+      File "../../test/contracts/FA1.2.entries.mligo", line 108, characters 3-21:
       107 |     | None -> 0n in
       108 |   [Mavryk.transaction value 0mumav param.callback], storage
                ^^^^^^^^^^^^^^^^^^
@@ -3191,7 +3191,7 @@ let%expect_test _ =
       Warning: deprecated value.
       In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
 
-      File "../../test/contracts/FA1.2.entries.mligo", line 116, characters 3-20:
+      File "../../test/contracts/FA1.2.entries.mligo", line 116, characters 3-21:
       115 |     | None -> 0n in
       116 |   [Mavryk.transaction value 0mumav param.callback], storage
                ^^^^^^^^^^^^^^^^^^
@@ -3200,7 +3200,7 @@ let%expect_test _ =
       Warning: deprecated value.
       In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
 
-      File "../../test/contracts/FA1.2.entries.mligo", line 121, characters 3-20:
+      File "../../test/contracts/FA1.2.entries.mligo", line 121, characters 3-21:
       120 |   let total = storage.total_supply in
       121 |   [Mavryk.transaction total 0mumav param.callback],storage
                ^^^^^^^^^^^^^^^^^^
@@ -3224,7 +3224,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/pokeGame.jsligo", line 102, characters 44-63:
+    File "../../test/contracts/pokeGame.jsligo", line 102, characters 44-64:
     101 |   } else {
     102 |     const t : ticket<string> = Option.unopt(Mavryk.create_ticket("can_poke", ticketCount));
                                                       ^^^^^^^^^^^^^^^^^^^^
@@ -3338,7 +3338,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/pokeGame.jsligo", line 102, characters 44-63:
+    File "../../test/contracts/pokeGame.jsligo", line 102, characters 44-64:
     101 |   } else {
     102 |     const t : ticket<string> = Option.unopt(Mavryk.create_ticket("can_poke", ticketCount));
                                                       ^^^^^^^^^^^^^^^^^^^^

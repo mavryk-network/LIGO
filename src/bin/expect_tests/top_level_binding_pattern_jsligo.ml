@@ -200,7 +200,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 3, characters 32-51:
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 3, characters 32-52:
       2 |
       3 | const { b } = { b: Option.unopt(Mavryk.create_ticket("one", 10 as nat)) };
                                           ^^^^^^^^^^^^^^^^^^^^
@@ -217,7 +217,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 9, characters 20-38:
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 9, characters 20-39:
       8 | const main = (_p: unit, _s: storage): [list<operation>, storage] =>
       9 |   [[], Option.unopt(Mavryk.join_tickets([b, b]))];
                               ^^^^^^^^^^^^^^^^^^^
@@ -242,7 +242,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 3, characters 32-51:
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 3, characters 32-52:
       2 |
       3 | const { b } = { b: Option.unopt(Mavryk.create_ticket("one", 10 as nat)) };
                                           ^^^^^^^^^^^^^^^^^^^^
@@ -259,7 +259,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 9, characters 20-38:
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_record.jsligo", line 9, characters 20-39:
       8 | const main = (_p: unit, _s: storage): [list<operation>, storage] =>
       9 |   [[], Option.unopt(Mavryk.join_tickets([b, b]))];
                               ^^^^^^^^^^^^^^^^^^^
@@ -305,7 +305,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 1, characters 29-48:
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 1, characters 29-49:
       1 | const [b, _] = [Option.unopt(Mavryk.create_ticket("one", 10 as nat)), 1];
                                        ^^^^^^^^^^^^^^^^^^^^
       2 |
@@ -321,7 +321,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 7, characters 20-38:
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 7, characters 20-39:
       6 | const main = (_p: unit, _s: storage): [list<operation>, storage] =>
       7 |   [[], Option.unopt(Mavryk.join_tickets([b, b]))];
                               ^^^^^^^^^^^^^^^^^^^
@@ -344,7 +344,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 1, characters 29-48:
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 1, characters 29-49:
       1 | const [b, _] = [Option.unopt(Mavryk.create_ticket("one", 10 as nat)), 1];
                                        ^^^^^^^^^^^^^^^^^^^^
       2 |
@@ -360,7 +360,7 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 7, characters 20-38:
+    File "../../test/contracts/top_level_patterns/negative/jsligo/ticket_tuple.jsligo", line 7, characters 20-39:
       6 | const main = (_p: unit, _s: storage): [list<operation>, storage] =>
       7 |   [[], Option.unopt(Mavryk.join_tickets([b, b]))];
                               ^^^^^^^^^^^^^^^^^^^

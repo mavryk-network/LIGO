@@ -1031,7 +1031,7 @@ let divs_nat =
   let b = 1mv/2mv in
   (a = 0n) && (a = b)
 
-let divs_tez =
+let divs_mav =
   let a = 1mv/2n in
   (a = 0.5mv)
 
@@ -1631,11 +1631,11 @@ let main (action, store : parameter * storage) : return =
     | Increment n -> store + n
     | Decrement n -> store - n
   in ([] : operation list), store
-let add_tez : mav = 21mumav + 0.000_021mav
-let sub_tez : mav = 0.000021mav - 0.000_020mav
-let not_enough_tez : mav = 461_168_601_842_738_7903mumav
+let add_mav : mav = 21mumav + 0.000_021mav
+let sub_mav : mav = 0.000021mav - 0.000_020mav
+let not_enough_mav : mav = 461_168_601_842_738_7903mumav
 
-let add_more_tez : mav =
+let add_more_mav : mav =
   100mav + 10mav + 1mav + 0.1mav + 0.01mav + 0.001mav
 (*
 Modelled after:

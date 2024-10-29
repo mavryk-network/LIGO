@@ -47,7 +47,7 @@ let op_list ~raise =
   let operation
       : _ Memory_proto_alpha.Protocol.Script_typed_ir.internal_operation_contents
     =
-    Transaction_to_implicit { destination; amount = Mav.zero }
+    Transaction_to_implicit { destination; amount = Tez.zero }
   in
   let internal_operation
       : Memory_proto_alpha.Protocol.Script_typed_ir.packed_internal_operation

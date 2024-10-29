@@ -48,21 +48,21 @@ let bls12_381_g1_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_option
     ~raise
     (Errors.generic_error Location.generated "Cannot parse bls12_381_g1")
-  @@ Bls12_381_G1.of_bytes_opt s
+  @@ Mavryk_bls12_381_G1.of_bytes_opt s
 
 
 let bls12_381_g2_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_option
     ~raise
     (Errors.generic_error Location.generated "Cannot parse bls12_381_g2")
-  @@ Bls12_381_G2.of_bytes_opt s
+  @@ Mavryk_bls12_381_G2.of_bytes_opt s
 
 
 let bls12_381_fr_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_option
     ~raise
     (Errors.generic_error Location.generated "Cannot parse bls12_381_fr")
-  @@ Bls12_381_Fr.of_bytes_opt s
+  @@ Mavryk_bls12_381_Fr.of_bytes_opt s
 
 
 let signature_of_string ~raise s =
@@ -188,7 +188,7 @@ let rec decompile_to_untyped_value ~(raise : _ Trace.raise) ~bigmaps
   | Prim (_, "bls12_381_fr", [], _), Bytes (_, b) ->
     V_Ct (C_bls12_381_fr (bls12_381_fr_of_bytes ~raise b))
   | Prim (_, "bls12_381_fr", [], _), Int (_, n) ->
-    V_Ct (C_bls12_381_fr (Bls12_381_Fr.of_z n))
+    V_Ct (C_bls12_381_fr (Mavryk_bls12_381_Fr.of_z n))
   | Prim (_, "signature", [], _), String (_, n) ->
     V_Ct (C_signature (signature_of_string ~raise n))
   | Prim (_, "chest", [], _), Bytes (_, b) -> V_Ct (C_chest b)
@@ -437,9 +437,9 @@ let rec decompile_value
         | Sapling_state
         | Sapling_transaction
         | Baker_operation
-        | Bls12_381_g1
-        | Bls12_381_g2
-        | Bls12_381_fr
+        | Mavryk_bls12_381_g1
+        | Mavryk_bls12_381_g2
+        | Mavryk_bls12_381_fr
         | Never
         | Ticket
         | Michelson_contract

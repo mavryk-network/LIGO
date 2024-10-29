@@ -4,7 +4,7 @@ open Ligo_prim
 module Ligo_z = Simple_utils.Ligo_z
 module Mavryk_protocol = Memory_proto_alpha
 module Mavryk_raw_protocol = Memory_proto_alpha.Raw_protocol
-module Mav = Memory_proto_alpha.Protocol.Alpha_context.Mav
+module Mav = Memory_proto_alpha.Protocol.Alpha_context.Tez
 module Timestamp = Memory_proto_alpha.Protocol.Alpha_context.Timestamp
 
 module Contract = struct
@@ -35,22 +35,22 @@ module Signature = struct
   let of_yojson _ = failwith "signature_of_yojson: not implemented"
 end
 
-module Bls12_381_G1 = struct
-  include Bls12_381.G1
+module Mavryk_bls12_381_G1 = struct
+  include Mavryk_bls12_381.G1
 
   let to_yojson (g1 : t) = [%to_yojson: bytes] (to_bytes g1)
   let of_yojson _ = failwith "bls12_381_g1_of_yojson: not implemented"
 end
 
-module Bls12_381_G2 = struct
-  include Bls12_381.G2
+module Mavryk_bls12_381_G2 = struct
+  include Mavryk_bls12_381.G2
 
   let to_yojson (g2 : t) = [%to_yojson: bytes] (to_bytes g2)
   let of_yojson _ = failwith "bls12_381_g2_of_yojson: not implemented"
 end
 
-module Bls12_381_Fr = struct
-  include Bls12_381.Fr
+module Mavryk_bls12_381_Fr = struct
+  include Mavryk_bls12_381.Fr
 
   let to_yojson (fr : t) = [%to_yojson: bytes] (to_bytes fr)
   let of_yojson _ = failwith "bls12_381_fr_of_yojson: not implemented"
@@ -117,9 +117,9 @@ type constant_val =
   | C_key_hash of Public_key_hash.t [@name "key_hash"]
   | C_key of Public_key.t [@name "key"]
   | C_signature of Signature.t [@name "signature"]
-  | C_bls12_381_g1 of Bls12_381_G1.t [@name "bls12_381_g1"]
-  | C_bls12_381_g2 of Bls12_381_G2.t [@name "bls12_381_g2"]
-  | C_bls12_381_fr of Bls12_381_Fr.t [@name "bls12_381_fr"]
+  | C_bls12_381_g1 of Mavryk_bls12_381_G1.t [@name "bls12_381_g1"]
+  | C_bls12_381_g2 of Mavryk_bls12_381_G2.t [@name "bls12_381_g2"]
+  | C_bls12_381_fr of Mavryk_bls12_381_Fr.t [@name "bls12_381_fr"]
   | C_chain_id of Chain_id.t [@name "chain_id"]
   | C_chest of bytes [@name "chest"]
   | C_chest_key of bytes [@name "chest_key"]

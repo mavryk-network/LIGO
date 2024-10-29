@@ -16,7 +16,7 @@
   fuzz
   ligo_run
   self_ast_typed
-  bls12-381
+  mavryk-bls12-381
   core_unix
   core_unix.sys_unix
   core_kernel.nonempty_list))

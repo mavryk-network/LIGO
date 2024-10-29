@@ -31,10 +31,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 4, characters 26-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 4, characters 26-46:
       3 | let { a = a1 ; b = b1 ; c = c1 }
       4 |     = { a = Option.unopt (Mavryk.create_ticket 1 10n)
-                                    ^^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^^^
       5 |       ; b = Option.unopt (Mavryk.create_ticket "one" 10n)
     :
     Warning: deprecated value.
@@ -49,10 +49,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 5, characters 26-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 5, characters 26-46:
       4 |     = { a = Option.unopt (Mavryk.create_ticket 1 10n)
       5 |       ; b = Option.unopt (Mavryk.create_ticket "one" 10n)
-                                    ^^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^^^
       6 |       ; c = Option.unopt (Mavryk.create_ticket 1n 10n)
     :
     Warning: deprecated value.
@@ -67,10 +67,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 6, characters 26-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 6, characters 26-46:
       5 |       ; b = Option.unopt (Mavryk.create_ticket "one" 10n)
       6 |       ; c = Option.unopt (Mavryk.create_ticket 1n 10n)
-                                    ^^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^^^
       7 |       }
     :
     Warning: deprecated value.
@@ -85,10 +85,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 10, characters 26-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 10, characters 26-46:
       9 | let { a = a2 ; c = c2 ; b = b2 }
      10 |     = { a = Option.unopt (Mavryk.create_ticket 2 10n)
-                                    ^^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^^^
      11 |       ; b = Option.unopt (Mavryk.create_ticket "TWO" 10n)
     :
     Warning: deprecated value.
@@ -103,10 +103,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 11, characters 26-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 11, characters 26-46:
      10 |     = { a = Option.unopt (Mavryk.create_ticket 2 10n)
      11 |       ; b = Option.unopt (Mavryk.create_ticket "TWO" 10n)
-                                    ^^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^^^
      12 |       ; c = Option.unopt (Mavryk.create_ticket 3n 10n)
     :
     Warning: deprecated value.
@@ -121,10 +121,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 12, characters 26-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 12, characters 26-46:
      11 |       ; b = Option.unopt (Mavryk.create_ticket "TWO" 10n)
      12 |       ; c = Option.unopt (Mavryk.create_ticket 3n 10n)
-                                    ^^^^^^^^^^^^^^^^^^^
+                                    ^^^^^^^^^^^^^^^^^^^^
      13 |       }
     :
     Warning: deprecated value.
@@ -139,10 +139,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 20, characters 27-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 20, characters 27-46:
      19 |   = [],
      20 |     (let a = Option.unopt (Mavryk.join_tickets (a1, a2)) in
-                                     ^^^^^^^^^^^^^^^^^^
+                                     ^^^^^^^^^^^^^^^^^^^
      21 |     let b  = Option.unopt (Mavryk.join_tickets (b1, b2)) in
     :
     Warning: deprecated value.
@@ -157,10 +157,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 21, characters 27-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 21, characters 27-46:
      20 |     (let a = Option.unopt (Mavryk.join_tickets (a1, a2)) in
      21 |     let b  = Option.unopt (Mavryk.join_tickets (b1, b2)) in
-                                     ^^^^^^^^^^^^^^^^^^
+                                     ^^^^^^^^^^^^^^^^^^^
      22 |     let c  = Option.unopt (Mavryk.join_tickets (c1, c2)) in
     :
     Warning: deprecated value.
@@ -175,10 +175,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 22, characters 27-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_record.mligo", line 22, characters 27-46:
      21 |     let b  = Option.unopt (Mavryk.join_tickets (b1, b2)) in
      22 |     let c  = Option.unopt (Mavryk.join_tickets (c1, c2)) in
-                                     ^^^^^^^^^^^^^^^^^^
+                                     ^^^^^^^^^^^^^^^^^^^
      23 |     (a, b, c))
     :
     Warning: deprecated value.
@@ -199,10 +199,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 2, characters 20-39:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 2, characters 20-40:
       1 | let (a1, a2, a3)
       2 |   = ( Option.unopt (Mavryk.create_ticket 1 10n)
-                              ^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^^
       3 |     , Option.unopt (Mavryk.create_ticket "one" 10n)
     :
     Warning: deprecated value.
@@ -217,10 +217,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 3, characters 20-39:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 3, characters 20-40:
       2 |   = ( Option.unopt (Mavryk.create_ticket 1 10n)
       3 |     , Option.unopt (Mavryk.create_ticket "one" 10n)
-                              ^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^^
       4 |     , Option.unopt (Mavryk.create_ticket 1n 10n)
     :
     Warning: deprecated value.
@@ -235,10 +235,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 4, characters 20-39:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 4, characters 20-40:
       3 |     , Option.unopt (Mavryk.create_ticket "one" 10n)
       4 |     , Option.unopt (Mavryk.create_ticket 1n 10n)
-                              ^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^^
       5 |     )
     :
     Warning: deprecated value.
@@ -253,10 +253,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 8, characters 20-39:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 8, characters 20-40:
       7 | let (b1, b2, b3)
       8 |   = ( Option.unopt (Mavryk.create_ticket 2 10n)
-                              ^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^^
       9 |     , Option.unopt (Mavryk.create_ticket "TWO" 10n)
     :
     Warning: deprecated value.
@@ -271,10 +271,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 9, characters 20-39:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 9, characters 20-40:
       8 |   = ( Option.unopt (Mavryk.create_ticket 2 10n)
       9 |     , Option.unopt (Mavryk.create_ticket "TWO" 10n)
-                              ^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^^
      10 |     , Option.unopt (Mavryk.create_ticket 3n 10n)
     :
     Warning: deprecated value.
@@ -289,10 +289,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 10, characters 20-39:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 10, characters 20-40:
       9 |     , Option.unopt (Mavryk.create_ticket "TWO" 10n)
      10 |     , Option.unopt (Mavryk.create_ticket 3n 10n)
-                              ^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^^
      11 |     )
     :
     Warning: deprecated value.
@@ -307,10 +307,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 18, characters 27-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 18, characters 27-46:
      17 |   = [],
      18 |     (let a = Option.unopt (Mavryk.join_tickets (a1, b1)) in
-                                     ^^^^^^^^^^^^^^^^^^
+                                     ^^^^^^^^^^^^^^^^^^^
      19 |     let b  = Option.unopt (Mavryk.join_tickets (a2, b2)) in
     :
     Warning: deprecated value.
@@ -325,10 +325,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 19, characters 27-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 19, characters 27-46:
      18 |     (let a = Option.unopt (Mavryk.join_tickets (a1, b1)) in
      19 |     let b  = Option.unopt (Mavryk.join_tickets (a2, b2)) in
-                                     ^^^^^^^^^^^^^^^^^^
+                                     ^^^^^^^^^^^^^^^^^^^
      20 |     let c  = Option.unopt (Mavryk.join_tickets (a3, b3)) in
     :
     Warning: deprecated value.
@@ -343,10 +343,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 20, characters 27-45:
+    File "../../test/contracts/top_level_patterns/contracts/cameligo/ticket_tuple.mligo", line 20, characters 27-46:
      19 |     let b  = Option.unopt (Mavryk.join_tickets (a2, b2)) in
      20 |     let c  = Option.unopt (Mavryk.join_tickets (a3, b3)) in
-                                     ^^^^^^^^^^^^^^^^^^
+                                     ^^^^^^^^^^^^^^^^^^^
      21 |     (a, b, c))
     :
     Warning: deprecated value.
@@ -886,10 +886,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 3, characters 29-48:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 3, characters 29-49:
       2 |
       3 | let {b} = {b = Option.unopt (Mavryk.create_ticket "one" 10n)}
-                                       ^^^^^^^^^^^^^^^^^^^
+                                       ^^^^^^^^^^^^^^^^^^^^
       4 |
     :
     Warning: deprecated value.
@@ -903,10 +903,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 9, characters 20-38:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 9, characters 20-39:
       8 | let main (_ : unit) (_ : storage) : operation list * storage =
       9 |   [], Option.unopt (Mavryk.join_tickets (b, b))
-                              ^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^
     :
     Warning: deprecated value.
     In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Ticket.join` from `Mavryk.Next` is encouraged for a smoother migration.
@@ -928,10 +928,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 3, characters 29-48:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 3, characters 29-49:
       2 |
       3 | let {b} = {b = Option.unopt (Mavryk.create_ticket "one" 10n)}
-                                       ^^^^^^^^^^^^^^^^^^^
+                                       ^^^^^^^^^^^^^^^^^^^^
       4 |
     :
     Warning: deprecated value.
@@ -945,10 +945,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 9, characters 20-38:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_record.mligo", line 9, characters 20-39:
       8 | let main (_ : unit) (_ : storage) : operation list * storage =
       9 |   [], Option.unopt (Mavryk.join_tickets (b, b))
-                              ^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^
     :
     Warning: deprecated value.
     In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Ticket.join` from `Mavryk.Next` is encouraged for a smoother migration.
@@ -991,9 +991,9 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 1, characters 28-47:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 1, characters 28-48:
       1 | let (b, _) = (Option.unopt (Mavryk.create_ticket "one" 10n), 1)
-                                      ^^^^^^^^^^^^^^^^^^^
+                                      ^^^^^^^^^^^^^^^^^^^^
       2 |
     :
     Warning: deprecated value.
@@ -1007,10 +1007,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 7, characters 20-38:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 7, characters 20-39:
       6 | let main (_ : unit) (_ : storage) : operation list * storage =
       7 |   [], Option.unopt (Mavryk.join_tickets (b, b))
-                              ^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^
     :
     Warning: deprecated value.
     In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Ticket.join` from `Mavryk.Next` is encouraged for a smoother migration.
@@ -1030,9 +1030,9 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 1, characters 28-47:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 1, characters 28-48:
       1 | let (b, _) = (Option.unopt (Mavryk.create_ticket "one" 10n), 1)
-                                      ^^^^^^^^^^^^^^^^^^^
+                                      ^^^^^^^^^^^^^^^^^^^^
       2 |
     :
     Warning: deprecated value.
@@ -1046,10 +1046,10 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
-    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 7, characters 20-38:
+    File "../../test/contracts/top_level_patterns/negative/cameligo/ticket_tuple.mligo", line 7, characters 20-39:
       6 | let main (_ : unit) (_ : storage) : operation list * storage =
       7 |   [], Option.unopt (Mavryk.join_tickets (b, b))
-                              ^^^^^^^^^^^^^^^^^^
+                              ^^^^^^^^^^^^^^^^^^^
     :
     Warning: deprecated value.
     In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Ticket.join` from `Mavryk.Next` is encouraged for a smoother migration.
