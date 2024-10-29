@@ -9,7 +9,7 @@ This sub-command compiles a parameter for a given contract to a Michelson expres
 
 ### FLAGS
 **--amount INT**
-the tezos amount the Michelson interpreter will use for the transaction.
+the mavryk amount the Michelson interpreter will use for the transaction.
 
 **--balance INT**
 the balance the Michelson interpreter will use for the contract balance.

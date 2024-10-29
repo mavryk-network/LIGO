@@ -98,6 +98,14 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "rollup_address.mligo" ];
   [%expect
     {|
+    File "../../test/contracts/rollup_address.mligo", line 4, characters 4-21:
+      3 |   let sr_cont = Mavryk.get_contract_with_error sr_address "Err" in
+      4 |   [ Mavryk.transaction () 0mumav sr_cont ], ()
+              ^^^^^^^^^^^^^^^^^
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
     { parameter unit ;
       storage unit ;
       code { DROP ;
@@ -116,9 +124,10 @@ let%expect_test _ =
 (* Test if pre alpha protocol works in this case it's mumbai, but in future this 
    will change *)
 let%expect_test _ =
-  run_ligo_good [ "compile"; "contract"; contract "unit.mligo"; "--protocol"; "atlas" ];
+  run_ligo_good [ "compile"; "contract"; contract "unit.mligo"; "--protocol"; "boreas" ];
   [%expect
     {|
-    { parameter unit ;
-      storage unit ;
-      code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+  Warning: the flag `-p` (aliases: `--protocol`) is deprecated and will be ignored
+  { parameter unit ;
+    storage unit ;
+    code { DROP ; UNIT ; NIL operation ; PAIR } } |}]

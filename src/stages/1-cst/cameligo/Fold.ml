@@ -1,4 +1,3 @@
-open Core
 open Cst_shared.Fold
 open CST
 open Region
@@ -47,7 +46,8 @@ type _ sing =
   | S_geq : geq sing
   | S_gt : gt sing
   | S_hex : Hex.t sing
-  | S_int64 : Int64.t sing
+  | S_int64 : Int64.t  sing
+  | S_q : Q.t sing
   | S_kwd_begin : kwd_begin sing
   | S_kwd_do : kwd_do sing
   | S_kwd_done : kwd_done sing
@@ -110,7 +110,7 @@ type _ sing =
   | S_module_path : 'a sing -> 'a module_path sing
   | S_neq : neq sing
   | S_nsepseq : 'a sing * 'b sing -> ('a, 'b) Utils.nsepseq sing
-  | S_nseq : 'a sing -> 'a Utils.nseq sing
+  | S_ne_list : 'a sing -> 'a Nonempty_list.t sing
   | S_option : 'a sing -> 'a option sing
   | S_par : 'a sing -> 'a par sing
   | S_par' : 'a sing -> 'a par' sing
@@ -168,7 +168,7 @@ type _ sing =
   | S_update_expr : update_expr sing
   | S_variable : variable sing
   | S_variant : variant sing
-  | S_variant_type : variant_type sing
+  | S_sum_type : sum_type sing
   | S_vbar : vbar sing
   | S_vbar_eq : vbar_eq sing
   | S_verbatim_literal : verbatim_literal sing
@@ -195,6 +195,9 @@ let fold'
 
   and process_list : some_node list -> unit =
     fun l -> List.iter l ~f:process
+
+  and process_ne_list : some_node Nonempty_list.t -> unit =
+    fun l -> Nonempty_list.iter l ~f:process
 
   and fold : some_node -> unit =
   function (Some_node (node, sing)) -> match sing with
@@ -261,7 +264,7 @@ let fold'
   | S_cst ->
       let { decl; eof } = node in
       process_list
-      [ decl -| S_nseq S_declaration
+      [ decl -| S_ne_list S_declaration
       ; eof -| S_eof ]
   | S_ctor -> process @@ node -| S_wrap S_lexeme
   | S_declaration -> process
@@ -285,7 +288,7 @@ let fold'
     (match node with
       E_Add node -> node -| S_reg (S_bin_op S_plus)
     | E_And node -> node -| S_reg (S_bin_op S_bool_and)
-    | E_App node -> node -| S_reg (S_tuple_2 (S_expr, S_nseq S_expr))
+    | E_App node -> node -| S_reg (S_tuple_2 (S_expr, S_ne_list S_expr))
     | E_Assign node -> node -| S_reg S_assign
     | E_Attr node -> node -| S_tuple_2 (S_attribute, S_expr)
     | E_Bytes node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_hex))
@@ -320,6 +323,7 @@ let fold'
     | E_ModPath node -> node -| S_reg (S_module_path S_expr)
     | E_Mult node -> node -| S_reg (S_bin_op S_times)
     | E_Mumav node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_int64))
+    | E_Mav node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_q))
     | E_Nat node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_z))
     | E_Neg node -> node -| S_reg (S_un_op S_minus)
     | E_Neq node -> node -| S_reg (S_bin_op S_neq)
@@ -360,7 +364,7 @@ let fold'
     ; field_type -| S_option S_type_annotation ]
   | S_field_name -> process @@ node -| S_variable
   | S_for_all ->
-    process @@ node -| S_tuple_3 (S_nseq S_type_var, S_dot, S_type_expr)
+    process @@ node -| S_tuple_3 (S_ne_list S_type_var, S_dot, S_type_expr)
   | S_for_in_loop ->
     let { kwd_for; pattern; kwd_in; collection; body } = node in
     process_list
@@ -384,7 +388,7 @@ let fold'
     process_list
     [ kwd_fun -| S_kwd_fun
     ; type_params -| S_option (S_par S_type_params)
-    ; binders -| S_nseq S_pattern
+    ; binders -| S_ne_list S_pattern
     ; rhs_type -| S_option (S_tuple_2 (S_colon, S_type_expr))
     ; arrow -| S_arrow
     ; body -| S_expr ]
@@ -393,6 +397,7 @@ let fold'
   | S_gt -> process @@ node -| S_wrap S_lexeme
   | S_hex -> () (* Leaf *)
   | S_int64 -> () (* Leaf *)
+  | S_q -> () (* Leaf *)
   | S_kwd_begin -> process @@ node -| S_wrap S_lexeme
   | S_kwd_do -> process @@ node -| S_wrap S_lexeme
   | S_kwd_done -> process @@ node -| S_wrap S_lexeme
@@ -443,7 +448,7 @@ let fold'
     let { type_params; binders; rhs_type; eq; let_rhs } = node in
     process_list
     [ type_params -| S_option (S_par S_type_params)
-    ; binders -| S_nseq S_pattern
+    ; binders -| S_ne_list S_pattern
     ; rhs_type -| S_option (S_tuple_2 (S_colon, S_type_expr))
     ; eq -| S_equal
     ; let_rhs -| S_expr ]
@@ -496,7 +501,7 @@ let fold'
     let { kwd_struct; declarations; kwd_end } = node in
     process_list
     [ kwd_struct -| S_kwd_module
-    ; declarations -| S_list S_declaration
+    ; declarations -| S_ne_list S_declaration
     ; kwd_end -| S_kwd_end ]
   | S_module_decl ->
     let { kwd_module; name; annotation; eq; module_expr} = node in
@@ -533,7 +538,8 @@ let fold'
   | S_neq -> process @@ node -| S_wrap S_lexeme
   | S_nsepseq (sing_1, sing_2) ->
     process @@ node -| S_tuple_2 (sing_1, S_list (S_tuple_2 (sing_2, sing_1)))
-  | S_nseq sing -> process @@ node -| S_tuple_2 (sing, S_list sing)
+  | S_ne_list sing ->
+    process_ne_list @@ Nonempty_list.map ~f:(fun x -> x -| sing) node
   | S_option sing ->
     (match node with
       None -> () (* Leaf *)
@@ -561,6 +567,7 @@ let fold'
     | P_List node -> node -| S_list_ S_pattern
     | P_ModPath node -> node -| S_reg (S_module_path S_pattern)
     | P_Mumav node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_int64))
+    | P_Mav node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_q))
     | P_Nat node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_z))
     | P_Par node -> node -| S_par S_pattern
     | P_Record node -> node -| S_record_pattern
@@ -705,7 +712,7 @@ let fold'
     | T_Par node -> node -| S_par S_type_expr
     | T_Record node -> node -| S_record (S_reg S_field_decl)
     | T_String node -> node -| S_string_literal
-    | T_Variant node -> node -| S_reg S_variant_type
+    | T_Sum node -> node -| S_reg S_sum_type
     | T_Var node -> node -| S_type_variable
     | T_ParameterOf node -> node -| S_reg (S_nsepseq (S_module_name, S_dot)))
   | S_type_in ->
@@ -716,7 +723,7 @@ let fold'
     ; body -| S_expr ]
   | S_type_name -> process @@ node -| S_variable
   | S_type_params ->
-    process @@ node -| S_tuple_2 (S_kwd_type, S_nseq S_type_variable)
+    process @@ node -| S_tuple_2 (S_kwd_type, S_ne_list S_type_variable)
   | S_type_var ->
     process @@ node -| S_reg (S_tuple_2 (S_option S_quote, S_type_variable))
   | S_type_variable -> process @@ node -| S_variable
@@ -747,7 +754,7 @@ let fold'
     [ attributes -| S_list S_attribute
     ; ctor -| S_ctor
     ; ctor_args -| S_option (S_tuple_2 (S_kwd_of, S_type_expr))]
-  | S_variant_type ->
+  | S_sum_type ->
     let { lead_vbar; variants } = node in
     process_list
     [ lead_vbar -| S_option S_vbar

@@ -1,5 +1,5 @@
 const CreateAndCall = artifacts.require('CreateAndCall')
-const taquito = require('@taquito/taquito')
+const taquito = require('@mavrykdynamics/taquito')
 
 contract('CreateAndCall', () => {
     let instance = null

@@ -1,20 +1,32 @@
-module Location = Simple_utils.Location
-module List = Simple_utils.List
-module Ligo_string = Simple_utils.Ligo_string
-open Simple_utils
-open Ligo_prim
+open Core
 open Types
+module Ligo_result = Simple_utils.Ligo_result
+module Location = Simple_utils.Location
+module Ligo_string = Simple_utils.Ligo_string
+module Ligo_option = Simple_utils.Ligo_option
+module Value_var = Ligo_prim.Value_var
+module Type_var = Ligo_prim.Type_var
+module Module_var = Ligo_prim.Module_var
+module Sig_item_attr = Ligo_prim.Sig_item_attr
+module Sig_type_attr = Ligo_prim.Sig_type_attr
+module Literal_types = Ligo_prim.Literal_types
+module Literal_value = Ligo_prim.Literal_value
+module Label = Ligo_prim.Label
+module Kind = Ligo_prim.Kind
+module Binder = Ligo_prim.Binder
+module Param = Ligo_prim.Param
+module Union = Ligo_prim.Union
 
 let assert_same_size a b = if List.length a = List.length b then Some () else None
 let constant_compare ia ib = Literal_types.compare ia ib
 
 let assert_no_type_vars (t : type_expression) : unit option =
   let f r te =
-    let open Option in
+    let open Ligo_option in
     let* () = r in
     match te.type_content with
     | T_variable _ | T_for_all _ -> None
-    | _ -> return ()
+    | _ -> Option.return ()
   in
   Helpers.fold_type_expression t ~init:(Some ()) ~f
 
@@ -22,7 +34,7 @@ let assert_no_type_vars (t : type_expression) : unit option =
 let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     : unit option
   =
-  let open Option in
+  let open Ligo_option in
   match a.type_content, b.type_content with
   | ( T_constant { language = la; injection = ia; parameters = lsta }
     , T_constant { language = lb; injection = ib; parameters = lstb } ) ->
@@ -38,15 +50,22 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
         (List.zip_exn lsta lstb)
     else None
   | T_constant _, _ -> None
-  | T_sum (row1, _), T_sum (row2, _) | T_record row1, T_record row2 ->
+  | T_sum row1, T_sum row2 | T_record row1, T_record row2 ->
     Option.some_if
       (Row.equal
          (fun t1 t2 -> Option.is_some @@ assert_type_expression_eq (t1, t2))
          row1
          row2)
       ()
-  | T_record _, _ -> None
-  | T_sum _, _ -> None
+  | T_sum _, _ | T_record _, _ -> None
+  | T_union union1, T_union union2 ->
+    Option.some_if
+      (Union.equal
+         (fun t1 t2 -> Option.is_some @@ assert_type_expression_eq (t1, t2))
+         union1
+         union2)
+      ()
+  | T_union _, _ -> None
   | ( T_arrow { type1; type2; param_names = _ }
     , T_arrow { type1 = type1'; type2 = type2'; param_names = _ } ) ->
     let* _ = assert_type_expression_eq (type1, type1') in
@@ -56,12 +75,16 @@ let rec assert_type_expression_eq ((a, b) : type_expression * type_expression)
     (* TODO : we must check that the two types were bound at the same location (even if they have the same name), i.e. use something like De Bruijn indices or a propper graph encoding *)
     if Type_var.equal x y then Some () else None
   | T_variable _, _ -> None
+  | T_exists x, T_exists y -> if Type_var.equal x y then Some () else None
+  | T_exists _, _ -> None
   | T_singleton a, T_singleton b -> assert_literal_eq (a, b)
   | T_singleton _, _ -> None
   | T_abstraction a, T_abstraction b ->
+    let open Option in
     assert_type_expression_eq (a.type_, b.type_)
     >>= fun _ -> Some (assert (Kind.equal a.kind b.kind))
   | T_for_all a, T_for_all b ->
+    let open Option in
     assert_type_expression_eq (a.type_, b.type_)
     >>= fun _ -> Some (assert (Kind.equal a.kind b.kind))
   | T_abstraction _, _ -> None
@@ -145,8 +168,12 @@ let rec get_entry (lst : module_) (name : Value_var.t) : expression option =
             }
         } -> if Binder.apply (Value_var.equal name) binder then Some expr else None
     | D_module_include { module_content = M_struct x; _ } -> get_entry x name
-    | D_module_include _ | D_irrefutable_match _ | D_type _ | D_module _ | D_signature _
-      -> None
+    | D_module_include _
+    | D_irrefutable_match _
+    | D_type _
+    | D_module _
+    | D_signature _
+    | D_import _ -> None
   in
   List.find_map ~f:aux (List.rev lst)
 
@@ -156,11 +183,11 @@ let get_type_of_contract ty =
   | Some { type1; type2; param_names = _ } ->
     (match Combinators.get_t_pair type1, Combinators.get_t_pair type2 with
     | Some (parameter, storage), Some (listop, storage') ->
-      let open Simple_utils.Option in
+      let open Ligo_option in
       let* () = Combinators.assert_t_list_operation listop in
       let* () = assert_type_expression_eq (storage, storage') in
       (* TODO: on storage/parameter : asert_storable, assert_passable ? *)
-      return (parameter, storage)
+      Option.return (parameter, storage)
     | _ -> None)
   | _ -> None
 
@@ -226,7 +253,7 @@ let should_uncurry_view ~storage_ty view_ty =
 
 
 let parameter_from_entrypoints
-    :  (Value_var.t * type_expression) List.Ne.t
+    :  (Value_var.t * type_expression) Nonempty_list.t
     -> ( type_expression * type_expression
        , [> `Not_entry_point_form of Types.expression_variable * Types.type_expression
          | `Storage_does_not_match of
@@ -234,8 +261,8 @@ let parameter_from_entrypoints
          ] )
        result
   =
- fun ((entrypoint, entrypoint_type), rest) ->
-  let open Result in
+ fun ((entrypoint, entrypoint_type) :: rest) ->
+  let open Ligo_result in
   let* parameter, storage =
     match should_uncurry_entry entrypoint_type with
     | `Yes (parameter, storage) | `No (parameter, storage) ->
@@ -257,10 +284,11 @@ let parameter_from_entrypoints
             ~error:(`Storage_does_not_match (entrypoint, storage, ep, storage_))
           @@ assert_type_expression_eq (storage_, storage)
         in
-        return ((String.capitalize (Value_var.to_name_exn ep), parameter_) :: parameters))
+        Result.return
+          ((String.capitalize (Value_var.to_name_exn ep), parameter_) :: parameters))
       rest
   in
-  return
+  Result.return
     ( Combinators.t_sum_ez
         ~loc:Location.generated
         ~layout:Combinators.default_layout
@@ -272,7 +300,7 @@ let parameter_from_entrypoints
    to an expression `fun (p, s) -> f p s : parameter * storage -> return` *)
 let uncurry_wrap ~loc ~type_ var =
   let open Combinators in
-  let open Simple_utils.Option in
+  let open Ligo_option in
   let* { type1 = input_ty; type2 = output_ty; param_names = _ } = get_t_arrow type_ in
   let* { type1 = storage; type2 = output_ty; param_names = _ } = get_t_arrow output_ty in
   (* We create a wrapper to uncurry it: *)
@@ -322,7 +350,7 @@ let uncurry_wrap ~loc ~type_ var =
       (t_pair ~loc parameter storage)
       output_ty
   in
-  some @@ expr
+  Some expr
 
 
 let rec fetch_views_in_module ~storage_ty
@@ -383,14 +411,15 @@ let rec fetch_views_in_module ~storage_ty
     | D_type _
     | D_module _
     | D_value _
-    | D_signature _ -> return ()
+    | D_signature _
+    | D_import _ -> return ()
   in
   List.fold_right ~f:aux ~init:([], []) prog
 
 
 let get_path_signature : signature -> Module_var.t list -> signature option =
  fun prg_sig mods ->
-  let open Simple_utils.Option in
+  let open Ligo_option in
   List.fold
     mods
     ~f:(fun acc el ->
@@ -419,7 +448,7 @@ let get_contract_signature
     : signature -> Module_var.t list -> (signature * contract_sig) option
   =
  fun prg_sig mods ->
-  let open Simple_utils.Option in
+  let open Ligo_option in
   let* sig_ = get_path_signature prg_sig mods in
   get_contract_opt sig_
 
@@ -428,7 +457,7 @@ let get_sig_value
     : Module_var.t list -> Value_var.t -> signature -> (ty_expr * Sig_item_attr.t) option
   =
  fun path v sig_ ->
-  let open Simple_utils.Option in
+  let open Ligo_option in
   let* sig_ = get_path_signature sig_ path in
   List.find_map sig_.sig_items ~f:(function
       | { wrap_content = S_value (v', ty, attr); location = _ } when Value_var.equal v v'
@@ -440,8 +469,8 @@ let get_entrypoint_parameter_type
     : Label.t option -> type_expression -> type_expression option
   =
  fun label parameter_ty ->
-  let open Simple_utils.Option in
-  let* rows, _ = Combinators.get_t_sum parameter_ty in
+  let open Ligo_option in
+  let* rows = Combinators.get_t_sum parameter_ty in
   let lst = Row.to_alist rows in
   match lst with
   | [ (_single_entry, ty) ] when Option.is_none label -> Some ty
@@ -452,42 +481,42 @@ let get_entrypoint_parameter_type
 
 let get_entrypoint_storage_type : program -> Module_var.t list -> type_expression option =
  fun prg mods ->
-  let open Simple_utils.Option in
+  let open Ligo_option in
   let* _, { storage; _ } = get_contract_signature prg.pr_sig mods in
-  return storage
+  Option.return storage
 
 
 let to_sig_items (module_ : module_) : sig_item list =
-  List.fold module_ ~init:[] ~f:(fun ctx decl ->
+  List.fold_right module_ ~init:[] ~f:(fun decl ctx ->
       let loc = Location.get_location decl in
       match Location.unwrap decl with
       | D_irrefutable_match { pattern; expr = _; attr = { view; entry; dyn_entry; _ } } ->
-        List.fold (Pattern.binders pattern) ~init:ctx ~f:(fun ctx x ->
-            ctx
-            @ [ Location.wrap ~loc
-                @@ S_value
-                     ( Binder.get_var x
-                     , Binder.get_ascr x
-                     , { Sig_item_attr.default_attributes with dyn_entry; view; entry } )
-              ])
-      | D_value { binder; expr = _; attr = { view; entry; dyn_entry; _ } } ->
-        ctx
-        @ [ Location.wrap ~loc
+        List.fold_right (Pattern.binders pattern) ~init:ctx ~f:(fun x ctx ->
+            (Location.wrap ~loc
             @@ S_value
-                 ( Binder.get_var binder
-                 , Binder.get_ascr binder
-                 , { Sig_item_attr.default_attributes with dyn_entry; view; entry } )
-          ]
+                 ( Binder.get_var x
+                 , Binder.get_ascr x
+                 , { Sig_item_attr.default_attributes with dyn_entry; view; entry } ))
+            :: ctx)
+      | D_value { binder; expr = _; attr = { view; entry; dyn_entry; _ } } ->
+        (Location.wrap ~loc
+        @@ S_value
+             ( Binder.get_var binder
+             , Binder.get_ascr binder
+             , { Sig_item_attr.default_attributes with dyn_entry; view; entry } ))
+        :: ctx
       | D_type { type_binder; type_expr; type_attr = _ } ->
-        ctx
-        @ [ Location.wrap ~loc
-            @@ S_type (type_binder, type_expr, Sig_type_attr.default_attributes)
-          ]
+        (Location.wrap ~loc
+        @@ S_type (type_binder, type_expr, Sig_type_attr.default_attributes))
+        :: ctx
       | D_module_include x -> x.signature.sig_items
       | D_module { module_binder; module_; module_attr = _; annotation = () } ->
-        ctx @ [ Location.wrap ~loc @@ S_module (module_binder, module_.signature) ]
+        (Location.wrap ~loc @@ S_module (module_binder, module_.signature)) :: ctx
       | D_signature { signature_binder; signature; signature_attr } ->
-        ctx @ [ Location.wrap ~loc @@ S_module_type (signature_binder, signature) ])
+        (Location.wrap ~loc @@ S_module_type (signature_binder, signature)) :: ctx
+      | D_import import ->
+        (* Imports are hidden in signatures *)
+        ctx)
 
 
 let to_signature (module_ : module_) : signature =

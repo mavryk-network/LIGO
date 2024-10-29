@@ -113,8 +113,8 @@ let pp_test_exec_error (err: test_exec_error) : string =
   | Balance_too_low r ->
     let contract_balance = r.contract_balance in
     let spend_request = r.spend_request in
-    let balance = Util.tez_to_string contract_balance in
-    let request = Util.tez_to_string spend_request in
+    let balance = Util.mav_to_string contract_balance in
+    let request = Util.mav_to_string spend_request in
     "Balance_too_low {contract_balance = "
      ^ balance
      ^ "; spend_request = "

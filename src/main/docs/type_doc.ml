@@ -1,9 +1,10 @@
-module Location = Simple_utils.Location
 open PPrint
 open Ligo_prim
-open Simple_utils.Function
+module Location = Simple_utils.Location
+module Trace = Simple_utils.Trace
 
-let strip_empty = List.filter ~f:(Caml.( != ) empty)
+let ( <@ ) f g x = f (g x)
+let strip_empty = List.filter ~f:(fun doc -> not @@ is_empty doc)
 let unwords : document list -> document = separate space <@ strip_empty
 let unlines : document list -> document = separate hardline <@ strip_empty
 
@@ -11,18 +12,19 @@ let unlines : document list -> document = separate hardline <@ strip_empty
 let dots = !^"\"...\""
 
 let decompile_type (ty_expr : Ast_typed.ty_expr) : document =
-  let core_type = Checking.untype_type_expression ~use_orig_var:true ty_expr in
   let unified_type =
     match
-      Simple_utils.Trace.to_stdlib_result
-      @@ Nanopasses.decompile_ty_expr ~syntax:JsLIGO core_type
+      let%bind.Option core_type =
+        Trace.to_option @@ Checking.untype_type_expression ~use_orig_var:true ty_expr
+      in
+      Trace.to_option @@ Nanopasses.decompile_ty_expr ~syntax:JsLIGO core_type
     with
-    | Ok (unified_type, _) -> unified_type
-    | Error _ ->
+    | None ->
       let open Ast_unified in
       t_var
         ~loc:Location.generated
         (Ty_variable.of_input_var ~loc:Location.generated "unresolved")
+    | Some unified_type -> unified_type
   in
   let open Unification.Jsligo in
   let open Parsing.Jsligo in
@@ -81,10 +83,16 @@ let type_expr_doc
     attach_doc doc_opt @@ unwords [ export public; !^"type"; !^name; params; equals; typ ])
 
 
+let file_exists path =
+  match Sys_unix.file_exists path with
+  | `Yes -> true
+  | `No | `Unknown -> false
+
+
 let to_typescript_path (path : string) : string option =
   let open Option.Let_syntax in
-  let absolute_path = FilePath.make_absolute (Caml.Sys.getcwd ()) path in
-  let%bind () = Option.some_if (Caml.Sys.file_exists absolute_path) () in
+  let absolute_path = FilePath.make_absolute (Sys_unix.getcwd ()) path in
+  let%bind () = Option.some_if (file_exists absolute_path) () in
   let base_name, ext_opt = Filename.split_extension absolute_path in
   match%bind Syntax.of_ext_opt ext_opt with
   | JsLIGO -> return base_name
@@ -123,7 +131,8 @@ let rec decl_to_typescript (decl : Ast_typed.decl) : document =
     when (not hidden) && not (Module_var.is_generated module_binder) ->
     let name = Module_var.to_name_exn module_binder in
     let doc = comments_to_doc leading_comments in
-    let import (var, vars) =
+    let import : _ Nonempty_list.t -> _ =
+     fun (var :: vars) ->
       let import_line mod_path =
         unwords [ export public; !^"import"; !^name; equals; mod_path ]
       in
@@ -147,7 +156,7 @@ let rec decl_to_typescript (decl : Ast_typed.decl) : document =
     | M_struct decls ->
       let content = unlines @@ List.map decls ~f:decl_to_typescript in
       attach_doc doc @@ unwords [ export public; !^"namespace"; !^name; braces content ]
-    | M_variable var -> import (var, [])
+    | M_variable var -> import [ var ]
     | M_module_path vars -> import vars)
   | D_module_include _ -> (* This is impossible in JsLIGO *) empty
   | D_signature

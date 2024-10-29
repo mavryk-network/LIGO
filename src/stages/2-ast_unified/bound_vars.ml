@@ -1,3 +1,4 @@
+open Core
 open Types
 open Recursion_schemes.Catamorphism
 
@@ -12,9 +13,10 @@ let empty = [ [] ]
 let singleton x = [ x ]
 
 let union a b =
-  match List.map2 a b ~f:List.append with
-  | Types.List.Or_unequal_lengths.Ok x -> x
-  | Types.List.Or_unequal_lengths.Unequal_lengths -> assert false
+  let open List in
+  match map2 a b ~f:List.append with
+  | Or_unequal_lengths.Ok x -> x
+  | Or_unequal_lengths.Unequal_lengths -> assert false
 
 
 let add (el : Variable.t) (x : bound) : bound = List.map x ~f:(fun lst -> el :: lst)
@@ -28,8 +30,8 @@ let fv_folder =
    fun expr ->
     match Location.unwrap expr with
     | E_simple_let_in { binder; rhs = _; let_result = body }
-    | E_let_in { lhs = binder, _; rhs = _; body; _ }
-    | E_let_mut_in { lhs = binder, _; rhs = _; body; _ } ->
+    | E_let_in { lhs = binder :: _; rhs = _; body; _ }
+    | E_let_mut_in { lhs = binder :: _; rhs = _; body; _ } ->
       adds (Combinators.get_pattern_binders binder) body
     | E_for { index; init = _; bound = _; step = _; block } -> add index block
     | E_for_in (ForMap { binding = v1, v2; collection = _; block }) ->
@@ -60,13 +62,13 @@ let fv_folder =
         add bound result
       in
       add fun_name b_lamb
-    | E_match { expr = _; disc_label = _; cases } ->
+    | E_match { expr = _; cases } ->
       let f Case.{ pattern; rhs } =
         match pattern with
         | None -> []
         | Some pattern -> adds (Combinators.get_pattern_binders pattern) rhs
       in
-      let bounds = List.map (List.Ne.to_list cases) ~f in
+      let bounds = List.map (Nonempty_list.to_list cases) ~f in
       List.concat bounds
     | _ -> empty
   in
@@ -74,7 +76,7 @@ let fv_folder =
    fun d ->
     match Location.unwrap d with
     | D_attr (_, d) -> d
-    | D_let { is_rec; pattern = fun_name, params; let_rhs = _; _ } ->
+    | D_let { is_rec; pattern = fun_name :: params; let_rhs = _; _ } ->
       let bound =
         let binders = if is_rec then fun_name :: params else params in
         List.concat @@ List.map ~f:(fun x -> Combinators.get_pattern_binders x) binders
@@ -84,7 +86,7 @@ let fv_folder =
       let bound = Combinators.get_pattern_binders pattern in
       singleton bound
     | D_multi_var lst | D_multi_const lst ->
-      let lst = List.Ne.to_list lst in
+      let lst = Nonempty_list.to_list lst in
       let bounds =
         List.map lst ~f:(fun { pattern; _ } -> Combinators.get_pattern_binders pattern)
       in

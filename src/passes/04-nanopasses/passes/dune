@@ -44,7 +44,7 @@
   pattern_constructor_application
   pattern_heuristic
   object_to_record
-  array_to_tuple
+  no_parameter_function
   let_syntax
   generalize_functions
   curry
@@ -62,11 +62,10 @@
   freeze_containers
   reduce_sequence
   restrict_typed_pattern
-  literalize_annotated
+  bytes_raw_code
   detect_recursive
   restrict_projections
-  unpuning
-  disc_union_types
+  unpunning
   prefix_postfix_operators
   for_to_while_loop
   escaped_variables)
@@ -76,14 +75,10 @@
   mavkit-libs.crypto
   mavkit-libs.base
   compiler_options
-  main_warnings)
+  main_warnings
+  core_kernel.nonempty_list)
  (inline_tests
-  (libraries simple-utils-unix simple-utils-unix.http_uri ligo.api)
+  (libraries ligo.api)
   (flags (-stop-on-error)))
  (preprocess
-  (pps
-   ppx_map
-   ppx_deriving.map
-   ppx_sexp_conv
-   ppx_expect
-   ppx_poly_constructor)))
+  (pps ppx_jane ppx_map ppx_deriving.map ppx_poly_constructor)))

@@ -1,8 +1,32 @@
-module OS = Bos.OS
 open Prometheus_push
 open Prometheus
 open Core
 open Compiler_options.Raw_options
+module OS = Bos.OS
+
+(* dirty, but simple *)
+let project_root : string option ref = ref None
+let set_project_root : string option -> unit = fun s -> project_root := s
+let is_running_lsp_ref = ref false
+let set_is_running_lsp is_running = is_running_lsp_ref := is_running
+
+let dot_ligo rest use_home_folder =
+  let home =
+    match Sys.getenv "HOME" with
+    | Some v -> v
+    | None ->
+      (match Sys.getenv "USERPROFILE" with
+      | Some v -> v
+      | None -> "")
+  in
+  (match use_home_folder with
+  | true -> home ^ "/.ligo"
+  | false ->
+    (match !project_root with
+    | None -> "./.ligo"
+    | Some x -> x ^ "/.ligo"))
+  ^/ rest
+
 
 (* Types *)
 type environment =
@@ -10,6 +34,7 @@ type environment =
   | Tty
   | Docker_non_interactive
   | Docker_interactive
+  | Lsp
 
 type metric_group =
   | Counter_cli_execution of { command : string }
@@ -32,6 +57,23 @@ type metric_group =
       ; syntax : string
       ; protocol : string
       }
+  | Counter_lsp_initialize of
+      { syntax : string
+      ; ide : string
+      ; ide_version : string
+      ; agg_id : Uuid.t
+      }
+  | Counter_lsp_restart
+  | Counter_lsp_number_of_crashes of
+      { user : string
+      ; agg_id : Uuid.t
+      }
+  | Gauge_lsp_method_time of
+      { user : string
+      ; agg_id : Uuid.t
+      ; name : string
+      ; index : int
+      }
 
 type analytics_input =
   { group : metric_group
@@ -47,40 +89,38 @@ let is_skip_analytics_through_env_var =
   | None -> false
 
 
-let get_home =
-  match Sys.getenv "HOME" with
-  | Some v -> v
-  | None ->
-    (match Sys.getenv "USERPROFILE" with
-    | Some v -> v
-    | None -> "")
-
-
 let current_process_is_in_docker =
   match Sys.getenv "DOCKER_EXECUTION" with
   | Some _value -> true
   | None -> false
 
 
+let is_running_lsp () = !is_running_lsp_ref
 let is_tty = UnixLabels.isatty UnixLabels.stdin && UnixLabels.isatty UnixLabels.stdout
 
-let env : environment =
-  match current_process_is_in_docker, is_tty with
-  | false, false -> Ci (* = neither docker not tty *)
-  | false, true -> Tty
-  | true, false -> Docker_non_interactive
-  | true, true -> Docker_interactive
+let env () : environment =
+  if is_running_lsp ()
+  then Lsp
+  else (
+    match current_process_is_in_docker, is_tty with
+    | false, false -> Ci (* = neither docker not tty *)
+    | false, true -> Tty
+    | true, false -> Docker_non_interactive
+    | true, true -> Docker_interactive)
 
 
-let is_in_ci =
-  match env with
+let is_in_ci () =
+  match env () with
   | Ci -> true
   | _ -> false
 
 
 (* Collector registry *)
 let agg_registry =
-  PushableCollectorRegistry.create "https://agg.push.analytics.ligo.mavryk.org/metrics"
+  (* If you change this string, then also change the one in the debugger in
+     [tools/debugger/ligo-debugger/src/Language/LIGO/Analytics.hs]. Look for the
+     [aggRegistry] variable. *)
+  PushableCollectorRegistry.create "https://push.analytics.ligo.mavryk.org/metrics"
 
 
 let registry =
@@ -91,10 +131,10 @@ let registry =
 let term_acceptance_filepath =
   if current_process_is_in_docker
   then ".ligo/term_acceptance"
-  else get_home ^ "/.ligo/term_acceptance"
+  else dot_ligo "term_acceptance" true
 
 
-let line_separator = if String.equal Sys.os_type "Win32" then "\r\n" else "\n"
+let line_separator = "\n"
 
 let acceptance_condition_common =
   "Ligo uses analytics to have a better understanding compiler community usage."
@@ -108,12 +148,12 @@ let acceptance_condition_common =
      https://discord.com/invite/9rhYaEt."
 
 
-let acceptance_condition =
+let acceptance_condition () =
   acceptance_condition_common
   ^ line_separator
   ^ line_separator
   ^
-  match env with
+  match env () with
   | Docker_non_interactive ->
     "When running Ligo through Docker, which is non-interactive, the terms will be \
      automatically accepted. However, it is still possible to use 'ligo analytics \
@@ -190,9 +230,67 @@ let gauge_compilation_size_group =
     "compilation_size"
 
 
-let create_id () =
-  Format.asprintf "%a" Uuid.pp (Uuid.create_random Core.Random.State.default)
+let counter_lsp_initialize =
+  Counter.v_labels
+    ~label_names:
+      [ "user"; "repository"; "version"; "syntax"; "ide"; "ide_version"; "agg_id" ]
+    ~registry:agg_registry.collectorRegistry
+    ~help:"ligo lsp initialize request"
+    ~namespace:"ligo"
+    ~subsystem:"tooling"
+    "lsp_initialize"
 
+
+let counter_lsp_restart =
+  Counter.v_labels
+    ~label_names:[ "user"; "repository"; "version" ]
+    ~registry:agg_registry.collectorRegistry
+    ~help:"ligo lsp restarts counter"
+    ~namespace:"ligo"
+    ~subsystem:"tooling"
+    "lsp_restart"
+
+
+let counter_lsp_number_of_crashes =
+  Counter.v_labels
+    ~label_names:[ "repository"; "version"; "user"; "agg_id" ]
+    ~registry:agg_registry.collectorRegistry
+    ~help:"ligo lsp number of crashes on keystrokes"
+    ~namespace:"ligo"
+    ~subsystem:"tooling"
+    "lsp_number_of_crashes"
+
+
+(* HACK: [Gauge.v_labels] can't be called more than once, otherwise it will fail since the
+   metric group will already be registered. Hence we cache it for use by
+   [gauge_lsp_method_time] while its metrics are not pushed and its cache not cleared.
+
+   Moreover, the [prometheus] library offers no way to clear pushed metrics, so they'd get
+   pushed every time to the server. The [prometheus_push] library tries to get around this
+   by "resetting" the collector registry (in this case, [registry.collectorRegistry] with
+   [Prometheus.CollectorRegistry.clear ()]), which also ends up erasing its labels.
+   Therefore, we need to clear this table in [push_collected_metrics_scheduled] to
+   recreate the gauges... *)
+let method_tbl = Hashtbl.create (module String)
+
+let gauge_lsp_method_time method_name =
+  Hashtbl.find_or_add method_tbl method_name ~default:(fun () ->
+      Gauge.v_labels
+        ~label_names:[ "repository"; "version"; "user"; "agg_id"; "index" ]
+        ~registry:registry.collectorRegistry
+        ~help:"ligo lsp method execution time in miliseconds with index of metric"
+        ~namespace:"ligo"
+        ~subsystem:"tooling"
+        (* LSP methods have names like "textDocument/semanticTokens/range", we want to
+           replace these slashes with another character since Prometheus doesn't allow
+           slashes in names. More specifically, they must match the following regex:
+           ^[a-zA-Z_:][a-zA-Z0-9_:]*$ *)
+        (Format.sprintf
+           "lsp_method_execution_time:%s"
+           (String.substr_replace_all ~pattern:"/" ~with_:"_" method_name)))
+
+
+let create_id () = Format.asprintf "%a" Uuid.pp (Uuid.create_random Random.State.default)
 
 let read_file path =
   match OS.File.read Fpath.(v path) with
@@ -238,47 +336,58 @@ let is_term_already_proposed () =
   | Error _ -> false
 
 
+let accepted = "accepted"
+let denied = "denied"
+
 let is_term_accepted () =
   let term_acceptance = read_file term_acceptance_filepath in
-  if String.equal term_acceptance "accepted" then true else false
+  String.equal term_acceptance accepted
 
 
-let is_in_docker =
-  match env with
+let is_in_docker () =
+  match env () with
   | Docker_non_interactive -> true
   | Docker_interactive -> true
   | _ -> false
 
 
-let is_dev_version =
+let is_dev_version () =
   (String.is_prefix Version.version ~prefix:"Rolling release"
   || String.is_empty Version.version)
-  && not is_in_docker
+  && not (is_in_docker ())
 
 
-let rec accept () =
+let rec get_user_answer () =
   match In_channel.input_line In_channel.stdin with
   | Some v ->
     (match v with
-    | "y" -> "accepted"
-    | "n" -> "denied"
-    | _ -> accept ())
+    | "y" -> accepted
+    | "n" -> denied
+    | _ -> get_user_answer ())
   | None ->
-    (match env with
-    | Docker_non_interactive -> "accepted"
-    | _ -> "denied")
+    (match env () with
+    | Docker_non_interactive -> accepted
+    | _ -> denied)
+
+
+let accept () = store accepted term_acceptance_filepath
+let deny () = store denied term_acceptance_filepath
+
+let should_propose_analytics ~skip_analytics =
+  not
+    (skip_analytics
+    || is_skip_analytics_through_env_var
+    || is_term_already_proposed ()
+    || is_in_ci ()
+    || is_dev_version ())
 
 
 let propose_term_acceptation ~skip_analytics =
-  if skip_analytics
-     || is_skip_analytics_through_env_var
-     || is_term_already_proposed ()
-     || is_in_ci
-     || is_dev_version
+  if not (should_propose_analytics ~skip_analytics)
   then ()
   else (
-    Format.eprintf "%s\n%!" acceptance_condition;
-    let user_answer = accept () in
+    Format.eprintf "%s\n%!" (acceptance_condition ());
+    let user_answer = get_user_answer () in
     store user_answer term_acceptance_filepath)
 
 
@@ -287,13 +396,13 @@ let get_user_id () =
   let user_id =
     if current_process_is_in_docker
     then "docker"
-    else get_or_create_id (get_home ^ "/.ligo/user_id")
+    else get_or_create_id (dot_ligo "user_id" true)
   in
   user_id
 
 
 (* Repository id *)
-let get_repository_id () = get_or_create_id ".ligo/repository_id"
+let get_repository_id () = get_or_create_id (dot_ligo "repository_id" false)
 
 (* Analytics *)
 let set ~gauge_group ~labels ~value =
@@ -314,32 +423,34 @@ let inc ~counter_group ~labels ~value =
   ()
 
 
+let should_push_metrics ~skip_analytics =
+  not
+    (skip_analytics
+    || (not (is_term_accepted ()))
+    || is_in_ci ()
+    || is_skip_analytics_through_env_var
+    || is_dev_version ())
+
+
 let push_collected_metrics ~skip_analytics =
-  if skip_analytics
-     || (not (is_term_accepted ()))
-     || is_in_ci
-     || is_skip_analytics_through_env_var
-     || is_dev_version
-  then ()
-  else (
-    let p_1 () =
-      let _ = PushableCollectorRegistry.push agg_registry in
+  if should_push_metrics ~skip_analytics
+  then (
+    let p_1 =
+      let%lwt _ = PushableCollectorRegistry.push agg_registry in
       Lwt.return_unit
     in
-    let p_2 () =
-      let _ = PushableCollectorRegistry.push registry in
+    let p_2 =
+      let%lwt _ = PushableCollectorRegistry.push registry in
       Lwt.return_unit
     in
-    let p_3 = Lwt.join [ p_1 (); p_2 () ] in
-    Lwt_main.run p_3;
-    ())
+    Lwt.join [ p_1; p_2 ])
+  else Lwt.return_unit
 
 
 let determine_syntax_label_from_source source : string =
-  let ext = Caml.Filename.extension source in
-  match ext with
-  | ".mligo" -> "CameLIGO"
-  | ".jsligo" -> "JsLIGO"
+  match Filename.split_extension source with
+  | _, Some "mligo" -> "CameLIGO"
+  | _, Some "jsligo" -> "JsLIGO"
   | _ -> "invalid"
 
 
@@ -349,12 +460,6 @@ let determine_syntax_label syntax source : string =
   | ("cameligo" | "CameLIGO"), _ -> "CameLIGO"
   | ("jsligo" | "JsLIGO"), _ -> "JsLIGO"
   | _ -> "invalid"
-
-
-let get_protocol_label ~raw_options =
-  match raw_options.protocol_version with
-  | "current" -> Environment.Protocols.variant_to_string Environment.Protocols.current
-  | _ -> raw_options.protocol_version
 
 
 let generate_cli_metric ~command =
@@ -368,16 +473,48 @@ let generate_cli_metrics_with_syntax_and_protocol ~command ~raw_options ?source_
     | None -> ""
   in
   let syntax = determine_syntax_label raw_options.syntax source in
-  let protocol_version = get_protocol_label ~raw_options in
   let execution_metric = generate_cli_metric ~command in
   let run_metric =
     { group =
         Counter_cli_execution_by_syntax_and_protocol
-          { command; syntax; protocol = protocol_version }
+          { command; syntax; protocol = Memory_proto_alpha.protocol_str }
     ; metric_value = 1.0
     }
   in
   [ execution_metric; run_metric ]
+
+
+let generate_lsp_initialize_metrics ~syntax ~ide ~ide_version ~session_id () =
+  let run_metric =
+    { group = Counter_lsp_initialize { syntax; ide; ide_version; agg_id = session_id }
+    ; metric_value = 1.0
+    }
+  in
+  [ run_metric ]
+
+
+let generate_lsp_restart_metrics () =
+  let run_metric = { group = Counter_lsp_restart; metric_value = 1.0 } in
+  [ run_metric ]
+
+
+let generate_lsp_number_of_crashes ~session_id ~number_of_crashes_on_keystrokes () =
+  let run_metric =
+    { group = Counter_lsp_number_of_crashes { user = get_user_id (); agg_id = session_id }
+    ; metric_value = float_of_int number_of_crashes_on_keystrokes
+    }
+  in
+  [ run_metric ]
+
+
+let generate_lsp_method_time ~session_id ~name ~times () =
+  let user = get_user_id () in
+  let make_run_metric index time =
+    { group = Gauge_lsp_method_time { user; agg_id = session_id; name; index }
+    ; metric_value = Time_float.Span.to_ms time
+    }
+  in
+  List.mapi ~f:make_run_metric times
 
 
 let get_family_by_group
@@ -389,6 +526,10 @@ let get_family_by_group
   | Counter_cli_transpile _ -> `Ctr counter_cli_transpilation_group
   | Counter_cli_init _ -> `Ctr counter_cli_init_group
   | Gauge_compilation_size _ -> `Gauge gauge_compilation_size_group
+  | Counter_lsp_initialize _ -> `Ctr counter_lsp_initialize
+  | Counter_lsp_restart -> `Ctr counter_lsp_restart
+  | Counter_lsp_number_of_crashes _ -> `Ctr counter_lsp_number_of_crashes
+  | Gauge_lsp_method_time { name; _ } -> `Gauge (gauge_lsp_method_time name)
 
 
 let get_labels_from_group : metric_group -> string list = function
@@ -400,6 +541,12 @@ let get_labels_from_group : metric_group -> string list = function
   | Counter_cli_init { command; template } -> [ command; template ]
   | Gauge_compilation_size { contract_discriminant; syntax; protocol } ->
     [ contract_discriminant; syntax; protocol ]
+  | Counter_lsp_initialize { syntax; ide; ide_version; agg_id } ->
+    [ syntax; ide; ide_version; Uuid.to_string agg_id ]
+  | Counter_lsp_restart -> []
+  | Counter_lsp_number_of_crashes { user; agg_id } -> [ user; Uuid.to_string agg_id ]
+  | Gauge_lsp_method_time { user; agg_id; name = _; index } ->
+    [ user; Uuid.to_string agg_id; Int.to_string index ]
 
 
 let edit_metric_value : analytics_input -> unit =
@@ -412,3 +559,36 @@ let edit_metric_value : analytics_input -> unit =
 
 
 let edit_metrics_values : analytics_inputs -> unit = List.iter ~f:edit_metric_value
+
+let push_collected_metrics_scheduled
+    ~skip_analytics
+    ~time_between_pushes
+    ~should_stop
+    ~collect_metrics
+  =
+  while%lwt should_push_metrics ~skip_analytics && not (should_stop ()) do
+    let should_stop_task () =
+      while%lwt not (should_stop ()) do
+        (* Wait for a second to not get 100% CPU usage. *)
+        let%lwt () = Lwt_unix.sleep 1. in
+        Lwt.pause ()
+      done
+    in
+    let%lwt () =
+      Lwt.pick
+        [ should_stop_task ()
+        ; Lwt_unix.sleep (Time_float.Span.to_sec time_between_pushes)
+        ]
+    in
+    let () = collect_metrics () in
+    let%lwt () =
+      try%lwt
+        let%lwt _ = PushableCollectorRegistry.push registry in
+        Lwt.return_unit
+      with
+      | _ -> Lwt.return_unit
+    in
+    (* See the HACK session in [method_tbl] for the reason this is needed. *)
+    Hashtbl.clear method_tbl;
+    Lwt.return_unit
+  done

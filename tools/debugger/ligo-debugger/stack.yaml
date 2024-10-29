@@ -10,8 +10,6 @@ packages:
 
 extra-deps:
 - dir-traverse-0.2.3.0
-- git: https://github.com/brendanhay/semver.git
-  commit: 540990acfd2d4aaffa17a8337cbfa9a38cb3f2aa  # master with quasi-quoter
 # Morley Debugger and its dependencies
 - git: https://gitlab.com/morley-framework/morley-debugger.git
   commit: 98c0a812f5529a0e3791f56f4051249210a0a905  # master
@@ -88,3 +86,4 @@ extra-deps:
 - monad-validate-1.2.0.1
 - msgpack-binary-0.0.16
 - msgpack-arbitrary-0.1.3
+- msgpack-testsuite-0.1.0

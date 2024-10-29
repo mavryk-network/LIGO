@@ -1,0 +1,9 @@
+(library
+ (name mavryk_utils)
+ (public_name ligo.mavryk-utils)
+ (libraries
+  mavkit-libs.micheline
+  mavkit-libs.base
+  data-encoding
+  simple-utils
+  base))

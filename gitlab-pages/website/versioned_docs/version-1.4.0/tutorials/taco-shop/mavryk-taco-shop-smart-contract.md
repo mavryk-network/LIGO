@@ -122,7 +122,7 @@ function buy_taco(taco_kind_index: nat, taco_shop_storage: taco_shop_storage): [
   list<operation>,
   taco_shop_storage
 ]  {
-    return [list([]), taco_shop_storage]
+    return [[], taco_shop_storage]
   };
 ```
 
@@ -184,7 +184,7 @@ namespace TacoShop {
     list<operation>,
     taco_shop_storage
   ] {
-    return [list([]), taco_shop_storage]
+    return [[], taco_shop_storage]
   };
 };
 
@@ -223,10 +223,10 @@ let default_storage: taco_shop_storage  = Map.literal [
 <Syntax syntax="jsligo">
 
 ```jsligo group=TacoShop
-const default_storage: taco_shop_storage = Map.literal (list([
+const default_storage: taco_shop_storage = Map.literal ([
   [1n, { current_stock : 50n, max_price : 50mav }],
   [2n, { current_stock : 20n, max_price : 75mav }]
-]));
+]);
 ```
 
 </Syntax>
@@ -319,7 +319,7 @@ function buy_taco(taco_kind_index: nat, taco_shop_storage: taco_shop_storage): [
     taco_kind_index,
     (Some (({...taco_kind, current_stock : abs (taco_kind.current_stock - (1n)) }))),
     taco_shop_storage );
-  return [list([]), taco_shop_storage_updated]
+  return [[], taco_shop_storage_updated]
 };
 ```
 
@@ -329,7 +329,7 @@ function buy_taco(taco_kind_index: nat, taco_shop_storage: taco_shop_storage): [
 
 In order to make Pedro's taco shop profitable, he needs to stop giving
 away tacos for free. When a contract is invoked via a transaction, an
-amount of tezzies to be sent can be specified as well. This amount is
+amount of mavzies to be sent can be specified as well. This amount is
 accessible within LIGO as `Mavryk.get_amount`.
 
 To make sure we get paid, we will:
@@ -399,7 +399,7 @@ const buy_taco = (taco_kind_index: nat, taco_shop_storage: taco_shop_storage) : 
       taco_kind_index,
       (Some (({...taco_kind, current_stock : abs (taco_kind.current_stock - 1n) }))),
       taco_shop_storage );
-    return [list([]), taco_shop_storage]
+    return [[], taco_shop_storage]
   }
 };
 ```
@@ -582,7 +582,7 @@ Let's break it down a little bit:
   trying to purchase an unregistered Taco. An auxiliary function to
   check equality of values on maps is defined.
 
-> checkout the [reference page](../../reference/Test.md) for a more detailed description of the Test API
+> checkout the [reference page](../../reference/test.md) for a more detailed description of the Test API
 
 Now it is time to use the LIGO command `test`. It will evaluate our
 smart contract and print the result value of those entries that start

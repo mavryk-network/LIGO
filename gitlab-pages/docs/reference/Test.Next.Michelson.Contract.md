@@ -1,6 +1,6 @@
 ---
 id: test.next.michelson.contract-reference
-title: Contract
+title: contract
 hide_table_of_contents: true
 ---
 import Syntax from '@theme/Syntax';

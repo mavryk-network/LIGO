@@ -11,6 +11,7 @@ let%expect_test _ =
     ; "dev"
     ; "--with-types"
     ; "--no-stdlib"
+    ; "--typer-error-recovery"
     ];
   [%expect
     {|
@@ -51,14 +52,14 @@ let%expect_test _ =
     (b#12:4-5 -> b)
     Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 12, characters 4-5
     Decl Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 12, character 0 to line 14, character 3
-    Content: |unresolved|
+    Content: |resolved: ^gen#770|
     references: []
     Mod Path =
     Def Type = Global
     (j#13:6-7 -> j)
     Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, characters 6-7
     Decl Range: File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, character 2 to line 14, character 2
-    Content: |unresolved|
+    Content: |resolved: ^gen#770|
     references:
       File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 14, characters 2-3
     Mod Path =
@@ -90,7 +91,27 @@ let%expect_test _ =
                     ^^^^^
      14 |   j
 
-    Invalid record field "boo" in record.
+    Underspecified type "^a".
+    Cannot decompile this type.
+    Hint: "^a" represent placeholder type(s).
+
+    File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, characters 10-15:
+     12 | let b =
+     13 |   let j = c.boo in
+                    ^^^^^
+     14 |   j
+
+    Underspecified type "^a".
+    Cannot encode this type.
+    Hint: "^a" represent placeholder type(s).
+
+    File "../../test/contracts/get_scope_tests/bad_field_record.mligo", line 13, characters 10-15:
+     12 | let b =
+     13 |   let j = c.boo in
+                    ^^^^^
+     14 |   j
+
+    Invalid record field "boo" in record of type "record[bar -> int , foo -> int]".
 
 |}];
   run_ligo_good
@@ -101,6 +122,7 @@ let%expect_test _ =
     ; "dev"
     ; "--with-types"
     ; "--no-stdlib"
+    ; "--typer-error-recovery"
     ];
   [%expect
     {|
@@ -128,7 +150,7 @@ let%expect_test _ =
     (y#2:6-7 -> y)
     Range: File "../../test/contracts/get_scope_tests/local_type.mligo", line 2, characters 6-7
     Decl Range: File "../../test/contracts/get_scope_tests/local_type.mligo", line 2, character 2 to line 3, character 2
-    Content: |unresolved|
+    Content: |resolved: int|
     references: []
     Mod Path =
     Def Type = Local
@@ -181,6 +203,7 @@ let%expect_test _ =
     ; "dev"
     ; "--with-types"
     ; "--no-stdlib"
+    ; "--typer-error-recovery"
     ];
   [%expect
     {|
@@ -207,6 +230,7 @@ let%expect_test _ =
     ; "dev"
     ; "--with-types"
     ; "--no-stdlib"
+    ; "--typer-error-recovery"
     ];
   [%expect
     {|
@@ -240,6 +264,7 @@ let%expect_test _ =
     ; "dev"
     ; "--with-types"
     ; "--no-stdlib"
+    ; "--typer-error-recovery"
     ];
   [%expect
     {|
@@ -365,6 +390,7 @@ let%expect_test _ =
     ; "dev"
     ; "--with-types"
     ; "--no-stdlib"
+    ; "--typer-error-recovery"
     ];
   [%expect
     {|
@@ -401,6 +427,7 @@ let%expect_test _ =
     ; "dev"
     ; "--with-types"
     ; "--no-stdlib"
+    ; "--typer-error-recovery"
     ];
   [%expect
     {|

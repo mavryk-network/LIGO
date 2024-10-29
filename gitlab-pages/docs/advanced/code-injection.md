@@ -93,7 +93,7 @@ Contracts with embedded Michelson code are compiled normally like any
 other contract. We give an example of a contract that uses the type
 `never`, a new Michelson type that represents the empty type. You can
 read more about it
-[here](https://tezos.gitlab.io/active/michelson.html#operations-on-type-never).
+[here](https://protocol.mavryk.org/active/michelson.html#operations-on-type-never).
 
 We will use the Michelson instruction `NEVER` to resolve a forbidden
 branch when matching on the parameter of our contract:
@@ -133,7 +133,7 @@ function main (action: parameter, store: storage) : [list<operation>, storage] {
       Increment: n => store + n,
       Extend: k => (Michelson`{ NEVER }` as ((n: never) => int))(k)
     });
-  return [list([]), storage];
+  return [[], storage];
 };
 ```
 

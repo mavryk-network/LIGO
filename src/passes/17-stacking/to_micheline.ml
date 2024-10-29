@@ -1,9 +1,10 @@
-module List = Core.List
-module Location = Simple_utils.Location
+open Core
 open Mavryk_micheline.Micheline
+open Ligo_prim
+module Location = Simple_utils.Location
+module Ligo_string = Simple_utils.Ligo_string
 module Compiler = Ligo_coq_ocaml.Compiler
 module Datatypes = Ligo_coq_ocaml.Datatypes
-open Ligo_prim
 
 type meta = Mini_c.meta
 
@@ -29,7 +30,6 @@ let smaller m1 m2 =
     optimize
       ~experimental_disable_optimizations_for_debugging:false
       ~has_comment:(fun _ -> false)
-      Environment.Protocols.current
   in
   let%bind loc1 = measure (optimize (Seq (null, m1))) in
   let%bind loc2 = measure (optimize (Seq (null, m2))) in
@@ -110,7 +110,7 @@ let literal_value (l : Literal_value.t) : (meta, string) node =
   | Literal_nat x -> Int (null, x)
   | Literal_timestamp x -> Int (null, x)
   | Literal_mumav x -> Int (null, x)
-  | Literal_string x -> String (null, Simple_utils.Ligo_string.extract x)
+  | Literal_string x -> String (null, Ligo_string.extract x)
   | Literal_bytes x -> Bytes (null, x)
   | Literal_address x -> String (null, x)
   | Literal_signature x -> String (null, x)

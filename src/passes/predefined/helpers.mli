@@ -1,5 +1,5 @@
 module Michelson : sig
-  open Tezos_utils.Michelson
+  open Mavryk_utils.Michelson
 
   type predicate
 

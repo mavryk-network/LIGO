@@ -1,8 +1,8 @@
-# Maintainer: LigoLang <infra at marigold dot dev>
+# Maintainer: LigoLang <infra at trili dot tech>
 pkgname=ligo-bin
 pkgver=LIGO_VERSION_PLACEHOLDER
 pkgrel=1
-pkgdesc="High Level Smart Contract Language for Tezos (binary)"
+pkgdesc="High Level Smart Contract Language for Mavryk (binary)"
 url="https://gitlab.com/mavryk-network/ligo"
 
 arch=('x86_64')

@@ -1,7 +1,8 @@
-module Trace = Simple_utils.Trace
-module Ligo_string = Simple_utils.Ligo_string
+open Core
 open Ligo_prim
 open Ast_aggregated
+module Trace = Simple_utils.Trace
+module Ligo_string = Simple_utils.Ligo_string
 include Fuzz_shared.Monad
 
 type mutation = Location.t * expression * string
@@ -60,14 +61,12 @@ let add_all_lines_to_buffer : In_channel.t -> Buffer.t -> unit =
   loop_lines ()
 
 
-let expression_to_string ~syntax aggregated =
+let expression_to_string ~raise ~syntax aggregated =
   let aggregated = Reduplicate_binders.reduplicate ~raise aggregated in
   let typed = Aggregation.decompile aggregated in
-  let core = Decompile.Of_typed.decompile_expression typed in
+  let core = Decompile.Of_typed.decompile_expression ~raise typed in
   let unified =
-    let raise =
-      Simple_utils.Trace.raise_failwith "Could not decompile in mutation fuzz"
-    in
+    let raise = Trace.raise_failwith "Could not decompile in mutation fuzz" in
     Decompile.Of_core.decompile_expression ~raise ~syntax core
   in
   let buffer = Decompile.Of_unified.decompile_expression unified syntax in
@@ -238,11 +237,14 @@ module Mutator = struct
     | l -> return (l, false)
 
 
+  let rec remove_element x = function
+    | [] -> []
+    | hd :: tl when Constant.compare_constant' x hd = 0 -> tl
+    | hd :: tl -> hd :: remove_element x tl
+
+
   let mutate_constant (Constant.{ cons_name; arguments } as const) final_type =
-    let ops =
-      List.remove_element ~compare:Constant.compare_constant' cons_name
-      @@ map_constant cons_name arguments final_type
-    in
+    let ops = remove_element cons_name @@ map_constant cons_name arguments final_type in
     let mapper x = { const with cons_name = x }, true in
     let swapper cons_name arguments =
       match cons_name with
@@ -260,11 +262,11 @@ module Mutator = struct
     let return expression_content = { e' with expression_content } in
     let self = mutate_expression in
     match e'.expression_content with
-    | E_matching { matchee; disc_label; cases } ->
+    | E_matching { matchee; cases } ->
       let+ matchee, cases, mutation =
         combine matchee (self matchee) cases (mutate_cases cases)
       in
-      return @@ E_matching { matchee; disc_label; cases }, mutation
+      return @@ E_matching { matchee; cases }, mutation
     | E_accessor { struct_; path } ->
       let+ struct_, mutation = self struct_ in
       return @@ E_accessor { struct_; path }, mutation

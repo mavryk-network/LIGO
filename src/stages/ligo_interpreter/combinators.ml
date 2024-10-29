@@ -75,7 +75,7 @@ let get_typed_address : value -> Mavryk_protocol.Protocol.Alpha_context.Contract
   | _ -> None
 
 
-let get_michelson_contract : value -> unit Tezos_utils.Michelson.michelson option
+let get_michelson_contract : value -> unit Mavryk_utils.Michelson.michelson option
   = function
   | V_Michelson_contract x -> Some x
   | _ -> None
@@ -255,8 +255,8 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
     Mavryk_protocol.Protocol.Alpha_context.Contract.compare a a'
   | ( C_contract { address = a; entrypoint = e }
     , C_contract { address = a'; entrypoint = e' } ) ->
-    (match Mavryk_protocol.Protocol.Alpha_context.Contract.compare a a' with
-    | 0 -> Option.compare String.compare e e'
+    (match Contract.compare a a' with
+    | 0 -> Option.compare Entrypoint_repr.compare e e'
     | c -> c)
   | C_key_hash kh, C_key_hash kh' -> Mavryk_crypto.Signature.Public_key_hash.compare kh kh'
   | C_key k, C_key k' -> Mavryk_crypto.Signature.Public_key.compare k k'
@@ -364,24 +364,24 @@ let rec compare_value (v : value) (v' : value) : int =
     | c -> c)
   | V_Michelson m, V_Michelson m' ->
     (match m, m' with
-    | Ty_code t, Ty_code t' -> Caml.compare t t'
+    | Ty_code t, Ty_code t' -> Stdlib.compare t t'
     | Untyped_code _, Ty_code _ -> -1
-    | Untyped_code c, Untyped_code c' -> Caml.compare c c'
+    | Untyped_code c, Untyped_code c' -> Stdlib.compare c c'
     | Ty_code _, Untyped_code _ -> 1)
   | V_Mutation (l, e, _), V_Mutation (l', e', _) ->
     (match Location.compare l l' with
-    | 0 -> Caml.compare e e'
+    | 0 -> Stdlib.compare e e'
     | c -> c)
-  | V_Michelson_contract c, V_Michelson_contract c' -> Caml.compare c c'
+  | V_Michelson_contract c, V_Michelson_contract c' -> Stdlib.compare c c'
   | V_Ast_contract { main; views = _ }, V_Ast_contract { main = main'; views = _ } ->
-    Caml.compare main main'
-  | V_Func_val f, V_Func_val f' -> Caml.compare f f'
-  | V_Gen v, V_Gen v' -> Caml.compare v v'
+    Stdlib.compare main main'
+  | V_Func_val f, V_Func_val f' -> Stdlib.compare f f'
+  | V_Gen v, V_Gen v' -> Stdlib.compare v v'
   | V_Location loc, V_Location loc' -> Int.compare loc loc'
   | V_Typed_address a, V_Typed_address a' ->
     Mavryk_protocol.Protocol.Alpha_context.Contract.compare a a'
   | V_Views vs, V_Views vs' ->
-    List.compare (Tuple2.compare ~cmp1:String.compare ~cmp2:Caml.compare) vs vs'
+    List.compare (Tuple2.compare ~cmp1:String.compare ~cmp2:Stdlib.compare) vs vs'
   | ( ( V_Ct _
       | V_List _
       | V_Record _

@@ -15,6 +15,6 @@ type account_data = {
 type ledger = map <account, account_data>;
 
 const my_ledger : ledger =
-  Map.literal(list([
+  Map.literal([
     ["mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address,
-     {balance: 10mumav, transactions: 5n}]]));
+     {balance: 10mumav, transactions: 5n}]]);

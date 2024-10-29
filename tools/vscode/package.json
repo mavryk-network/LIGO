@@ -4,7 +4,7 @@
     "description": "LIGO VSCode extension includes syntax highlighting, debugger, and a language server for LIGO.",
     "author": "Serokell",
     "license": "MIT",
-    "version": "1.4.0",
+    "version": "1.6.0",
     "repository": {
         "type": "git",
         "url": "https://gitlab.com/mavryk-network/ligo"
@@ -89,7 +89,7 @@
                     "default": [],
                     "markdownDescription": "Disable specific LIGO LSP features. For a list of features, see [the README.md](https://gitlab.com/mavryk-network/ligo/-/blob/dev/tools/vscode/README.md)."
                 },
-                "ligoLanguageServer.tezos_source_account": {
+                "ligoLanguageServer.mavryk_source_account": {
                     "scope": "resource",
                     "type": "string",
                     "default": "baker",
@@ -137,6 +137,18 @@
                     ],
                     "default": "on document link request",
                     "markdownDescription": "When should the language server publish diagnostics for files?\n - 'on doc update' means running checks on each keystroke which can lead to performance problems\n - 'on document link request' relies on the `textDocument/documentLink` request sent automatically by VSCode when the user stops typing\n - 'on save' checks a file and publishes diagnostics for it after the file was saved\nNote: the file is also always checked when the language server receives a request like hover/completion/etc"
+                },
+                "ligoLanguageServer.metadataChecksDownloading": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Allow metadata checks to visit specified external resources (relevant for e.g. TZIP-16 metadata)."
+                },
+                "ligoLanguageServer.metadataChecksDownloadTimeout": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 10,
+                    "description": "Time limit (in seconds) for metadata checks that involve downloading from external resource.\nTakes effect only when metadata checks downloading is enabled."
                 },
                 "ligoDebugger.maxSteps": {
                     "scope": "resource",
@@ -199,12 +211,12 @@
             },
             {
                 "command": "ligo.deploy",
-                "title": "Tezos: Deploy the current contract",
+                "title": "Mavryk: Deploy the current contract",
                 "description": "Deploys the current contract on a given network"
             },
             {
                 "command": "ligo.generateDeployScript",
-                "title": "Tezos: Generate deploy script",
+                "title": "Mavryk: Generate deploy script",
                 "description": "Generates deploy script for a given contract"
             },
             {
@@ -439,13 +451,12 @@
         "extest-deploy": "npm run build-tests && extest setup-and-run --yarn --offline --code_version 1.81.1 client/out/test/vsc-test/commands-deploy.test.js"
     },
     "dependencies": {
-        "@airgap/beacon-sdk": "^3.0.0",
-        "@taquito/signer": "^17.0.0",
-        "@taquito/taquito": "^17.0.0",
+        "@mavrykdynamics/beacon-sdk": "^4.2.3",
+        "@mavrykdynamics/taquito-signer": "^19.2.3",
+        "@mavrykdynamics/taquito": "^19.2.3",
         "@vscode/debugadapter-testsupport": "1.55.1",
         "@vscode/debugprotocol": "1.55.1",
         "axios": "^1.4.0",
-        "detect-installer": "git+https://github.com/ligolang/detect-installer.git",
         "fs-extra": "^11.1.0",
         "node-fetch": "^3.2.3",
         "semver": "^7.3.5",
@@ -456,7 +467,7 @@
         "@types/copy-paste": "^1.1.30",
         "@types/glob": "^7.2.0",
         "@types/mocha": "^10.0.1",
-        "@types/node": "^20.1.0",
+        "@types/node": "^20.4.4",
         "@types/vscode": "^1.78.0",
         "@typescript-eslint/eslint-plugin": "^4.27.0",
         "@typescript-eslint/parser": "^4.27.0",

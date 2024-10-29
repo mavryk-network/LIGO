@@ -1,4 +1,4 @@
-open Tezos_utils
+open Mavryk_utils
 open Michelson
 open Mavryk_micheline.Micheline
 

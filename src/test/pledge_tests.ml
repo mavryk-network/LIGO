@@ -36,7 +36,7 @@ let pledge ~raise f () =
   let options =
     make_options
       ~sender:oracle_contract
-      ~amount:Memory_proto_alpha.Protocol.Alpha_context.Tez.one
+      ~amount:Memory_proto_alpha.Protocol.Alpha_context.Mav.one
       ()
   in
   expect_eq

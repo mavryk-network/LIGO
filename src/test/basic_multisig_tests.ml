@@ -47,7 +47,7 @@ let op_list ~raise =
   let operation
       : _ Memory_proto_alpha.Protocol.Script_typed_ir.internal_operation_contents
     =
-    Transaction_to_implicit { destination; amount = Tez.zero }
+    Transaction_to_implicit { destination; amount = Mav.zero }
   in
   let internal_operation
       : Memory_proto_alpha.Protocol.Script_typed_ir.packed_internal_operation
@@ -87,12 +87,11 @@ let params ~raise counter payload keys is_validl f =
     let pkh, _, _ = str_keys key in
     let msg =
       e_tuple ~loc
-      @@ List.Ne.of_list
-           [ payload
-           ; e_nat ~loc counter
-           ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
-           ; chain_id_zero
-           ]
+      @@ [ payload
+         ; e_nat ~loc counter
+         ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
+         ; chain_id_zero
+         ]
     in
     let%map signature = sign_message ~raise prog msg sk in
     e_pair ~loc (e_key_hash ~loc pkh) (e_signature ~loc signature) :: acc

@@ -1,7 +1,8 @@
-let map_expression = Ast_aggregated.Helpers.map_expression
-
+open Core
 open Ligo_prim
 open Ast_aggregated
+
+let map_expression = Ast_aggregated.Helpers.map_expression
 
 (* Utilities *)
 
@@ -139,8 +140,8 @@ let uncurried_rows (depth : int) (args : type_expression list) : row =
 let uncurried_record_type ~loc depth args =
   let record_type = uncurried_rows depth args in
   { type_content = T_record record_type
-  ; orig_var = None
   ; location = loc
+  ; abbrev = None
   ; source_type = None
   }
 
@@ -176,8 +177,7 @@ let uncurry_rhs (depth : int) (expr : expression) =
   in
   let pattern = Location.wrap ~loc (Pattern.P_record fields) in
   let result =
-    { expression_content =
-        E_matching { matchee; disc_label = None; cases = [ { pattern; body } ] }
+    { expression_content = E_matching { matchee; cases = [ { pattern; body } ] }
     ; location = loc
     ; type_expression = body.type_expression
     }
@@ -278,10 +278,10 @@ let rec uncurry_in_expression ~raise (f : Value_var.t) (depth : int) (expr : exp
   | E_constructor { constructor; element } ->
     let element = self element in
     return (E_constructor { constructor; element })
-  | E_matching { matchee; disc_label; cases } ->
+  | E_matching { matchee; cases } ->
     let matchee = self matchee in
     let cases = self_cases cases in
-    return (E_matching { matchee; disc_label; cases })
+    return (E_matching { matchee; cases })
   | E_record fields ->
     let fields = Record.map ~f:self fields in
     return (E_record fields)
@@ -411,7 +411,7 @@ let uncurry_expression (expr : expression) : expression =
               ; type_expression =
                   { type_content =
                       T_arrow { type1 = record_type; type2 = ret_type; param_names = [] }
-                  ; orig_var = None
+                  ; abbrev = None
                   ; location = loc
                   ; source_type = None
                   }

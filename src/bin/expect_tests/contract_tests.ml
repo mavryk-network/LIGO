@@ -189,48 +189,25 @@ let%expect_test _ =
     [ "compile"; "contract"; bad_contract "interfaces.optional.jsligo"; "-m"; "FAAll" ];
   [%expect
     {|
-    File "../../test/contracts/negative/interfaces.optional.jsligo", line 33, character 0 to line 49, character 1:
-     32 |
-     33 | namespace ImplAll implements FAAll {
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     34 |   type t = int;
+    File "../../test/contracts/negative/interfaces.optional.jsligo", line 17, character 0 to line 23, character 1:
+     16 |
+     17 | namespace Impl implements FA0Ext, FA1 {
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     18 |   type t = int;
           ^^^^^^^^^^^^^^^
-     35 |
+     19 |
 
-     36 |   @entry const transfer = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     37 |   @entry const other1 = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     38 |   @entry const other2 = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     39 |   @entry const other3 = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     40 |   @view const v1 = (_u : unit, s : t) : t => s;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     41 |   /* this is wrong because juju has a different type */
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     42 |   @entry const juju = (_i : string, s : t) : [list<operation>, t] => [list([]), s];
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     43 |
-
-     44 |   /* foo, other4 and v2 are not in FAAll, but still added, because filtering
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     45 |      is not enabled */
-          ^^^^^^^^^^^^^^^^^^^^^^
-     46 |   export const foo = (s : t) : t => s;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     47 |   @entry const other4 = (_u : unit, s : t) : [list<operation>, t] => [list([]), s];
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     48 |   @view const v2 = (_u : unit, s : t) : t => s;
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     49 | }
+     20 |   @entry const transfer = (_u : unit, s : t) : [list<operation>, t] => [[], s];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     21 |   @entry const other1 = (_u : unit, s : t) : [list<operation>, t] => [[], s];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     22 |   @entry const other2 = (_u : unit, s : t) : [list<operation>, t] => [[], s];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     23 | };
           ^
-     50 |
+     24 |
 
-    Value "juju" does not match.
-    Expected "[_i, s]string -> int -> ( list (operation) * int )", but got: "[i, s]int -> int ->
-    ( list (operation) *
-      int )". |}];
+    Type "t" declared in signature but not found. |}];
   run_ligo_good [ "run"; "test"; contract "interfaces.include.jsligo" ];
   [%expect
     {|
@@ -328,12 +305,11 @@ let%expect_test _ =
     [ "compile"
     ; "expression"
     ; "jsligo"
-    ; "f(list([1,2,3,4,5]))"
+    ; "f([1,2,3,4,5])"
     ; "--init-file"
     ; contract "implicit_cast.jsligo"
     ];
-  [%expect {|
-    3 |}]
+  [%expect {| 3 |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -356,8 +332,7 @@ let%expect_test _ =
     ; "--init-file"
     ; contract "implicit_cast.mligo"
     ];
-  [%expect {|
-    True |}]
+  [%expect {| True |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -376,6 +351,33 @@ let%expect_test _ =
     [ "compile"; "contract"; contract "FA1.2.interface.mligo"; "-m"; "FA12_ENTRIES" ];
   [%expect
     {|
+    File "../../test/contracts/FA1.2.entries.mligo", line 108, characters 3-20:
+    107 |     | None -> 0n in
+    108 |   [Mavryk.transaction value 0mumav param.callback], storage
+             ^^^^^^^^^^^^^^^^^^
+    109 |
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
+    File "../../test/contracts/FA1.2.entries.mligo", line 116, characters 3-20:
+    115 |     | None -> 0n in
+    116 |   [Mavryk.transaction value 0mumav param.callback], storage
+             ^^^^^^^^^^^^^^^^^^
+    117 |
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
+    File "../../test/contracts/FA1.2.entries.mligo", line 121, characters 3-20:
+    120 |   let total = storage.total_supply in
+    121 |   [Mavryk.transaction total 0mumav param.callback],storage
+             ^^^^^^^^^^^^^^^^^^
+    122 |
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
     { parameter
         (or (pair %getTotalSupply (unit %request) (contract %callback nat))
             (or (pair %getBalance (address %owner) (contract %callback nat))
@@ -448,15 +450,15 @@ let%expect_test _ =
                              GT ;
                              AND ;
                              IF { PUSH string "UnsafeAllowanceChange" ; FAILWITH } {} ;
-                             DIG 2 ;
+                             DIG 3 ;
+                             DIG 3 ;
                              CDR ;
                              DIG 3 ;
-                             DIG 3 ;
                              PUSH nat 0 ;
-                             DUP 4 ;
+                             DUP 3 ;
                              COMPARE ;
                              EQ ;
-                             IF { DIG 2 ; DROP ; NONE nat } { DIG 2 ; SOME } ;
+                             IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
                              DIG 3 ;
                              UPDATE ;
                              UPDATE 3 }
@@ -554,6 +556,13 @@ let%expect_test _ =
       storage (list int) ;
       code { UNPAIR ;
              NIL int ;
+             DIG 2 ;
+             NIL int ;
+             SWAP ;
+             ITER { CONS } ;
+             ITER { CONS } ;
+             SWAP ;
+             NIL int ;
              SWAP ;
              ITER { CONS } ;
              ITER { CONS } ;
@@ -650,7 +659,7 @@ let%expect_test _ =
       2 | const main = (u : unit, _ : unit) : [list<operation>, unit] => {
       3 |   let [op, _addr] = (create_contract_of_file `./removed.mv`)(None(), 1mav, u);
                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      4 |   return [list([op]), []]
+      4 |   return [[op], []]
 
     Found a system error: ./removed.mv: No such file or directory. |}]
 
@@ -835,11 +844,11 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "ticket_builder.mligo" ];
   [%expect
     {|
-    File "../../test/contracts/ticket_builder.mligo", line 29, characters 30-36:
-     28 |         begin
-     29 |           let ((ticketer, _), ticket) =
+    File "../../test/contracts/ticket_builder.mligo", line 31, characters 30-36:
+     30 |         begin
+     31 |           let ((ticketer, _), ticket) =
                                         ^^^^^^
-     30 |             (Mavryk.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
+     32 |             (Mavryk.Ticket.read ticket : (address * (unit * nat)) * unit ticket) in
     :
     Warning: unused variable "ticket".
     Hint: replace it by "_ticket" to prevent this warning.
@@ -1150,7 +1159,7 @@ File "../../test/contracts/negative/create_contract_toplevel.mligo", line 5, cha
       ^^^^^^^^
  10 |   in
 
-Not all free variables could be inlined in Mavryk.create_contract usage: gen#385. |}];
+Not all free variables could be inlined in Mavryk.create_contract usage: gen#430. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract_var.mligo" ];
   [%expect
     {|
@@ -1242,7 +1251,7 @@ Not all free variables could be inlined in Mavryk.create_contract usage: gen#385
           ^^^^^^^^^^
      15 |   ([toto.0], store)
 
-    Not all free variables could be inlined in Mavryk.create_contract usage: gen#386. |}];
+    Not all free variables could be inlined in Mavryk.create_contract usage: gen#431. |}];
   run_ligo_bad [ "compile"; "contract"; bad_contract "create_contract_no_inline.mligo" ];
   [%expect
     {|
@@ -1305,7 +1314,7 @@ Not all free variables could be inlined in Mavryk.create_contract usage: gen#385
           ^^^^^^^
      15 |   let toto : operation list = [op] in
 
-    Not all free variables could be inlined in Mavryk.create_contract usage: foo#400. |}];
+    Not all free variables could be inlined in Mavryk.create_contract usage: foo#445. |}];
   run_ligo_good [ "compile"; "contract"; contract "create_contract.mligo" ];
   [%expect
     {|
@@ -1517,6 +1526,15 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "self_annotations.mligo" ];
   [%expect
     {|
+    File "../../test/contracts/self_annotations.mligo", line 8, characters 11-28:
+      7 |   let c = (Mavryk.self ("%foo") : unit contract) in
+      8 |   let op = Mavryk.transaction () 0mumav c in
+                     ^^^^^^^^^^^^^^^^^^
+      9 |   ([op] : operation list), ()
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
     { parameter (or (unit %foo) (unit %b)) ;
       storage unit ;
       code { DROP ;
@@ -2148,27 +2166,20 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } |}]
 
-let%expect_test _ =
-  run_ligo_bad [ "compile"; "contract"; contract "increment.ligo" ];
-  [%expect
-    {|
-    Invalid file extension for '../../test/contracts/increment.ligo'.
-    PascaLIGO is deprecated.
-    Hint: You can use LIGO 0.73.0 with the --deprecated flag. |}]
-
-let%expect_test _ =
-  run_ligo_bad [ "compile"; "expression"; "pascaligo"; "1 + 1" ];
-  [%expect
-    {|
-    Invalid syntax.
-    PascaLIGO is deprecated.
-    Hint: You can use LIGO 0.73.0 with the --deprecated flag. |}]
-
 (* Test compiling a contract with a get_entrypoint_opt to a capitalized entrypoint *)
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "get_capitalized_entrypoint.mligo" ];
   [%expect
     {|
+    File "../../test/contracts/get_capitalized_entrypoint.mligo", line 7, characters 25-42:
+      6 |   | Some dst ->
+      7 |     let op : operation = Mavryk.transaction () 0mumav dst in
+                                   ^^^^^^^^^^^^^^^^^^
+      8 |     ([op], ())
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
     { parameter unit ;
       storage unit ;
       code { DROP ;
@@ -2649,7 +2660,7 @@ let%expect_test _ =
       2 | const main = (_u : unit, _b : address) : [list <operation>, address] => {
       3 |   let c : contract<int> = Option.unopt(Mavryk.get_entrypoint_opt ("%foo", Mavryk.get_sender()));
                                     ^^^^^^^^^^^^
-      4 |   return [list([]) as list <operation>, Mavryk.address(c)];
+      4 |   return [[] as list <operation>, Mavryk.address(c)];
     :
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
@@ -2672,7 +2683,18 @@ let%expect_test _ =
 (* make sure that in compile storage/expression we can check SELF *)
 let%expect_test _ =
   run_ligo_good [ "compile"; "storage"; contract "self_annotations.mligo"; "()" ];
-  [%expect {| Unit |}]
+  [%expect
+    {|
+    File "../../test/contracts/self_annotations.mligo", line 8, characters 11-28:
+      7 |   let c = (Mavryk.self ("%foo") : unit contract) in
+      8 |   let op = Mavryk.transaction () 0mumav c in
+                     ^^^^^^^^^^^^^^^^^^
+      9 |   ([op] : operation list), ()
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
+    Unit |}]
 
 (* check tag in Mavryk.emit *)
 let%expect_test _ =
@@ -2706,7 +2728,8 @@ let%expect_test _ =
     ; "-m"
     ; "Contract"
     ];
-  [%expect {| Unit |}];
+  [%expect {|
+    Unit |}];
   run_ligo_good
     [ "compile"
     ; "parameter"
@@ -2715,7 +2738,8 @@ let%expect_test _ =
     ; "-m"
     ; "Contract"
     ];
-  [%expect {| Unit |}];
+  [%expect {|
+    Unit |}];
   run_ligo_good
     [ "compile"
     ; "parameter"
@@ -2724,7 +2748,8 @@ let%expect_test _ =
     ; "-m"
     ; "Contract"
     ];
-  [%expect {| Unit |}]
+  [%expect {|
+    Unit |}]
 
 (* make sure that in compile storage we annotate the type *)
 let%expect_test _ =
@@ -2763,45 +2788,35 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "disc_union_vbar.jsligo" ];
   [%expect
     {|
-    File "../../test/contracts/disc_union_vbar.jsligo", line 14, characters 10-20:
-     13 |   let planetType = p.planetType;
-     14 |   switch (planetType.kind) {
-                    ^^^^^^^^^^
-     15 |     case "Tellurian":
-    :
-    Warning: unused variable "planetType".
-    Hint: replace it by "_planetType" to prevent this warning.
-
-    File "../../test/contracts/disc_union_vbar.jsligo", line 14, characters 10-20:
-     13 |   let planetType = p.planetType;
-     14 |   switch (planetType.kind) {
-                    ^^^^^^^^^^
-     15 |     case "Tellurian":
-    :
-    Warning: unused variable "planetType".
-    Hint: replace it by "_planetType" to prevent this warning.
-
-    File "../../test/contracts/disc_union_vbar.jsligo", line 14, characters 10-20:
-     13 |   let planetType = p.planetType;
-     14 |   switch (planetType.kind) {
-                    ^^^^^^^^^^
-     15 |     case "Tellurian":
-    :
-    Warning: unused variable "planetType".
-    Hint: replace it by "_planetType" to prevent this warning.
-
     { parameter
         (pair (string %name)
-              (or %planetType (unit %tellurian) (or (unit %gaseous) (unit %other)))
+              (or %planetType
+                 (string %union.Injection_0)
+                 (or (string %union.Injection_1) (string %union.Injection_2)))
               (option %lord address)) ;
       storage int ;
       code { CAR ;
              PUSH int 0 ;
-             SWAP ;
+             LAMBDA (or string string) unit { DROP ; UNIT } ;
+             DUP 3 ;
              GET 3 ;
              IF_LEFT
-               { DROP ; PUSH int 1 ; ADD }
-               { IF_LEFT { DROP ; PUSH int 2 ; SWAP ; SUB } { DROP 2 ; PUSH int 0 } } ;
+               { DROP 2 ; PUSH int 1 ; ADD }
+               { IF_LEFT { LEFT string ; EXEC ; DROP } { RIGHT string ; EXEC ; DROP } } ;
+             LAMBDA (or string string) unit { DROP ; UNIT } ;
+             DUP 3 ;
+             GET 3 ;
+             IF_LEFT
+               { LEFT string ; EXEC ; DROP }
+               { IF_LEFT
+                   { DROP 2 ; PUSH int 2 ; SWAP ; SUB }
+                   { RIGHT string ; EXEC ; DROP } } ;
+             LAMBDA (or string string) unit { DROP ; UNIT } ;
+             DIG 2 ;
+             GET 3 ;
+             IF_LEFT
+               { LEFT string ; EXEC ; DROP }
+               { IF_LEFT { RIGHT string ; EXEC ; DROP } { DROP 3 ; PUSH int 0 } } ;
              NIL operation ;
              PAIR } } |}]
 
@@ -2955,7 +2970,7 @@ let%expect_test _ =
                 ^^^^^^
       9 |     return failwith("You need to be part of Mavryk organization to activate an organization");
 
-    Not an entrypoint: [_p]record[admins -> int , name -> string] -> ∀ gen#5 : * . [_s]int -> gen#5 |}]
+    Not an entrypoint: [_p]record[admins -> int , name -> string] -> ∀ a : * . [_s]int -> a |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "increment_module.jsligo"; "-m"; "C" ];
@@ -2972,6 +2987,33 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "FA1.2.entries.mligo" ];
   [%expect
     {|
+    File "../../test/contracts/FA1.2.entries.mligo", line 108, characters 3-20:
+    107 |     | None -> 0n in
+    108 |   [Mavryk.transaction value 0mumav param.callback], storage
+             ^^^^^^^^^^^^^^^^^^
+    109 |
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
+    File "../../test/contracts/FA1.2.entries.mligo", line 116, characters 3-20:
+    115 |     | None -> 0n in
+    116 |   [Mavryk.transaction value 0mumav param.callback], storage
+             ^^^^^^^^^^^^^^^^^^
+    117 |
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
+    File "../../test/contracts/FA1.2.entries.mligo", line 121, characters 3-20:
+    120 |   let total = storage.total_supply in
+    121 |   [Mavryk.transaction total 0mumav param.callback],storage
+             ^^^^^^^^^^^^^^^^^^
+    122 |
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
     { parameter
         (or (pair %getTotalSupply (unit %request) (contract %callback nat))
             (or (pair %getBalance (address %owner) (contract %callback nat))
@@ -3044,15 +3086,15 @@ let%expect_test _ =
                              GT ;
                              AND ;
                              IF { PUSH string "UnsafeAllowanceChange" ; FAILWITH } {} ;
-                             DIG 2 ;
+                             DIG 3 ;
+                             DIG 3 ;
                              CDR ;
                              DIG 3 ;
-                             DIG 3 ;
                              PUSH nat 0 ;
-                             DUP 4 ;
+                             DUP 3 ;
                              COMPARE ;
                              EQ ;
-                             IF { DIG 2 ; DROP ; NONE nat } { DIG 2 ; SOME } ;
+                             IF { SWAP ; DROP ; NONE nat } { SWAP ; SOME } ;
                              DIG 3 ;
                              UPDATE ;
                              UPDATE 3 }
@@ -3139,7 +3181,35 @@ let%expect_test _ =
        = 3n }"
     ];
   [%expect
-    {| (Right (Right (Right (Left (Pair "mv2fakefakefakefakefakefakefak82z7t2" 3))))) |}]
+    {|
+      File "../../test/contracts/FA1.2.entries.mligo", line 108, characters 3-20:
+      107 |     | None -> 0n in
+      108 |   [Mavryk.transaction value 0mumav param.callback], storage
+               ^^^^^^^^^^^^^^^^^^
+      109 |
+      :
+      Warning: deprecated value.
+      In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
+      File "../../test/contracts/FA1.2.entries.mligo", line 116, characters 3-20:
+      115 |     | None -> 0n in
+      116 |   [Mavryk.transaction value 0mumav param.callback], storage
+               ^^^^^^^^^^^^^^^^^^
+      117 |
+      :
+      Warning: deprecated value.
+      In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
+      File "../../test/contracts/FA1.2.entries.mligo", line 121, characters 3-20:
+      120 |   let total = storage.total_supply in
+      121 |   [Mavryk.transaction total 0mumav param.callback],storage
+               ^^^^^^^^^^^^^^^^^^
+      122 |
+      :
+      Warning: deprecated value.
+      In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Operation.transaction` from `Mavryk.Next` is encouraged for a smoother migration.
+
+      (Right (Right (Right (Left (Pair "mv2fakefakefakefakefakefakefak82z7t2" 3))))) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "pokeGame.jsligo" ];
@@ -3153,6 +3223,15 @@ let%expect_test _ =
     :
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
+
+    File "../../test/contracts/pokeGame.jsligo", line 102, characters 44-63:
+    101 |   } else {
+    102 |     const t : ticket<string> = Option.unopt(Mavryk.create_ticket("can_poke", ticketCount));
+                                                      ^^^^^^^^^^^^^^^^^^^^
+    103 |     return [
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Ticket.create` from `Mavryk.Next` is encouraged for a smoother migration.
 
     { parameter
         (or (pair %init address nat) (or (address %pokeAndGetFeedback) (unit %poke))) ;
@@ -3259,6 +3338,15 @@ let%expect_test _ =
     Warning: deprecated value.
     Use `Option.value_with_error` instead.
 
+    File "../../test/contracts/pokeGame.jsligo", line 102, characters 44-63:
+    101 |   } else {
+    102 |     const t : ticket<string> = Option.unopt(Mavryk.create_ticket("can_poke", ticketCount));
+                                                      ^^^^^^^^^^^^^^^^^^^^
+    103 |     return [
+    :
+    Warning: deprecated value.
+    In a future version, `Mavryk` will be replaced by `Mavryk.Next`, and using `Ticket.create` from `Mavryk.Next` is encouraged for a smoother migration.
+
     (Right (Right Unit)) |}]
 
 let%expect_test _ =
@@ -3284,6 +3372,15 @@ let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "bytes_bitwise.mligo" ];
   [%expect
     {|
+    File "../../test/contracts/bytes_bitwise.mligo", line 7, characters 11-17:
+      6 |   let b_shift_right = 0x0006 lsr  1n     in
+      7 |   let () = assert (b_and         = 0x0004 &&
+                     ^^^^^^
+      8 |                    b_or          = 0x0107 &&
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
     { parameter unit ;
       storage unit ;
       code { DROP ;
@@ -3328,12 +3425,59 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } |}];
   run_ligo_good [ "run"; "dry-run"; contract "bytes_bitwise.mligo"; "()"; "()" ];
-  [%expect {| ( LIST_EMPTY() , unit ) |}]
+  [%expect
+    {|
+    File "../../test/contracts/bytes_bitwise.mligo", line 7, characters 11-17:
+      6 |   let b_shift_right = 0x0006 lsr  1n     in
+      7 |   let () = assert (b_and         = 0x0004 &&
+                     ^^^^^^
+      8 |                    b_or          = 0x0107 &&
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
+    ( LIST_EMPTY() , unit ) |}]
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; contract "bytes_int_nat_conv.mligo" ];
   [%expect
     {|
+    File "../../test/contracts/bytes_int_nat_conv.mligo", line 4, characters 11-17:
+      3 |   (* bytes => nat => bytes *)
+      4 |   let () = assert (b = bytes(nat(b))) in
+                     ^^^^^^
+      5 |   (* bytes => int => bytes *)
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
+    File "../../test/contracts/bytes_int_nat_conv.mligo", line 6, characters 11-17:
+      5 |   (* bytes => int => bytes *)
+      6 |   let () = assert (b = bytes(int(b))) in
+                     ^^^^^^
+      7 |   (* int => bytes => int *)
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
+    File "../../test/contracts/bytes_int_nat_conv.mligo", line 8, characters 11-17:
+      7 |   (* int => bytes => int *)
+      8 |   let () = assert (1234 = int(bytes(1234))) in
+                     ^^^^^^
+      9 |   (* nat => bytes => nat *)
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
+    File "../../test/contracts/bytes_int_nat_conv.mligo", line 10, characters 11-17:
+      9 |   (* nat => bytes => nat *)
+     10 |   let () = assert (4567n = nat(bytes(4567n))) in
+                     ^^^^^^
+     11 |   [], ()
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
     { parameter unit ;
       storage unit ;
       code { DROP ;
@@ -3370,7 +3514,45 @@ let%expect_test _ =
              NIL operation ;
              PAIR } } |}];
   run_ligo_good [ "run"; "dry-run"; contract "bytes_int_nat_conv.mligo"; "()"; "()" ];
-  [%expect {| ( LIST_EMPTY() , unit ) |}]
+  [%expect
+    {|
+    File "../../test/contracts/bytes_int_nat_conv.mligo", line 4, characters 11-17:
+      3 |   (* bytes => nat => bytes *)
+      4 |   let () = assert (b = bytes(nat(b))) in
+                     ^^^^^^
+      5 |   (* bytes => int => bytes *)
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
+    File "../../test/contracts/bytes_int_nat_conv.mligo", line 6, characters 11-17:
+      5 |   (* bytes => int => bytes *)
+      6 |   let () = assert (b = bytes(int(b))) in
+                     ^^^^^^
+      7 |   (* int => bytes => int *)
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
+    File "../../test/contracts/bytes_int_nat_conv.mligo", line 8, characters 11-17:
+      7 |   (* int => bytes => int *)
+      8 |   let () = assert (1234 = int(bytes(1234))) in
+                     ^^^^^^
+      9 |   (* nat => bytes => nat *)
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
+    File "../../test/contracts/bytes_int_nat_conv.mligo", line 10, characters 11-17:
+      9 |   (* nat => bytes => nat *)
+     10 |   let () = assert (4567n = nat(bytes(4567n))) in
+                     ^^^^^^
+     11 |   [], ()
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
+    ( LIST_EMPTY() , unit ) |}]
 
 let%expect_test _ =
   run_ligo_good
@@ -3406,6 +3588,15 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
+    File "../../test/contracts/increment_prefix.jsligo", line 26, characters 9-15:
+     25 |   Test.transfer_exn(orig.addr, Increment(), 1mumav);
+     26 |   return assert(Test.get_storage(orig.addr) == initial_storage + 1);
+                   ^^^^^^
+     27 | }) ();
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
     File "../../test/contracts/increment_prefix.jsligo", line 26, characters 16-32:
      25 |   Test.transfer_exn(orig.addr, Increment(), 1mumav);
      26 |   return assert(Test.get_storage(orig.addr) == initial_storage + 1);
@@ -3430,13 +3621,13 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative/loop.jsligo", line 4, character 4 to line 7, character 5:
-      3 |     let values = list ([]) ;
+      3 |     let values : list<int> = [];
       4 |     for (const [k, v, z] of x) {
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      5 |       keys = list([k, ...keys]);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      6 |       values = list([v, ...values]);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      5 |       keys = [k, ...keys];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      6 |       values = [v, ...values];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       7 |     };
           ^^^^^
       8 |     return [keys, values];
@@ -3455,13 +3646,13 @@ let%expect_test _ =
   [%expect
     {|
     File "../../test/contracts/negative/loop2.jsligo", line 4, character 4 to line 7, character 5:
-      3 |     let values : list<int> = list([]);
+      3 |     let values : list<int> = [];
       4 |     for (const [k, v] of x) {
               ^^^^^^^^^^^^^^^^^^^^^^^^^
-      5 |       keys = list([k, ...keys]);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      6 |       values = list([v, ...values]);
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      5 |       keys = [k, ...keys];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      6 |       values = [v, ...values];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       7 |     };
           ^^^^^
       8 |     return [keys, values];
@@ -3547,6 +3738,15 @@ let%expect_test _ =
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_storage` from `Test.Next` is encouraged for a smoother migration.
 
+    File "../../test/contracts/reverse_string_for_loop.jsligo", line 22, characters 13-19:
+     21 |       Test.log(Test.get_storage(orig.addr));
+     22 |       return assert(Test.get_storage(orig.addr) == "reverse")
+                       ^^^^^^
+     23 |     }
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
     File "../../test/contracts/reverse_string_for_loop.jsligo", line 22, characters 20-36:
      21 |       Test.log(Test.get_storage(orig.addr));
      22 |       return assert(Test.get_storage(orig.addr) == "reverse")
@@ -3593,3 +3793,95 @@ let%expect_test "infer compilation target" =
       { parameter unit ;
         storage unit ;
         code { DROP ; UNIT ; NIL operation ; PAIR } } |}]
+
+(* invalid list annotations for tuples *)
+let%expect_test _ =
+  run_ligo_bad
+    [ "print"; "ast-typed"; bad_contract "bad_annotation_list_and_tuple.mligo" ];
+  [%expect
+    {|
+    File "../../test/contracts/negative/bad_annotation_list_and_tuple.mligo", line 1, characters 10-14:
+      1 | let x = ((1, 2) : int list)
+                    ^^^^
+
+    This expression has type "( int * int )", but an expression was expected of type
+    "list (int)".
+    Type "( int * int )" is not compatible with type "list (int)". |}]
+
+(* array disambiguate *)
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "t"
+    ; "--init-file"
+    ; contract "array_disambiguate.jsligo"
+    ];
+  [%expect
+    {|
+    { DROP ;
+      PUSH int 3 ;
+      PUSH int 2 ;
+      PUSH int 1 ;
+      PAIR 3 ;
+      UNIT ;
+      NIL int ;
+      PUSH int 2 ;
+      CONS ;
+      PUSH int 1 ;
+      CONS ;
+      UNIT ;
+      PAIR 4 } |}]
+
+(* array as list *)
+let%expect_test _ =
+  run_ligo_good
+    [ "compile"
+    ; "expression"
+    ; "jsligo"
+    ; "t"
+    ; "--feature-infer-array-as-list"
+    ; "--init-file"
+    ; contract "array_as_list.jsligo"
+    ];
+  [%expect
+    {|
+    { DROP ;
+      NIL int ;
+      PUSH int 2 ;
+      CONS ;
+      PUSH int 1 ;
+      CONS ;
+      NIL int ;
+      PUSH int 3 ;
+      CONS ;
+      DUP 2 ;
+      NIL int ;
+      SWAP ;
+      ITER { CONS } ;
+      ITER { CONS } ;
+      PUSH int 1 ;
+      CONS ;
+      NIL int ;
+      PUSH int 3 ;
+      CONS ;
+      DUP 3 ;
+      NIL int ;
+      SWAP ;
+      ITER { CONS } ;
+      ITER { CONS } ;
+      PUSH int 1 ;
+      CONS ;
+      SWAP ;
+      NIL int ;
+      PUSH int 3 ;
+      CONS ;
+      PUSH int 2 ;
+      CONS ;
+      PUSH int 1 ;
+      CONS ;
+      NIL string ;
+      DIG 4 ;
+      UNIT ;
+      PAIR 6 } |}]

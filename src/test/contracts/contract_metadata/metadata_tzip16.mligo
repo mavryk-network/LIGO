@@ -280,7 +280,7 @@ let hen_metadata =
   [%bytes
   {|{"authors":["@hicetnunc2000 <hicetnunc2000@protonmail.com>"],"description":"OBJKTs FA2 collectibles","homepage":"https://hicetnunc.xyz","interfaces":["TZIP-12"],"license":{"name":"MIT"},"name":"OBJKTs","repository":"https://github.com/hic2nc2000","version":"2.0.0"}|}]
 
-let good_tezos_sha256_storage : storage =
+let good_mavos_sha256_storage : storage =
   {
    data = 42;
    metadata =
@@ -293,7 +293,7 @@ let good_tezos_sha256_storage : storage =
        ]
   }
 
-let bad_tezos_sha256_storage : storage =
+let bad_mavos_sha256_storage : storage =
   {
    data = 42;
    metadata =

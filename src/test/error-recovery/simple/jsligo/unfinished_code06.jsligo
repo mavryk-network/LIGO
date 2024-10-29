@@ -27,7 +27,7 @@ const  commit = ([p, s] : [bytes, storage]) : return_ => {
   const updated_map : commit_set =
     Big_map.update(Mavryk.get_sender(), (Some (commit)), s.commits);
   const s_ = {...s, commits: updated_map};
-  return [(list([]) as list<operation>), s_]
+  return [[], s_]
 }
   
 const reveal = ([p, s] : [reveal, storage]) : return_ => {

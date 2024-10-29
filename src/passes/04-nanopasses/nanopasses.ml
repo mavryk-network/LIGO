@@ -3,8 +3,10 @@ module O = Ast_core
 open Passes.Pass_type
 module Errors = Passes.Errors
 module Selector = Passes.Pass_type.Selector
-open Simple_utils.Function
 module ModRes = Preprocessor.ModRes
+module Ligo_fun = Simple_utils.Ligo_fun
+
+let ( <@ ) = Ligo_fun.( <@ )
 
 type flags =
   { initial_node_check : bool
@@ -14,7 +16,7 @@ type flags =
   ; export : bool
   ; freeze_operators : Syntax_types.t
   ; list_as_function : bool
-  ; array_to_tuple : bool
+  ; no_parameter_function : bool
   ; match_as_function : bool
   ; object_to_record : bool
   ; detect_recursion : bool
@@ -27,7 +29,7 @@ type flags =
   ; t_for_alls : bool
   }
 
-let passes ~(flags : flags) : (module T) list =
+let passes ~(flags : flags) : (module T) list list =
   let open Passes in
   let { initial_node_check
       ; duplicate_identifier
@@ -35,7 +37,7 @@ let passes ~(flags : flags) : (module T) list =
       ; restrict_projection
       ; export
       ; list_as_function
-      ; array_to_tuple
+      ; no_parameter_function
       ; match_as_function
       ; object_to_record
       ; detect_recursion
@@ -59,67 +61,83 @@ let passes ~(flags : flags) : (module T) list =
     P.set_flag ~enable:flag arg;
     (module P)
   in
-  [ entry (module Initial_node_check) ~flag:initial_node_check ~arg:()
-  ; entry (module For_to_while_loop) ~flag:always ~arg:for_to_while_loop
-  ; entry (module Escaped_variables) ~flag:always ~arg:()
-  ; entry (module Wildcards) ~flag:wildcards ~arg:()
-  ; entry (module Duplicate_identifier) ~flag:duplicate_identifier ~arg:()
-  ; entry (module Linear_signature) ~flag:always ~arg:()
-  ; entry (module Restrict_projections) ~flag:restrict_projection ~arg:()
-  ; entry (module Break_continue_outside) ~flag:always ~arg:()
-  ; entry (module Single_switch_block) ~flag:always ~arg:()
-  ; entry (module Export_program_entry) ~flag:export ~arg:()
-  ; entry (module Export_declaration) ~flag:export ~arg:()
-  ; entry (module Top_level_restriction) ~flag:always ~arg:()
-  ; entry (module Pattern_constructor_application) ~flag:always ~arg:()
-  ; entry (module Pattern_restriction) ~flag:always ~arg:()
-  ; entry (module Pattern_heuristic) ~flag:always ~arg:()
-  ; entry (module Unpuning) ~flag:always ~arg:()
-  ; entry (module Module_open_restriction) ~flag:always ~arg:()
-  ; entry (module Import_restriction) ~flag:always ~arg:()
-  ; entry (module External_hack) ~flag:always ~arg:()
-  ; entry (module Linearity) ~flag:always ~arg:()
-  ; entry (module T_for_alls) ~flag:always ~arg:t_for_alls
-  ; entry (module T_constant) ~flag:always ~arg:()
-  ; entry (module T_arg) ~flag:always ~arg:()
-  ; entry (module Constructor_application) ~flag:always ~arg:()
-  ; entry (module Standalone_constructor_removal) ~flag:always ~arg:()
-  ; entry (module Type_abstraction_declaration) ~flag:always ~arg:()
-  ; entry (module Sum_type_helper_generator) ~flag:always ~arg:()
-  ; entry (module Named_fun) ~flag:named_fun ~arg:()
-  ; entry (module Reverse_application) ~flag:always ~arg:()
-  ; entry (module Prefix_postfix_operators) ~flag:always ~arg:()
-  ; entry (module Freeze_operators) ~flag:always ~arg:freeze_operators
-  ; entry (module Literalize_annotated) ~flag:always ~arg:()
-  ; entry (module Of_file) ~flag:always ~arg:mod_res
-  ; entry (module List_as_function) ~flag:list_as_function ~arg:()
-  ; entry (module Array_to_tuple) ~flag:array_to_tuple ~arg:()
-  ; entry (module Match_tc39) ~flag:match_as_function ~arg:()
-  ; entry (module Object_to_record) ~flag:object_to_record ~arg:()
-  ; entry (module Hack_literalize_jsligo) ~flag:hack_literalize_jsligo ~arg:()
-  ; entry (module Restrict_t_app) ~flag:always ~arg:()
-  ; entry (module T_app_michelson_types) ~flag:always ~arg:t_app_michelson_types
-  ; entry (module Multi_bindings) ~flag:always ~arg:()
-  ; entry (module Loop_variable) ~flag:always ~arg:()
-  ; entry (module Disc_union_types) ~flag:always ~arg:()
-  ; entry (module Returns) ~flag:always ~arg:()
-  ; entry (module Reduce_switch) ~flag:always ~arg:()
-  ; entry (module Structural_updates) ~flag:always ~arg:()
-  ; entry (module Map_lookup) ~flag:always ~arg:()
-  ; entry (module Freeze_containers) ~flag:always ~arg:()
-  ; entry (module Unstate) ~flag:always ~arg:()
-  ; entry (module Projections) ~flag:always ~arg:projections
-  ; entry (module Assign_transitivity) ~flag:always ~arg:()
-  ; entry (module Reduce_sequence) ~flag:always ~arg:()
-  ; entry (module Let_syntax) ~flag:always ~arg:()
-  ; entry (module Generalize_functions) ~flag:always ~arg:()
-  ; entry (module Detect_recursive) ~flag:detect_recursion ~arg:()
-  ; entry (module Curry) ~flag:always ~arg:()
-  ; entry (module Tuple_as_record) ~flag:always ~arg:()
-  ; entry (module If_as_pattern_match) ~flag:always ~arg:()
-  ; entry (module Restrict_typed_pattern) ~flag:always ~arg:()
-  ; entry (module Compute_layout.Normalize_layout) ~flag:always ~arg:()
-  ; entry (module Compute_layout.Normalize_no_layout) ~flag:always ~arg:()
+  (* Nanopasses that contain in the same list would be executed in one tree traversal.
+     Keep in mind that code transformation occurs from leaves to roots.
+
+     Take this situation:
+     Pass A: E_x(E_a, ...) --> E_x(E_b, ...)
+     Pass B: E_b --> E_c
+     Pass A is executed before Pass B. If we do them in parallel (i.e. Pass A and Pass B are in the same group)
+     then Pass B won't do any transformation on node E_b. Thus, they should be executed in the different groups. *)
+  [ [ entry (module Initial_node_check) ~flag:initial_node_check ~arg:()
+    ; entry (module For_to_while_loop) ~flag:always ~arg:for_to_while_loop
+    ; entry (module Escaped_variables) ~flag:always ~arg:()
+    ; entry (module Wildcards) ~flag:wildcards ~arg:()
+    ; entry (module Duplicate_identifier) ~flag:duplicate_identifier ~arg:()
+    ; entry (module Linear_signature) ~flag:always ~arg:()
+    ; entry (module Restrict_projections) ~flag:restrict_projection ~arg:()
+    ; entry (module Break_continue_outside) ~flag:always ~arg:()
+    ; entry (module Single_switch_block) ~flag:always ~arg:()
+    ; entry (module Export_program_entry) ~flag:export ~arg:()
+    ; entry (module Export_declaration) ~flag:export ~arg:()
+    ; entry (module Top_level_restriction) ~flag:always ~arg:()
+    ; entry (module Pattern_constructor_application) ~flag:always ~arg:()
+    ]
+  ; [ entry (module Pattern_restriction) ~flag:always ~arg:()
+    ; entry (module Pattern_heuristic) ~flag:always ~arg:()
+    ; entry (module Unpunning) ~flag:always ~arg:()
+    ; entry (module Module_open_restriction) ~flag:always ~arg:()
+    ; entry (module Import_restriction) ~flag:always ~arg:()
+    ; entry (module External_hack) ~flag:always ~arg:()
+    ]
+  ; [ entry (module Linearity) ~flag:always ~arg:() ]
+  ; [ entry (module T_for_alls) ~flag:always ~arg:t_for_alls
+    ; entry (module T_constant) ~flag:always ~arg:()
+    ; entry (module T_arg) ~flag:always ~arg:()
+    ; entry (module Constructor_application) ~flag:always ~arg:()
+    ; entry (module Standalone_constructor_removal) ~flag:always ~arg:()
+    ; entry (module Type_abstraction_declaration) ~flag:always ~arg:()
+    ; entry (module Sum_type_helper_generator) ~flag:always ~arg:()
+    ; entry (module Named_fun) ~flag:named_fun ~arg:()
+    ; entry (module Reverse_application) ~flag:always ~arg:()
+    ; entry (module Prefix_postfix_operators) ~flag:always ~arg:()
+    ]
+  ; [ entry (module Freeze_operators) ~flag:always ~arg:freeze_operators
+    ; entry (module Bytes_raw_code) ~flag:always ~arg:()
+    ; entry (module Of_file) ~flag:always ~arg:mod_res
+    ; entry (module List_as_function) ~flag:list_as_function ~arg:()
+    ]
+  ; [ entry (module No_parameter_function) ~flag:no_parameter_function ~arg:()
+    ; entry (module Match_tc39) ~flag:match_as_function ~arg:()
+    ; entry (module Object_to_record) ~flag:object_to_record ~arg:()
+    ; entry (module Hack_literalize_jsligo) ~flag:hack_literalize_jsligo ~arg:()
+    ; entry (module Restrict_t_app) ~flag:always ~arg:()
+    ; entry (module T_app_michelson_types) ~flag:always ~arg:t_app_michelson_types
+    ; entry (module Multi_bindings) ~flag:always ~arg:()
+    ; entry (module Loop_variable) ~flag:always ~arg:()
+    ; entry (module Returns) ~flag:always ~arg:()
+    ; entry (module Reduce_switch) ~flag:always ~arg:()
+    ]
+  ; [ entry (module Structural_updates) ~flag:always ~arg:() ]
+  ; [ entry (module Map_lookup) ~flag:always ~arg:()
+    ; entry (module Freeze_containers) ~flag:always ~arg:()
+    ; entry (module Unstate) ~flag:always ~arg:()
+    ; entry (module Projections) ~flag:always ~arg:projections
+    ]
+  ; [ entry (module Assign_transitivity) ~flag:always ~arg:()
+    ; entry (module Reduce_sequence) ~flag:always ~arg:()
+    ]
+  ; [ entry (module Let_syntax) ~flag:always ~arg:() ]
+  ; [ entry (module Generalize_functions) ~flag:always ~arg:()
+    ; entry (module Detect_recursive) ~flag:detect_recursion ~arg:()
+    ]
+  ; [ entry (module Curry) ~flag:always ~arg:() ]
+  ; [ entry (module Tuple_as_record) ~flag:always ~arg:()
+    ; entry (module If_as_pattern_match) ~flag:always ~arg:()
+    ; entry (module Restrict_typed_pattern) ~flag:always ~arg:()
+    ; entry (module Compute_layout.Normalize_layout) ~flag:always ~arg:()
+    ]
+  ; [ entry (module Compute_layout.Normalize_no_layout) ~flag:always ~arg:() ]
   ]
 
 
@@ -141,7 +159,7 @@ let extract_flags_from_options : disable_initial_check:bool -> Compiler_options.
   ; restrict_projection = is_jsligo
   ; export = is_jsligo
   ; list_as_function = is_jsligo
-  ; array_to_tuple = is_jsligo
+  ; no_parameter_function = is_jsligo
   ; match_as_function = is_jsligo
   ; object_to_record = is_jsligo
   ; detect_recursion = is_jsligo
@@ -171,7 +189,9 @@ let get_passes_no_options syntax =
 
 
 let passes_names : string list =
-  List.map (get_passes_no_options CameLIGO) ~f:(fun (module T) -> process_name @@ T.name)
+  List.map
+    (List.concat @@ get_passes_no_options CameLIGO)
+    ~f:(fun (module T) -> process_name @@ T.name)
 
 
 let execute_nanopasses

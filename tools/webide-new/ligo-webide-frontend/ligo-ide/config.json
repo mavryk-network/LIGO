@@ -1,18 +1,18 @@
 {
     "defaultProtocol":{
-       "showName":"Atlas",
-       "name":"atlas"
+       "showName":"Boreas",
+       "name":"boreas"
     },
     "protocols":[
        {
-          "showName":"Atlas",
-          "name":"atlas"
+          "showName":"Boreas",
+          "name":"boreas"
        }
     ],
     "networks":[
        {
          "id":"mavrykatlasnet",
-         "group":"Tezos",
+         "group":"Mavryk",
          "name":"Atlasnet",
          "fullName":"Atlasnet Testnet",
          "url":"https://atlasnet.rpc.mavryk.network",

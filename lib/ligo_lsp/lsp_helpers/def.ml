@@ -1,0 +1,354 @@
+open Core
+module Loc = Simple_utils.Location
+module Ligo_fun = Simple_utils.Ligo_fun
+
+let ( <@ ) = Ligo_fun.( <@ )
+
+type t = Scopes.def
+type definitions = Scopes.definitions
+type 'a fold_control = 'a Cst_shared.Fold.fold_control
+
+(* TODO use this in Scopes instead of `Loc` and `LSet` *)
+
+module Loc_in_file = struct
+  (** It's useful to bundle the path to a file and a given range together for a variety of
+      requests where results from multiple files may be present. *)
+  type t =
+    { path : Path.t
+    ; range : Range.t
+    }
+  [@@deriving eq, ord, sexp]
+
+  let pp : t Fmt.t = fun ppf -> Format.fprintf ppf "%a" Sexp.pp <@ sexp_of_t
+end
+
+module Def_location = struct
+  (** Depending on the symbol we're dealing with, we might find a [File] to some
+      user-written file or registry package, a symbol declared in LIGO's [StdLib], or a
+      [Virtual] location. *)
+  type t =
+    | File of Loc_in_file.t
+    | StdLib of { range : Range.t }
+    | Virtual of string
+  [@@deriving eq, ord, sexp]
+
+  (** Convert a {!Loc.t} into a {t}. *)
+  let of_loc : normalize:Path.normalization -> Loc.t -> t =
+   fun ~normalize -> function
+    | File region when Helpers_file.is_stdlib region#file ->
+      StdLib { range = Range.of_region region }
+    | File region -> File { range = Range.of_region region; path = normalize region#file }
+    | Virtual s -> Virtual s
+
+  let pp : t Fmt.t = fun ppf -> Format.fprintf ppf "%a" Sexp.pp <@ sexp_of_t
+end
+
+module Def_locations = Set.Make (Def_location)
+
+(** For debugging. Convert a [t] into a [string]. *)
+let to_string (def : t) = Format.asprintf "%a" Scopes.PP.definitions [ def ]
+
+(** Gets the range (not declaration range) of a [t]. *)
+let get_location : normalize:Path.normalization -> Scopes.def -> Def_location.t =
+ fun ~normalize -> Def_location.of_loc ~normalize <@ Scopes.Types.get_range
+
+(** Gets the path where a [t] was declared. *)
+let get_path : normalize:Path.normalization -> Scopes.def -> Path.t option =
+ fun ~normalize ->
+  Def_location.(
+    function
+    | File { path; _ } -> Some path
+    | StdLib _ | Virtual _ -> None)
+  <@ get_location ~normalize
+
+(** Gets a set with all the references of the given definition. *)
+let references_getter : normalize:Path.normalization -> t -> Def_locations.t =
+ fun ~normalize def ->
+  let lset =
+    match def with
+    | Variable vdef -> Set.add vdef.references vdef.range
+    | Type tdef -> Set.add tdef.references tdef.range
+    | Module mdef -> Set.add mdef.references mdef.range
+    | Label ldef -> Set.add ldef.references ldef.range
+  in
+  Def_locations.of_sequence
+  @@ Sequence.map ~f:(Def_location.of_loc ~normalize)
+  @@ Set.to_sequence lset
+
+(** Checks whether the given definition is a reference to the symbol located at the given
+    path and position (if there is no symbol there it will return [false]). *)
+let is_reference : normalize:Path.normalization -> Position.t -> Path.t -> t -> bool =
+ fun ~normalize pos file definition ->
+  let check_pos : Def_location.t -> bool = function
+    | File { path; range } -> Range.contains_position pos range && Path.equal path file
+    | StdLib _ | Virtual _ -> false
+  in
+  Set.exists ~f:check_pos @@ references_getter ~normalize definition
+
+(** Fold over definitions, flattening them along the fold. The [fold_control] allows you
+    to choose whether to continue or stop (with or without accumulating the new value) the
+    fold into that definition's children, in case it is a module. *)
+let fold_definitions : init:'a -> f:('a -> t -> 'a fold_control) -> definitions -> 'a =
+ fun ~init ~f { definitions } ->
+  let rec go init =
+    List.fold ~init ~f:(fun acc (def : t) ->
+        let[@inline] fold_inner acc =
+          match def with
+          | Module { mod_case = Def definitions; _ } -> go acc definitions
+          | Module { mod_case = Alias _; _ } | Variable _ | Type _ | Label _ -> acc
+        in
+        match f acc def with
+        | Stop -> acc
+        | Skip -> fold_inner acc
+        | Continue acc -> fold_inner acc
+        | Last acc -> acc)
+  in
+  go init definitions
+
+(** Searches for a definition matching the predicate [f], returning the first one for
+    which it has returned [Some]. *)
+let find_map : f:(t -> 'a option) -> definitions -> 'a option =
+ fun ~f ->
+  fold_definitions ~init:None ~f:(fun acc def ->
+      match acc with
+      | Some _ -> Last acc
+      | None -> Continue (f def))
+
+(** Searches for a definition matching the predicate [f], returning the first one for
+    which it has returned [true]. *)
+let find : f:(t -> bool) -> definitions -> t option =
+ fun ~f -> find_map ~f:(fun def -> Option.some_if (f def) def)
+
+(** Filters the definitions while mapping each element, removing all definitions that
+    caused [f] to return [None]. The returned list of elements is flattened. This
+    function visits every module's definitions even if the predicate returned [None]. *)
+let filter_map : f:(t -> 'a option) -> definitions -> 'a list =
+ fun ~f ->
+  List.rev
+  <@ fold_definitions ~init:[] ~f:(fun acc def ->
+         Continue (Option.value_map ~default:acc ~f:(fun x -> x :: acc) (f def)))
+
+(** Filters the definitions while removing all definitions that caused [f] to return
+    [false]. The returned list of definitions is flattened. This function visits every
+    module's definitions even if the predicate returned [false]. *)
+let filter : f:(t -> bool) -> definitions -> t list =
+ fun ~f -> filter_map ~f:(fun def -> Option.some_if (f def) def)
+
+(** Filters the definitions while removing all definitions that were not declared in
+    [file]. The returned list of definitions is flattened. This function does not visit a
+    module's inner definitions if that module was not declared in [file]. *)
+let filter_file : normalize:Path.normalization -> file:Path.t -> definitions -> t list =
+ fun ~normalize ~file ->
+  fold_definitions ~init:[] ~f:(fun acc def ->
+      match Scopes.Types.get_decl_range def with
+      | File region ->
+        if Path.equal (normalize region#file) file then Continue (def :: acc) else Stop
+      | Virtual _ -> Stop)
+
+(** Gets the definition that is a reference to the symbol located at the given path and
+    position (if there is no symbol there it will return [None]). *)
+let get_definition
+    : normalize:Path.normalization -> Position.t -> Path.t -> definitions -> t option
+  =
+ fun ~normalize pos path definitions ->
+  find ~f:(is_reference ~normalize pos path) definitions
+
+(** Returns the declaration name of a type (if there is one) as well as that type's body.
+    E.g. when [type t = A | B], the type info for [A] would have [var_name] as
+    [Some t] (where [t] is a [Ligo_prim.Type_var.t] and [contents] as [A | B] (which is a
+    [T_sum]). *)
+type type_info =
+  { var_name : Ast_core.type_expression option
+  ; contents : Ast_core.type_expression
+  }
+
+(** Use the most compact type expression available. *)
+let use_var_name_if_available : type_info -> Ast_core.type_expression =
+ fun { var_name; contents } -> Option.value ~default:contents var_name
+
+(** Get the [type_info] from [vdef.t]. If the type is [Resolved] and [use_module_accessor]
+    is [true], then this function will try to create a [T_module_accessor] using the
+    module path in which the [orig_var] was defined. For example, if we have
+    [module M = struct type t = int end], then the user will see [M.t] when hovering over
+    something of this type. Returns [None] if the type is [Unresolved]. *)
+let get_type ~(use_module_accessor : bool) (vdef : Scopes.Types.vdef) : type_info option =
+  match vdef.t with
+  | Core contents -> Some { var_name = None; contents }
+  | Resolved { type_content; abbrev; location; source_type } ->
+    let%bind.Option contents =
+      (* We want to preserve both the type var and type expression here, so we set
+         [use_orig_var = True] so this expression will be pretty, and we also set
+         [orig_var = None] before untyping so we're getting full expression and not just
+         [T_variable]. *)
+      try
+        Simple_utils.Trace.to_option ~fast_fail:false
+        @@ Checking.untype_type_expression
+             ~use_orig_var:true
+             { type_content; abbrev = None; location; source_type }
+      with
+      | _exn -> None
+    in
+    Some
+      { var_name =
+          (* This is non-empty in case there is a name for our type. *)
+          Option.map abbrev ~f:(fun { orig_var = module_path, element; applied_types } ->
+              let type_content : Ast_core.type_content =
+                let module_path = if use_module_accessor then module_path else [] in
+                match applied_types, module_path with
+                | _ :: _, _ ->
+                  let type_operator = Ligo_prim.Module_access.{ module_path; element } in
+                  let arguments =
+                    List.filter_map applied_types ~f:(fun t ->
+                        try
+                          Simple_utils.Trace.to_option ~fast_fail:false
+                          @@ Checking.untype_type_expression ~use_orig_var:true t
+                        with
+                        | _exn -> None)
+                  in
+                  T_app { type_operator; arguments }
+                | [], _ :: _ -> T_module_accessor { module_path; element }
+                | [], [] -> T_variable element
+              in
+              Ast_core.{ type_content; location })
+      ; contents
+      }
+  | Unresolved -> None
+
+(** A definition may have line or block comments attached to it, which may be easily
+    retrieved using this function. *)
+let get_comments : t -> string list = function
+  | Variable vdef ->
+    (match vdef.attributes with
+    | Value_attr attr -> attr.leading_comments
+    | Sig_item attr -> attr.leading_comments
+    | No_attributes -> [])
+  | Type tdef ->
+    (match tdef.attributes with
+    | Type_attr attr -> attr.leading_comments
+    | Sig_type attr -> attr.leading_comments
+    | No_attributes -> [])
+  | Module mdef ->
+    (match mdef.attributes with
+    | Module_attr attr -> attr.leading_comments
+    | Signature_attr attr -> attr.leading_comments
+    | No_attributes -> [])
+  | Label _ -> []
+
+(** Hierarchies of declarations. The hierarchy is based on the ranges of each symbol. A
+    symbol [a] is nested inside another symbol [b] if [a] was declared inside [b]. More
+    precisely, [a] is nested in [b] if the declaration range of [a] is contained in the
+    declaration range of [b]. *)
+module Hierarchy = struct
+  (** A structure holding a definition hierarchy. *)
+  type t = Scopes.def Rose.forest
+
+  (** Turn definitions into a hierarchy. *)
+  let create : normalize:Path.normalization -> definitions -> t =
+   fun ~normalize defs ->
+    Rose.map_forest ~f:Tuple3.get3
+    @@ Rose.forest_of_list
+       (* See the expect test in [Rose] on why we compare and check for intersection
+              like this. *)
+         ~compare:(fun ((range1 : Range.t), file1, _def1) (range2, file2, _def2) ->
+           let path_ord = Path.compare file1 file2 in
+           if path_ord = 0
+           then (
+             let pos_ord = Position.compare range1.start range2.start in
+             if pos_ord = 0 then Position.compare range2.end_ range1.end_ else pos_ord)
+           else path_ord)
+         ~intersects:(fun (range1, file1, _def1) (range2, file2, _def2) ->
+           Path.equal file1 file2 && Position.compare range1.end_ range2.start > 0)
+    @@ filter_map defs ~f:(fun def ->
+           match Scopes.Types.get_decl_range def with
+           | File region ->
+             let range = Range.of_region region in
+             let path = normalize region#file in
+             Some (range, path, def)
+           | Virtual _ -> None)
+
+  (** Finds all definitions that are in-scope at the given file and position. The provided
+      module path should be the one at the given position. *)
+  let scope_at_point
+      ~(normalize : Path.normalization)
+      (file : Path.t)
+      (point : Position.t)
+      (mod_path : Scopes.Uid.t list)
+      : t -> Scopes.def list
+    =
+    let shadow_defs : Scopes.def list -> Scopes.def list =
+      List.filter_map ~f:List.hd
+      <@ List.sort_and_group ~compare:Scopes.Types.compare_def_by_name
+    in
+    (* A def is interesting to us if either it's from another file, or it's from the same
+       file but it's declaration happened before the current point. Also, it must be
+       visible from our current module.
+         There is a caveat: constructors are declared in the global scope, so we need to
+       consider that they are of interest even if they aren't in the scope "spine".
+         To handle this, we consider that types and constructors are always definitions of
+       interest (so we can visit them), and that constructors are always parents of
+       interest (so we always add them to the scope). Moreover, constructors declared in
+       local type definitions are not added globally, so we want to add them only if we're
+       completing a scope within a child's body, and hence we have to also ask whether we
+       have children of interest. *)
+    let is_def_of_interest (def : Scopes.def) : bool =
+      match Scopes.Types.get_decl_range def with
+      | File region ->
+        (Position.(of_pos region#start <= point)
+        || not (Path.equal file (normalize region#file)))
+        &&
+        (match def with
+        | Label { label_case = Ctor; _ } | Type _ -> true
+        | Label { label_case = Field; _ } | Variable _ | Module _ ->
+          List.is_prefix
+            mod_path
+            ~equal:Scopes.Uid.equal
+            ~prefix:(Scopes.Types.get_mod_path def))
+      | Virtual _ -> false
+    in
+    (* We consider that a parent is of interest if it doesn't contain the point. Such
+       parents are the ones in the "spine" of the scope, such as our current variable or
+       module, which we don't want to show.
+         The same caveat about constructors above apply here.
+         TODO: Strictly speaking, we should check whether the definition is recursive or
+       not, and show it in case it's recursive. *)
+    let is_parent_of_interest (def : Scopes.def) : bool =
+      match Scopes.Types.get_decl_range def with
+      | File region ->
+        let excludes_position = not Range.(contains_position point (of_region region)) in
+        (match def with
+        | Label { label_case = Ctor; _ } -> true
+        | Label { label_case = Field; _ } | Variable _ | Type _ | Module _ ->
+          excludes_position)
+      | Virtual _ -> false
+    in
+    (* We only have this function because of global constructors. Only add constructors
+       declared within a variable's body if our scope point is inside the variable in the
+       first place. Otherwise, children are always valid. *)
+    let are_children_of_interest (def : Scopes.def) : bool =
+      match def with
+      | Variable _ ->
+        (match Scopes.Types.get_decl_range def with
+        | File region -> Range.(contains_position point (of_region region))
+        | Virtual _ -> false)
+      | Type _ | Module _ | Label _ -> true
+    in
+    let rec go : t -> Scopes.def list = function
+      | [] -> []
+      | Rose.Tree (parent :: parents, children) :: ts ->
+        if is_def_of_interest parent
+        then
+          if is_parent_of_interest parent
+          then
+            parent
+            :: List.concat
+                 [ parents
+                 ; (if are_children_of_interest parent then go children else [])
+                 ; go ts
+                 ]
+          else if are_children_of_interest parent
+          then go children @ go ts
+          else go ts
+        else go ts
+    in
+    shadow_defs <@ go
+end

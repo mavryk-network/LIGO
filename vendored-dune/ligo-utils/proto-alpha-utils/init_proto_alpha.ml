@@ -4,7 +4,7 @@ module Signature = Mavryk_base.TzPervasives.Signature
 module Data_encoding = Alpha_environment.Data_encoding
 module MBytes = Bytes
 module Error_monad = X_error_monad
-module Proto_env = Mavryk_protocol_environment_001_PtAtLas
+module Proto_env = Mavryk_protocol_environment_002_PtBoreas
 open Error_monad
 open Protocol
 
@@ -15,8 +15,8 @@ module Context_init = struct
     ; sk : Signature.secret_key
     }
 
-  let generate_accounts n : (account * Alpha_context.Tez.t) list =
-    let amount = Alpha_context.Tez.of_mumav_exn 4_000_000_000_000L in
+  let generate_accounts n : (account * Alpha_context.Mav.t) list =
+    let amount = Alpha_context.Mav.of_mumav_exn 4_000_000_000_000L in
     List.map
       ~f:(fun _ ->
         let pkh, pk, sk = Signature.generate_key () in
@@ -48,30 +48,26 @@ module Context_init = struct
     let open Alpha_context.Constants in
     let open Error_monad in
     let open Lwt_result_syntax in
-    let Parametric.
-          { blocks_per_cycle; blocks_per_commitment; blocks_per_stake_snapshot; _ }
-      =
-      constants
-    in
+    let Parametric.{ blocks_per_cycle; blocks_per_commitment; _ } = constants in
     let* () =
       Error_monad.unless (blocks_per_commitment <= blocks_per_cycle) (fun () ->
           failwith
             "Inconsistent constants : blocks per commitment must be less than blocks per \
              cycle")
     in
-    let* () =
+    (* let* () =
       Error_monad.unless (blocks_per_cycle >= blocks_per_stake_snapshot) (fun () ->
           failwith
             "Inconsistent constants : blocks per cycle must be superior than blocks per \
              roll snapshot")
-    in
+    in *)
     return ()
 
   let initial_context
       constants
       header
       commitments
-      (initial_accounts : (account * Alpha_context.Tez.t) trace)
+      (initial_accounts : (account * Alpha_context.Mav.t) trace)
       security_deposit_ramp_up_cycles
       no_reward_cycles
     =
@@ -119,7 +115,7 @@ module Context_init = struct
       ?(commitments = [])
       ?(security_deposit_ramp_up_cycles = None)
       ?(no_reward_cycles = None)
-      (initial_accounts : (account * Alpha_context.Tez.t) list)
+      (initial_accounts : (account * Alpha_context.Mav.t) list)
     =
     let open Lwt_result_syntax in
     if initial_accounts = []
@@ -218,7 +214,7 @@ module Context_init = struct
     let ( >>=? ) = Lwt_result_syntax.( let* ) in
     init n
     >>=? fun ((ctxt, header, hash), accounts, contracts) ->
-    let timestamp = Environment.Time.of_seconds @@ 1645498950L in
+    let timestamp = Environment.Time.of_notation_exn "2022-02-20T18:57:10Z" in
     begin_construction ~timestamp ~header ~hash ctxt.context
     >>=? fun ctxt -> Lwt_result_syntax.return (ctxt, accounts, contracts)
 end
@@ -231,18 +227,18 @@ type identity =
   }
 
 type environment =
-  { tezos_context : Alpha_context.t
+  { mavryk_context : Alpha_context.t
   ; identities : identity list
   }
 
 let init_environment ?(n = 2) () =
   let open Lwt_result_syntax in
-  let* tezos_context, accounts, contracts = Context_init.main n in
+  let* mavryk_context, accounts, contracts = Context_init.main n in
   let accounts = List.map ~f:fst accounts in
   let x =
     Memory_proto_alpha.Protocol.Alpha_context.Gas.Arith.(integral_of_int_exn 800000)
   in
-  let tezos_context = Alpha_context.Gas.set_limit tezos_context x in
+  let mavryk_context = Alpha_context.Gas.set_limit mavryk_context x in
   let identities =
     List.map ~f:(fun ((a : Context_init.account), c) ->
         { public_key = a.pk
@@ -252,7 +248,7 @@ let init_environment ?(n = 2) () =
         })
     @@ List.zip_exn accounts contracts
   in
-  return { tezos_context; identities }
+  return { mavryk_context; identities }
 
 let dummy_environment_ : environment option ref = ref None
 

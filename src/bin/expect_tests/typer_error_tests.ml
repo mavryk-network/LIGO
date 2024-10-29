@@ -250,8 +250,8 @@ let%expect_test _ =
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      10 |     let newStorage : storage = addone (oldStorage, 1 as nat);
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     11 |     return [list([]) as list<operation>, newStorage];
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     11 |     return [[], newStorage];
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      12 | }
           ^
 
@@ -261,7 +261,7 @@ let%expect_test _ =
       9 | let main = (param : action, oldStorage : storage) : [list<operation>, storage] => {
      10 |     let newStorage : storage = addone (oldStorage, 1 as nat);
                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-     11 |     return [list([]) as list<operation>, newStorage];
+     11 |     return [[], newStorage];
 
     Invalid type.
     Expected a function type, but got "nat". |}];
@@ -311,7 +311,9 @@ let%expect_test _ =
       4 |   (([] : operation list) , { storage with nofield=2048} )
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    Invalid record field "nofield" in record. |}]
+    Invalid record field "nofield" in record of type "record[a -> int ,
+                                                             b -> int ,
+                                                             c -> int]". |}]
 
 let%expect_test _ =
   run_ligo_bad

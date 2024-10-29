@@ -1,8 +1,8 @@
 [@@@warning "-30"]
 
-module Nano_prim = Nano_prim
 module Location = Simple_utils.Location
-module List = Simple_utils.List
+module Ne_list = Simple_utils.Ne_list (* FIXME: Remove *)
+module Nano_prim = Nano_prim
 module Label = Ligo_prim.Label
 module Variable = Ligo_prim.Value_var
 module Ty_variable = Ligo_prim.Type_var
@@ -17,7 +17,7 @@ module Application = Ligo_prim.Application
 module Record = Ligo_prim.Record
 module Non_linear_rows = Nano_prim.Non_linear_rows (Label)
 module Field = Nano_prim.Field
-module Array_repr = Nano_prim.Array_repr
+module Array_repr = Ligo_prim.Array_repr
 module Object_ = Nano_prim.Object_
 module Selection = Nano_prim.Selection
 module Match_tc39 = Nano_prim.Match_tc39
@@ -51,7 +51,6 @@ module Empty_label = struct
   let to_string () = "unlabeled"
 end
 
-module Non_linear_disc_rows = Nano_prim.Non_linear_rows (Empty_label)
 module Attribute = Nano_prim.Attribute
 module Named_fun = Nano_prim.Named_fun
 module Type_app = Nano_prim.Type_app
@@ -80,13 +79,11 @@ module Sig_decl = Nano_prim.Sig_decl
 module Operators = Nano_prim.Operators
 module Let_binding = Nano_prim.Let_binding
 module Rev_app = Nano_prim.Rev_app
-module Z = Ligo_prim.Literal_value.Z
+module Ligo_z = Simple_utils.Ligo_z
 module Ty_escaped_var = Nano_prim.Ty_escaped_var
 module Value_escaped_var = Nano_prim.Value_escaped_var
-
 (*  INFO: Node tagged with [@not_initial] should not be emited by unification
    the first nanopass do the check *)
-
 (* ========================== TYPES ======================================== *)
 
 type 'self type_expression_ = 'self type_expression_content_ Location.wrap
@@ -96,36 +93,29 @@ and 'self type_expression_content_ =
   | T_attr of Attribute.t * 'self (* [@a] x *)
   | T_var of Ty_variable.t [@not_initial] (* x *)
   | T_var_esc of Ty_escaped_var.t (* x or @x without @ *)
-  | T_contract_parameter of Mod_variable.t Simple_utils.List.Ne.t
+  | T_contract_parameter of Mod_variable.t Ne_list.t
   | T_constant of string [@not_initial]
-  | T_prod of 'self Simple_utils.List.Ne.t (* x * y *)
+  | T_prod of 'self Ne_list.t (* x * y *)
   | T_app of ('self, 'self) Type_app.t (* x y *)
   | T_fun of 'self Arrow.t (* Initial in CameLIGO only: x -> y *)
   | T_named_fun of 'self Named_fun.t (* JsLIGO only: (x : x) => y *)
   | T_string of string (* Some types are parametrized by strings / ints *)
-  | T_int of string * Z.t
-  | T_nat of string * Z.t
+  | T_int of string * Ligo_z.t
+  | T_nat of string * Ligo_z.t
   | T_module_open_in of (Mod_variable.t, 'self) Mod_access.t (* A.(<...>) *)
   | T_arg of string (* 'a *)
-  | T_sum_raw of
-      'self option Non_linear_rows.t
-      * (Label.t option[@eq.ignore] [@hash.ignore] [@compare.ignore])
+  | T_sum_raw of 'self option Non_linear_rows.t
   (* A of int | B of string , initial for CameLIGO*)
-  (* This [Label.t] represent an original name of field in disc union type. Initially it's [None] *)
   | T_record_raw of 'self option Non_linear_rows.t (* {a: int; b : int} *)
-  | T_disc_union of 'self Non_linear_disc_rows.t
-    (* { kind: "A" } | { kind: "B" }, initial for JsLIGO only *)
+  | T_union of 'self list (* ty1 | ... | tyn, initial for JsLIGO only *)
   | T_abstraction of 'self Abstraction.t [@not_initial]
     (* [type 'a t = 'a * 'a] <- [t] this decl will be replaced by an abstraction
        at passes/04-nanopasses/passes/type_abstraction_declaration.ml *)
-  | T_module_access of
-      (Mod_variable.t Simple_utils.List.Ne.t, Ty_variable.t) Mod_access.t (* A.B.x *)
+  | T_module_access of (Mod_variable.t Ne_list.t, Ty_variable.t) Mod_access.t (* A.B.x *)
   | T_module_app of
-      ( (Mod_variable.t Simple_utils.List.Ne.t, Ty_variable.t) Mod_access.t
-      , 'self )
-      Type_app.t [@not_initial]
-  | T_sum of 'self Row.t * (Label.t option[@eq.ignore] [@hash.ignore] [@compare.ignore])
+      ((Mod_variable.t Ne_list.t, Ty_variable.t) Mod_access.t, 'self) Type_app.t
       [@not_initial]
+  | T_sum of 'self Row.t [@not_initial]
   | T_record of 'self Row.t [@not_initial]
   | T_for_all of 'self Abstraction.t [@not_initial]
   | T_for_alls of 'self Abstractions.t
@@ -165,10 +155,10 @@ and ('self, 'ty_expr) pattern_content_ =
   | P_pun_record of (Label.t, 'self) Field.t list
   | P_rest of Label.t
   | P_attr of Attribute.t * 'self
-  | P_mod_access of (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t
+  | P_mod_access of (Mod_variable.t Ne_list.t, 'self) Mod_access.t
   | P_app of 'self * 'self option
   | P_ctor of Label.t
-  | P_ctor_app of 'self Simple_utils.List.Ne.t
+  | P_ctor_app of 'self Ne_list.t
   | P_var_typed of 'ty_expr * Variable.t [@not_initial]
 [@@deriving
   map
@@ -242,7 +232,7 @@ and ('self, 'instruction, 'declaration) statement_content_ =
 include struct
   [@@@warning "-27"]
 
-  type ('self, 'statement) block_ = 'statement Simple_utils.List.Ne.t Location.wrap
+  type ('self, 'statement) block_ = 'statement Ne_list.t Location.wrap
   [@@deriving map, fold, yojson, iter, sexp, eq, compare, hash]
 end
 
@@ -256,13 +246,13 @@ and ('self, 'expr, 'ty_expr, 'pattern, 'mod_expr, 'sig_expr) declaration_content
   | D_directive of unit (* directive ignored for now *)
   | D_import of Import.t
   | D_export of 'self
-  | D_let of ('expr, 'pattern Simple_utils.List.Ne.t, 'ty_expr) Let_decl.t
+  | D_let of ('expr, 'pattern Ne_list.t, 'ty_expr) Let_decl.t
     (* let x = <..> ; let x (type a b) y (z:ty) = <..> *)
   | D_var of ('pattern, 'expr, 'ty_expr) Simple_decl.t (* var x = y *)
-  | D_multi_var of ('pattern, 'expr, 'ty_expr) Simple_decl.t Simple_utils.List.Ne.t
+  | D_multi_var of ('pattern, 'expr, 'ty_expr) Simple_decl.t Ne_list.t
     (* var x = y , z = w *)
   | D_const of ('pattern, 'expr, 'ty_expr) Simple_decl.t (* const x = y *)
-  | D_multi_const of ('pattern, 'expr, 'ty_expr) Simple_decl.t Simple_utils.List.Ne.t
+  | D_multi_const of ('pattern, 'expr, 'ty_expr) Simple_decl.t Ne_list.t
     (* const x = y , z = w *)
   | D_fun of ('ty_expr, 'expr, 'pattern Param.t) Fun_decl.t
   | D_type_abstraction of 'ty_expr Type_abstraction_decl.t
@@ -311,7 +301,7 @@ include struct
 
   and ('sig_expr, 'sig_entry, 'ty_expr) sig_expr_content_ =
     | S_body of 'sig_entry list
-    | S_path of Ligo_prim.Module_var.t Simple_utils.List.Ne.t
+    | S_path of Ligo_prim.Module_var.t Ne_list.t
   [@@deriving
     map
     , fold
@@ -332,7 +322,7 @@ include struct
 
   and ('self, 'program) mod_expr_content_ =
     | M_body of 'program
-    | M_path of Ligo_prim.Module_var.t Simple_utils.List.Ne.t
+    | M_path of Ligo_prim.Module_var.t Ne_list.t
     | M_var of Ligo_prim.Module_var.t
   [@@deriving
     map
@@ -361,23 +351,29 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_variable of Variable.t [@not_initial] (* x *)
   | E_variable_esc of Value_escaped_var.t (* x or @x without @ *)
   | E_rev_app of 'self Rev_app.t (* x |> f *)
-  | E_tuple of 'self Simple_utils.List.Ne.t (* (x, y, z) *)
+  | E_tuple of 'self Ne_list.t (* (x, y, z) *)
   | E_record_pun of (Label.t, 'self) Field.t list (* { x = 10; y; z } *)
   | E_array of
       'self Array_repr.t (* [1, 2, 3] , [42] , [] , [2 ...3] (specific to jsligo) *)
+  | E_array_as_list of 'self Array_repr.t (* list([1, 2, 3]) (specific to jsligo) *)
   | E_object of 'self Object_.t (* {a : 1, b : 2}  ; { a ... n } *)
   | E_object_update of 'self Object_.update
   | E_list of 'self list (* [ 1; 2; 3; 4; 5] *)
   | E_proj of 'self * 'self Selection.t list (* x.y.1 *)
   | E_module_open_in of
-      (Mod_variable.t Simple_utils.List.Ne.t, 'self) Mod_access.t (* M.N.a or M.N.(a.x)*)
+      (Mod_variable.t Ne_list.t, 'self) Mod_access.t (* M.N.a or M.N.(a.x)*)
   | E_update of 'self Update.t
   | E_poly_fun of
       ('self, 'ty_expr, 'pattern) Poly_fun.t (* (fun (type a) (x, y) z -> x + y - z) *)
   | E_block_poly_fun of
       ('block, 'ty_expr, 'pattern) Poly_fun.t (* <A>(x: A) => { ... } ) *)
   | E_constr of Label.t
-  | E_ctor_app of ('self * 'self Simple_utils.List.Ne.t option)
+  | E_ctor_app of ('self * 'self Ne_list.t option)
+  (* FIXME: @christian
+     https://gitlab.com/mavryk-network/ligo/-/issues/2177
+     Following the removal of PascaLIGO, it appears that this constructor might
+     not be necessary.
+   *)
   | E_applied_constructor of 'self Constructor.t (* MyCtor (42, 43, 44), PascaLigo only *)
   | E_call of 'self * 'self list Location.wrap (* f (x, y) ; f x y *)
   | E_match of ('self, 'pattern, 'self) Case.t (* match e with | A -> ... | B -> ... *)
@@ -403,7 +399,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_for of ('self, 'self) For_int.t
   | E_for_in of ('pattern, 'self, 'self) For_collection.t
   | E_sequence of 'self list (* begin a ; a () ; x := y end *)
-  | E_contract of Mod_variable.t Simple_utils.List.Ne.t
+  | E_contract of Mod_variable.t Ne_list.t
   | E_constant of 'self Constant.t [@not_initial]
   | E_simple_let_in of ('self, 'pattern) Simple_let_in.t [@not_initial]
   | E_assign_chainable of 'self Assign_chainable.assign [@not_initial]
@@ -416,8 +412,7 @@ and ('self, 'ty_expr, 'pattern, 'block, 'mod_expr) expression_content_ =
   | E_application of 'self Application.t [@not_initial]
   | E_record_update of 'self Record_update.t [@not_initial]
   | E_record_access of 'self Record_access.t [@not_initial]
-  | E_module_access of (Mod_variable.t Simple_utils.List.Ne.t, Variable.t) Mod_access.t
-      [@not_initial]
+  | E_module_access of (Mod_variable.t Ne_list.t, Variable.t) Mod_access.t [@not_initial]
   | E_match_block of ('self, 'pattern, 'block) Case.t [@not_initial]
   | E_prefix of 'self Prefix_postfix.prefix
   | E_postfix of 'self Prefix_postfix.postfix

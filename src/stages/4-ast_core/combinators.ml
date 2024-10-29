@@ -71,7 +71,7 @@ let t__type_ ~loc () : type_expression = t_constant ~loc _type_ []
       , "baker_hash" )]
 
 
-let ez_t_sum ~loc ?layout ?orig_name lst =
+let ez_t_sum ~loc ?layout lst =
   (* inconsistent naming conventions, but [t_sum_ez] is already taken *)
   let layout =
     match layout with
@@ -80,7 +80,7 @@ let ez_t_sum ~loc ?layout ?orig_name lst =
   in
   let layout = Some layout in
   let row = Row.of_alist_exn ~layout lst in
-  make_t ~loc @@ T_sum (row, orig_name)
+  make_t ~loc @@ T_sum row
 
 
 let t_sum_ez ~loc ?layout (lst : (string * type_expression) list) : type_expression =
@@ -95,7 +95,7 @@ let t_bool ~loc () : type_expression =
 
 let get_t_bool (t : type_expression) : unit option =
   match t.type_content with
-  | T_sum ({ fields; _ }, _) ->
+  | T_sum { fields; _ } ->
     let keys = Map.key_set fields in
     if Set.length keys = 2
        && Set.mem keys (Label.of_string "True")
@@ -107,7 +107,7 @@ let get_t_bool (t : type_expression) : unit option =
 
 let get_t_option (t : type_expression) : type_expression option =
   match t.type_content with
-  | T_sum ({ fields; _ }, _) ->
+  | T_sum { fields; _ } ->
     let keys = Map.key_set fields in
     if Set.length keys = 2
        && Set.mem keys (Label.of_string "Some")
@@ -137,7 +137,9 @@ let e__type_ ~loc p : expression = make_e ~loc @@ E_literal (Literal__type_ p)
       , "operation"
       , "bls12_381_g1"
       , "bls12_381_g2"
-      , "bls12_381_fr" )]
+      , "bls12_381_fr"
+      , "chest"
+      , "chest_key" )]
 
 
 let e_constant ~loc cons_name arguments = e_constant ~loc { cons_name; arguments } ()
@@ -174,9 +176,7 @@ let e_constructor ~loc constructor element : expression =
   e_constructor ~loc { constructor; element } ()
 
 
-let e_matching ~loc ?disc_label matchee cases : expression =
-  e_matching ~loc { matchee; disc_label; cases } ()
-
+let e_matching ~loc matchee cases : expression = e_matching ~loc { matchee; cases } ()
 
 let e_record_accessor ~loc struct_ path =
   e_accessor ~loc ({ struct_; path } : _ Types.Accessor.t) ()
@@ -188,12 +188,6 @@ let e_record_update ~loc struct_ path update =
 
 let e_ascription ~loc anno_expr type_annotation : expression =
   e_ascription ~loc { anno_expr; type_annotation } ()
-
-
-let get_e_tuple t =
-  match t with
-  | E_record r -> Some (List.map ~f:snd @@ Record.tuple_of_record r)
-  | _ -> None
 
 
 let get_e_application t =
@@ -223,25 +217,6 @@ let get_e_lambda t =
   | _ -> None
 
 
-(* Same as get_e_pair *)
-let extract_pair : expression -> (expression * expression) option =
- fun e ->
-  match e.expression_content with
-  | E_record record ->
-    (match Record.to_list record with
-    | [ (Label ("0", _), a); (Label ("1", _), b) ]
-    | [ (Label ("1", _), b); (Label ("0", _), a) ] -> Some (a, b)
-    | _ -> None)
-  | _ -> None
-
-
-let extract_record : expression -> (Label.t * expression) list option =
- fun e ->
-  match e.expression_content with
-  | E_record lst -> Some (Record.to_list lst)
-  | _ -> None
-
-
 (** Removes [T_abstraction] and [T_for_all] from the top-level. *)
 let rec strip_abstraction : ty_expr -> ty_expr =
  fun ty_expr ->
@@ -253,6 +228,7 @@ let rec strip_abstraction : ty_expr -> ty_expr =
   | T_variable _
   | T_constant _
   | T_sum _
+  | T_union _
   | T_record _
   | T_arrow _
   | T_singleton _

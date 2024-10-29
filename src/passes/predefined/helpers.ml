@@ -1,5 +1,5 @@
 module Michelson = struct
-  open Tezos_utils.Michelson
+  open Mavryk_utils.Michelson
 
   type predicate =
     | Simple of unit michelson

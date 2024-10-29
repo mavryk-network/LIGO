@@ -1,7 +1,7 @@
 (*
 Modelled after:
 
-  https://gitlab.com/tezos/tezos/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_builder_fungible.mv
+  https://gitlab.com/mavryk-network/mavryk-protocol/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_builder_fungible.mv
 
 Goes with ticket_wallet.mligo.
 *)

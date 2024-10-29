@@ -12,7 +12,7 @@ This sub-command compiles an initial storage for a given contract to a Michelson
 Allow LIGO to download JSON files for metadata check.
 
 **--amount INT**
-the tezos amount the Michelson interpreter will use for the transaction.
+the mavryk amount the Michelson interpreter will use for the transaction.
 
 **--balance INT**
 the balance the Michelson interpreter will use for the contract balance.

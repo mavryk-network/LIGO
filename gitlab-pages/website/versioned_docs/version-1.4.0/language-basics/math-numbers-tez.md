@@ -1,6 +1,6 @@
 ---
 id: math-numbers-mav
-title: Math, Numbers & Tez
+title: Math, Numbers & Mav
 ---
 
 import Syntax from '@theme/Syntax';

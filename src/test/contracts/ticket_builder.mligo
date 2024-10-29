@@ -1,10 +1,12 @@
 (*
 Modelled after:
 
-  https://gitlab.com/tezos/tezos/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_builder_fungible.mv
+  https://gitlab.com/mavos/mavos/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_builder_fungible.mv
 
 Goes with ticket_wallet.mligo.
 *)
+
+module Mavryk = Mavryk.Next
 
 type mint_parameter =
   [@layout comb]
@@ -22,22 +24,22 @@ type storage = [@layout comb] {admin : address}
 [@entry]
 let main (p : parameter) (s : storage) : operation list * storage =
   begin
-    assert (Mavryk.get_amount () = 0mumav);
+    Assert.assert (Mavryk.get_amount () = 0mumav);
     match p with
       Burn ticket ->
         begin
           let ((ticketer, _), ticket) =
-            (Mavryk.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
-          assert (ticketer = Mavryk.get_self_address ());
+            (Mavryk.Ticket.read ticket : (address * (unit * nat)) * unit ticket) in
+          Assert.assert (ticketer = Mavryk.get_self_address ());
           (([] : operation list), s)
         end
     | Mint mint ->
         begin
-          assert (Mavryk.get_sender () = s.admin);
+          Assert.assert (Mavryk.get_sender () = s.admin);
           let ticket =
             Option.value_with_error
-              "option is None" (Mavryk.create_ticket () mint.amount) in
-          let op = Mavryk.transaction ticket 0mumav mint.destination in
+              "option is None" (Mavryk.Ticket.create () mint.amount) in
+          let op = Mavryk.Operation.transaction ticket 0mumav mint.destination in
           ([op], s)
         end
   end

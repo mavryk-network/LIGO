@@ -6,7 +6,7 @@ let bnat = not 0n && 1n
 
 let bint = not 0 && 1 && (0 - 1)
 
-let btez = not 0mav && 1mav
+let bmav = not 0mav && 1mav
 
 let bstring = not "" && "foo"
 
@@ -18,4 +18,4 @@ let bset = not (Set.empty : int set) && (Set.literal [1])
 
 let bmap = not (Map.empty : (int, int) map) && (Map.literal [(1, 1)])
 
-let ball = bnat && bint && btez && bstring && bbytes && blist && bset && bmap
+let ball = bnat && bint && bmav && bstring && bbytes && blist && bset && bmap

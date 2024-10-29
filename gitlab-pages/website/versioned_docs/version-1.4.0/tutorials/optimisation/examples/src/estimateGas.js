@@ -1,6 +1,6 @@
-const taquito = require("@taquito/taquito")
+const taquito = require("@mavrykdynamics/taquito")
 
-const { initializeTezos, Artifacts } = require("./tezos")
+const { initializeMavryk, Artifacts } = require("./tezos")
 
 function printEstimate(description, est) {
     console.log(description)
@@ -15,8 +15,8 @@ function printEstimate(description, est) {
 }
 
 async function estimateGas(networkConfig, buildDir) {
-    const Tezos = await initializeTezos(networkConfig)
-    const artifacts = new Artifacts(Tezos, buildDir)
+    const Mavryk = await initializeMavryk(networkConfig)
+    const artifacts = new Artifacts(Mavryk, buildDir)
     let op = null
     let est = null
 

@@ -5,7 +5,7 @@ cabal-version: 2.0
 -- see: https://github.com/sol/hpack
 
 name:           ligo-debugger
-version:        1.4.0
+version:        1.6.0
 license:        MIT
 license-file:   LICENSE
 build-type:     Simple
@@ -16,6 +16,7 @@ library
       Control.DelayedValues
       Control.MessagePack
       Debug
+      Language.LIGO.Analytics
       Language.LIGO.AST
       Language.LIGO.AST.Parser
       Language.LIGO.AST.Parser.CameLigoCST
@@ -40,7 +41,6 @@ library
       Language.LIGO.Debugger.Michelson
       Language.LIGO.Debugger.Navigate
       Language.LIGO.Debugger.Snapshots
-      Language.LIGO.Diagnostic
       Language.LIGO.Extension
       Language.LIGO.Range
       Language.LIGO.Scope
@@ -110,6 +110,7 @@ library
     , conduit-extra
     , containers
     , data-default
+    , directory
     , dlist
     , duplo
     , fastsum
@@ -118,6 +119,9 @@ library
     , free
     , hashable
     , hex-text
+    , http-client
+    , http-client-tls
+    , http-types
     , lens
     , monad-stm
     , monad-validate
@@ -128,15 +132,16 @@ library
     , msgpack-types
     , mtl
     , named
+    , network-uri
     , nyan-interpolation
     , nyan-interpolation-core
     , process
     , process-extras
+    , prometheus
     , record-dot-preprocessor
     , record-hasfield
     , reflection
     , scientific
-    , semver
     , singletons
     , singletons-th
     , stm
@@ -150,6 +155,7 @@ library
     , unliftio
     , unliftio-core
     , unordered-containers
+    , uuid
     , vector
     , vinyl
   default-language: Haskell2010
@@ -215,7 +221,6 @@ executable ligo-debugger
     , morley
     , morley-debugger
     , morley-prelude
-    , semver
   default-language: Haskell2010
 
 test-suite ligo-debugger-test

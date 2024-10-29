@@ -9,7 +9,7 @@ This sub-command runs a LIGO function on a given argument. The context is initia
 
 ### FLAGS
 **--amount INT**
-the tezos amount the Michelson interpreter will use for the transaction.
+the mavryk amount the Michelson interpreter will use for the transaction.
 
 **--balance INT**
 the balance the Michelson interpreter will use for the contract balance.

@@ -2,14 +2,14 @@
   "checksum": "236cd3ef677e0a02655a611bb99e43f0",
   "root": "dao_path_bug@link-dev:./ligo.json",
   "node": {
-    "tezos-ligo-fa2@1.0.4@d41d8cd9": {
-      "id": "tezos-ligo-fa2@1.0.4@d41d8cd9",
-      "name": "tezos-ligo-fa2",
+    "mavryk-ligo-fa2@1.0.4@d41d8cd9": {
+      "id": "mavryk-ligo-fa2@1.0.4@d41d8cd9",
+      "name": "mavryk-ligo-fa2",
       "version": "1.0.4",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://beta.packages.ligolang.org/-/api/tezos-ligo-fa2/-/tezos-ligo-fa2-1.0.4.tgz#sha1:05e8ae8baf69910ad2b498c69fa15e942e613a5e"
+          "archive:https://beta.packages.ligo.mavryk.org/-/api/mavryk-ligo-fa2/-/mavryk-ligo-fa2-1.0.4.tgz#sha1:05e8ae8baf69910ad2b498c69fa15e942e613a5e"
         ]
       },
       "overrides": [],
@@ -36,11 +36,11 @@
       "source": {
         "type": "install",
         "source": [
-          "archive:https://beta.packages.ligolang.org/-/api/@ligo/dao/-/@ligo/dao-1.0.9.tgz#sha1:ae500c5b5e32347c05d056eccc253ca9edbfbeb6"
+          "archive:https://beta.packages.ligo.mavryk.org/-/api/@ligo/dao/-/@ligo/dao-1.0.9.tgz#sha1:ae500c5b5e32347c05d056eccc253ca9edbfbeb6"
         ]
       },
       "overrides": [],
-      "dependencies": [ "tezos-ligo-fa2@1.0.4@d41d8cd9" ],
+      "dependencies": [ "mavryk-ligo-fa2@1.0.4@d41d8cd9" ],
       "devDependencies": []
     }
   }

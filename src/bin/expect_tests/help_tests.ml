@@ -70,6 +70,8 @@ This sub-command compiles a contract to Michelson code. It expects a source file
                                order to simplify the relationship between the
                                source LIGO and the target Michelson. Intended
                                for use with stepwise Michelson debuggers.
+  [--feature-infer-array-as-list]
+                             . Infer array as lists.
   [--file-constants FILE_CONSTANTS]
                              . A file with a JSON list of strings with Michelson
                                code. Those Michelson values will be registered
@@ -119,8 +121,7 @@ This sub-command compiles a contract to Michelson code. It expects a source file
                                module. Files containing a single contract module
                                are automatically infered
   [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                               the LIGO environment (atlas). By default, the
-                               current protocol (atlas) will be used
+                               the LIGO environment (deprecated)
   [-help], -?                . print this help text and exit |}]
 
 let%expect_test _ =
@@ -136,7 +137,7 @@ let%expect_test _ =
 
     === flags ===
 
-      [--amount INT]             . the tezos amount the Michelson interpreter will
+      [--amount INT]             . the mavryk amount the Michelson interpreter will
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
@@ -191,8 +192,7 @@ let%expect_test _ =
                                    module. Files containing a single contract module
                                    are automatically infered
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (atlas). By default, the
-                                   current protocol (atlas) will be used
+                                   the LIGO environment (deprecated)
       [-help], -?                . print this help text and exit |}]
 
 let%expect_test _ =
@@ -210,7 +210,7 @@ let%expect_test _ =
 
       [--allow-json-download]    . Allow LIGO to download JSON files for metadata
                                    check.
-      [--amount INT]             . the tezos amount the Michelson interpreter will
+      [--amount INT]             . the mavryk amount the Michelson interpreter will
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
@@ -268,8 +268,7 @@ let%expect_test _ =
                                    module. Files containing a single contract module
                                    are automatically infered
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (atlas). By default, the
-                                   current protocol (atlas) will be used
+                                   the LIGO environment (deprecated)
       [-help], -?                . print this help text and exit |}]
 
 let%expect_test _ =
@@ -292,6 +291,8 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
+      [--feature-infer-array-as-list]
+                                 . Infer array as lists.
       [--init-file FILENAME]     . the path to the smart contract file to be used
                                    for context initialization.
       [--library LIBS], -l       . A comma-separated list of paths to directories
@@ -309,8 +310,7 @@ let%expect_test _ =
       [--without-run]            . disable running of compiled expression.
       [-D pass]                  . a list of defines to the preprocessor
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (atlas). By default, the
-                                   current protocol (atlas) will be used
+                                   the LIGO environment (deprecated)
       [-help], -?                . print this help text and exit |}]
 
 let%expect_test _ =
@@ -326,7 +326,7 @@ let%expect_test _ =
 
     === flags ===
 
-      [--amount INT]             . the tezos amount the Michelson interpreter will
+      [--amount INT]             . the mavryk amount the Michelson interpreter will
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
@@ -337,6 +337,8 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
+      [--feature-infer-array-as-list]
+                                 . Infer array as lists.
       [--library LIBS], -l       . A comma-separated list of paths to directories
                                    where to search for files to be included by the
                                    preprocessor
@@ -366,8 +368,7 @@ let%expect_test _ =
                                    module. Files containing a single contract module
                                    are automatically infered
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (atlas). By default, the
-                                   current protocol (atlas) will be used
+                                   the LIGO environment (deprecated)
       [-help], -?                . print this help text and exit |}]
 
 let%expect_test _ =
@@ -383,7 +384,7 @@ let%expect_test _ =
 
     === flags ===
 
-      [--amount INT]             . the tezos amount the Michelson interpreter will
+      [--amount INT]             . the mavryk amount the Michelson interpreter will
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
@@ -394,6 +395,8 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
+      [--feature-infer-array-as-list]
+                                 . Infer array as lists.
       [--library LIBS], -l       . A comma-separated list of paths to directories
                                    where to search for files to be included by the
                                    preprocessor
@@ -417,8 +420,7 @@ let%expect_test _ =
                                    function
       [--werror]                 . treat warnings as errors
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (atlas). By default, the
-                                   current protocol (atlas) will be used
+                                   the LIGO environment (deprecated)
       [-help], -?                . print this help text and exit |}]
 
 let%expect_test _ =
@@ -434,7 +436,7 @@ let%expect_test _ =
 
     === flags ===
 
-      [--amount INT]             . the tezos amount the Michelson interpreter will
+      [--amount INT]             . the mavryk amount the Michelson interpreter will
                                    use for the transaction.
       [--balance INT]            . the balance the Michelson interpreter will use
                                    for the contract balance.
@@ -445,6 +447,8 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
+      [--feature-infer-array-as-list]
+                                 . Infer array as lists.
       [--library LIBS], -l       . A comma-separated list of paths to directories
                                    where to search for files to be included by the
                                    preprocessor
@@ -468,8 +472,7 @@ let%expect_test _ =
                                    function
       [--werror]                 . treat warnings as errors
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (atlas). By default, the
-                                   current protocol (atlas) will be used
+                                   the LIGO environment (deprecated)
       [-help], -?                . print this help text and exit |}]
 
 let%expect_test _ =
@@ -495,6 +498,8 @@ let%expect_test _ =
                                    lacks details (we are still tweaking it), please
                                    contact us and use another format in the
                                    meanwhile.
+      [--feature-infer-array-as-list]
+                                 . Infer array as lists.
       [--file-constants FILE_CONSTANTS]
                                  . A file with a JSON list of strings with Michelson
                                    code. Those Michelson values will be registered
@@ -522,8 +527,7 @@ let%expect_test _ =
       [--without-run]            . disable running of compiled expression.
       [-D pass]                  . a list of defines to the preprocessor
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (atlas). By default, the
-                                   current protocol (atlas) will be used
+                                   the LIGO environment (deprecated)
       [-help], -?                . print this help text and exit |}]
 
 let%expect_test _ =
@@ -595,6 +599,5 @@ let%expect_test _ =
       [--type-doc]               . Translate JsLIGO program into TypeScript for
                                    generating documentation.
       [-p PROTOCOL], --protocol  . choose protocol's types/values pre-loaded into
-                                   the LIGO environment (atlas). By default, the
-                                   current protocol (atlas) will be used
+                                   the LIGO environment (deprecated)
       [-help], -?                . print this help text and exit |}]

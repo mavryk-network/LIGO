@@ -1,7 +1,7 @@
 open Ligo_prim
 module Location = Simple_utils.Location
 
-type tezos_alpha_error = [ `Mavryk_alpha_error of Mavryk_error_monad.Error_monad.error ]
+type mavryk_alpha_error = [ `Mavryk_alpha_error of Mavryk_error_monad.Error_monad.error ]
 
 type all =
   [ `Build_error_tracer of BuildSystem.Errors.t
@@ -16,21 +16,21 @@ type all =
   | `Main_transpilation_unsupported_syntaxes of string * string
   | `Main_transpilation_unspecified_dest_syntax
   | `Main_transpilation_same_source_and_dest_syntax of string
-  | `Main_unparse_tracer of tezos_alpha_error list
+  | `Main_unparse_tracer of mavryk_alpha_error list
   | `Main_typecheck_contract_tracer of
-    Environment.Protocols.t * int Tezos_utils.Michelson.michelson * tezos_alpha_error list
-  | `Main_could_not_serialize of tezos_alpha_error list
+    int Mavryk_utils.Michelson.michelson * mavryk_alpha_error list
+  | `Main_could_not_serialize of mavryk_alpha_error list
   | `Check_typed_arguments_tracer of Simple_utils.Runned_result.check_type * all
   | `Main_unknown
   | `Main_execution_failed of (int, string) Mavryk_micheline.Micheline.node
   | `Main_cannot_open_global_constants of string
   | `Main_cannot_parse_global_constants of string * string
-  | `Unparsing_michelson_tracer of tezos_alpha_error list
-  | `Parsing_payload_tracer of tezos_alpha_error list
-  | `Packing_payload_tracer of tezos_alpha_error list
-  | `Parsing_input_tracer of tezos_alpha_error list
-  | `Parsing_code_tracer of tezos_alpha_error list
-  | `Error_of_execution_tracer of tezos_alpha_error list
+  | `Unparsing_michelson_tracer of mavryk_alpha_error list
+  | `Parsing_payload_tracer of mavryk_alpha_error list
+  | `Packing_payload_tracer of mavryk_alpha_error list
+  | `Parsing_input_tracer of mavryk_alpha_error list
+  | `Parsing_code_tracer of mavryk_alpha_error list
+  | `Error_of_execution_tracer of mavryk_alpha_error list
   | `Preproc_tracer of Preprocessing.Errors.t
   | `Parser_tracer of Parsing.Errors.t
   | `Nanopasses_tracer of Nanopasses.Errors.t
@@ -39,6 +39,7 @@ type all =
   | `Self_ast_typed_tracer of Self_ast_typed.Errors.self_ast_typed_error
   | `Aggregation_tracer of Aggregation.Errors.aggregation_error
   | `Self_ast_aggregated_tracer of Self_ast_aggregated.Errors.self_ast_aggregated_error
+  | `Expansion_tracer of Expansion.Errors.expansion_error
   | `Spilling_tracer of Spilling.Errors.spilling_error
   | `Self_mini_c_tracer of Self_mini_c.Errors.self_mini_c_error
   | `Scoping_tracer of Scoping.Errors.scoping_error
@@ -62,7 +63,7 @@ type all =
   | `Main_interpret_literal of Location.t * Literal_value.t
   | `Main_interpret_modules_not_supported of Location.t
   | `Main_interpret_not_enough_initial_accounts of
-    Location.t * Memory_proto_alpha.Protocol.Alpha_context.Tez.mav
+    Location.t * Memory_proto_alpha.Protocol.Alpha_context.Mav.t
   | `Main_decompile_michelson of Stacking.Errors.stacking_error
   | `Main_decompile_mini_c of Spilling.Errors.spilling_error
   | `Main_decompile_typed of Checking.Errors.typer_error
@@ -103,5 +104,6 @@ type all =
   | `Resolve_config_config_type_mismatch of
     Ast_typed.type_expression * (Format.formatter -> Ast_typed.type_expression -> unit)
   | `Repl_unexpected
+  | `Scopes_recovered_error of Simple_utils.Error.t
   ]
 [@@deriving poly_constructor]

@@ -36,7 +36,7 @@ contracts and executing transactions, as well as additional helper
 functions that allow to control different parameters of the Mavryk
 testing library.
 
-> Note: The LIGO interpreter uses the [same library that Mavryk internally uses for testing](https://gitlab.com/tezos/tezos/-/tree/master/src/proto_alpha/lib_protocol/test/helpers).
+> Note: The LIGO interpreter uses the [same library that Mavryk internally uses for testing](https://gitlab.com/mavryk-network/mavryk-protocol/-/tree/master/src/proto_alpha/lib_protocol/test/helpers).
 
 The function `Test.originate` allows to deploy a contract in the
 testing environment. It takes a contract, which is represented as a
@@ -211,7 +211,7 @@ and then show you how to handle it.
 
 There is two kind of operations in the protocol : external and internal.
 `internal operations` are those created by smart contracts and `external operations` are those created from outside the chain
-(e.g. using `Test.originate` or `mavryk-client` for instance) [more information here](https://tezos.gitlab.io/active/michelson.html#semantics-of-smart-contracts-and-transactions)
+(e.g. using `Test.originate` or `mavryk-client` for instance) [more information here](https://protocol.mavryk.org/active/michelson.html#semantics-of-smart-contracts-and-transactions)
 
 In the protocol, both external and internal `transfer`/`origination` operations contains a piece of michelson code representing the `parameter`/`initial storage`.
 Now imagine you have a value of type `parameter_ty`/`storage_ty` containing a ticket, that you want to transfer or originate,
@@ -793,7 +793,7 @@ When declaring the entry points of a contract using `@entry`, LIGO generates two
 
 In the example below, `contract_of(C)` is returns the implicitly-declared `main` function that calls the `increment` or `decrement` entry points depending on the argument given, and `parameter_of C` is the [variant](https://ligo.mavryk.org/docs/language-basics/unit-option-pattern-matching#variant-types) `["Increment", int] | ["Decrement", int]`.
 
-```jsligo group=tezos_specific
+```jsligo group=mavryk_specific
 namespace C {
   type storage = int;
 

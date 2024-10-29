@@ -64,7 +64,7 @@ const News = () => {
       description:
         "The Ligo team is contributing too. See us at conferences to discover Ligo through a talk given by one of our teammates.",
       size: "small",
-      href: "https://tezos.com/mav-dev",
+      href: "https://mavryk.org/mav-dev",
 
       cta: "ligo at mav/dev",
     },

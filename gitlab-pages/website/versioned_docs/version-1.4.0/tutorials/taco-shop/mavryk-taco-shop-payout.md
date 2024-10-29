@@ -115,7 +115,7 @@ namespace TacoShop {
       taco_kind_index,
       (Some ({...taco_kind, current_stock : abs (taco_kind.current_stock - 1n) })),
       taco_shop_storage );
-    return [list([]), taco_shop_storage]
+    return [[], taco_shop_storage]
   }
   };
 };
@@ -184,7 +184,7 @@ contract with no parameters, or an implicit account.
 <Syntax syntax="cameligo">
 
 ```cameligo group=ex1
-let ownerAddress : address = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" : address)
+let ownerAddress : address = "mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ"
 let receiver : unit contract =
   match (Mavryk.get_contract_opt ownerAddress : unit contract option) with
     Some (contract) -> contract
@@ -196,7 +196,7 @@ let receiver : unit contract =
 <Syntax syntax="jsligo">
 
 ```jsligo group=ex1
-const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address)
+const ownerAddress : address = "mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ"
 const receiver : contract<unit> =
   match (Mavryk.get_contract_opt(ownerAddress) as option<contract<unit>>) {
     when(Some(contract)): contract;
@@ -230,7 +230,7 @@ let operations : operation list = [payoutOperation]
 
 ```jsligo group=ex1
 const payoutOperation : operation = Mavryk.transaction (unit, Mavryk.get_amount (), receiver) ;
-const operations : list <operation> = list([payoutOperation]);
+const operations : list <operation> = [payoutOperation];
 ```
 
 </Syntax>
@@ -319,9 +319,9 @@ namespace TacoShop {
   export type taco_supply = { current_stock: nat, max_price: mav };
   export type taco_shop_storage = map<nat, taco_supply>;
 
-  const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address);
+  const ownerAddress : address = "mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ";
 
-  const donationAddress = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address);
+  const donationAddress : address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
 
   @entry
   function buy_taco(taco_kind_index: nat, taco_shop_storage: taco_shop_storage): [
@@ -379,7 +379,7 @@ namespace TacoShop {
         when(None()): failwith ("Insufficient balance")
       };
       const op2 = Mavryk.transaction (unit, donationAmount, donationReceiver);
-      const operations : list<operation> = list([ op1 , op2 ]);
+      const operations : list<operation> = [ op1 , op2 ];
 
       return [operations, taco_shop_storage]
     }
@@ -475,8 +475,8 @@ let operations : operation list =
 <Syntax syntax="jsligo">
 
 ```jsligo group=bonus
-const ownerAddress = ("mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ" as address);
-const donationAddress = ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address);
+const ownerAddress : address = "mv1KJETikoyVdWeBh5Hr1SHBDycQUkrKFNdZ";
+const donationAddress : address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
 
 const receiver : contract<unit> =
   match ((Mavryk.get_contract_opt (ownerAddress)) as option<contract<unit>>) {
@@ -498,7 +498,7 @@ const op1 = match ((Mavryk.get_amount ()) - donationAmount) {
   when(None()): failwith ("Insufficient balance")
 };
 const op2 = Mavryk.transaction (unit, donationAmount, donationReceiver);
-const operations : list<operation> = list([ op1 , op2 ]);
+const operations : list<operation> = [ op1 , op2 ];
 ```
 
 </Syntax>

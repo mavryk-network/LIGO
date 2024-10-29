@@ -372,7 +372,7 @@ Contracts & Accounts
 </div>
 <div className="example">
 
-```cameligo group=tezos_specific
+```cameligo group=mavryk_specific
 let destinationAddress : address =
   ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
@@ -388,7 +388,7 @@ Transactions
 </div>
 <div className="example">
 
-```cameligo group=tezos_specific
+```cameligo group=mavryk_specific
 
 let payment : operation =
   Mavryk.transaction unit 100mumav contract
@@ -517,10 +517,10 @@ namespace C {
   export type storage = int;
 
   @entry
-  const increment = (action: int, store: storage) : [list <operation>, storage] => [list([]), store + action];
+  const increment = (action: int, store: storage) : [list <operation>, storage] => [[], store + action];
 
   @entry
-  const decrement = (action: int, store: storage) : [list <operation>, storage] => [list([]), store - action];
+  const decrement = (action: int, store: storage) : [list <operation>, storage] => [[], store - action];
 
   @view
   const get_storage = (must_be_positive: bool, storage: int): int => {
@@ -621,8 +621,8 @@ Mumav (micro mav)
 <div className="example">
 
 ```jsligo
-const tez_amount: mav = 42mav
-const tez_amount2: mav = tez_amount + 7mumav // == 42000007mumav
+const mav_amount: mav = 42mav
+const mav_amount2: mav = mav_amount + 7mumav // == 42000007mumav
 ```
 
 </div>
@@ -632,10 +632,8 @@ Address
 <div className="example">
 
 ```jsligo
-const mv1address: address =
-  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
-const kt1address: address =
-  "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;
+const tz1address: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
+const kt1address: address = "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD";
 ```
 
 </div>
@@ -806,8 +804,7 @@ Type Annotations
 <div className="example">
 
 ```jsligo
-const someAddress: address =
-  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
+const someAddress: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
 ```
 
 </div>
@@ -867,11 +864,11 @@ Maps
 ```jsligo
 type prices = map<nat, mav>;
 
-const prices: prices = Map.literal(list([
+const prices: prices = Map.literal([
   [10n, 60mumav],
   [50n, 30mumav],
   [100n, 10mumav]
-]));
+]);
 
 const price: option<mav> = Map.find_opt(50n, prices)
 
@@ -884,9 +881,8 @@ Contracts & Accounts
 </div>
 <div className="example">
 
-```jsligo group=tezos_specific
-const destinationAddress: address =
-  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
+```jsligo group=mavryk_specific
+const destinationAddress: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
 
 const contract : contract<unit> =
   match(Mavryk.get_contract_opt(Mavryk.get_sender()) as option<contract<unit>>) {
@@ -901,7 +897,7 @@ Transactions
 </div>
 <div className="example">
 
-```jsligo group=tezos_specific
+```jsligo group=mavryk_specific
 const payment: operation =
   Mavryk.transaction(unit, 100mumav, contract);
 ```
@@ -954,8 +950,8 @@ Namespace (auto-inferred type)
 ```jsligo
 namespace FA0_inferred {
   type storage = int;
-  @entry const add = (s : int, k : int) : [list<operation>, int] => [list([]), s + k];
-  @entry const extra = (s : int, k : int) : [list<operation>, int] => [list([]), s - k];
+  @entry const add = (s : int, k : int) : [list<operation>, int] => [[], s + k];
+  @entry const extra = (s : int, k : int) : [list<operation>, int] => [[], s - k];
 }
 ```
 
@@ -993,9 +989,9 @@ Namespace impmlementing
 
 ```jsligo
 namespace FA0 implements FA0_INTF {
-  type storage = int;
-  @entry const add = (s : int, k : int) : [list<operation>, int] => [list([]), s + k];
-  @entry const extra = (s : int, k : int) : [list<operation>, int] => [list([]), s - k];
+  export type storage = int;
+  @entry const add = (s : int, k : int) : [list<operation>, int] => [[], s + k];
+  @entry const extra = (s : int, k : int) : [list<operation>, int] => [[], s - k];
 }
 ```
 

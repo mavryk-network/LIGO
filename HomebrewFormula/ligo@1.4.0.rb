@@ -1,5 +1,5 @@
 class LigoAT140 < Formula
-  desc "Friendly Smart Contract Language for Tezos"
+  desc "Friendly Smart Contract Language for Mavryk"
   homepage "https://ligo.mavryk.org/"
   license "MIT"
 
@@ -42,7 +42,7 @@ class LigoAT140 < Formula
     system "scripts/setup_switch.sh"
     # TODO: remowe workarounds below and use the script provided by the ligo repo once
     # a new version is released
-    # Required for Tezos hangzhou protocol
+    # Required for Mavryk hangzhou protocol
     system "git", "submodule", "init"
     system "git", "submodule", "update", "--recursive"
     # Because sed has different options on MacOS >:(

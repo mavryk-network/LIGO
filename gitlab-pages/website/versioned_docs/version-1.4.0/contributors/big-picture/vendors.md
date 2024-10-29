@@ -8,7 +8,7 @@ Next to LIGO’s main pipeline, we use some other libraries, that are in the fol
 This, quite expectedly, defines utilities that are used in LIGO.
 There are three kinds of utilities, corresponding to their dependencies.
 
-`tezos-utils` contain utilities that depend on some Mavryk libraries.
+`mavryk-utils` contain utilities that depend on some Mavryk libraries.
 
 `proto-alpha-utils` contain utilities that depend on the compilation of some Mavryk protocol. It is very big and thus can’t be compiled in JS. This is because of a dependency to this that we don’t have LIGO in the browser yet.
 

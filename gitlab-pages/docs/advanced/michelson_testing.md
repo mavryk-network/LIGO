@@ -17,7 +17,7 @@ test contracts in Michelson:
 
 Another alternative is to use Mavryk's binary `mavryk-client`
 directly. There's a new
-[mockup](https://tezos.gitlab.io/user/mockup.html) mode which is does
+[mockup](https://protocol.mavryk.org/user/mockup.html) mode which is does
 not need a Mavryk node to be running (albeit this is less similar to
 mainnet than running a Mavryk sandbox node).
 
@@ -54,7 +54,7 @@ type result = [list<operation>, storage];
 
 @entry
 const append = (s : string, store: storage): result =>
-  [list([]), store + s]
+  [[], store + s]
 ```
 
 </Syntax>

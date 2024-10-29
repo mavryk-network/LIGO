@@ -12,6 +12,7 @@ type t =
   ; libraries : string list
   ; project_root : string option
   ; transpiled : bool
+  ; parser_error_recovery : bool
   ; (* Tools *)
     with_types : bool
   ; self_pass : bool
@@ -19,6 +20,7 @@ type t =
   ; only_ep : bool
   ; skip_generated : bool
   ; defs_only : bool
+  ; typer_error_recovery : bool
   ; (* Test framework *)
     test : bool
   ; steps : int
@@ -26,9 +28,9 @@ type t =
   ; cli_expr_inj : string option
   ; (* Middle-end *)
     no_stdlib : bool
+  ; array_as_list : bool
   ; (* Backend *)
-    protocol_version : string
-  ; disable_michelson_typechecking : bool
+    disable_michelson_typechecking : bool
   ; experimental_disable_optimizations_for_debugging : bool
   ; enable_typed_opt : bool
   ; without_run : bool
@@ -54,6 +56,7 @@ module Default_options = struct
   let libraries = []
   let project_root = None
   let transpiled = false
+  let parser_error_recovery = false
 
   (* Tools *)
   let only_ep = false
@@ -62,6 +65,7 @@ module Default_options = struct
   let json_download = None
   let skip_generated = false
   let defs_only = false
+  let typer_error_recovery = false
 
   (* Test framework *)
   let test = false
@@ -71,9 +75,9 @@ module Default_options = struct
 
   (* Middle-end *)
   let no_stdlib = false
+  let array_as_list = false
 
   (* Backend *)
-  let protocol_version = "current"
   let disable_michelson_typechecking = false
   let experimental_disable_optimizations_for_debugging = false
   let enable_typed_opt = false
@@ -96,6 +100,7 @@ let make
     ?(libraries = Default_options.libraries)
     ?(project_root = Default_options.project_root)
     ?(transpiled = Default_options.transpiled)
+    ?(parser_error_recovery = Default_options.parser_error_recovery)
     ?(only_ep = Default_options.only_ep)
     ?(with_types = Default_options.with_types)
     ?(self_pass = Default_options.self_pass)
@@ -104,9 +109,10 @@ let make
     ?(steps = Default_options.steps)
     ?(generator = Default_options.generator)
     ?(cli_expr_inj = Default_options.cli_expr_inj)
-    ?(protocol_version = Default_options.protocol_version)
     ?(no_stdlib = Default_options.no_stdlib)
+    ?(array_as_list = Default_options.array_as_list)
     ?(defs_only = Default_options.defs_only)
+    ?(typer_error_recovery = Default_options.typer_error_recovery)
     ?(disable_michelson_typechecking = Default_options.disable_michelson_typechecking)
     ?(experimental_disable_optimizations_for_debugging =
       Default_options.experimental_disable_optimizations_for_debugging)
@@ -131,6 +137,7 @@ let make
   ; libraries
   ; project_root
   ; transpiled
+  ; parser_error_recovery
   ; (* Tools *)
     only_ep
   ; with_types
@@ -138,6 +145,7 @@ let make
   ; json_download
   ; skip_generated
   ; defs_only
+  ; typer_error_recovery
   ; (* Test framework *)
     test
   ; steps
@@ -145,9 +153,9 @@ let make
   ; cli_expr_inj
   ; (* Middle-end *)
     no_stdlib
+  ; array_as_list
   ; (* Backend *)
-    protocol_version
-  ; disable_michelson_typechecking
+    disable_michelson_typechecking
   ; experimental_disable_optimizations_for_debugging
   ; enable_typed_opt
   ; without_run

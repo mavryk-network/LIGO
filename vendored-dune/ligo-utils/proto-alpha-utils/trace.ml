@@ -1,11 +1,11 @@
+open Core
 include Simple_utils.Trace
-module List = Simple_utils.List
 module AE = Memory_proto_alpha.Alpha_environment
 module TP = Mavryk_error_monad.Error_monad
 
-type tezos_alpha_error = [ `Mavryk_alpha_error of TP.error ]
+type mavryk_alpha_error = [ `Mavryk_alpha_error of TP.error ]
 
-let of_tz_error (err : X_error_monad.error) : tezos_alpha_error = `Mavryk_alpha_error err
+let of_tz_error (err : X_error_monad.error) : mavryk_alpha_error = `Mavryk_alpha_error err
 
 let trace_decoding_error
     :  (Data_encoding.Binary.read_error -> 'err)
@@ -17,7 +17,7 @@ let trace_decoding_error
   | Error err -> Error (f err)
 
 let trace_alpha_tzresult
-    :  raise:('b, 'w) raise -> (tezos_alpha_error list -> 'b)
+    :  raise:('b, 'w) raise -> (mavryk_alpha_error list -> 'b)
     -> 'a AE.Error_monad.tzresult -> 'a
   =
  fun ~raise tracer err ->
@@ -26,7 +26,7 @@ let trace_alpha_tzresult
   | Error errs -> raise.error @@ tracer (List.map ~f:of_tz_error @@ AE.wrap_tztrace errs)
 
 let trace_alpha_shell_tzresult
-    :  raise:('b, 'w) raise -> (tezos_alpha_error list -> 'b)
+    :  raise:('b, 'w) raise -> (mavryk_alpha_error list -> 'b)
     -> 'a AE.Error_monad.shell_tzresult -> 'a
   =
  fun ~raise tracer err ->
@@ -35,7 +35,7 @@ let trace_alpha_shell_tzresult
   | Error errs -> raise.error @@ tracer (List.map ~f:of_tz_error @@ errs)
 
 let trace_tzresult
-    :  raise:('b, 'w) raise -> (tezos_alpha_error list -> _)
+    :  raise:('b, 'w) raise -> (mavryk_alpha_error list -> _)
     -> ('a, TP.error list) Stdlib.result -> 'a
   =
  fun ~raise tracer err ->

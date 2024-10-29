@@ -356,9 +356,9 @@ Inductive expr_typed : list ty -> expr -> ty -> Prop :=
     `{args_typed g args az ->
       (* TODO should postulate some typing *)
       expr_typed g (E_inline_michelson l1 code args) b}
-(* E_global_constant is for Tezos "global constants". It is very
+(* E_global_constant is for Mavryk "global constants". It is very
    similar to E_inline_michelson, but accepts the string hash of a
-   Tezos "global constant" in place of the Michelson code. *)
+   Mavryk "global constant" in place of the Michelson code. *)
 | E_global_constant_typed {az b hash args} :
     `{args_typed g args az ->
       (* TODO should postulate some typing *)

@@ -16,7 +16,7 @@ Two choices are offered, ideal if you want to work with Ligo :
 - Install necessary stuff onto your machine
     - [Ligo compiler](https://ligo.mavryk.org/docs/intro/installation) to compile your code.
     - [IDE plugins](https://ligo.mavryk.org/docs/intro/editor-support)
-    - [mavkit-client](https://tezos.gitlab.io/introduction/howtoget.html) used to interact with tezos blockchain. Pre-built binaries are available [here](https://github.com/serokell/mavryk-packaging)
+    - [mavkit-client](https://protocol.mavryk.org/introduction/howtoget.html) used to interact with mavryk blockchain. Pre-built binaries are available [here](https://github.com/serokell/mavryk-packaging)
 - Use [webide](https://ide.mavryk.network), ideal if you want a quick view of ligo. You'll be able to do, test, dry-run, and deploy the code !
 
 ## Building a smart-contract.
@@ -273,13 +273,13 @@ and more on how to write and test namespace/module contracts
 
 For deploying the contract on Mavryk, we will use the `mavkit-client` interface as we did on the previous section.
 
-First, you will need an account address. You can get one using any wallet listed [here](https://tezos.com/learn/store-and-use/).
+First, you will need an account address. You can get one using any wallet listed [here](https://mavryk.org/learn/store-and-use/).
 Once you have your first account configured, go to a [faucet](https://faucet.marigold.dev/), select the `ghostnet` testnet and claim `XTZ` tokens. clikc on the faucet and you will receive some tokens to play with.
 
 Then we are going to point the Mavryk client to a Ghostnet testnet node
 
 ```zsh
-mavkit-client --endpoint https://ghostnet.tezos.marigold.dev/ config update
+mavkit-client --endpoint https://basenet.rpc.mavryk.network/ config update
 ```
 
 Ghostnet is a testnet, which is a separate network from the Mavryk mainnet, which can be used for testing.
@@ -335,7 +335,7 @@ If you do so, back to `mvkt`, you will see several information on the operation,
 
 ## Testing the Michelson contract locally
 
-It can be annoying to deploy you contract onto a node to test it. We advise testing that [the Michelson code locally using mockup environment](https://tezos.gitlab.io/user/mockup.html). It'll allow to automate end to end tests in simulated environment
+It can be annoying to deploy you contract onto a node to test it. We advise testing that [the Michelson code locally using mockup environment](https://protocol.mavryk.org/user/mockup.html). It'll allow to automate end to end tests in simulated environment
 
 This conclude this part of our tutorial.
 You should now be able to compile, test, publish and call a contract.

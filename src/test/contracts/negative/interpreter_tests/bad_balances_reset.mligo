@@ -1,1 +1,3 @@
-let test = Test.reset_state 2n [4000mav;4000mav]
+module Test = Test.Next
+
+let test = Test.State.reset 2n [4000mav;4000mav]

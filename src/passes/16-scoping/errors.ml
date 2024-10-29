@@ -1,6 +1,7 @@
-module Michelson = Tezos_utils.Michelson
+module Michelson = Mavryk_utils.Michelson
 open Ligo_prim
-open Simple_utils.Display
+module Display = Simple_utils.Display
+module Ligo_Error = Simple_utils.Error
 
 type scoping_error =
   [ `Scoping_corner_case of string * string
@@ -10,7 +11,7 @@ type scoping_error =
   | `Scoping_could_not_tokenize_michelson of string
   | `Scoping_could_not_parse_michelson of string
   | `Scoping_untranspilable of int Michelson.t * int Michelson.t
-  | `Scoping_unsupported_primitive of Constant.constant' * Environment.Protocols.t
+  | `Scoping_unsupported_primitive of Constant.constant'
   ]
 [@@deriving poly_constructor { prefix = "scoping_" }]
 
@@ -22,19 +23,15 @@ let corner_case_msg () =
 
 
 let error_ppformat
-    : display_format:string display_format -> Format.formatter -> scoping_error -> unit
+    :  display_format:string Display.display_format -> Format.formatter -> scoping_error
+    -> unit
   =
  fun ~display_format f a ->
   match display_format with
   | Human_readable | Dev ->
     (match a with
-    | `Scoping_unsupported_primitive (c, p) ->
-      Format.fprintf
-        f
-        "@[<hv>unsupported primitive %a in protocol %s@]"
-        Constant.pp_constant'
-        c
-        (Environment.Protocols.variant_to_string p)
+    | `Scoping_unsupported_primitive c ->
+      Format.fprintf f "@[<hv>unsupported primitive %a@]" Constant.pp_constant' c
     | `Scoping_corner_case (loc, msg) ->
       let s =
         Format.asprintf "Scoping corner case at %s : %s.\n%s" loc msg (corner_case_msg ())
@@ -68,17 +65,13 @@ let error_ppformat
         value)
 
 
-let error_json : scoping_error -> Simple_utils.Error.t =
+let error_json : scoping_error -> Ligo_Error.t =
  fun e ->
-  let open Simple_utils.Error in
+  let open Ligo_Error in
   match e with
-  | `Scoping_unsupported_primitive (c, p) ->
+  | `Scoping_unsupported_primitive c ->
     let message =
-      Format.asprintf
-        "@[<hv>unsupported primitive %a in protocol %s@]"
-        Constant.pp_constant'
-        c
-        (Environment.Protocols.variant_to_string p)
+      Format.asprintf "@[<hv>unsupported primitive %a@]" Constant.pp_constant' c
     in
     let content = make_content ~message () in
     make ~stage ~content

@@ -1,6 +1,7 @@
 open Ligo_prim
 open Ast_aggregated
 module Free_variables = Helpers.Free_variables
+module Ligo_pair = Simple_utils.Ligo_pair
 
 (* Reference implementation:
    https://www.cs.cornell.edu/courses/cs3110/2019sp/textbook/interp/lambda-subst/main.ml
@@ -58,7 +59,7 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
     let arguments = List.map ~f:replace arguments in
     return @@ E_constant { cons_name; arguments }
   | E_application { lamb; args } ->
-    let lamb, args = Simple_utils.Tuple.map2 replace (lamb, args) in
+    let lamb, args = Ligo_pair.map ~f:replace (lamb, args) in
     return @@ E_application { lamb; args }
   | E_type_abstraction { type_binder; result } ->
     let result = replace result in
@@ -69,7 +70,7 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
   | E_constructor { constructor; element } ->
     let element = replace element in
     return @@ E_constructor { constructor; element }
-  | E_matching { matchee; disc_label; cases } ->
+  | E_matching { matchee; cases } ->
     let matchee = replace matchee in
     let cases =
       List.map cases ~f:(fun { pattern; body } ->
@@ -80,7 +81,7 @@ let rec replace : expression -> Value_var.t -> Value_var.t -> expression =
           in
           ({ pattern; body } : _ Types.Match_expr.match_case))
     in
-    return @@ E_matching { matchee; disc_label; cases }
+    return @@ E_matching { matchee; cases }
   | E_literal _ -> e
   | E_raw_code { language; code } ->
     let code = replace code in
@@ -236,7 +237,7 @@ let rec subst_expression
     let arguments = List.map ~f:self arguments in
     return @@ E_constant { cons_name; arguments }
   | E_application { lamb; args } ->
-    let lamb, args = Simple_utils.Tuple.map2 self (lamb, args) in
+    let lamb, args = Ligo_pair.map ~f:self (lamb, args) in
     return @@ E_application { lamb; args }
   | E_type_abstraction { type_binder; result } ->
     let result = self result in
@@ -247,14 +248,14 @@ let rec subst_expression
   | E_constructor { constructor; element } ->
     let element = self element in
     return @@ E_constructor { constructor; element }
-  | E_matching { matchee; disc_label; cases } ->
+  | E_matching { matchee; cases } ->
     let matchee = self matchee in
     let cases =
       List.map cases ~f:(fun { pattern; body } ->
           let pattern, body = subst_pattern (pattern, body) ~x ~expr in
           ({ pattern; body } : _ Match_expr.match_case))
     in
-    return @@ E_matching { matchee; disc_label; cases }
+    return @@ E_matching { matchee; cases }
   | E_literal _ -> return_id
   | E_raw_code { language; code } ->
     let code = self code in

@@ -25,13 +25,13 @@ type storage = {
   ; minimal_amount : mav}
 type applied = operation list * storage
 
-let tez_to_nat (xtz: mav) : nat = xtz / 1mumav
-let nat_to_tez (x: nat) : mav = x * 1mumav
+let mav_to_nat (xtz: mav) : nat = xtz / 1mumav
+let nat_to_mav (x: nat) : mav = x * 1mumav
 
 let create_new_ticket (storage: storage) (qty: mav) : bytes ticket option =
   if qty < storage.minimal_amount then failwith "mint_sc: amount too low"
   else
-    let qty_nat = tez_to_nat qty in
+    let qty_nat = mav_to_nat qty in
     let payload = storage.fixed_payload in
     Mavryk.create_ticket payload qty_nat
 
@@ -52,7 +52,7 @@ let process_redeem
   let () = if qty <= 0n then failwith "mint_sc: invalid amount" in
   let () = if addr <> self_address then failwith "mint_sc: invalid ticketer" in
   let () = if payload <> storage.fixed_payload then failwith "mint_sc: invalid payload" in
-  let retribution = nat_to_tez qty in
+  let retribution = nat_to_mav qty in
   Mavryk.transaction unit retribution callback
 
 [@entry]

@@ -1,4 +1,7 @@
-open Types
+open Core
+module Trace = Simple_utils.Trace
+module Ne_list = Simple_utils.Ne_list
+module Location = Simple_utils.Location
 
 (** Given some signature:
 
@@ -44,6 +47,7 @@ let flatten_includes : Ast_core.signature -> Ast_core.signature =
   { items = go [] items }
 
 
+(** Maps all [Ast_core.type_content] in an [Ast_core.type_expression] bottom-up. *)
 let map_core_type_content_in_type_expression
     :  (Ast_core.type_content -> Ast_core.type_content) -> Ast_core.type_expression
     -> Ast_core.type_expression
@@ -51,8 +55,9 @@ let map_core_type_content_in_type_expression
  fun f ->
   let open Ligo_prim in
   let rec type_content : Ast_core.type_content -> Ast_core.type_content = function
-    | T_sum (t, label) -> T_sum (row t, label)
+    | T_sum t -> T_sum (row t)
     | T_record t -> T_record (row t)
+    | T_union union -> T_union (Union.map type_expression union)
     | T_arrow { type1; type2; param_names } ->
       T_arrow
         { type1 = type_expression type1; type2 = type_expression type2; param_names }
@@ -75,9 +80,12 @@ let map_core_type_content_in_type_expression
   type_expression
 
 
+(** Maps all module paths in an [Ast_core.type_expression]. The data types sometimes use a
+    non-empty list, and sometimes an ordinary list, hence two functions need to be
+    provided. *)
 let map_core_type_expression_module_path
     :  (Ligo_prim.Module_var.t list -> Ligo_prim.Module_var.t list)
-    -> (Ligo_prim.Module_var.t List.Ne.t -> Ligo_prim.Module_var.t List.Ne.t)
+    -> (Ligo_prim.Module_var.t Ne_list.t -> Ligo_prim.Module_var.t Ne_list.t)
     -> Ast_core.type_expression -> Ast_core.type_expression
   =
  fun f_list f_ne_list ->
@@ -94,6 +102,7 @@ let map_core_type_expression_module_path
         | [] -> T_variable t.element
         | _ :: _ -> T_module_accessor module_access)
       | ( T_sum _
+        | T_union _
         | T_record _
         | T_arrow _
         | T_abstraction _
@@ -103,6 +112,7 @@ let map_core_type_expression_module_path
         | T_singleton _ ) as t -> t)
 
 
+(** Maps all module paths in an [Ast_typed.type_expression]. *)
 let rec map_typed_type_expression_module_path
     :  (Ligo_prim.Module_var.t list -> Ligo_prim.Module_var.t list)
     -> Ast_typed.type_expression -> Ast_typed.type_expression
@@ -113,7 +123,8 @@ let rec map_typed_type_expression_module_path
     | T_constant { language; injection; parameters } ->
       T_constant
         { language; injection; parameters = List.map parameters ~f:type_expression }
-    | T_sum (t, orig_label) -> T_sum (row t, orig_label)
+    | T_sum t -> T_sum (row t)
+    | T_union union -> T_union (Union.map type_expression union)
     | T_record t -> T_record (row t)
     | T_arrow { type1; type2; param_names } ->
       T_arrow
@@ -122,11 +133,11 @@ let rec map_typed_type_expression_module_path
       T_abstraction { ty_binder; kind; type_ = type_expression type_ }
     | T_for_all { ty_binder; kind; type_ } ->
       T_for_all { ty_binder; kind; type_ = type_expression type_ }
-    | (T_variable _ | T_singleton _) as t -> t
+    | (T_variable _ | T_exists _ | T_singleton _) as t -> t
   and row : Ast_typed.row -> Ast_typed.row =
    fun { fields; layout } -> { fields = Label.Map.map fields ~f:type_expression; layout }
   and type_expression : Ast_typed.type_expression -> Ast_typed.type_expression =
-   fun { type_content = t; abbrev; location } ->
+   fun { type_content = t; abbrev; location; source_type } ->
     { type_content = type_content t
     ; abbrev =
         Option.map abbrev ~f:(fun { orig_var; applied_types } ->
@@ -136,14 +147,18 @@ let rec map_typed_type_expression_module_path
                   List.map ~f:(map_typed_type_expression_module_path f) applied_types
               })
     ; location
+    ; source_type
     }
   in
   type_expression
 
 
+(** Maps all module paths in an [Ast_core.signature]. The data types sometimes use a
+    non-empty list, and sometimes an ordinary list, hence two functions need to be
+    provided. *)
 let map_core_signature_module_path
     :  (Ligo_prim.Module_var.t list -> Ligo_prim.Module_var.t list)
-    -> (Ligo_prim.Module_var.t List.Ne.t -> Ligo_prim.Module_var.t List.Ne.t)
+    -> (Ligo_prim.Module_var.t Ne_list.t -> Ligo_prim.Module_var.t Ne_list.t)
     -> Ast_core.signature -> Ast_core.signature
   =
  fun f_list f_ne_list ->
@@ -170,3 +185,54 @@ let map_core_signature_module_path
     | S_path path -> S_path (f_ne_list path)
   in
   signature
+
+
+(** The current stage (scopes). *)
+let stage : string = "scopes"
+
+(** Creates a [Simple_utils.Error.t] from the provided exception and wraps in
+    [`Scopes_recovered_error] (defined in [Main_errors]). The [stage] allows to set the
+    compiler stage that caused this exception. Defaults to ["scopes"] if unset. *)
+let recover_exception_error ?(stage : string = stage) (exn : exn)
+    : [> `Scopes_recovered_error of Simple_utils.Error.t ]
+  =
+  Main_errors.scopes_recovered_error
+  @@ Simple_utils.Error.(
+       make
+         ~stage
+         ~content:
+           (make_content
+              ~message:(Format.asprintf "Unexpected exception: %a" Exn.pp exn)
+              ()))
+
+
+(** Logs the provided exception (after wrapping it with [recover_exception_error]) and
+    returns the [default] value. The [stage] allows to set the compiler stage that caused
+    this exception. Defaults to ["scopes"] if unset. *)
+let log_exception_with_raise
+    ~(raise :
+       ( [> `Scopes_recovered_error of Simple_utils.Error.t ]
+       , [> ] )
+       Simple_utils.Trace.raise)
+    ?(stage : string option)
+    ~(default : 'a)
+    (exn : exn)
+    : 'a
+  =
+  raise.log_error @@ recover_exception_error ?stage exn;
+  default
+
+
+(** Raises the provided exception (after wrapping it with [recover_exception_error]). The
+    [stage] allows to set the compiler stage that caused this exception. Defaults to
+    ["scopes"] if unset. *)
+let rethrow_exception_with_raise
+    ~(raise :
+       ( [> `Scopes_recovered_error of Simple_utils.Error.t ]
+       , [> ] )
+       Simple_utils.Trace.raise)
+    ?(stage : string option)
+    (exn : exn)
+    : 'a
+  =
+  raise.error @@ recover_exception_error ?stage exn

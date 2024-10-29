@@ -2,13 +2,14 @@
 
 (* Jane Street dependency *)
 
-module List = Core.List
+open Core
 
 (* Vendored dependencies *)
 
-module Utils  = Simple_utils.Utils
-module Region = Simple_utils.Region
-module Option = Simple_utils.Option
+module Utils    = Simple_utils.Utils
+module Region   = Simple_utils.Region
+module Ligo_fun = Simple_utils.Ligo_fun
+module Ne       = Nonempty_list
 
 (* Local dependencies *)
 
@@ -27,7 +28,7 @@ let prefix = PrettyComb.prefix
 let (^/^)  = PrettyComb.(^/^)
 type state = PrettyComb.state
 
-let (<@) = Utils.(<@)
+let (<@) = Ligo_fun.(<@)
 
 (* Placement *)
 
@@ -141,8 +142,8 @@ let print_sepseq :
     None     -> empty
   | Some seq -> print_nsepseq terminator print seq
 
-let print_nseq : 'a.('a -> document) -> 'a Utils.nseq -> document =
-  fun print (head, tail) -> separate_map (break 1) print (head::tail)
+let print_ne_list : 'a.('a -> document) -> 'a Ne.t -> document =
+  fun print (head::tail) -> separate_map (break 1) print (head::tail)
 
 (* UTILITIES *)
 
@@ -188,6 +189,33 @@ let print_mumav (node : (lexeme * Int64.t) wrap) =
                ^/^ (Int64.to_string (snd node#payload) ^ "mumav" |> string)
   in print_line_comment_opt prefix node#line_comment
 
+  let print_tez (node : (lexeme * Q.t) wrap) =
+    let payload = snd node#payload in
+    let numerator = Q.num payload in
+    let denominator = Q.den payload in
+    let power_of_ten = Z.(of_string "10" ** String.length (to_string denominator)) in
+    let multiply_by = Z.(power_of_ten / denominator) in
+    let adjusted_numerator = Z.(numerator * multiply_by) in
+    let integral = Z.(to_string (div adjusted_numerator power_of_ten)) in
+    let fractional = Z.(to_string (rem adjusted_numerator power_of_ten)) in
+    let num_zeros = String.length (Z.to_string denominator) - String.length fractional in
+    let fractional_with_zeros = String.make num_zeros '0' ^ fractional in
+
+    let rec remove_trailing_zeros str =
+      if String.length str > 0 && Char.(str.[String.length str - 1] = '0') then
+        remove_trailing_zeros (String.sub str ~pos:0 ~len:(String.length str - 1))
+      else
+        str
+    in
+    let fractional_no_trailing_zeros = remove_trailing_zeros fractional_with_zeros in
+
+    let prefix =
+      print_comments node#comments
+      ^/^ (integral ^ (if String.(fractional_no_trailing_zeros <> "")
+                       then "." ^ fractional_no_trailing_zeros
+                       else "") ^ "mav" |> string)
+    in print_line_comment_opt prefix node#line_comment
+
 let print_string (node : lexeme wrap) =
   let escape node =
     if Parsing_shared.Errors.ErrorWrapper.is_wrapped node#payload
@@ -222,8 +250,8 @@ let rec print state (cst: CST.t) =
 
 (* DECLARATIONS (top-level) *)
 
-and print_declarations state (node : declaration Utils.nseq) =
-  print_decl_list state (Utils.nseq_to_list node)
+and print_declarations state (node : declaration Ne.t) =
+  print_decl_list state (Ne.to_list node)
 
 and print_decl_list state (node : declaration list) =
   match node with
@@ -273,7 +301,7 @@ and print_attributes state thread attributes =
                 ^^ hardline ^^ thread)
 
 and drop_comment_attr attributes =
-  let not_a_comment w = fst (w#payload) <> "comment"
+  let not_a_comment w = String.(fst (w#payload) <> "comment")
   in List.filter ~f:not_a_comment attributes
 
 (* Preprocessing directives *)
@@ -293,7 +321,7 @@ and print_D_Let state (node : let_decl reg) =
 
 and print_let_binding state (node : let_binding) =
   let {binders; type_params; rhs_type; eq; let_rhs} = node in
-  let head, tail = binders in
+  let head :: tail = binders in
   let thread = print_type_params (print_pattern state head) type_params in
   let thread =
     if List.is_empty tail then thread
@@ -318,7 +346,7 @@ and print_type_params thread (node : type_params par option) =
     None    -> thread
   | Some {value; _ } ->
       let {lpar; inside=(kwd_type, vars); rpar} = value in
-      let params = print_nseq print_variable vars in
+      let params = print_ne_list print_variable vars in
       thread ^^ space ^^ token lpar ^^ token kwd_type ^^ space ^^ params ^^ token rpar
 
 (* Module declaration (structure) *)
@@ -349,10 +377,9 @@ and print_module_expr state = function
 
 and print_M_Body state (node : module_body reg) =
   let {kwd_struct; declarations; kwd_end} = node.value in
-  let decls = print_decl_list state declarations in
+  let decls = print_declarations state declarations in
   let decls = nest state#indent (break 0 ^^ decls) in
-  group (token kwd_struct ^^ (if List.is_empty declarations then space else decls)
-         ^^ token kwd_end)
+  group (token kwd_struct ^^ decls ^^ token kwd_end)
 
 and print_M_Path (node : module_name module_path reg) =
   print_module_path token node
@@ -415,7 +442,7 @@ and print_S_Type state (node : sig_type reg) =
 
 and print_type_rhs state thread (node : (equal * type_expr) option) =
   let print state (eq, type_expr) =
-    let padding = match type_expr with T_Variant _ -> 0 | _ -> state#indent
+    let padding = match type_expr with T_Sum _ -> 0 | _ -> state#indent
     and rhs = print_type_expr state type_expr in
     thread ^^ space ^^ token eq ^^ space ^^ nest padding (break 1 ^^ rhs)
   in Option.value_map node ~default:thread ~f:(print state)
@@ -441,7 +468,7 @@ and print_type_decl state (node : type_decl) =
   let {kwd_type; params; name; eq; type_expr} = node in
   let name    = print_variable name
   and params  = print_type_vars params
-  and padding = match type_expr with T_Variant _ -> 0 | _ -> state#indent
+  and padding = match type_expr with T_Sum _ -> 0 | _ -> state#indent
   and t_expr  = print_type_expr state type_expr in
   token kwd_type ^^ space ^^ params ^^ name ^^ space ^^ token eq
   ^^ group (nest padding (break 1 ^^ t_expr))
@@ -477,7 +504,7 @@ and print_type_expr state = function
 | T_Par         t -> print_T_Par       state t
 | T_Record      t -> print_T_Record    state t
 | T_String      t -> print_T_String          t
-| T_Variant     t -> print_T_Variant   state t
+| T_Sum     t -> print_T_Sum   state t
 | T_Var         t -> print_T_Var             t
 | T_ParameterOf t -> print_T_ParameterOf     t
 
@@ -522,8 +549,8 @@ and print_T_Attr state (node : attribute * type_expr) =
   let attributes, type_expr = unroll_T_Attr node in
   let thread =
     match type_expr with
-      T_Variant t ->
-        print_variant_type state ~attr:(not (List.is_empty attributes)) t
+      T_Sum t ->
+        print_sum_type state ~attr:(not (List.is_empty attributes)) t
     | _ -> print_type_expr state type_expr
   in print_attributes state thread attributes
 
@@ -544,7 +571,7 @@ and print_T_Cart state (node : cartesian reg) =
 
 and print_T_ForAll state (node : for_all reg) =
   let type_vars, dot, type_expr = node.value in
-  print_nseq print_type_var type_vars ^^ token dot
+  print_ne_list print_type_var type_vars ^^ token dot
   ^^ print_type_expr state type_expr
 
 (* Functional type *)
@@ -606,10 +633,10 @@ and print_T_String (node : lexeme wrap) = print_string node
 
 (* Variant types *)
 
-and print_T_Variant state (node : variant_type reg) =
-  print_variant_type state ~attr:false node
+and print_T_Sum state (node : sum_type reg) =
+  print_sum_type state ~attr:false node
 
-and print_variant_type state ~(attr: bool) (node : variant_type reg) =
+and print_sum_type state ~(attr: bool) (node : sum_type reg) =
   let head, tail =
     Utils.nsepseq_map (nest state#indent <@ print_variant state)
                       node.value.variants
@@ -678,6 +705,7 @@ and print_pattern state = function
 | P_List     p -> print_P_List     state p
 | P_ModPath  p -> print_P_ModPath  state p
 | P_Mumav    p -> print_P_Mumav          p
+| P_Mav      p -> print_P_Mav            p
 | P_Nat      p -> print_P_Nat            p
 | P_Par      p -> print_P_Par      state p
 | P_Record   p -> print_P_Record   state p
@@ -746,6 +774,10 @@ and print_P_ModPath state (node : pattern module_path reg) =
 (* Mumav in patterns *)
 
 and print_P_Mumav (node : (lexeme * Int64.t) wrap) = print_mumav node
+
+(* Mav in patterns *)
+
+and print_P_Mav (node : (lexeme * Q.t) wrap) = print_tez node
 
 (* Natural numbers in patterns *)
 
@@ -874,6 +906,7 @@ and print_expr state = function
 | E_ModPath    e -> print_E_ModPath  state e
 | E_Mult       e -> print_E_Mult     state e
 | E_Mumav      e -> print_E_Mumav          e
+| E_Mav        e -> print_E_Mav            e
 | E_Nat        e -> print_E_Nat            e
 | E_Neg        e -> print_E_Neg      state e
 | E_Neq        e -> print_E_Neq      state e
@@ -913,9 +946,9 @@ and print_E_And state (node : bool_and bin_op reg) =
 
 (* Application to data constructors and functions *)
 
-and print_E_App state (node : (expr * expr Utils.nseq) reg) =
+and print_E_App state (node : (expr * expr Ne.t) reg) =
   let fun_or_ctor, args = node.value in
-  let args = print_nseq (print_expr state) args in
+  let args = print_ne_list (print_expr state) args in
   group (print_expr state fun_or_ctor
          ^^ nest state#indent (break 1 ^^ args))
 
@@ -1036,7 +1069,7 @@ and print_E_Fun state (node : fun_expr reg) =
   let thread  = print_type_params thread type_params in
   let thread  = thread ^^ space
                 ^^ nest state#indent
-                        (print_nseq (print_pattern state) binders) in
+                        (print_ne_list (print_pattern state) binders) in
   let thread  = print_opt_type state thread rhs_type in
   group (thread ^^ space ^^ token arrow ^^ space
          ^^ nest state#indent (print_expr state body))
@@ -1156,6 +1189,9 @@ and print_E_Mult state (node : times bin_op reg) = print_bin_op state node
 
 and print_E_Mumav (node : (lexeme * Int64.t) wrap) =
   print_mumav node
+
+and print_E_Mav (node : (lexeme * Q.t) wrap) =
+    print_tez node
 
 (* Natural numbers in expressions *)
 

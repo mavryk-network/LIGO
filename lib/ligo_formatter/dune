@@ -1,0 +1,14 @@
+(library
+ (name ligo_formatter)
+ (public_name ligo.formatter)
+ (libraries
+  simple-utils
+  ligo_prim
+  ligo.mavryk-utils
+  ligo.proto-alpha-utils
+  ast_typed
+  mini_c
+  msgpck
+  scopes)
+ (preprocess
+  (pps ppx_deriving_yojson)))

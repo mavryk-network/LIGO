@@ -1,5 +1,5 @@
 const sub = (store : mav, delta : mav) : option<mav> => store - delta;
 
 const main = (_ : unit, store : mav) : [list<operation>, mav] => {
- return [ (list([]) as list <operation>), Option.unopt(sub (store, 1 as mav)) ]
+ return [ ([] as list <operation>), Option.unopt(sub (store, 1 as mav)) ]
 };

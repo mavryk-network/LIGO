@@ -9,7 +9,7 @@
       "source": {
         "type": "install",
         "source": [
-          "archive:https://beta.packages.ligolang.org/-/api/pkg-a/-/pkg-a-1.0.0.tgz#sha1:d1fb4eb393bfb432cd34dd106c63190aae4e39b2"
+          "archive:https://beta.packages.ligo.mavryk.org/-/api/pkg-a/-/pkg-a-1.0.0.tgz#sha1:d1fb4eb393bfb432cd34dd106c63190aae4e39b2"
         ]
       },
       "overrides": [],
@@ -36,7 +36,7 @@
       "source": {
         "type": "install",
         "source": [
-          "archive:https://beta.packages.ligolang.org/-/api/import-import/-/import-import-1.0.0.tgz#sha1:197fc6fef695adb1a54dc3870bd418fb5351a867"
+          "archive:https://beta.packages.ligo.mavryk.org/-/api/import-import/-/import-import-1.0.0.tgz#sha1:197fc6fef695adb1a54dc3870bd418fb5351a867"
         ]
       },
       "overrides": [],
@@ -50,7 +50,7 @@
       "source": {
         "type": "install",
         "source": [
-          "archive:https://beta.packages.ligolang.org/-/api/import-a/-/import-a-1.0.1.tgz#sha1:c5507911359dd318e9359049300424bb4187caff"
+          "archive:https://beta.packages.ligo.mavryk.org/-/api/import-a/-/import-a-1.0.1.tgz#sha1:c5507911359dd318e9359049300424bb4187caff"
         ]
       },
       "overrides": [],

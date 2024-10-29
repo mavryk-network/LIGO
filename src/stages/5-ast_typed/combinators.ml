@@ -1,9 +1,9 @@
-module Location = Simple_utils.Location
-module List = Simple_utils.List
-module Ligo_string = Simple_utils.Ligo_string
+open Core
 open Ligo_prim
 open Literal_types
 open Types
+module Location = Simple_utils.Location
+module Ligo_string = Simple_utils.Ligo_string
 
 (* Helpers for accessing and constructing elements are derived using
    `ppx_woo` (`@@deriving ez`) *)
@@ -31,7 +31,7 @@ type type_content = [%import: Types.type_content]
     { prefixes =
         [ ( "make_t"
           , fun ~loc type_content : type_expression ->
-              { type_content; location = loc; abbrev = None } )
+              { type_content; location = loc; abbrev = None; source_type = None } )
         ; ("get", fun x -> x.type_content)
         ]
     ; wrap_constructor =
@@ -188,7 +188,7 @@ let t_sum_ez
   let fields = List.map ~f:(fun (x, y) -> Label.of_string x, y) lst in
   let layout = layout @@ fields_with_no_annot fields in
   let row = Row.of_alist_exn ~layout fields in
-  make_t ~loc (T_sum (row, orig_name))
+  make_t ~loc (T_sum row)
 
 
 let t_bool ~loc () : type_expression =
@@ -207,7 +207,7 @@ let get_lambda_with_type e =
 
 let get_t_bool (t : type_expression) : unit option =
   match t.type_content with
-  | T_sum ({ fields; _ }, _) ->
+  | T_sum { fields; _ } ->
     let keys = Map.key_set fields in
     if Set.length keys = 2
        && Set.mem keys (Label.of_string "True")
@@ -219,7 +219,7 @@ let get_t_bool (t : type_expression) : unit option =
 
 let get_t_option (t : type_expression) : type_expression option =
   match t.type_content with
-  | T_sum ({ fields; _ }, _) ->
+  | T_sum { fields; _ } ->
     let keys = Map.key_set fields in
     if Set.length keys = 2
        && Set.mem keys (Label.of_string "Some")
@@ -346,10 +346,6 @@ let ez_e_record (lst : (Label.t * expression) list) : expression_content =
   E_record (Record.of_list lst)
 
 
-let e__ct_ arguments : expression_content = E_constant { cons_name = C__CT_; arguments }
-  [@@map _ct_, "list_literal"]
-
-
 let e__ct_ () : expression_content = E_constant { cons_name = C__CT_; arguments = [] }
   [@@map _ct_, "none"]
 
@@ -455,9 +451,7 @@ let e_a_applications ~loc lamb args : expression =
   e_a_applications ~loc lamb (List.rev args)
 
 
-let e_a_matching ~loc ?disc_label matchee cases t =
-  e_matching ~loc { matchee; disc_label; cases } t
-
+let e_a_matching ~loc matchee cases t = e_matching ~loc { matchee; cases } t
 
 let e_a_test_nil_views ~loc s =
   make_e ~loc (e_test_nil_views (e_a_unit ~loc ())) (t_views ~loc s)
@@ -483,3 +477,34 @@ let get_view_form ty =
     | Some [ arg; storage ] -> Some (arg, storage, return)
     | _ -> None)
   | None -> None
+
+
+let e_nil ~loc type_ = e_constant ~loc { cons_name = C_LIST_EMPTY; arguments = [] } type_
+
+let e_cons ~loc hd tl type_ =
+  e_constant ~loc { cons_name = C_CONS; arguments = [ hd; tl ] } type_
+
+
+let e_list ~loc elts elt_type =
+  let list_type = t_list ~loc elt_type in
+  List.fold_right
+    elts
+    ~f:(fun hd tl -> e_cons ~loc hd tl list_type)
+    ~init:(e_nil ~loc list_type)
+
+
+let e_michelson ~loc code args result_type : expression =
+  let code = e_a_string ~loc (Ligo_string.verbatim code) in
+  let rec build_func_type = function
+    | [] -> result_type
+    | arg :: args -> t_arrow ~loc arg.type_expression (build_func_type args) ()
+  in
+  let type_ = build_func_type args in
+  let code = e_a_applications ~loc { code with type_expression = type_ } args in
+  make_e ~loc (E_raw_code { language = "michelson"; code }) result_type
+
+
+let e_failwith ~loc arg result_type = e_michelson ~loc "{ FAILWITH }" [ arg ] result_type
+
+let e_failwith_str ~loc s result_type =
+  e_failwith ~loc (e_a_string ~loc (Ligo_string.verbatim s)) result_type

@@ -336,7 +336,7 @@ let%expect_test _ =
     ; test "metadata_tzip16.mligo"
     ; "-m"
     ; entrypoint
-    ; "good_tezos_sha256_storage"
+    ; "good_mavryk_sha256_storage"
     ];
   [%expect
     {|
@@ -351,7 +351,7 @@ let%expect_test _ =
     ; test "metadata_tzip16.mligo"
     ; "-m"
     ; entrypoint
-    ; "bad_tezos_sha256_storage"
+    ; "bad_mavryk_sha256_storage"
     ];
   [%expect
     {|

@@ -5,10 +5,9 @@
 
 module Region    = Simple_utils.Region
 module Std       = Simple_utils.Std
-module Core      = LexerLib.Core
 module Markup    = LexerLib.Markup
 module Directive = Preprocessor.Directive
-module Unit      = LexerLib.Unit
+module LexUnit   = LexerLib.LexUnit
 module Wrap      = Lexing_shared.Wrap
 
 (* Local dependencies *)
@@ -32,6 +31,7 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 | Int      w -> Int (w#add_line_comment comment)
 | Nat      w -> Nat (w#add_line_comment comment)
 | Mumav    w -> Mumav (w#add_line_comment comment)
+| Mav      w -> Mav (w#add_line_comment comment)
 | Ident    w -> Ident (w#add_line_comment comment)
 | UIdent   w -> UIdent (w#add_line_comment comment)
 | EIdent   w -> EIdent (w#add_line_comment comment)
@@ -119,7 +119,7 @@ let add_comment (comment : string Region.reg) : Token.t -> Token.t = function
 | Upto        w -> Upto (w#add_line_comment comment)
 
 
-let filter (units : Token.t Unit.t list) : Token.t Unit.t list =
+let filter (units : Token.t LexUnit.t list) : Token.t LexUnit.t list =
   let open! Token in
   let rec aux acc = function
     `Token token :: rest -> skip_spaces token acc [] rest
@@ -136,13 +136,13 @@ let filter (units : Token.t Unit.t list) : Token.t Unit.t list =
 
 (* Exported *)
 
-type item = Token.t Unit.t
+type item = Token.t LexUnit.t
 
 type units = item list
 
 type message = string Region.reg
 
-type result = (units, units * message) Stdlib.result
+type nonrec result = (units, units * message) result
 
 let filter ?print_passes ~add_warning:_ units : result =
   let () =

@@ -116,13 +116,15 @@ let%expect_test _ =
     ; "dev"
     ; "--with-types"
     ; "--no-stdlib"
+    ; "--typer-error-recovery"
     ];
   [%expect
     {|
     Scopes:
     [  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 1, character 12 to line 5, character 1
     [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 7, characters 14-18
-    [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 8, characters 13-21
+    [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 8, characters 13-14
+    [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 8, characters 18-21
     [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 9, characters 13-17
     [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 10, characters 13-20
     [ user#1:5-9 alice#7:6-11  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 13, characters 18-22
@@ -179,7 +181,9 @@ let%expect_test _ =
      13 | let alice_admin : bool = alice.i
                                    ^^^^^^^
 
-    Invalid record field "i" in record.
+    Invalid record field "i" in record of type "record[id -> nat ,
+                                                       is_admin -> bool ,
+                                                       name -> string]".
     Warnings:
     File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 13, characters 0-32:
      12 |

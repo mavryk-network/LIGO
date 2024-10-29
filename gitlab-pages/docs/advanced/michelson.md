@@ -3,7 +3,7 @@ id: michelson-and-ligo
 title: Michelson and LIGO
 ---
 
-Currently LIGO compiles to [Michelson](https://tezos.gitlab.io/whitedoc/michelson.html),
+Currently LIGO compiles to [Michelson](https://protocol.mavryk.org/whitedoc/michelson.html),
 the native smart contract language supported by Mavryk. This page explains the
 relationship between LIGO and the underlying Michelson it compiles to. Understanding
 Michelson is not a requirement to use LIGO, but it does become important if you want
@@ -81,7 +81,7 @@ Here is an example of a Michelson contract.
 ```
 
 The contract above maintains an `int` as its storage. It has two
-[entrypoints](https://tezos.gitlab.io/whitedoc/michelson.html#entrypoints),
+[entrypoints](https://protocol.mavryk.org/whitedoc/michelson.html#entrypoints),
 `add` and `sub`, to modify it, and the `default` entrypoint of type
 `unit` will reset it to `0`.
 
@@ -147,13 +147,13 @@ type t_storage = int
 type result = [list<operation>, t_storage]
 
 @entry
-function add (a, storage) : result { return [list([]), storage + a]; }
+function add (a, storage) : result { return [[], storage + a]; }
 
 @entry
-function sub (a, storage) : result { return [list([]), storage - a]; }
+function sub (a, storage) : result { return [[], storage - a]; }
 
 @entry
-function reset (_ : unit, _storage : t_storage) : result { return [list([]), 0]; }
+function reset (_ : unit, _storage : t_storage) : result { return [[], 0]; }
 ```
 
 <!-- updated use of entry -->

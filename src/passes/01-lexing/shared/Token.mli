@@ -77,12 +77,14 @@ module type S =
       lexeme -> Z.t -> Region.t -> (token, nat_err) result
 
     (* Mumav *)
-
-    type mumav_err = Wrong_mumav_syntax of string (* Hint *)
-
     val mk_mumav :
       lexeme -> suffix:string -> Int64.t ->
-      Region.t -> (token, mumav_err) result
+      Region.t -> token
+    
+    (* Mav *)
+    val mk_mav :
+      lexeme -> suffix:string -> Q.t ->
+      Region.t -> token
 
     (* Symbols *)
 

@@ -372,7 +372,7 @@ Contracts & Accounts
 </div>
 <div className="example">
 
-```cameligo group=tezos_specific
+```cameligo group=mavryk_specific
 let destinationAddress : address =
   ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
@@ -388,7 +388,7 @@ Transactions
 </div>
 <div className="example">
 
-```cameligo group=tezos_specific
+```cameligo group=mavryk_specific
 
 let payment : operation =
   Mavryk.transaction unit 100mumav contract
@@ -621,8 +621,8 @@ Mumav (micro mav)
 <div className="example">
 
 ```jsligo
-const tez_amount: mav = 42mav
-const tez_amount2: mav = tez_amount + 7mumav // == 42000007mumav
+const mav_amount: mav = 42mav
+const mav_amount2: mav = mav_amount + 7mumav // == 42000007mumav
 ```
 
 </div>
@@ -884,7 +884,7 @@ Contracts & Accounts
 </div>
 <div className="example">
 
-```jsligo group=tezos_specific
+```jsligo group=mavryk_specific
 const destinationAddress: address =
   "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 
@@ -901,7 +901,7 @@ Transactions
 </div>
 <div className="example">
 
-```jsligo group=tezos_specific
+```jsligo group=mavryk_specific
 const payment: operation =
   Mavryk.transaction(unit, 100mumav, contract);
 ```

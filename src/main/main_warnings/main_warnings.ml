@@ -1,6 +1,8 @@
-open Simple_utils
+module Warning = Simple_utils.Warning
+module Display = Simple_utils.Display
+module Location = Simple_utils.Location
+module Snippet = Simple_utils.Snippet
 open Ligo_prim
-open Display
 
 type all =
   [ `Self_ast_aggregated_warning_unused of Location.t * string
@@ -21,17 +23,16 @@ type all =
     Location.t * Type_var.t
   | `Main_view_ignored of Location.t
   | `Main_entry_ignored of Location.t
-  | `Michelson_typecheck_failed_with_different_protocol of
-    Environment.Protocols.t * Mavryk_error_monad.Error_monad.error list
   | `Jsligo_deprecated_failwith_no_return of Location.t
   | `Jsligo_deprecated_toplevel_let of Location.t
   | `Jsligo_unreachable_code of Location.t
   | `Use_meta_ligo of Location.t
   | `Self_ast_aggregated_warning_bad_self_type of
     Ast_aggregated.type_expression * Ast_aggregated.type_expression * Location.t
+  | `Metadata_absent of Location.t
   | `Metadata_cannot_parse of Location.t
   | `Metadata_no_empty_key of Location.t
-  | `Metadata_tezos_storage_not_found of Location.t * string
+  | `Metadata_mavryk_storage_not_found of Location.t * string
   | `Metadata_not_valid_URI of Location.t * string
   | `Metadata_slash_not_valid_URI of Location.t * string
   | `Metadata_invalid_JSON of Location.t * string
@@ -39,18 +40,20 @@ type all =
   | `Metadata_hash_fails of Location.t * string * string
   | `Metadata_json_download of Location.t * string
   | `Metadata_error_download of Location.t * string
+  | `Metadata_download_timeout of Location.t * string
   ]
+[@@deriving compare]
 
 let warn_bad_self_type t1 t2 loc = `Self_ast_aggregated_warning_bad_self_type (t1, t2, loc)
 
 let pp
-    :  display_format:string display_format -> no_colour:bool -> Format.formatter -> all
-    -> unit
+    :  display_format:string Display.display_format -> no_colour:bool -> Format.formatter
+    -> all -> unit
   =
  fun ~display_format ~no_colour f a ->
   let snippet_pp = Snippet.pp ~no_colour in
   match display_format with
-  | Human_readable | Dev ->
+  | Display.Human_readable | Dev ->
     (match a with
     | `Use_meta_ligo loc ->
       Format.fprintf
@@ -60,23 +63,6 @@ let pp
          failure.@.@]"
         snippet_pp
         loc
-    | `Michelson_typecheck_failed_with_different_protocol (user_proto, errs) ->
-      let open Environment.Protocols in
-      Format.fprintf
-        f
-        "@[<hv>Warning: Error(s) occurred while type checking the produced michelson \
-         contract:@.%a@.Note: You compiled your contract with protocol %s although we \
-         internally use protocol %s to typecheck the produced Michelson contract@.so you \
-         might want to ignore this error if related to a breaking change in protocol \
-         %s@.@]"
-        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
-           ~details:true
-           ~show_source:true
-           ?parsed:None)
-        errs
-        (variant_to_string user_proto)
-        (variant_to_string in_use)
-        (variant_to_string in_use)
     | `Checking_ambiguous_constructor_expr (expr, tv_chosen, tv_possible, loc) ->
       Format.fprintf
         f
@@ -208,6 +194,12 @@ let pp
         got
         Ast_aggregated.PP.type_expression
         expected
+    | `Metadata_absent loc ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Warning: Metadata field is not present. @]"
+        snippet_pp
+        loc
     | `Metadata_cannot_parse loc ->
       Format.fprintf
         f
@@ -220,7 +212,7 @@ let pp
         "@[<hv>%a@.Warning: Empty key in metadata big-map is mandatory. @]"
         snippet_pp
         loc
-    | `Metadata_tezos_storage_not_found (loc, key) ->
+    | `Metadata_mavryk_storage_not_found (loc, key) ->
       Format.fprintf
         f
         "@[<hv>%a@.Warning: Could not find key %s in storage's metadata. @]"
@@ -281,12 +273,19 @@ let pp
         "@[<hv>%a@.Warning: Could not download JSON in URL: %s.@.@]"
         snippet_pp
         loc
+        s
+    | `Metadata_download_timeout (loc, s) ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.Warning: Downloading JSON timed out in URL: %s.@.@]"
+        snippet_pp
+        loc
         s)
 
 
-let to_warning : all -> Simple_utils.Warning.t =
+let to_warning : all -> Warning.t =
  fun w ->
-  let open Simple_utils.Warning in
+  let open Warning in
   match w with
   | `Use_meta_ligo location ->
     let message =
@@ -297,27 +296,6 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"testing framework" ~content
-  | `Michelson_typecheck_failed_with_different_protocol (user_proto, errs) ->
-    let open Environment.Protocols in
-    let message =
-      Format.asprintf
-        "@[<hv>Warning: Error(s) occurred while type checking the produced michelson \
-         contract:@.%a@.Note: You compiled your contract with protocol %s although we \
-         internally use protocol %s to typecheck the produced Michelson contract@.so you \
-         might want to ignore this error if related to a breaking change in protocol \
-         %s@.@]"
-        (Memory_proto_alpha.Client.Michelson_v1_error_reporter.report_errors
-           ~details:true
-           ~show_source:true
-           ?parsed:None)
-        errs
-        (variant_to_string user_proto)
-        (variant_to_string in_use)
-        (variant_to_string in_use)
-    in
-    let location = Location.dummy in
-    let content = make_content ~message ~location () in
-    make ~stage:"michelson typecheck" ~content
   | `Checking_ambiguous_constructor_expr (expr, tv_chosen, tv_possible, location) ->
     let message =
       Format.asprintf
@@ -365,7 +343,7 @@ let to_warning : all -> Simple_utils.Warning.t =
   | `Self_ast_aggregated_deprecated (location, msg) ->
     let message = Format.sprintf "@.Warning: deprecated value.@.%s\n" msg in
     let content = make_content ~message ~location () in
-    make ~stage:"parsing command line parameters" ~content
+    make ~stage:"aggregation" ~content
   | `Self_ast_aggregated_warning_unused (location, variable) ->
     let message =
       Format.sprintf
@@ -375,7 +353,7 @@ let to_warning : all -> Simple_utils.Warning.t =
         variable
     in
     let content = make_content ~message ~location ~variable () in
-    make ~stage:"parsing command line parameters" ~content
+    make ~stage:"aggregation" ~content
   | `Self_ast_aggregated_warning_muchused (location, _s) ->
     let message =
       Format.sprintf "@.Warning: variable cannot be used more than once.\n@]"
@@ -390,7 +368,7 @@ let to_warning : all -> Simple_utils.Warning.t =
         s
     in
     let content = make_content ~message ~location () in
-    make ~stage:"parsing command line parameters" ~content
+    make ~stage:"aggregation" ~content
   | `Self_ast_aggregated_metadata_invalid_type (loc, s) ->
     let message =
       Format.sprintf
@@ -401,7 +379,7 @@ let to_warning : all -> Simple_utils.Warning.t =
         s
     in
     let content = make_content ~message ~location:loc () in
-    make ~stage:"parsing command line parameters" ~content
+    make ~stage:"aggregation" ~content
   | `Nanopasses_attribute_ignored loc ->
     let message = "Warning: ignored attributes" in
     let content = make_content ~message ~location:loc () in
@@ -455,6 +433,10 @@ let to_warning : all -> Simple_utils.Warning.t =
     in
     let content = make_content ~message ~location () in
     make ~stage:"aggregation" ~content
+  | `Metadata_absent location ->
+    let message = Format.sprintf "Metadata field is not present." in
+    let content = make_content ~message ~location () in
+    make ~stage:"metadata_check" ~content
   | `Metadata_cannot_parse location ->
     let message = Format.sprintf "Cannot parse big-map metadata." in
     let content = make_content ~message ~location () in
@@ -463,7 +445,7 @@ let to_warning : all -> Simple_utils.Warning.t =
     let message = Format.sprintf "Empty key in metadata big-map is mandatory." in
     let content = make_content ~message ~location () in
     make ~stage:"metadata_check" ~content
-  | `Metadata_tezos_storage_not_found (location, key) ->
+  | `Metadata_mavryk_storage_not_found (location, key) ->
     let message = Format.sprintf "Could not find key %s in storage's metadata." key in
     let content = make_content ~message ~location () in
     make ~stage:"metadata_check" ~content
@@ -508,12 +490,16 @@ let to_warning : all -> Simple_utils.Warning.t =
     let message = Format.sprintf "Warning: Could not download JSON in URL: %s" s in
     let content = make_content ~message ~location () in
     make ~stage:"metadata_check" ~content
+  | `Metadata_download_timeout (location, s) ->
+    let message = Format.sprintf "Warning: Downloading JSON timed out in URL: %s" s in
+    let content = make_content ~message ~location () in
+    make ~stage:"metadata_check" ~content
 
 
 let to_json : all -> Yojson.Safe.t =
  fun w ->
   let warning = to_warning w in
-  Simple_utils.Warning.to_yojson warning
+  Warning.to_yojson warning
 
 
-let format = { pp; to_json }
+let format : all Display.format = { pp; to_json }

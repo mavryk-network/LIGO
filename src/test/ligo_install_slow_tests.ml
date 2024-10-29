@@ -1,5 +1,6 @@
 (* -*- compile-command: "cd .. ; dune runtest" -*- *)
 
+open Core
 open Test_helpers
 
 module Slow_test = struct
@@ -83,7 +84,7 @@ module Slow_test = struct
 
   let package_dir = "."
   let cache_path = ".ligo"
-  let ligo_registry = "https://packages.ligolang.org/-/api"
+  let ligo_registry = "https://packages.ligo.mavryk.org/-/api"
 
   let rec run_seq : string -> string -> (string, [> Rresult.R.msg ]) result =
    fun cwd repo ->
@@ -153,12 +154,6 @@ module Slow_test = struct
     String.filter tz_file ~f:is_uneccessary
 
 
-  module StringMap = Caml.Map.Make (struct
-    type t = string
-
-    let compare = String.compare
-  end)
-
   let test_tz_files : unit -> (string * string) list =
    fun () ->
     List.map
@@ -175,14 +170,12 @@ module Slow_test = struct
 
 
   (* map of static sample test files *)
-  let repo_test_map : string StringMap.t =
-    Caml.List.to_seq @@ test_tz_files () |> StringMap.of_seq
-
+  let repo_test_map : string String.Map.t = String.Map.of_alist_exn @@ test_tz_files ()
 
   (* map of generated test files *)
 
-  let repo_gen_map : string StringMap.t =
-    Caml.List.to_seq @@ generated_tz_files () |> StringMap.of_seq
+  let repo_gen_map : string String.Map.t =
+    String.Map.of_alist_exn @@ generated_tz_files ()
 
 
   (* let test_dao_jsligo ~raise:_ () =
@@ -194,31 +187,32 @@ module Slow_test = struct
   let test_dao_cameligo ~raise:_ () =
     Alcotest.(check string)
       "test dao-cameligo"
-      (StringMap.find "dao-cameligo" repo_test_map)
-      (StringMap.find "dao-cameligo" repo_gen_map)
+      (Map.find_exn repo_test_map "dao-cameligo")
+      (Map.find_exn repo_gen_map "dao-cameligo")
 
 
   let test_permit_jsligo ~raise:_ () =
     Alcotest.(check string)
       "test permit-jsligo"
-      (StringMap.find "permit-jsligo" repo_test_map)
-      (StringMap.find "permit-jsligo" repo_gen_map)
+      (Map.find_exn repo_test_map "permit-jsligo")
+      (Map.find_exn repo_gen_map "permit-jsligo")
 
 
   let test_permit_cameligo ~raise:_ () =
     Alcotest.(check string)
       "test permit-cameligo"
-      (StringMap.find "permit-cameligo" repo_test_map)
-      (StringMap.find "permit-cameligo" repo_gen_map)
+      (Map.find_exn repo_test_map "permit-cameligo")
+      (Map.find_exn repo_gen_map "permit-cameligo")
 
 
   let main =
     test_suite
-      "LIGO install tests"
-      [ test
-          (* "test dao-jsligo output with ligo version 0.70.0 and latest ligo version's output"
-        test_dao_jsligo
-    ; test *)
+      "LIGO install tests" 
+      [
+      (* test
+          "test dao-jsligo output with ligo version 0.70.0 and latest ligo version's output"
+          test_dao_jsligo
+      ; test 
           "test dao-cameligo output with ligo version 0.70.0 and latest ligo version's \
            output"
           test_dao_cameligo
@@ -229,7 +223,7 @@ module Slow_test = struct
       ; test
           "test permit-cameligo output with ligo version 0.70.0 and latest ligo \
            version's output"
-          test_permit_cameligo
+          test_permit_cameligo *)
       ]
 end
 

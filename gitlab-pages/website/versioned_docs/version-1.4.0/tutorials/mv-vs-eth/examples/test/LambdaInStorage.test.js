@@ -1,4 +1,4 @@
-const taquito = require('@taquito/taquito')
+const taquito = require('@mavrykdynamics/taquito')
 const LambdaInStorage = artifacts.require('LambdaInStorage')
 
 contract('LambdaInStorage', () => {

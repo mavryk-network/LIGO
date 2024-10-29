@@ -51,7 +51,7 @@ let body =
         "url": "https://github.com/foo/bar"
       },
       "version": "1.0.4",
-      "description": "A modular example DAO contract on Tezos written in Ligolang.",
+      "description": "A modular example DAO contract on Mavryk written in Ligolang.",
       "scripts": {},
       "dependencies": {},
       "devDependencies": {

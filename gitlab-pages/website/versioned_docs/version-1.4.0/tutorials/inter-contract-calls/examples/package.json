@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "for f in test/*.test.js ; do npx truffle test \"$f\" done",
-    "start-sandbox": "npx ganache-cli --flavor tezos --seed alice"
+    "start-sandbox": "npx ganache-cli --flavor mavryk --seed alice"
   },
   "keywords": [
     "ligo"

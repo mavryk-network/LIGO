@@ -9,7 +9,7 @@ In order to build Ligo, you may need to install:
 - `opam` - OCaml package manager,
 - `pkg-config` tool for finding library compilation flags,
 - `cargo` - rust package manager for Rust interoperability (needed for
-  the Tezos Edo protocol)
+  the Mavryk Edo protocol)
 - libraries with include files:
   - `libev` - event handling library
   - `libhidapi`

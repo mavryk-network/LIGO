@@ -46,6 +46,6 @@ flowchart LR
 
     User-- 1:request_redeem --> Oven_sc
     Oven_sc-- 2:redeem --> Mint_sc
-    Mint_sc-- 3:retreive_tez --> Oven_sc
-    Oven_sc-- 4:retreive_tez --> User
+    Mint_sc-- 3:retreive_mav --> Oven_sc
+    Oven_sc-- 4:retreive_mav --> User
 ```

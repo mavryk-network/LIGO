@@ -26,7 +26,7 @@ Those are being actively worked on.
 - [x] Jump to implementation
 - [x] Find references
 - [x] Folding range
-- [ ] Selection range
+- [x] Selection range
 - [x] Jump to type definition
 - [x] Document symbols
 - [x] Document links
@@ -340,7 +340,7 @@ We automatically detect the list of entrypoints in the contract, and in case it 
 
 ### Debugger stepping order is weird
 
-Before being executed, LIGO contracts are converted to Michelson language (which all Tezos smart contracts are eventually written in), and generally some things get reordered to get a more optimal contract.
+Before being executed, LIGO contracts are converted to Michelson language (which all Mavryk smart contracts are eventually written in), and generally some things get reordered to get a more optimal contract.
 
 For example, when executing binary operations, the right operand is computed first.
 

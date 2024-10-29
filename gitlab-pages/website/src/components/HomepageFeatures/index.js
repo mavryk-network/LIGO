@@ -20,14 +20,14 @@ const FEATURES = [
   {
     image: "img/ligo_features/ligo-feature-optimized.svg",
     title: "Optimized by Design",
-    content: "Ligo is a high-level language that compiles to optimized Tezos bytecode.",
+    content: "Ligo is a high-level language that compiles to optimized Mavryk bytecode.",
     link: "docs/intro/introduction#ligo-designed-to-be-cost-effective",
   },
   {
     image: "img/ligo_features/ligo-feature-testing-system.svg",
     title: "Testing System",
     content:
-      "Ligo uses a robust testing system to simulate the Tezos blockchain, as if you were inside.",
+      "Ligo uses a robust testing system to simulate the Mavryk blockchain, as if you were inside.",
     link: "docs/advanced/testing",
   },
   {

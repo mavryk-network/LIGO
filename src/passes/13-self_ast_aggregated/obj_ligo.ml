@@ -1,27 +1,34 @@
-module Self_helpers = Helpers
 open Ligo_prim
+module Self_helpers = Helpers
+module Trace = Simple_utils.Trace
+module Ligo_string = Simple_utils.Ligo_string
 open Ast_aggregated
+open Errors
 
 type 'err ty_exp_mapper = type_expression -> unit
 
 let rows : ('a -> unit) -> row -> unit = Row.iter
 
-let rec traverse_type_expression : 'err ty_exp_mapper -> type_expression -> unit =
+let rec traverse_type_expression ~(raise : _ Trace.raise)
+    : 'err ty_exp_mapper -> type_expression -> unit
+  =
  fun f te ->
-  let self = traverse_type_expression f in
+  let self = traverse_type_expression ~raise f in
   let () = f te in
   match te.type_content with
   | T_sum temap -> rows self temap
-  | T_for_all x -> self x.type_
+  | T_for_all x | T_abstraction x -> self x.type_
   | T_record temap -> rows self temap
   | T_arrow arr ->
     let _ = Arrow.map self arr in
     ()
   | T_variable _ -> ()
   | T_singleton _ -> ()
+  | T_exists _ -> raise.error @@ unexpected_texists te te.location
   | T_constant { parameters } ->
     let _ = List.map ~f:self parameters in
     ()
+  | T_union _ -> impossible_because_no_union_in_ast_aggregated ()
 
 
 (* Adapted from lib_protocol/script_string_repr.ml *)
@@ -42,7 +49,7 @@ let check_string v =
   [blacklist] is a list of binder and location which refer to meta-ligo terms, when
   encountering a variable matching an element of this list, it fails
 *)
-let check_obj_ligo ~raise ?(blacklist = []) (t : expression) : unit =
+let check_obj_ligo ~(raise : _ Trace.raise) ?(blacklist = []) (t : expression) : unit =
   let folder_constant () expr =
     match expr.expression_content with
     | E_variable v ->
@@ -50,12 +57,12 @@ let check_obj_ligo ~raise ?(blacklist = []) (t : expression) : unit =
         List.find ~f:(fun (x, _loc) -> Value_var.equal v (Binder.get_var x)) blacklist
       in
       (match b_opt with
-      | Some (_, loc) -> raise.Trace.error @@ Errors.expected_obj_ligo loc
+      | Some (_, loc) -> raise.error @@ Errors.expected_obj_ligo loc
       | None -> ())
     | E_constant { cons_name } when Constant.constant'_is_only_interpreter cons_name ->
-      raise.Trace.error @@ Errors.expected_obj_ligo expr.location
+      raise.error @@ Errors.expected_obj_ligo expr.location
     | E_literal (Literal_string s) when not (check_string @@ Ligo_string.extract s) ->
-      raise.Trace.error @@ Errors.expected_obj_ligo expr.location
+      raise.error @@ Errors.expected_obj_ligo expr.location
     | _ -> ()
   in
   let traverser_types ~t loc expr =
@@ -70,7 +77,7 @@ let check_obj_ligo ~raise ?(blacklist = []) (t : expression) : unit =
       expr.type_expression
   in
   let () = Self_helpers.fold_expression folder_constant () t in
-  let () = Self_helpers.fold_expression folder_types () t in
+  let () = Self_helpers.fold_expression (folder_types ~raise) () t in
   ()
 
 
@@ -113,7 +120,7 @@ let check_obj_ligo_program ~raise ?(blacklist = []) ((ctxt, e) : program) : unit
     ```
 
     when encountering the <rest>, [purge_meta_ligo] will fail on any meta-ligo constructors
-    
+
     e.g.
 
     ```
@@ -130,7 +137,7 @@ let check_obj_ligo_program ~raise ?(blacklist = []) ((ctxt, e) : program) : unit
     (fun _ -> 2) (Test.log y)
     ```
     | -> FAIL
-    
+
 *)
 let purge_meta_ligo_program ~raise ((ctxt, e) : program) : program =
   let f (blacklist, ctxt) decl =

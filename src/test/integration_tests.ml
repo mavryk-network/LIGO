@@ -1,4 +1,4 @@
-open Simple_utils.Trace
+module Trace = Simple_utils.Trace
 open Test_helpers
 open Main_errors
 open Ast_unified
@@ -309,7 +309,7 @@ let bytes_arithmetic ~raise f : unit =
       foototo
   in
   let () =
-    trace_assert_fail_option ~raise (test_internal __LOC__)
+    Trace.trace_assert_fail_option ~raise (test_internal __LOC__)
     @@ Ast_core.Misc.assert_value_eq (b3, b1)
   in
   ()
@@ -398,7 +398,7 @@ let crypto ~raise f : unit =
       foototo
   in
   let () =
-    trace_assert_fail_option ~raise (test_internal __LOC__)
+    Trace.trace_assert_fail_option ~raise (test_internal __LOC__)
     @@ Ast_core.Misc.assert_value_eq (b2, b1)
   in
   let%bind b4 =
@@ -417,7 +417,7 @@ let crypto ~raise f : unit =
       foototo
   in
   let () =
-    trace_assert_fail_option ~raise (test_internal __LOC__)
+    Trace.trace_assert_fail_option ~raise (test_internal __LOC__)
     @@ Ast_core.Misc.assert_value_eq (b5, b4)
   in
   ()
@@ -567,7 +567,7 @@ let record_ez_int names n =
 
 
 let tuple_ez_int names n =
-  e_tuple ~loc (List.Ne.of_list @@ List.map ~f:(fun _ -> e_int ~loc n) names)
+  e_tuple ~loc (Nonempty_list.map ~f:(fun _ -> e_int ~loc n) names)
 
 
 let multiple_parameters ~raise f : unit =
@@ -640,7 +640,7 @@ let record ~raise f : unit =
 
 let tuple ~raise f : unit =
   let program = type_file ~raise f in
-  let ez n = e_tuple ~loc (List.Ne.of_list @@ List.map ~f:(e_int ~loc) n) in
+  let ez n = e_tuple ~loc (Ne_list.map (e_int ~loc) n) in
   let () =
     let expected = ez [ 0; 0 ] in
     expect_eq_evaluate ~raise program "fb" expected
@@ -707,7 +707,7 @@ let map ~raise f : unit =
   let () =
     let make_input n =
       let m = ez [ 23, 0; 42, 0 ] in
-      e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc n; m ]
+      e_tuple ~loc [ e_int ~loc n; m ]
     in
     let make_expected n = ez [ 23, n; 42, 0 ] in
     expect_eq_n_pos_small ~raise program "set_" make_input make_expected
@@ -748,7 +748,7 @@ let map ~raise f : unit =
       ~raise
       program
       "mem"
-      (e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 23; input_map ])
+      (e_tuple ~loc [ e_int ~loc 23; input_map ])
       (e_bool ~loc true)
   in
   let () =
@@ -757,7 +757,7 @@ let map ~raise f : unit =
       ~raise
       program
       "mem"
-      (e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 1000; input_map ])
+      (e_tuple ~loc [ e_int ~loc 1000; input_map ])
       (e_bool ~loc false)
   in
   let () =
@@ -807,7 +807,7 @@ let big_map ~raise f : unit =
   let () =
     let make_input n =
       let m = ez [ 23, 0; 42, 0 ] in
-      e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc n; m ]
+      e_tuple ~loc [ e_int ~loc n; m ]
     in
     let make_expected n = ez [ 23, n; 42, 0 ] in
     expect_eq_n_pos_small ~raise program "set_" make_input make_expected
@@ -1109,9 +1109,7 @@ let recursion_ligo ~raise f : unit =
     expect_eq ~raise program "sum" make_input make_expected
   in
   let _ =
-    let make_input =
-      e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 10; e_int ~loc 1; e_int ~loc 1 ]
-    in
+    let make_input = e_tuple ~loc [ e_int ~loc 10; e_int ~loc 1; e_int ~loc 1 ] in
     let make_expected = e_int ~loc 89 in
     expect_eq ~raise program "fibo" make_input make_expected
   in
@@ -1349,8 +1347,8 @@ let website2_ligo ~raise f : unit =
   expect_eq_n_twice ~raise program "main" make_input make_expected
 
 
-let tez_mligo ~raise () : unit =
-  let program = type_file ~raise "./contracts/tez.mligo" in
+let mav_mligo ~raise () : unit =
+  let program = type_file ~raise "./contracts/mav.mligo" in
   let _ = expect_eq_evaluate ~raise program "add_tez" (e_mumav ~loc 42) in
   let _ = expect_eq_evaluate ~raise program "sub_tez" (e_some ~loc (e_mumav ~loc 1)) in
   let _ = expect_eq_evaluate ~raise program "sub_tez_none" (e_none ~loc) in
@@ -1375,7 +1373,7 @@ let mligo_let_multiple ~raise () : unit =
   in
   let () =
     let input = e_unit ~loc in
-    let expected = e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 23; e_int ~loc 42 ] in
+    let expected = e_tuple ~loc [ e_int ~loc 23; e_int ~loc 42 ] in
     expect_eq ~raise program "correct_values_bound" input expected
   in
   let () =
@@ -1386,17 +1384,15 @@ let mligo_let_multiple ~raise () : unit =
   let () =
     let input = e_unit ~loc in
     let expected =
-      e_tuple ~loc
-      @@ List.Ne.of_list
-           [ e_int ~loc 10; e_int ~loc 20; e_int ~loc 30; e_int ~loc 40; e_int ~loc 50 ]
+      e_tuple
+        ~loc
+        [ e_int ~loc 10; e_int ~loc 20; e_int ~loc 30; e_int ~loc 40; e_int ~loc 50 ]
     in
     expect_eq ~raise program "correct_values_big_tuple" input expected
   in
   let () =
     let input = e_unit ~loc in
-    let expected =
-      e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 10; e_string ~loc "hello" ]
-    in
+    let expected = e_tuple ~loc [ e_int ~loc 10; e_string ~loc "hello" ] in
     expect_eq ~raise program "correct_values_different_types" input expected
   in
   ()
@@ -1427,8 +1423,8 @@ let balance_test_options ~raise () =
   @@
   let open Lwt.Let_syntax in
   let balance =
-    trace_option ~raise (test_internal "could not convert balance")
-    @@ Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string "0"
+    Trace.trace_option ~raise (test_internal "could not convert balance")
+    @@ Memory_proto_alpha.Protocol.Alpha_context.Mav.of_string "0"
   in
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   Proto_alpha_utils.Memory_proto_alpha.make_options ~env ~balance ()
@@ -1436,7 +1432,7 @@ let balance_test_options ~raise () =
 
 let balance_constant ~raise f : unit =
   let program = type_file ~raise f in
-  let expected = e_tuple ~loc @@ List.Ne.of_list [ e_list ~loc []; e_mumav ~loc 0 ] in
+  let expected = e_tuple ~loc [ e_list ~loc []; e_mumav ~loc 0 ] in
   let options = balance_test_options ~raise () in
   expect_eq_twice ~raise ~options program "main" (e_unit ~loc) (e_mumav ~loc 0) expected
 
@@ -1449,9 +1445,9 @@ let amount ~raise f : unit =
   let input = e_unit ~loc in
   let expected = e_int ~loc 42 in
   let amount =
-    match Memory_proto_alpha.Protocol.Alpha_context.Tez.of_string "100" with
+    match Memory_proto_alpha.Protocol.Alpha_context.Mav.of_string "100" with
     | Some t -> t
-    | None -> Memory_proto_alpha.Protocol.Alpha_context.Tez.one
+    | None -> Memory_proto_alpha.Protocol.Alpha_context.Mav.one
   in
   let%bind env = Proto_alpha_utils.Memory_proto_alpha.test_environment () in
   let%map options = Proto_alpha_utils.Memory_proto_alpha.make_options ~env ~amount () in
@@ -1540,12 +1536,12 @@ let check_signature ~raise f : unit =
   let signed = Signature.sign sk (Bytes.of_string "hello world") in
   let program = type_file ~raise f in
   let make_input =
-    e_tuple ~loc
-    @@ List.Ne.of_list
-         [ e_key ~loc pk_str
-         ; e_signature ~loc (Signature.to_b58check signed)
-         ; e_bytes_string ~loc "hello world"
-         ]
+    e_tuple
+      ~loc
+      [ e_key ~loc pk_str
+      ; e_signature ~loc (Signature.to_b58check signed)
+      ; e_bytes_string ~loc "hello world"
+      ]
   in
   let make_expected = e_bool ~loc true in
   let () = expect_eq ~raise program "check_signature" make_input make_expected in
@@ -1584,7 +1580,7 @@ let tuple_param_destruct ~raise () : unit =
       ~raise
       program
       "sum"
-      (e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 20; e_int ~loc 10 ])
+      (e_tuple ~loc [ e_int ~loc 20; e_int ~loc 10 ])
       (e_int ~loc 10)
   in
   let () =
@@ -1592,7 +1588,7 @@ let tuple_param_destruct ~raise () : unit =
       ~raise
       program
       "parentheses"
-      (e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 20; e_int ~loc 10 ])
+      (e_tuple ~loc [ e_int ~loc 20; e_int ~loc 10 ])
       (e_int ~loc 10)
   in
   ()
@@ -1605,7 +1601,7 @@ let let_in_multi_bind ~raise () : unit =
       ~raise
       program
       "sum"
-      (e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 10; e_int ~loc 10 ])
+      (e_tuple ~loc [ e_int ~loc 10; e_int ~loc 10 ])
       (e_int ~loc 20)
   in
   let () =
@@ -1613,13 +1609,13 @@ let let_in_multi_bind ~raise () : unit =
       ~raise
       program
       "sum2"
-      (e_tuple ~loc
-      @@ List.Ne.of_list
-           [ e_string ~loc "my"
-           ; e_string ~loc "name"
-           ; e_string ~loc "is"
-           ; e_string ~loc "bob"
-           ])
+      (e_tuple
+         ~loc
+         [ e_string ~loc "my"
+         ; e_string ~loc "name"
+         ; e_string ~loc "is"
+         ; e_string ~loc "bob"
+         ])
       (e_string ~loc "mynameisbob")
   in
   ()
@@ -1747,7 +1743,7 @@ let tuple_assignment_jsligo ~raise () : unit =
     program
     "tuple_assignment"
     (e_unit ~loc)
-    (e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 2; e_int ~loc 5 ])
+    (e_tuple ~loc [ e_int ~loc 2; e_int ~loc 5 ])
 
 
 let block_scope_jsligo ~raise () : unit =
@@ -2504,38 +2500,38 @@ let while_and_for_loops_jsligo ~raise () : unit =
 
 let disc_union_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/disc_union.jsligo" in
-  let data1, data2 =
-    ( e_constructor ~loc "Increment" (e_record_ez ~loc [ "amount", e_int ~loc 42 ])
-    , e_int ~loc 22 )
+  let make_operation kind summand_index amount =
+    e_constructor
+      (Format.sprintf "Union.Injection_%i" summand_index)
+      ~loc
+      (e_record_ez
+         ~loc
+         [ "kind", e_string_singleton ~loc kind; "amount", e_int ~loc amount ])
   in
+  let data1, data2 = make_operation "Increment" 0 42, e_int ~loc 22 in
   let _ = expect_eq_twice ~raise program "check" data1 data2 (e_int ~loc 64) in
-  let data1, data2 =
-    ( e_constructor ~loc "Decrement" (e_record_ez ~loc [ "amount", e_int ~loc 5 ])
-    , e_int ~loc 22 )
-  in
+  let data1, data2 = make_operation "Decrement" 1 5, e_int ~loc 22 in
   let _ = expect_eq_twice ~raise program "check" data1 data2 (e_int ~loc 17) in
   ()
 
 
 let func_object_destruct_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/jsligo_destructure_object.jsligo" in
-  let data =
-    e_record_ez
+  let make_color color summand_index =
+    e_constructor
       ~loc
-      [ "bar", e_record_ez ~loc [ "color", e_constructor ~loc "red" (e_unit ~loc) ] ]
+      (Format.sprintf "Union.Injection_%i" summand_index)
+      (e_record_ez ~loc [ "kind", e_string_singleton ~loc color ])
   in
+  let bar_of_color color =
+    e_record_ez ~loc [ "bar", e_record_ez ~loc [ "color", color ] ]
+  in
+  let make_bar color summand_index = bar_of_color (make_color color summand_index) in
+  let data = make_bar "red" 0 in
   let _ = expect_eq ~raise program "x" data (e_int ~loc 1) in
-  let data =
-    e_record_ez
-      ~loc
-      [ "bar", e_record_ez ~loc [ "color", e_constructor ~loc "white" (e_unit ~loc) ] ]
-  in
+  let data = make_bar "white" 1 in
   let _ = expect_eq ~raise program "x" data (e_int ~loc 2) in
-  let data =
-    e_record_ez
-      ~loc
-      [ "bar", e_record_ez ~loc [ "color", e_constructor ~loc "blue" (e_unit ~loc) ] ]
-  in
+  let data = make_bar "blue" 2 in
   let _ = expect_eq ~raise program "x" data (e_int ~loc 5) in
   ()
 
@@ -2543,19 +2539,15 @@ let func_object_destruct_jsligo ~raise () : unit =
 let func_tuple_destruct_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/jsligo_destructure_tuples.jsligo" in
   let data =
-    e_tuple ~loc
-    @@ List.Ne.of_list
-         [ e_tuple ~loc
-           @@ List.Ne.of_list
-                [ e_string ~loc "first"
-                ; e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 1; e_string ~loc "uno" ]
-                ]
-         ; e_tuple ~loc
-           @@ List.Ne.of_list
-                [ e_string ~loc "second"
-                ; e_tuple ~loc @@ List.Ne.of_list [ e_int ~loc 2; e_string ~loc "dos" ]
-                ]
-         ]
+    e_tuple
+      ~loc
+      [ e_tuple
+          ~loc
+          [ e_string ~loc "first"; e_tuple ~loc [ e_int ~loc 1; e_string ~loc "uno" ] ]
+      ; e_tuple
+          ~loc
+          [ e_string ~loc "second"; e_tuple ~loc [ e_int ~loc 2; e_string ~loc "dos" ] ]
+      ]
   in
   let _ =
     expect_eq
@@ -2563,28 +2555,35 @@ let func_tuple_destruct_jsligo ~raise () : unit =
       program
       "test"
       data
-      (e_tuple ~loc
-      @@ List.Ne.of_list
-           [ e_string ~loc "firstsecond"; e_int ~loc 3; e_string ~loc "unodos" ])
+      (e_tuple ~loc [ e_string ~loc "firstsecond"; e_int ~loc 3; e_string ~loc "unodos" ])
   in
   ()
 
 
 let switch_return_jsligo ~raise () : unit =
   let program = type_file ~raise "./contracts/switch_return.jsligo" in
-  let data =
-    e_constructor ~loc "Increment" (e_record_ez ~loc [ "amount", e_int ~loc 42 ])
+  let wrap_operation summand_index operation =
+    e_constructor (Format.sprintf "Union.Injection_%i" summand_index) ~loc operation
   in
+  let make_operation_with_amount kind summand_index amount =
+    wrap_operation
+      summand_index
+      (e_record_ez
+         ~loc
+         [ "kind", e_string_singleton ~loc kind; "amount", e_int ~loc amount ])
+  in
+  let make_operation_without_arguments kind summand_index =
+    wrap_operation
+      summand_index
+      (e_record_ez ~loc [ "kind", e_string_singleton ~loc kind ])
+  in
+  let data = make_operation_with_amount "Increment" 0 42 in
   let _ = expect_eq ~raise program "check" data (e_int ~loc 51) in
-  let data =
-    e_constructor ~loc "Decrement" (e_record_ez ~loc [ "amount", e_int ~loc 5 ])
-  in
+  let data = make_operation_with_amount "Decrement" 1 5 in
   let _ = expect_eq ~raise program "check" data (e_int ~loc 2) in
-  let data =
-    e_constructor ~loc "Decrement" (e_record_ez ~loc [ "amount", e_int ~loc 3 ])
-  in
+  let data = make_operation_with_amount "Decrement" 1 3 in
   let _ = expect_eq ~raise program "check" data (e_int ~loc 5) in
-  let data = e_constructor ~loc "Reset" (e_unit ~loc) in
+  let data = make_operation_without_arguments "Reset" 2 in
   let _ = expect_eq ~raise program "check" data (e_int ~loc 3) in
   let _ = expect_eq ~raise program "check2" (e_int ~loc 0) (e_int ~loc 11) in
   let _ = expect_eq ~raise program "check2" (e_int ~loc 1) (e_int ~loc 5) in
@@ -2609,7 +2608,7 @@ let main =
   @ test_w_all "address" address
   @ test_w_all "self address" self_address
   @ test_w_all "implicit account" implicit_account
-  @ [ test_w "mav (mligo)" tez_mligo ]
+  @ [ test_w "mav (mligo)" mav_mligo ]
   @ test_w_all "lambda" lambda
   @ test_w_all "lambda2" lambda2
   @ test_w_all "tuple" tuple

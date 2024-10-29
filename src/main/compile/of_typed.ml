@@ -1,10 +1,10 @@
-open Simple_utils.Trace
+module Location = Simple_utils.Location
+module Trace = Simple_utils.Trace
 open Ligo_prim
 open Ast_typed
 open Aggregation
 open Main_errors
 module Var = Simple_utils.Var
-module SMap = Map.Make (String)
 
 (* contract_info here is the optional information on the contract we are compiling
    It would be better if Self_ast_aggregated.all_contract was executing on
@@ -20,12 +20,12 @@ let compile_expression_in_context
   =
  fun contract_info ctxt_typed exp ->
   let ctxt, exp =
-    trace ~raise aggregation_tracer @@ Aggregation.compile_program exp ctxt_typed
+    Trace.trace ~raise aggregation_tracer @@ Aggregation.compile_program exp ctxt_typed
   in
   let ctxt, exp =
     if self_pass
     then
-      trace ~raise self_ast_aggregated_tracer
+      Trace.trace ~raise self_ast_aggregated_tracer
       @@ Self_ast_aggregated.all_program ~options ~self_program (ctxt, exp)
     else ctxt, exp
   in
@@ -33,18 +33,14 @@ let compile_expression_in_context
   let exp =
     if self_pass
     then
-      trace ~raise self_ast_aggregated_tracer
+      Trace.trace ~raise self_ast_aggregated_tracer
       @@ Self_ast_aggregated.all_aggregated_expression exp
     else exp
   in
   let exp =
     Option.value_map contract_info ~default:exp ~f:(fun { storage; parameter } ->
-        trace ~raise self_ast_aggregated_tracer
-        @@ Self_ast_aggregated.all_contract
-             ~options
-             (Aggregation.compile_type parameter)
-             (Aggregation.compile_type storage)
-             exp)
+        Trace.trace ~raise self_ast_aggregated_tracer
+        @@ Self_ast_aggregated.all_contract ~options parameter storage exp)
   in
   let exp = if force_uncurry then Ast_aggregated.Combinators.uncurry_wrap exp else exp in
   if self_pass then Self_ast_aggregated.remove_check_self exp else exp
@@ -53,14 +49,9 @@ let compile_expression_in_context
 let compile_expression ~raise ~options : Ast_typed.expression -> Ast_aggregated.expression
   =
  fun e ->
-  let x = trace ~raise aggregation_tracer @@ compile_expression e in
-  trace ~raise self_ast_aggregated_tracer @@ Self_ast_aggregated.all_expression ~options x
-
-
-let compile_type_expression ~raise ~options
-    : Ast_typed.type_expression -> Ast_aggregated.type_expression
-  =
- fun e -> trace ~raise aggregation_tracer @@ compile_type_expression e
+  let x = Trace.trace ~raise aggregation_tracer @@ compile_expression e in
+  Trace.trace ~raise self_ast_aggregated_tracer
+  @@ Self_ast_aggregated.all_expression ~options x
 
 
 let apply_to_entrypoint_with_contract_type ~raise ~options
@@ -101,7 +92,8 @@ let apply_to_var ~raise ~options
        it would force users to export declaration in Jsligo *)
       to_signature prg.pr_module
     in
-    trace_option ~raise main_declaration_not_found @@ Ast_typed.get_sig_value [] v sig_
+    Trace.trace_option ~raise main_declaration_not_found
+    @@ Ast_typed.get_sig_value [] v sig_
   in
   let var_ep = Ast_typed.(e_a_variable ~loc:Location.dummy v ty) in
   compile_expression_in_context ~raise ~options None prg var_ep
@@ -117,7 +109,7 @@ let assert_equal_contract_type ~raise
     | Check_storage -> storage
     | Check_parameter -> parameter
   in
-  trace ~raise checking_tracer
+  Trace.trace ~raise checking_tracer
   @@ Checking.assert_type_expression_eq Location.dummy (exp.type_expression, ty)
 
 
@@ -131,7 +123,7 @@ let apply_to_entrypoint_view ~raise ~options
    fun i (view_ty, view_binder) ->
     let a_ty, s_ty, r_ty =
       (* at this point the self-pass on views has been applied, we assume the types are correct *)
-      trace_option ~raise main_unknown @@ Ast_typed.get_view_form view_ty
+      Trace.trace_option ~raise main_unknown @@ Ast_typed.get_view_form view_ty
     in
     let ty = t_arrow ~loc (t_pair ~loc a_ty s_ty) r_ty () in
     let ep_expr =
@@ -169,7 +161,7 @@ let rec list_declarations
   let should_skip b = skip_generated && is_generated_main b in
   List.fold_left
     ~f:(fun prev el ->
-      let open Simple_utils.Location in
+      let open Location in
       match el.wrap_content with
       | D_irrefutable_match { pattern = { wrap_content = P_var binder; _ }; attr; _ }
       | D_value { binder; attr; _ }
@@ -208,7 +200,12 @@ let rec list_declarations
                  (Format.asprintf "%a." Module_var.pp module_binder
                  ^ Format.asprintf "%a" Value_var.pp v)))
         @ prev
-      | D_value _ | D_irrefutable_match _ | D_type _ | D_module _ | D_signature _ -> prev)
+      | D_value _
+      | D_irrefutable_match _
+      | D_type _
+      | D_module _
+      | D_signature _
+      | D_import _ -> prev)
     ~init:[]
     m.pr_module
 
@@ -216,7 +213,7 @@ let rec list_declarations
 let list_type_declarations (m : Ast_typed.program) : Type_var.t list =
   List.fold_left
     ~f:(fun prev el ->
-      let open Simple_utils.Location in
+      let open Location in
       match el.wrap_content with
       | D_type { type_binder; type_attr; _ } when type_attr.public -> type_binder :: prev
       | _ -> prev)
@@ -224,27 +221,51 @@ let list_type_declarations (m : Ast_typed.program) : Type_var.t list =
     m.pr_module
 
 
-let get_modules_with_entries (prg : Ast_typed.program) : Module_var.t list list =
+let get_modules_with_entries (prg : Ast_typed.program)
+    : (Module_var.t list * Ast_typed.contract_sig) list
+  =
   let module ModPathOrd = struct
-    type t = Module_var.t list
+    module T = struct
+      type t =
+        Module_var.t list * (Ast_typed.contract_sig[@compare.ignore] [@sexp.opaque])
+      [@@deriving sexp, compare]
+    end
 
-    let compare = List.compare Module_var.compare
+    include T
+    include Comparable.Make (T)
   end
   in
-  let module ModSet = Caml.Set.Make (ModPathOrd) in
-  let rec aux ?(current_module = []) (prg : Ast_typed.program) : ModSet.t =
-    List.fold_left prg.pr_module ~init:ModSet.empty ~f:(fun acc decl ->
+  let contract_sig =
+    match prg.pr_sig.sig_sort with
+    | Ss_module ->
+      let unit_type = Ast_typed.t_unit ~loc:Location.generated () in
+      { parameter = unit_type; storage = unit_type }
+    | Ss_contract contract_sig -> contract_sig
+  in
+  let rec aux ?(current_module_and_sig = [], contract_sig) (prg : Ast_typed.program)
+      : ModPathOrd.Set.t
+    =
+    List.fold_left prg.pr_module ~init:ModPathOrd.Set.empty ~f:(fun acc decl ->
         match decl.wrap_content with
         | D_value { attr; _ } | D_irrefutable_match { attr; _ } ->
-          if attr.entry then ModSet.add current_module acc else acc
+          if attr.entry then Set.add acc current_module_and_sig else acc
         | D_module
             { module_binder
             ; module_ = { module_content = M_struct pr_module; signature = pr_sig; _ }
             ; _
             } ->
-          Ast_typed.{ pr_module; pr_sig }
-          |> aux ~current_module:(module_binder :: current_module)
-          |> ModSet.union acc
-        | D_module _ | D_type _ | D_module_include _ | D_signature _ -> acc)
+          let current_module_and_sig =
+            let current_module = module_binder :: fst current_module_and_sig in
+            let contract_sig =
+              match pr_sig.sig_sort with
+              | Ss_module -> snd current_module_and_sig
+              | Ss_contract contract_sig -> contract_sig
+            in
+            current_module, contract_sig
+          in
+          Ast_typed.{ pr_module; pr_sig } |> aux ~current_module_and_sig |> Set.union acc
+        | D_module _ | D_type _ | D_module_include _ | D_signature _ | D_import _ -> acc)
   in
-  aux prg |> ModSet.to_seq |> Seq.fold_left (fun acc elt -> List.rev elt :: acc) []
+  aux prg
+  |> Set.to_list
+  |> List.fold_left ~f:(fun acc elt -> Tuple2.map_fst ~f:List.rev elt :: acc) ~init:[]

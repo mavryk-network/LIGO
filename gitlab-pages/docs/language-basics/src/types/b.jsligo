@@ -2,6 +2,5 @@
 
 type account_balances = map<address, mav>;
 
-const ledger: account_balances =
-  Map.literal
-    (list([["mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address, 10mumav]]));
+const ledger : account_balances =
+  Map.literal([["mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address, 10mumav]]);

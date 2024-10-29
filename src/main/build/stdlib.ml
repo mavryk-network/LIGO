@@ -17,12 +17,7 @@ module Cache = struct
     - multiple imports (#imports)
     - multiple compilation of contract in "ligo test"
   *)
-  module LanguageMap = Simple_utils.Map.Make (struct
-    type t = Environment.Protocols.t * bool
-
-    let compare (pa, ta) (pb, tb) =
-      Int.(abs (Environment.Protocols.compare pa pb) + abs (compare_bool ta tb))
-  end)
+  module LanguageMap = Bool.Map
 
   type cache = t LanguageMap.t
 
@@ -30,7 +25,7 @@ module Cache = struct
 
   let build_key ~options =
     let open Compiler_options in
-    options.middle_end.protocol_version, options.middle_end.test
+    options.middle_end.test
 end
 
 let compile ~options x =
@@ -38,9 +33,10 @@ let compile ~options x =
   let no_colour : bool = options.tools.no_colour in
   match
     Simple_utils.Trace.to_stdlib_result
+      ~fast_fail:Fast_fail
       (Ligo_compile.Utils.core_program_string ~options CameLIGO x)
   with
-  | Ok (x, _w) -> Helpers.internalize_core x
+  | Ok (x, (), _w) -> Helpers.internalize_core x
   | Error (e, _w) ->
     let error_msg =
       Format.asprintf
@@ -55,9 +51,11 @@ let type_ ~options x =
   let open Compiler_options in
   let no_colour = options.tools.no_colour in
   match
-    Simple_utils.Trace.to_stdlib_result (Ligo_compile.Of_core.typecheck ~options x)
+    Simple_utils.Trace.to_stdlib_result
+      ~fast_fail:Fast_fail
+      (Ligo_compile.Of_core.typecheck ~options x)
   with
-  | Ok (x, _w) -> x
+  | Ok (x, (), _w) -> x
   | Error (e, _w) ->
     let error_msg =
       Format.asprintf
@@ -71,10 +69,7 @@ let type_ ~options x =
 let get : options:Compiler_options.t -> unit -> t =
  fun ~options () ->
   let def str = "#define " ^ str ^ "\n" in
-  let std =
-    match options.middle_end.protocol_version with
-    | Environment.Protocols.Atlas -> def "ATLAS"
-  in
+  let std = def Memory_proto_alpha.protocol_def_str in
   let legacy_layout_tree =
     if Ligo_prim.Layout.legacy_layout_flag then def "LEGACY_LAYOUT_TREE" else ""
   in
@@ -90,10 +85,10 @@ let get ~options : t =
   else
     let open Cache in
     let k = build_key ~options in
-    match LanguageMap.find_opt k @@ !cache_ref with
+    match Map.find !cache_ref k with
     | None ->
       let lib = get ~options () in
-      cache_ref := LanguageMap.add k lib @@ !cache_ref;
+      cache_ref := Map.set !cache_ref ~key:k ~data:lib;
       lib
     | Some typed -> typed
 

@@ -1,4 +1,4 @@
-const taquito = require('@taquito/taquito')
+const taquito = require('@mavrykdynamics/taquito')
 
 const ConstantsV1 = artifacts.require("ConstantsV1")
 const ConstantsV2 = artifacts.require("ConstantsV2")

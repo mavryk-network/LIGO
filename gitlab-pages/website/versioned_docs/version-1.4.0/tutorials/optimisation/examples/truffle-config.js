@@ -15,7 +15,7 @@ module.exports = {
       port: 8732,
       network_id: "*",
       secretKey: secret,
-      type: "tezos"
+      type: "mavryk"
     }
   }
 }

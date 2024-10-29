@@ -1,6 +1,6 @@
 
 author: Laucans
-description: "Fix `old processor can raise an illegal hardware instruction` which can be raised with old processors.\\nAvoid Tezos submodule emit ADX instructions. \\n\\n"
+description: "Fix `old processor can raise an illegal hardware instruction` which can be raised with old processors.\\nAvoid Mavryk submodule emit ADX instructions. \\n\\n"
 merge_request: '2952'
 title: "[fix] Ensure BLST_PORTABLE is 'y' during build on CI"
 type: fixed

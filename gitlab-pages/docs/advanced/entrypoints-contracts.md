@@ -31,7 +31,7 @@ export namespace IncDec {
 
   @entry
   const increment = (delta : int, store : storage) : result =>
-    [list([]), store + delta];
+    [[], store + delta];
 
   @entry
   const @default = (_u : unit, store : storage) : result =>
@@ -39,11 +39,11 @@ export namespace IncDec {
 
   @entry
   const decrement = (delta : int, store : storage) : result =>
-    [list([]), store - delta];
+    [[], store - delta];
 
   @entry
   const reset = (_p : unit, _s : storage) : result =>
-    [list([]), 0];
+    [[], 0];
 };
 ```
 
@@ -295,10 +295,10 @@ export type storage = {
 type result = [list<operation>, storage];
 
 const entry_A = (n: nat, store: storage): result =>
-  [list([]), {...store, counter: n}];
+  [[], {...store, counter: n}];
 
 const entry_B = (s: string, store: storage): result =>
-  [list([]), {...store, name: s}];
+  [[], {...store, name: s}];
 
 @entry
 const main = (action: parameter, store: storage): result =>
@@ -446,7 +446,7 @@ const no_tokens = (action: parameter, store: storage): result => {
   if (Mavryk.get_amount() > 0mav) {
     return failwith("This contract does not accept tokens.");
   } else {
-    return [list([]), store];
+    return [[], store];
   };
 };
 ```
@@ -474,11 +474,11 @@ let owner_only (action : parameter) (store: storage) : result =
 <Syntax syntax="jsligo">
 
 ```jsligo group=c
-const owner = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
+const owner: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
 
 const owner_only = (action: parameter, store: storage): result => {
   if (Mavryk.get_sender() != owner) { return failwith("Access denied."); }
-  else { return [list([]), store]; };
+  else { return [[], store]; };
 };
 ```
 
@@ -568,7 +568,7 @@ export namespace IncDec {
 
   @entry
   const increment = (delta : int, store : storage) : ret =>
-    [list([]), store + delta];
+    [[], store + delta];
 
   // And so on, as above
 };
@@ -586,12 +586,12 @@ type storage = unit;
 
 type result = [list<operation>, storage];
 
-const dest = "KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3" as address;
+const dest : address = "KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3";
 
 const proxy = (action: parameter, store: storage): result => {
   let counter : contract<parameter> = Mavryk.get_contract_with_error(dest, "not found");
   let op = Mavryk.transaction(Increment(5), 0mav, counter);
-  return [list([op]), store];
+  return [[], store];
 };
 ```
 

@@ -3,13 +3,13 @@ description: '#### New `Test` type and functions\n- `type michelson_contract`: r
   Michelson contracts.\n- `Test.compile_contract_from_file : string -> string -> string
   list -> michelson_contract`\n- `Test.compile_contract : (''param * ''storage -> operation list *
   ''storage) -> michelson_contract`\n- `Test.read_contract_from_file : string -> michelson_contract`\n-
-  `Test.originate_contract : michelson_contract -> michelson_program -> tez -> address`\n-
+  `Test.originate_contract : michelson_contract -> michelson_program -> mav -> address`\n-
   `Test.size : michelson_contract -> int`\n#### Breaking changes in `Test` types, now
   they return `michelson_contract` instead of `michelson_program`:\n- `Test.originate_from_file
-  : string -> string -> string list -> michelson_program -> tez -> address * michelson_contract 
+  : string -> string -> string list -> michelson_program -> mav -> address * michelson_contract 
   int` \n- `Test.originate : (''param * ''storage ->
   operation list * ''storage)
-  -> ''storage -> tez -> ((''param, ''storage) typed_address * michelson_contract *
+  -> ''storage -> mav -> ((''param, ''storage) typed_address * michelson_contract *
   int)`\n\nMost usages ignore this result, but might break some tests in case they
   are too annotated.'
 merge_request: '1772'

@@ -1,8 +1,6 @@
 import * as vscode from 'vscode'
 
-import {
-  LanguageClient,
-} from 'vscode-languageclient/node'
+import { LanguageClient, NotificationType } from 'vscode-languageclient/node'
 import { ligoOutput } from './commands/common'
 
 import * as lc from './commands/ligoCommands'
@@ -12,6 +10,10 @@ import * as ex from '../common/exceptions'
 import { LigoContext } from '../common/LigoContext'
 import { LigoProtocolClient } from '../common/LigoProtocolClient'
 
+/**
+ * Helper to report an exception to the LIGO Compiler output channel. It doesn't
+ * report {@link ex.UserInterruptionException | UserInterruptionException}.
+ */
 function reportException(exception: Error) {
   if (!(exception instanceof ex.UserInterruptionException)) {
     vscode.window.showErrorMessage('Exception happened during execution.\n'
@@ -21,6 +23,10 @@ function reportException(exception: Error) {
   }
 }
 
+/**
+ * Creates a quick pick allowing the user to choosen between the available
+ * commands for the "LIGO Options" status bar button.
+ */
 async function executeChooseLigoOption(context: LigoContext, client: LigoProtocolClient) {
   const possibleOptions = ['Compile contract', 'Compile storage', 'Compile expression', 'Dry run', 'Evaluate function', 'Evaluate value']
   const curCommand = await ui.createQuickPickBox(possibleOptions, 'ligo compiler command', 'command')
@@ -48,6 +54,10 @@ async function executeChooseLigoOption(context: LigoContext, client: LigoProtoco
   }
 }
 
+/**
+ * Creates a quick pick allowing the user to choosen between the available
+ * commands for the "Deploy LIGO" status bar button.
+ */
 async function executeChooseDeployOptions(context: LigoContext, client: LigoProtocolClient) {
   const possibleOptions = ['Deploy contract', 'Generate deploy script']
   const curCommand = await ui.createQuickPickBox(possibleOptions, 'Deployment options', 'command')
@@ -63,6 +73,13 @@ async function executeChooseDeployOptions(context: LigoContext, client: LigoProt
   }
 }
 
+/**
+ * A record containing all registed commands that may be executed by the user.
+ *
+ * `name` is the command's name (the same as in `package.json`), `run` is a
+ * function that executes the given command, and `register` register the command
+ * in VSCode.
+ */
 const LigoCommands = {
   StartServer: {
     name: 'ligo.startServer',
@@ -95,6 +112,10 @@ const LigoCommands = {
     run: async (client: LanguageClient, semanticTokensClient: LanguageClient) => {
       await LigoCommands.StopServer.run(client, semanticTokensClient)
       await LigoCommands.StartServer.run(client, semanticTokensClient)
+      // Notify the server that we have restarted for analytics collection.
+      const notifType = new NotificationType<null>('ligo/analytics/restarted')
+      await client.sendNotification(notifType)
+
     },
     register: (client: LanguageClient, semanticTokensClient: LanguageClient) => vscode.commands.registerCommand(
       LigoCommands.RestartServer.name,
@@ -193,6 +214,7 @@ const LigoCommands = {
 
 export default LigoCommands
 
+/** Runs all `register` fields from {@link LigoCommands}. */
 export function registerCommands(
   context: LigoContext,
   client: LanguageClient,
@@ -213,7 +235,7 @@ export function registerCommands(
   LigoCommands.DryRun.register(context, protocolClient);
   LigoCommands.EvaluateFunction.register(context);
   LigoCommands.EvaluateValue.register(context);
-  // Tezos commands
+  // Mavryk commands
   LigoCommands.Deploy.register(context, protocolClient);
   LigoCommands.GenerateDeployScript.register(context, protocolClient);
 }

@@ -1,6 +1,8 @@
 (library
  (name lsp_test_helpers)
  (public_name ligo.lsp_test.helpers)
+ (flags
+  (:standard -alert @all -alert -from_absolute_performance))
  (libraries
   lsp
   linol
@@ -9,4 +11,6 @@
   cli_helpers
   lsp_helpers
   compiler_options
-  syntax_types))
+  syntax_types)
+ (preprocess
+  (pps ppx_jane)))

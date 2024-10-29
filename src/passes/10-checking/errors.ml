@@ -1,9 +1,11 @@
-module Snippet = Simple_utils.Snippet
-module Location = Simple_utils.Location
-module List = Simple_utils.List
-open Simple_utils.Display
 open Ligo_prim
 open Type
+module Snippet = Simple_utils.Snippet
+module Location = Simple_utils.Location
+module Display = Simple_utils.Display
+module PP_helpers = Simple_utils.PP_helpers
+module Ligo_Error = Simple_utils.Error
+module Trace = Simple_utils.Trace
 
 type 'err with_loc = Location.t -> 'err
 
@@ -18,7 +20,7 @@ let pattern_to_string p syntax =
   in
   let p =
     Nanopasses.decompile_pattern
-      ~raise:(Simple_utils.Trace.raise_failwith "couldn't decompile pattern")
+      ~raise:(Trace.raise_failwith "couldn't decompile pattern")
       ~syntax
       p
   in
@@ -36,7 +38,7 @@ let type_improve t =
     match module_path with
     | [] -> t_variable ~loc element ()
     | _ ->
-      let open Simple_utils.PP_helpers in
+      let open PP_helpers in
       let x = Format.asprintf "%a" (list_sep Module_var.pp (tag ".")) module_path in
       let y = Format.asprintf "%a" Type_var.pp element in
       t_variable ~loc (Type_var.of_input_var ~loc (x ^ "." ^ y)) ()
@@ -60,9 +62,9 @@ let rec type_mapper ~f (t : Type.t) =
   | T_record row ->
     let row = row_mapper ~f row in
     return @@ T_record row
-  | T_sum (row, orig_label) ->
+  | T_sum row ->
     let row = row_mapper ~f row in
-    return @@ T_sum (row, orig_label)
+    return @@ T_sum row
   | T_for_all abs ->
     let abs = Abstraction.map (type_mapper ~f) abs in
     return @@ T_for_all abs
@@ -84,7 +86,7 @@ let pp_texists_hint ?(requires_annotations = false) ()
     Format.fprintf
       ppf
       "@.Hint: %a represent placeholder type(s)."
-      Simple_utils.PP_helpers.(
+      PP_helpers.(
         list_sep
           (fun ppf tvar ->
             Format.fprintf ppf "\"^%s\"" (Type.Type_var_name_tbl.Exists.name_of tvar))
@@ -138,13 +140,13 @@ type typer_error =
   | `Typer_assert_equal of
     Ast_typed.type_expression * Ast_typed.type_expression * Location.t
   | `Typer_unbound_module of Module_var.t list * Location.t
-  | `Typer_unbound_module_type of Module_var.t List.Ne.t * Location.t
+  | `Typer_unbound_module_type of Module_var.t Nonempty_list.t * Location.t
   | `Typer_unbound_texists_var of Type_var.t * Location.t
   | `Typer_unbound_type_variable of Type_var.t * Location.t
   | `Typer_unbound_module_variable of Module_var.t * Location.t
   | `Typer_type_app_wrong_arity of Type_var.t option * int * int * Location.t
   | `Typer_literal_type_mismatch of Type.t * Type.t * Location.t
-  | `Typer_bad_record_access of Label.t * Location.t
+  | `Typer_bad_record_access of Type.t * Label.t * Location.t
   | `Typer_bad_constructor of Label.t * Type.t * Location.t
   | `Typer_unbound_variable of Value_var.t * Location.t
   | `Typer_not_annotated of Location.t
@@ -162,7 +164,9 @@ type typer_error =
     Ast_core.type_expression option Ast_core.Pattern.t * Type.t * Location.t
   | `Typer_uncomparable_types of Type.t * Type.t * Location.t
   | `Typer_comparator_composed of Type.t * Location.t
-  | `Typer_cannot_decode_texists of Type.t * Location.t
+  | `Typer_cannot_decode_texists of Type_var.t * Location.t
+  | `Typer_cannot_encode_texists of Type_var.t * Location.t
+  | `Typer_cannot_decompile_texists of Type_var.t * Location.t
   | `Typer_signature_not_found_value of Value_var.t * Location.t
   | `Typer_signature_not_found_type of Type_var.t * Location.t
   | `Typer_signature_not_found_entry of Value_var.t * Location.t
@@ -174,6 +178,16 @@ type typer_error =
     Value_var.t * Type.t * Value_var.t * Type.t * Location.t
   | `Typer_duplicate_entrypoint of Value_var.t * Location.t
   | `Typer_wrong_dynamic_storage_definition of Type.t * Location.t
+  | (* Used only when error recovery is enabled. *)
+    `Typer_unbound_label_edge_case of
+    [ `Record | `Variant ] * Label.t * Ast_typed.row * Location.t
+  | `Typer_unsupported_rest_property of Ast_core.expression * Location.t
+  | `Typer_bad_key_hash of string * Location.t
+  | `Typer_bad_signature of string * Location.t
+  | `Typer_bad_key of string * Location.t
+  | `Typer_bad_timestamp of string * Location.t
+  | `Typer_bad_conversion_bytes of Location.t
+  | `Typer_unsupported_import_decl of Location.t
   ]
 [@@deriving poly_constructor { prefix = "typer_" }]
 
@@ -271,7 +285,11 @@ let rec extract_loc_and_message
         (pp_texists_hint ~requires_annotations:true ())
         [ type_ ] )
   | `Typer_corner_case (desc, loc) ->
-    loc, Format.asprintf "@[<hv>A type system corner case occurred:@.%s@]" desc
+    ( loc
+    , Format.asprintf
+        "@[<hv>A type system corner case occurred:@.%s This is an internal error, is \
+         typer error recovery enabled?@]"
+        desc )
   | `Typer_occurs_check_failed (tvar, type_, loc) ->
     let type_ = type_improve type_ in
     ( loc
@@ -406,8 +424,14 @@ let rec extract_loc_and_message
         lamb_type
         (pp_texists_hint ~requires_annotations:true ())
         [ lamb_type ] )
-  | `Typer_bad_record_access (field, loc) ->
-    loc, Format.asprintf "@[<hv>Invalid record field \"%a\" in record.@]" Label.pp field
+  | `Typer_bad_record_access (typ, field, loc) ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Invalid record field \"%a\" in record of type \"%a\".@]"
+        Label.pp
+        field
+        Type.pp
+        typ )
   | `Typer_not_annotated loc ->
     ( loc
     , Format.asprintf
@@ -490,7 +514,7 @@ let rec extract_loc_and_message
     in
     loc, Format.asprintf "@[<hv> Module \"%a\" not found.@]" pp_path path
   | `Typer_unbound_module_type (path, loc) ->
-    let path = List.Ne.to_list path in
+    let path = Nonempty_list.to_list path in
     let rec pp_path ppf path =
       match path with
       | [] -> failwith "Empty path"
@@ -498,15 +522,27 @@ let rec extract_loc_and_message
       | mvar :: path -> Format.fprintf ppf "%a.%a" Module_var.pp mvar pp_path path
     in
     loc, Format.asprintf "@[<hv> Signature \"%a\" not found.@]" pp_path path
-  | `Typer_cannot_decode_texists (type_, loc) ->
-    let type_ = type_improve type_ in
+  | `Typer_cannot_decode_texists (tvar, loc) ->
     ( loc
     , Format.asprintf
-        "@[<hv>Underspecified type \"%a\".@.Please add additional annotations.%a@]"
-        pp_type
-        type_
+        "@[<hv>Underspecified type \"^%s\".@.Please add additional annotations.%a@]"
+        (Type.Type_var_name_tbl.Exists.name_of tvar)
         (pp_texists_hint ())
-        [ type_ ] )
+        [ Type.t_exists ~loc tvar () ] )
+  | `Typer_cannot_decompile_texists (tvar, loc) ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Underspecified type \"^%s\".@.Cannot decompile this type.%a@]"
+        (Type.Type_var_name_tbl.Exists.name_of tvar)
+        (pp_texists_hint ())
+        [ Type.t_exists ~loc tvar () ] )
+  | `Typer_cannot_encode_texists (tvar, loc) ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Underspecified type \"^%s\".@.Cannot encode this type.%a@]"
+        (Type.Type_var_name_tbl.Exists.name_of tvar)
+        (pp_texists_hint ())
+        [ Type.t_exists ~loc tvar () ] )
   | `Typer_literal_type_mismatch (lit_type, expected_type, loc) ->
     let lit_type = type_improve lit_type in
     let expected_type = type_improve expected_type in
@@ -561,10 +597,56 @@ let rec extract_loc_and_message
         expected_type
         pp_type
         found_type )
+  | `Typer_unbound_label_edge_case (record_or_variant, label, type_row, loc) ->
+    let record_or_variant, pp_record_or_variant_type =
+      match record_or_variant with
+      | `Record -> "Record", Ast_typed.Row.PP.record_type
+      | `Variant -> "Variant", Ast_typed.Row.PP.sum_type
+    in
+    ( loc
+    , Format.asprintf
+        "@[<hv>%s type \"%a\" does not have a label \"%a\". This is an internal error, \
+         is typer error recovery enabled?@]"
+        record_or_variant
+        (pp_record_or_variant_type Ast_typed.PP.type_expression Ast_typed.Row.L.pp)
+        type_row
+        Label.pp
+        label )
+  | `Typer_unsupported_rest_property (_expr, loc) ->
+    loc, Format.asprintf "@[<hv>Unsupported rest property@]"
+  (* TODO: this seems wrong *)
+  | `Typer_bad_key_hash (s, loc) ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Ill-formed key hash \"%s\".@. A Base58 encoded key hash is expected. @]"
+        s )
+  | `Typer_bad_signature (s, loc) ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Ill-formed signature \"%s\".@. A Base58 encoded signature is expected. @]"
+        s )
+  | `Typer_bad_key (s, loc) ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Ill-formed key \"%s\".@. A Base58 encoded key is expected. @]"
+        s )
+  | `Typer_bad_timestamp (t, loc) ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Ill-formed timestamp \"%s\".@.At this point, a string with a RFC3339 \
+         notation or the number of seconds since Epoch is expected. @]"
+        t )
+  | `Typer_bad_conversion_bytes loc ->
+    ( loc
+    , Format.asprintf
+        "@[<hv>Ill-formed bytes literal.@.Example of a valid bytes literal: \
+         \"ff7a7aff\". @]" )
+  | `Typer_unsupported_import_decl loc ->
+    loc, Format.asprintf "@[<hv>LIGO doesn't support import declarations yet. @]"
 
 
 let error_ppformat
-    :  display_format:string display_format -> no_colour:bool -> Format.formatter
+    :  display_format:string Display.display_format -> no_colour:bool -> Format.formatter
     -> typer_error -> unit
   =
  fun ~display_format ~no_colour f a ->
@@ -574,9 +656,8 @@ let error_ppformat
   | Human_readable | Dev -> Format.fprintf f "@[<hv>%a@.%s@]" snippet_pp loc msg
 
 
-let error_json : typer_error -> Simple_utils.Error.t =
+let error_json : typer_error -> Ligo_Error.t =
  fun err ->
-  let open Simple_utils.Error in
   let location, message = extract_loc_and_message err in
-  let content = make_content ~message ~location () in
-  make ~stage ~content
+  let content = Ligo_Error.make_content ~message ~location () in
+  Ligo_Error.make ~stage ~content

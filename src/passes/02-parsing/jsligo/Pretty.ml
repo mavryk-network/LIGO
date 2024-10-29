@@ -4,13 +4,14 @@
 
 (* Jane Street dependency *)
 
-module List = Core.List
+open Core
 
 (* Vendored dependencies *)
 
-module Utils  = Simple_utils.Utils
-module Region = Simple_utils.Region
-module Option = Simple_utils.Option
+module Utils    = Simple_utils.Utils
+module Region   = Simple_utils.Region
+module Ligo_fun = Simple_utils.Ligo_fun
+module Ne       = Nonempty_list
 
 (* Local dependencies *)
 
@@ -23,7 +24,6 @@ open CST
 open! Region
 open! PPrint
 
-
 (* Utilities and local shadowings *)
 
 type state = PrettyComb.state
@@ -31,7 +31,7 @@ type state = PrettyComb.state
 let prefix = PrettyComb.prefix
 let (^/^)  = PrettyComb.(^/^)
 
-let (<@) = Utils.(<@)
+let (<@) = Ligo_fun.(<@)
 
 (* Placement *)
 
@@ -149,8 +149,8 @@ let print_sepseq :
   | Some seq -> print_nsepseq sep print seq
 *)
 
-let print_nseq : 'a.document -> ('a -> document) -> 'a Utils.nseq -> document =
-  fun sep print (head, tail) -> separate_map sep print (head::tail)
+let print_ne_list : 'a.document -> ('a -> document) -> 'a Ne.t -> document =
+  fun sep print (head::tail) -> separate_map sep print (head::tail)
 
 let print_nsep_or_term :
   'a.document -> ('a -> document) ->
@@ -158,7 +158,7 @@ let print_nsep_or_term :
   fun sep print -> function
     `Sep  seq -> print_nsepseq sep print seq
   | `Term seq -> let print (item, term) = print item ^^ token term
-                 in print_nseq sep print seq
+                 in print_ne_list sep print seq
 
 let print_sep_or_term :
   'a.document -> ('a -> document) ->
@@ -183,8 +183,6 @@ let is_enclosed_type = function
 | _ -> false
 
 (* UTILITIES *)
-
-(* let (<@) f g x = f (g x) *)
 
 let unroll_S_Attr (attr, stmt) =
   let rec aux attrs = function
@@ -229,6 +227,34 @@ let print_mumav (node : (lexeme * Int64.t) wrap) =
     ^/^ (Int64.to_string (snd node#payload) ^ "mumav" |> string)
   in print_line_comment_opt prefix node#line_comment
 
+let print_tez (node : (lexeme * Q.t) wrap) =
+  let payload = snd node#payload in
+  let numerator = Q.num payload in
+  let denominator = Q.den payload in
+  let power_of_ten = Z.((of_string "10") ** (String.length (to_string denominator))) in
+  let multiply_by = Z.(power_of_ten / denominator) in
+  let adjusted_numerator = Z.(numerator * multiply_by) in
+  let integral = Z.(to_string (div adjusted_numerator power_of_ten)) in
+  let fractional = Z.(to_string (rem adjusted_numerator power_of_ten)) in
+  let num_zeros = String.length (Z.to_string denominator) - String.length fractional in
+  let fractional_with_zeros = (String.make num_zeros '0') ^ fractional in
+
+  let rec remove_trailing_zeros str =
+    if String.length str > 0 && Char.(str.[String.length str - 1] = '0') then
+      remove_trailing_zeros (String.sub str ~pos:0 ~len:(String.length str - 1))
+    else
+      str
+  in
+  let fractional_no_trailing_zeros = remove_trailing_zeros fractional_with_zeros in
+
+  let prefix =
+    print_comments node#comments
+    ^/^ (integral ^ (if String.(fractional_no_trailing_zeros <> "")
+                     then "." ^ fractional_no_trailing_zeros
+                     else "") ^ "mav" |> string)
+  in print_line_comment_opt prefix node#line_comment
+
+
 let print_ctor (node : ctor) = token node
 
 let print_string (node : lexeme wrap) =
@@ -268,7 +294,7 @@ let print_attribute state (node : Attr.t wrap) =
 
 let print_attributes state thread attributes =
   let drop_comment_attr attributes =
-    let is_comment w = fst (w#payload) = "comment"
+    let is_comment w = String.(fst (w#payload) = "comment")
     in List.filter ~f:(not <@ is_comment) attributes
   in
   match drop_comment_attr attributes with
@@ -279,7 +305,7 @@ let print_attributes state thread attributes =
 
 let rec print state (node : CST.t) =
   let {statements; eof} = node in
-  let prog = Utils.nseq_to_list statements
+  let prog = Ne.to_list statements
              |> List.map ~f:(print_statement_semi state)
              |> separate_map (hardline ^^ hardline) group
              |> Fun.flip ( ^^ ) hardline
@@ -319,7 +345,7 @@ and print_block state (node : statements braces) =
   print_braces ~force_hardline:true state (print_statements state) node
 
 and print_statements state (node : statements) =
-  print_nseq (break 1) (print_statement_semi state) node
+  print_ne_list (break 1) (print_statement_semi state) node
 
 and print_statement_semi state (node : statement * semi option) =
   let statement, semi_opt = node in
@@ -642,8 +668,8 @@ and print_AllCases state (node : all_cases) =
     None -> thread
   | Some default -> thread ^^ hardline ^^ print_switch_default state default
 
-and print_switch_cases state (node : switch_case reg Utils.nseq) =
-  print_nseq hardline (print_switch_case state) node
+and print_switch_cases state (node : switch_case reg Ne.t) =
+  print_ne_list hardline (print_switch_case state) node
 
 and print_switch_case state (node : switch_case reg) =
   let {kwd_case; expr; colon; case_body} = node.value in
@@ -661,7 +687,7 @@ and print_switch_default state (node : switch_default reg) =
 
 and print_label_and_statements state label = function
   None -> label
-| Some ((stmt,_), []) when is_enclosed_statement stmt ->
+| Some ([stmt,_]) when is_enclosed_statement stmt ->
     label ^^ space ^^ group (print_statement state stmt)
 | Some stmts ->
     hang state#indent (label ^/^ print_statements state stmts)
@@ -714,6 +740,7 @@ and print_expr state = function
 | E_Mult       e -> print_E_Mult       state e
 | E_MultEq     e -> print_E_MultEq     state e
 | E_Mumav      e -> print_E_Mumav            e
+| E_Mav        e -> print_E_Mav              e
 | E_NamePath   e -> print_E_NamePath   state e
 | E_Nat        e -> print_E_Nat              e
 | E_Neg        e -> print_E_Neg        state e
@@ -805,7 +832,7 @@ and print_fun_body state lhs = function
   StmtBody s ->
     (* If the function has only one statement we may try to display
        it inline rather than in a new one. *)
-    let force_hardline = not @@ List.is_empty @@ snd s.value.inside in
+    let force_hardline = Ne.length s.value.inside > 1 in
     lhs ^^ print_braces state ~force_hardline (print_statements state) s
 | ExprBody e -> prefix state#indent 0 lhs (print_expr state e)
 
@@ -933,7 +960,7 @@ and print_E_Function state (node : function_expr reg) =
       StmtBody s ->
         (* If the function has only one statement we may try to display
            it inline rather than in a new one.  *)
-        let force_hardline = not @@ List.is_empty @@ snd s.value.inside in
+        let force_hardline = Ne.length s.value.inside > 1 in
         lhs ^^ space
         ^^ print_braces state ~force_hardline (print_statements state) s
     | ExprBody e -> prefix state#indent 1 lhs (print_expr state e)
@@ -979,8 +1006,8 @@ and print_AllClauses state (node : all_match_clauses) =
     None -> thread
   | Some default -> thread ^^ hardline ^^ print_DefaultClause state default
 
-and print_match_clauses state (node : match_clause reg Utils.nseq) =
-  print_nseq hardline (print_match_clause state) node
+and print_match_clauses state (node : match_clause reg Ne.t) =
+  print_ne_list hardline (print_match_clause state) node
 
 and print_match_clause state (node : match_clause reg) =
   let {kwd_when; filter; colon; clause_expr} = node.value in
@@ -1011,6 +1038,10 @@ and print_E_MultEq state (node : times_eq bin_op reg) =
 (* Mumav as an expression *)
 
 and print_E_Mumav (node : (lexeme * Int64.t) wrap) = print_mumav node
+
+(* Mav as an expression *)
+
+and print_E_Mav (node : (lexeme * Q.t) wrap) = print_tez node
 
 (* Selection through nested namespaces *)
 
@@ -1110,7 +1141,7 @@ and print_selection state = function
 and print_E_Proj state (node : projection reg) =
   let {object_or_array; property_path} = node.value in
   let thread = print_expr state object_or_array in
-  let path   = print_nseq (break 0) (print_selection state) property_path
+  let path   = print_ne_list (break 0) (print_selection state) property_path
   in group (thread ^^ path)
 
 (* Arithmetic remainder *)
@@ -1196,6 +1227,7 @@ and print_pattern state = function
 | P_False    p -> print_P_False          p
 | P_Int      p -> print_P_Int            p
 | P_Mumav    p -> print_P_Mumav          p
+| P_Mav      p -> print_P_Mav            p
 | P_NamePath p -> print_P_NamePath state p
 | P_Nat      p -> print_P_Nat            p
 | P_Object   p -> print_P_Object   state p
@@ -1240,6 +1272,10 @@ and print_P_Int (node : (lexeme * Z.t) wrap) = print_int node
 (* Mumav in patterns *)
 
 and print_P_Mumav (node : (lexeme * Int64.t) wrap) = print_mumav node
+
+(* Mav in patterns *)
+
+and print_P_Mav (node : (lexeme * Q.t) wrap) = print_tez node
 
 (* Selected pattern *)
 
@@ -1295,7 +1331,7 @@ and print_type_expr state = function
 | T_String      t -> print_T_String            t
 | T_Union       t -> print_T_Union       state t
 | T_Var         t -> print_T_Var               t
-| T_Variant     t -> print_T_Variant     state t
+| T_Sum     t -> print_T_Sum     state t
 
 (* Type constructor application *)
 
@@ -1385,7 +1421,7 @@ and print_T_String (node : lexeme wrap) = print_string node
 (* Union type *)
 
 and print_union_type state (node : union_type) =
-  print_variant_or_union_type state print_object_type node
+  print_variant_or_union_type state print_type_expr node
 
 and print_variant_or_union_type :
   'a.state -> (state -> 'a -> document) ->
@@ -1408,7 +1444,6 @@ and print_variant_or_union_type :
          ]
    *)
   let variants =
-    let open Simple_utils.Function in
     Utils.nsep_or_pref_map (nest state#indent <@ print state) node.value
   in
   let bar, head, tail =
@@ -1417,7 +1452,7 @@ and print_variant_or_union_type :
         let head, tail = variants in
         bar, head, tail
     | `Pref variants ->
-        let (vbar, head), tail = variants in
+        let (vbar, head) :: tail = variants in
         token vbar, head, tail
   in
   let padding_flat =
@@ -1452,33 +1487,13 @@ and print_variant_kind : 'a. (state -> 'a -> document) -> state -> 'a variant_ki
  fun printer state node ->
   match node with
     Variant node -> print_variant printer state node
-  | Bracketed node -> print_bracketed_variant printer state node
   | Legacy  node -> print_legacy_variant printer state node
 
 and print_variant : 'a. (state -> 'a -> document) -> state -> 'a variant reg -> document =
  fun printer state node ->
   let ({tuple; attributes} : 'a variant) = node.value in
-  let sharp, app = tuple in
-  let tuple = Option.value_map ~default:empty ~f:token sharp
-              ^^ print_app state printer app
+  let tuple = print_app state printer tuple
   in group (print_attributes state tuple attributes)
-
-and print_bracketed_variant : 'a. (state -> 'a -> document) -> state -> 'a bracketed_variant reg -> document =
- fun printer state node ->
-  let {attributes; sharp; tuple} = node.value in
-  let attributes = print_attributes state empty attributes in
-  let sharp = token sharp in
-  let tuple = print_brackets state (print_bracketed_variant_args printer state) tuple
-  in group (attributes ^^ sharp ^^ tuple)
-
-and print_bracketed_variant_args : 'a. (state -> 'a -> document) -> state -> 'a bracketed_variant_args -> document =
- fun printer state node ->
-  let {ctor; args} : 'a bracketed_variant_args = node in
-  let args =
-    match args with
-      None -> empty
-    | Some (comma, args) -> token comma ^/^ print_sep_or_term (break 1) (printer state) args
-  in printer state ctor ^^ args
 
 and print_legacy_variant : 'a. (state -> 'a -> document) -> state -> 'a legacy_variant reg -> document =
  fun printer state node ->
@@ -1497,7 +1512,7 @@ and print_legacy_variant_args : 'a. (state -> 'a -> document) -> state -> 'a leg
     in ctor ^^ separate_map args)
 
 and print_app :
-  'a.state -> (state -> 'a -> document) -> 'a app -> document =
+  'a.state -> (state -> 'a -> document) -> 'a ctor_app -> document =
   fun state print -> function
     ZeroArg ctor -> print_ctor_app_kind ctor ^^ string "()"
   | MultArg (ctor, args) ->
@@ -1508,10 +1523,10 @@ and print_ctor_app_kind = function
   CtorStr  node -> print_string node
 | CtorName node -> print_ctor node
 
-and print_variant_type state (node : variant_type) =
+and print_sum_type state (node : sum_type) =
   print_variant_or_union_type state (print_variant_kind print_type_expr) node
 
-and print_T_Variant state (node : variant_type) = print_variant_type state node
+and print_T_Sum state (node : sum_type) = print_sum_type state node
 
 let print_type_expr = print_type_expr
 let print_pattern   = print_pattern

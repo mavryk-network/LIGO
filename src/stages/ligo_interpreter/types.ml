@@ -1,9 +1,10 @@
+module Ligo_option = Simple_utils.Ligo_option
 include Ast_aggregated.Types
 open Ligo_prim
-module Z = Simple_utils.Z
+module Ligo_z = Simple_utils.Ligo_z
 module Mavryk_protocol = Memory_proto_alpha
 module Mavryk_raw_protocol = Memory_proto_alpha.Raw_protocol
-module Tez = Memory_proto_alpha.Protocol.Alpha_context.Tez
+module Mav = Memory_proto_alpha.Protocol.Alpha_context.Mav
 module Timestamp = Memory_proto_alpha.Protocol.Alpha_context.Timestamp
 
 module Contract = struct
@@ -69,25 +70,46 @@ module Generator = struct
   let of_yojson _ = failwith "generator_of_yojson: not implemented"
 end
 
-type mcode = unit Tezos_utils.Michelson.michelson [@@deriving yojson]
+module Entrypoint_repr = struct
+  include Mavryk_raw_protocol.Entrypoint_repr
+
+  let to_yojson (c : t) = [%to_yojson: string] (to_string c)
+  let of_yojson _ = failwith "entrypoint_of_yojson: not implemented"
+
+  let of_string_exn s =
+    match
+      Memory_proto_alpha.Raw_protocol.Entrypoint_repr.of_annot_lax_opt
+        (Memory_proto_alpha.Raw_protocol.Non_empty_string.of_string_exn s)
+    with
+    | Some x -> x
+    | None -> failwith (Format.asprintf "Testing framework: Invalid entrypoint %s" s)
+
+
+  let of_string_opt s =
+    let open Ligo_option in
+    let* s = Memory_proto_alpha.Raw_protocol.Non_empty_string.of_string s in
+    Memory_proto_alpha.Raw_protocol.Entrypoint_repr.of_annot_lax_opt s
+end
+
+type mcode = unit Mavryk_utils.Michelson.michelson [@@deriving yojson]
 type mutation = Location.t * Ast_aggregated.expression * string [@@deriving yojson]
 
 type contract =
   { address : Contract.t
-  ; entrypoint : string option
+  ; entrypoint : Entrypoint_repr.t option
   }
 [@@deriving yojson]
 
 type constant_val =
   | C_unit [@name "unit"]
   | C_bool of bool [@name "bool"]
-  | C_int of Z.t [@name "int"]
+  | C_int of Ligo_z.t [@name "int"]
   | C_int64 of Int64.t [@name "int64"]
-  | C_nat of Z.t [@name "nat"]
-  | C_timestamp of Z.t [@name "timestamp"]
+  | C_nat of Ligo_z.t [@name "nat"]
+  | C_timestamp of Ligo_z.t [@name "timestamp"]
   | C_string of string [@name "string"]
   | C_bytes of bytes [@name "bytes"]
-  | C_mumav of Z.t [@name "mumav"]
+  | C_mumav of Ligo_z.t [@name "mumav"]
   | C_address of Contract.t
       (*should be represented as michelson data ? not convenient *)
       [@name "address"]

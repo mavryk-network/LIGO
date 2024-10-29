@@ -1,4 +1,4 @@
-const taquito = require('@taquito/taquito')
+const taquito = require('@mavrykdynamics/taquito')
 
 const LargeEntrypointV1 = artifacts.require("LargeEntrypointV1")
 const LargeEntrypointV2 = artifacts.require("LargeEntrypointV2")

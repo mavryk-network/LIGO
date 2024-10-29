@@ -10,8 +10,8 @@ const booleanLogic: bool =
     false ==
     (false && true) ==
     (false || false)
-const tez_amount: mav = 42mav
-const tez_amount2: mav = tez_amount + 7mumav // == 42000007mumav
+const mav_amount: mav = 42mav
+const mav_amount2: mav = mav_amount + 7mumav // == 42000007mumav
 const mv1address: address =
   "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 const kt1address: address =

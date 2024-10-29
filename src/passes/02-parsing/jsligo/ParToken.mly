@@ -36,6 +36,7 @@
   let mk_int       = Token.wrap_int       Z.zero
   let mk_nat       = Token.wrap_nat       Z.zero
   let mk_mumav     = Token.wrap_mumav     Int64.zero
+  let mk_mav       = Token.wrap_mav       Q.zero
   let mk_ident     = Token.wrap_ident     @@ ErrorWrapper.wrap "ghost_ident"
   let mk_uident    = Token.wrap_uident    @@ ErrorWrapper.wrap "Ghost_uident"
   let mk_eident    = Token.wrap_eident    @@ ErrorWrapper.wrap "@ghost_eident"
@@ -69,6 +70,7 @@
 %token             <Attr.t Wrap.t> Attr      "[@attr]"     [@recover.expr mk_attr     $loc]
 %token     <(string * Z.t) Wrap.t> Nat       "<nat>"       [@recover.expr mk_nat      $loc]
 %token <(string * Int64.t) Wrap.t> Mumav     "<mumav>"     [@recover.expr mk_mumav    $loc]
+%token     <(string * Q.t) Wrap.t> Mav       "<mav>"       [@recover.expr mk_mav      $loc]
 (*
 %token     <string Region.reg Wrap.t> Lang      "[%lang"      [@recover.expr mk_lang      $loc]
 *)

@@ -4,7 +4,7 @@ module Region  = Simple_utils.Region
 module Std     = Simple_utils.Std
 module Lexbuf  = Simple_utils.Lexbuf
 module Snippet = Simple_utils.Snippet
-module Unit    = LexerLib.Unit
+module LexUnit = LexerLib.LexUnit
 
 module type PARAMETERS = LexerLib.CLI.PARAMETERS
 
@@ -80,9 +80,9 @@ module type S =
 
     (* Scanning all lexical units. If specified by [Options], the
        preprocessor may be run before, and/or the pipeline of
-       self-passes [UnitPasses] after. *)
+      self-passes [UnitPasses] after. *)
 
-    val scan_all_units : no_colour:bool -> token Unit.t lexer
+    val scan_all_units : no_colour:bool -> token LexUnit.t lexer
 
     (* Scanning all tokens. *)
 
@@ -102,7 +102,7 @@ module Make
          (Preprocessor : Preprocessor.TopAPI.S)
          (Parameters   : PARAMETERS)
          (Token        : Token.S)
-         (UnitPasses   : Pipeline.PASSES with type item = Token.t Unit.t)
+         (UnitPasses   : Pipeline.PASSES with type item = Token.t LexUnit.t)
          (TokenPasses  : Pipeline.PASSES with type item = Token.t)
          (Warning      : WARNING) =
   struct
@@ -207,7 +207,7 @@ module Make
         Some `Units ->
           let offsets = Options.offsets in
           let f unit =
-            Unit.to_string
+            LexUnit.to_string
               ~token_to_string:Token.to_string ~offsets `Point unit
             |> Std.(add_line std.out)
           in List.iter ~f units; Std.(add_nl std.out)
@@ -233,7 +233,7 @@ module Make
         Some `Copy ->
           let f unit =
             List.iter ~f:Std.(add_string std.out)
-              (Unit.to_lexeme ~token_to_lexeme:Token.to_lexeme unit)
+              (LexUnit.to_lexeme ~token_to_lexeme:Token.to_lexeme unit)
           in List.iter ~f lexemes; Std.(add_nl std.out)
       | _ -> ()
 
@@ -253,7 +253,7 @@ module Make
           (* Running the preprocessor *)
           match Preprocessor.preprocess input with
             std, Error (preprocessed, message) ->
-              let error = Stdlib.Error Scan.{used_units=[]; message}
+              let error = Result.Error Scan.{used_units=[]; message}
               in std, preprocessed, error
           | std, Ok (preprocessed, _deps) ->
               let lexbuf =
@@ -275,12 +275,12 @@ module Make
           Std.empty, None, result
       in
       match result with
-        Stdlib.Error {used_units; message} ->
+        Error {used_units; message} ->
           let used_items = used_units in
           commit_units used_units std; (* If "--units" *)
           Std.(add_line std.err @@ format_error no_colour file message);
           Std.(add_nl std.err);
-          std, Stdlib.Error {preprocessed; used_items; message}
+          std, Result.Error {preprocessed; used_items; message}
 
       | Ok units ->
           let () = commit_lexemes units std in (* If "--copy" *)
@@ -344,7 +344,7 @@ module Make
             let used_items = filter_tokens used_items in
             std, Error {preprocessed; used_items; message}
 
-        | std, Stdlib.Ok units ->
+        | std, Ok units ->
             let tokens = filter_tokens units
             in
             if last <= num_of_unit_passes then
@@ -405,14 +405,14 @@ module Make
                 used_tokens := token :: !used_tokens;
                 store := tokens;
                 token
-          in Stdlib.Ok token
+          in Ok token
         else
           (* Dropping standard output/error *)
           let file  = Lexbuf.current_filename lexbuf in
           let input = Lexbuf.Lexbuf (file, lexbuf) in
           let _std, result = scan_all_tokens ~no_colour input in  (* TODO *)
           match result with
-            Stdlib.Error {used_items; _} as err ->
+            Error {used_items; _} as err ->
               used_tokens := used_items; err
           | Ok tokens ->
               store  := tokens;

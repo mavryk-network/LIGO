@@ -1,6 +1,9 @@
-module List = Core.List
-module Michelson = Tezos_utils.Michelson
+open! Core
+module Michelson = Mavryk_utils.Michelson
+module Ligo_fun = Simple_utils.Ligo_fun
 include Memory_proto_alpha
+
+let (<@) = Ligo_fun.(<@)
 
 let init_environment = Init_proto_alpha.init_environment
 let dummy_environment = Init_proto_alpha.dummy_environment
@@ -28,9 +31,11 @@ module X = struct
     let error_details = Informative 0 in
     match ta, tb with
     | Item_t (tva, ra), Item_t (tvb, rb) ->
-      let (>>?) v f =
+      let ( >>? ) v f =
         let open Result_syntax in
-        let* x = v in f x in
+        let* x = v in
+        f x
+      in
       let x = ty_eq ~error_details tva tvb in
       Gas_monad.run ctxt x
       >>? fun (x, ctxt) ->
@@ -54,44 +59,44 @@ open X_error_monad
 
 let dummy_environment_result ?environment () =
   Option.value
-    ~default:(Lwt.map Result.ok @@ dummy_environment ())
-    (Option.map (fun env -> Lwt.return (Ok env)) environment)
+    ~default:(Lwt.map Result.return @@ dummy_environment ())
+    (Option.map ~f:(fun env -> Lwt.return (Ok env)) environment)
 
-let dummy_tezos_context ?tezos_context () =
+let dummy_mavryk_context ?mavryk_context () =
   Option.value
     ~default:
-      (Lwt.map (fun env -> Ok env.Init_proto_alpha.tezos_context) @@ dummy_environment ())
-    (Option.map (fun ctxt -> Lwt.return (Ok ctxt)) tezos_context)
+      (Lwt.map (fun env -> Ok env.Init_proto_alpha.mavryk_context) @@ dummy_environment ())
+    (Option.map ~f:(fun ctxt -> Lwt.return (Ok ctxt)) mavryk_context)
 
 let stack_ty_eq
     (type a ra b rb)
-    ?tezos_context
+    ?mavryk_context
     (a : (a, ra) stack_ty)
     (b : (b, rb) stack_ty)
   =
   let open Lwt_result.Let_syntax in
-  let%bind tezos_context = dummy_tezos_context ?tezos_context () in
-  let%bind Eq, _ = Lwt.return @@ alpha_wrap (X.stack_ty_eq tezos_context 0 a b) in
+  let%bind mavryk_context = dummy_mavryk_context ?mavryk_context () in
+  let%bind Eq, _ = Lwt.return @@ alpha_wrap (X.stack_ty_eq mavryk_context 0 a b) in
   Lwt_result.return Eq
 
-let ty_eq (type a b) ?tezos_context (a : (a, _) ty) (b : (b, _) ty)
+let ty_eq (type a b) ?mavryk_context (a : (a, _) ty) (b : (b, _) ty)
     : ((_, _) eq, Mavryk_base.TzPervasives.tztrace) Lwt_result.t
   =
   let open Lwt_result.Let_syntax in
-  let%bind tezos_context = dummy_tezos_context ?tezos_context () in
+  let%bind mavryk_context = dummy_mavryk_context ?mavryk_context () in
   let error_details = Script_tc_errors.Informative 0 in
   let%bind x, _ =
     Lwt.return
     @@ alpha_wrap
          (let x = Script_ir_translator.ty_eq ~error_details a b in
-          Gas_monad.run tezos_context x)
+          Gas_monad.run mavryk_context x)
   in
   Lwt.return @@ alpha_wrap x
 
 (* should not need lwt *)
 let canonical_of_strings michelson =
   let michelson, errs =
-    Mavryk_client_001_PtAtLas.Michelson_v1_macros.expand_rec michelson
+    Mavryk_client_002_PtBoreas.Michelson_v1_macros.expand_rec michelson
   in
   match errs with
   | _ :: _ -> Lwt.return (Error errs)
@@ -112,7 +117,7 @@ let lazy_expr expr =
 
 let parse_michelson_fail
     (type aft aftr)
-    ?tezos_context
+    ?mavryk_context
     ~(top_level : tc_context)
     michelson
     ?(legacy = false)
@@ -123,31 +128,31 @@ let parse_michelson_fail
   =
   let ( >>=? ) = Lwt_result_syntax.( let* ) in
   let ( >>? ) = Result_syntax.( let* ) in
-  dummy_tezos_context ?tezos_context ()
-  >>=? fun tezos_context ->
+  dummy_mavryk_context ?mavryk_context ()
+  >>=? fun mavryk_context ->
   canonical_of_strings michelson
   >>=? fun michelson ->
-  Alpha_context.Global_constants_storage.expand tezos_context michelson
-  >>=? (fun (tezos_context, michelson) ->
+  Alpha_context.Global_constants_storage.expand mavryk_context michelson
+  >>=? (fun (mavryk_context, michelson) ->
          let michelson = Mavryk_micheline.Micheline.root michelson in
          let elab_conf =
            Script_ir_translator_config.
              { type_logger; legacy; keep_extra_types_for_interpreter_logging = false }
          in
-         parse_instr ~elab_conf top_level tezos_context michelson bef)
+         parse_instr ~elab_conf top_level mavryk_context michelson bef)
   >>=?? fun (j, _) ->
   match j with
   | Typed descr ->
     Lwt.return
-      (alpha_wrap (X.stack_ty_eq tezos_context 0 descr.aft aft)
+      (alpha_wrap (X.stack_ty_eq mavryk_context 0 descr.aft aft)
       >>? fun (Eq, _) ->
       let descr : (_, _, aft, aftr) descr = { descr with aft } in
       Ok descr)
   | Failed { descr } -> Lwt.return (Ok (descr aft))
 
-let parse_michelson_data ?tezos_context michelson ty =
-  dummy_tezos_context ?tezos_context ()
-  >>=?? fun tezos_context ->
+let parse_michelson_data ?mavryk_context michelson ty =
+  dummy_mavryk_context ?mavryk_context ()
+  >>=?? fun mavryk_context ->
   let elab_conf =
     Script_ir_translator_config.
       { type_logger = None
@@ -155,22 +160,28 @@ let parse_michelson_data ?tezos_context michelson ty =
       ; keep_extra_types_for_interpreter_logging = false
       }
   in
-  parse_data tezos_context ty michelson ~elab_conf ~allow_forged:true
+  parse_data
+    mavryk_context
+    ty
+    michelson
+    ~elab_conf
+    ~allow_forged_tickets:true
+    ~allow_forged_lazy_storage_id:true
   >>=?? fun (data, _) -> Lwt_result_syntax.return data
 
 let parse_michelson_ty
-    ?tezos_context
+    ?mavryk_context
     ?(allow_operation = true)
     ?(allow_contract = true)
     ?(allow_lazy_storage = true)
     ?(allow_ticket = true)
     michelson
   =
-  dummy_tezos_context ?tezos_context ()
-  >>=?? fun tezos_context ->
+  dummy_mavryk_context ?mavryk_context ()
+  >>=?? fun mavryk_context ->
   Lwt.return
   @@ parse_ty
-       tezos_context
+       mavryk_context
        ~allow_operation
        michelson
        ~legacy:false
@@ -190,28 +201,28 @@ let node_to_canonical m =
   let x = strip_locations x in
   Michelson_v1_primitives.prims_of_strings x
 
-let unparse_michelson_data ?tezos_context ty value =
-  dummy_tezos_context ?tezos_context ()
-  >>=?? fun tezos_context ->
-  unparse_data tezos_context Readable ty value
+let unparse_michelson_data ?mavryk_context ty value =
+  dummy_mavryk_context ?mavryk_context ()
+  >>=?? fun mavryk_context ->
+  unparse_data mavryk_context Readable ty value
   >>=?? fun (michelson, _) ->
   let michelson = Mavryk_micheline.Micheline.inject_locations (fun _ -> 0) michelson in
   Lwt_result_syntax.return (strings_of_prims michelson)
 
-let unparse_michelson_ty ?tezos_context ty =
-  dummy_tezos_context ?tezos_context ()
-  >>=?? fun tezos_context ->
-  Lwt.return @@ Script_ir_unparser.unparse_ty ~loc:() tezos_context ty
+let unparse_michelson_ty ?mavryk_context ty =
+  dummy_mavryk_context ?mavryk_context ()
+  >>=?? fun mavryk_context ->
+  Lwt.return @@ Script_ir_unparser.unparse_ty ~loc:() mavryk_context ty
   >>=?? fun (michelson, _) -> Lwt_result_syntax.return (strings_of_prims michelson)
 
 type options =
-  { tezos_context : Alpha_context.t
+  { mavryk_context : Alpha_context.t
   ; source : Alpha_context.Contract.t
   ; payer : Alpha_context.Contract.t
   ; self : Alpha_context.Contract.t
-  ; amount : Alpha_context.Tez.t
+  ; amount : Alpha_context.Mav.t
   ; chain_id : Environment.Chain_id.t
-  ; balance : Alpha_context.Tez.t
+  ; balance : Alpha_context.Mav.t
   ; now : Script_timestamp.t
   ; level : Script_int.n Script_int.num
   }
@@ -232,18 +243,18 @@ let begin_validation_and_application ctxt chain_id mode ~predecessor =
   return (validation_state, application_state)
 
 (* fake bake a block in order to set the predecessor timestamp *)
-let fake_bake tezos_context chain_id now : Alpha_context.t Lwt.t =
+let fake_bake mavryk_context chain_id now : Alpha_context.t Lwt.t =
   let ( >>= ) = Lwt_syntax.( let* ) in
   let ( >>=? ) = Lwt_result_syntax.( let* ) in
   Lwt.map (force_ok ~msg:("bad init" ^ __LOC__)) (Init_proto_alpha.Context_init.init 1)
   >>= fun ((_, header, hash), _, _) ->
-  let tezos_context = (Alpha_context.finalize tezos_context header.fitness).context in
+  let mavryk_context = (Alpha_context.finalize mavryk_context header.fitness).context in
   let contents = Init_proto_alpha.Context_init.contents ~predecessor_hash:hash () in
   let protocol_data =
     let open! Alpha_context.Block_header in
     { contents; signature = Mavryk_crypto.Signature.zero }
   in
-  let tezos_context =
+  let mavryk_context =
     Lwt.map
       (force_ok ~msg:("bad block " ^ __LOC__))
       ((let predecessor_timestamp =
@@ -257,16 +268,16 @@ let fake_bake tezos_context chain_id now : Alpha_context.t Lwt.t =
         let timestamp =
           match
             Alpha_context.Timestamp.of_seconds_string
-              (Z.to_string (Z.add (Z.of_int 30) (Script_timestamp.to_zint now)))
+              (Z.to_string (Z.add (Z.of_int 20) (Script_timestamp.to_zint now)))
           with
           | Some t -> t
           | _ -> Stdlib.failwith "bad timestamp"
         in
-        let predecessor_context = tezos_context in
+        let predecessor_context = mavryk_context in
         let header = { header with timestamp = predecessor_timestamp } in
         let predecessor = hash in
         begin_validation_and_application
-          tezos_context
+          mavryk_context
           Alpha_environment.Chain_id.zero
           (Construction
              { predecessor_hash = hash; timestamp; block_header_data = protocol_data })
@@ -275,22 +286,22 @@ let fake_bake tezos_context chain_id now : Alpha_context.t Lwt.t =
       Lwt.return @@ Alpha_environment.wrap_tzresult x
       >>=? fun (_, state) -> Lwt_result_syntax.return state.ctxt)
   in
-  tezos_context
+  mavryk_context
 
-let register_constant tezos_context constant =
-  Alpha_context.Global_constants_storage.register tezos_context constant
+let register_constant mavryk_context constant =
+  Alpha_context.Global_constants_storage.register mavryk_context constant
 
 let make_options
     ?(env : Init_proto_alpha.environment option)
-    ?(tezos_context : Alpha_context.t option)
+    ?(mavryk_context : Alpha_context.t option)
     ?(constants = [])
     ?(now : Script_timestamp.t option)
     ?(sender : Alpha_context.Contract.t option)
     ?(self = default_self)
     ?(parameter_ty = t_unit)
     ?(source : Alpha_context.Contract.t option)
-    ?(amount = Alpha_context.Tez.one)
-    ?(balance = Alpha_context.Tez.zero)
+    ?(amount = Alpha_context.Mav.one)
+    ?(balance = Alpha_context.Mav.zero)
     ?(chain_id = Environment.Chain_id.zero)
     ()
     : options Lwt.t
@@ -300,12 +311,11 @@ let make_options
   let open Mavryk_micheline in
   let open Micheline in
   let open Lwt.Let_syntax in
-  let open Simple_utils.Function in
   let%bind env =
-    Option.value ~default:(dummy_environment ()) (Option.map Lwt.return env)
+    Option.value ~default:(dummy_environment ()) (Option.map ~f:Lwt.return env)
   in
-  let tezos_context = Option.value ~default:env.tezos_context tezos_context in
-  let now = Option.value ~default:(Script_timestamp.now env.tezos_context) now in
+  let mavryk_context = Option.value ~default:env.mavryk_context mavryk_context in
+  let now = Option.value ~default:(Script_timestamp.now env.mavryk_context) now in
   let sender =
     Option.value ~default:(List.nth_exn env.identities 0).implicit_contract sender
   in
@@ -338,7 +348,7 @@ let make_options
   in
   let lazy_dummy_storage = Script.lazy_expr dummy_storage in
   let script = Script.{ code = dummy_script; storage = lazy_dummy_storage } in
-  let%bind tezos_context =
+  let%bind mavryk_context =
     let self =
       match self with
       | Implicit hash -> Contract_hash.zero
@@ -346,7 +356,7 @@ let make_options
     in
     Lwt.map (force_ok ~msg:("bad options " ^ __LOC__) <@ alpha_wrap)
     @@ Alpha_context.Contract.raw_originate
-         tezos_context
+         mavryk_context
          ~prepaid_bootstrap_storage:false
          self
          ~script:(script, None)
@@ -354,19 +364,19 @@ let make_options
   (* fake bake to set the predecessor timestamp *)
   let time_between_blocks = 1 in
   let level =
-    (Level.current tezos_context).level
+    (Level.current mavryk_context).level
     |> Raw_level.to_int32
     |> Script_int.of_int32
     |> Script_int.abs
   in
-  let%bind tezos_context =
+  let%bind mavryk_context =
     fake_bake
-      tezos_context
+      mavryk_context
       chain_id
       (Script_timestamp.sub_delta now (Script_int.of_int time_between_blocks))
   in
-  (* Update the Tezos context by registering the global constants *)
-  let%map tezos_context =
+  (* Update the Mavryk context by registering the global constants *)
+  let%map mavryk_context =
     Lwt_list.fold_left_s
       (fun ctxt cnt ->
         let%map ctxt, _, _ =
@@ -374,17 +384,17 @@ let make_options
           @@ register_constant ctxt cnt
         in
         ctxt)
-      tezos_context
+      mavryk_context
       constants
   in
-  { tezos_context
+  { mavryk_context
   ; source = sender
   ; payer = source
   ; self
   ; amount
   ; chain_id
   ; balance
-  ; now = Script_timestamp.now tezos_context
+  ; now = Script_timestamp.now mavryk_context
   ; level
   }
 
@@ -392,8 +402,8 @@ let no_trace_logger = None
 
 let interpret ?options (instr : ('a, 'b, 'c, 'd) kdescr) bef : (_ * _) tzresult Lwt.t =
   let open Lwt.Let_syntax in
-  let%bind { tezos_context; source; self; payer; amount; chain_id; balance; now; level } =
-    Option.value ~default:(make_options ()) (Option.map Lwt.return options)
+  let%bind { mavryk_context; source; self; payer; amount; chain_id; balance; now; level } =
+    Option.value ~default:(make_options ()) (Option.map ~f:Lwt.return options)
   in
   let self =
     match self with
@@ -409,7 +419,7 @@ let interpret ?options (instr : ('a, 'b, 'c, 'd) kdescr) bef : (_ * _) tzresult 
   let step_constants = { sender; self; payer; amount; chain_id; balance; now; level } in
   Script_interpreter.Internals.step_descr
     no_trace_logger
-    tezos_context
+    mavryk_context
     step_constants
     instr
     bef
@@ -418,7 +428,7 @@ let interpret ?options (instr : ('a, 'b, 'c, 'd) kdescr) bef : (_ * _) tzresult 
 
 let unparse_ty_michelson ty =
   Lwt.bind (dummy_environment ()) (fun env ->
-      Lwt.return @@ Script_ir_unparser.unparse_ty ~loc:() env.tezos_context ty
+      Lwt.return @@ Script_ir_unparser.unparse_ty ~loc:() env.mavryk_context ty
       >>=?? fun (n, _) -> Lwt_result_syntax.return n)
 
 type typecheck_res =
@@ -436,7 +446,7 @@ let typecheck_contract ?environment contract =
   >>=?? fun env ->
   let contract' = Mavryk_micheline.Micheline.strip_locations contract in
   let legacy = false in
-  Script_ir_translator.typecheck_code ~show_types:true ~legacy env.tezos_context contract'
+  Script_ir_translator.typecheck_code ~show_types:true ~legacy env.mavryk_context contract'
   >>= fun x ->
   match x with
   | Ok _ -> Lwt_result_syntax.return @@ contract
@@ -449,7 +459,7 @@ let typecheck_map_contract ?environment contract =
   >>=?? fun env ->
   let contract' = Mavryk_micheline.Micheline.strip_locations contract in
   let legacy = false in
-  Script_ir_translator.typecheck_code ~show_types:true ~legacy env.tezos_context contract'
+  Script_ir_translator.typecheck_code ~show_types:true ~legacy env.mavryk_context contract'
   >>= fun x ->
   match x with
   | Ok (map, _) -> Lwt_result_syntax.return @@ (map, contract)
@@ -468,11 +478,11 @@ let typecheck_view ?environment input_ty output_ty storage_ty view_code =
       { type_logger = None; legacy; keep_extra_types_for_interpreter_logging = false }
   in
   let view = { view_code; input_ty; output_ty } in
-  parse_michelson_ty ~tezos_context:env.tezos_context storage_ty
+  parse_michelson_ty ~mavryk_context:env.mavryk_context storage_ty
   >>= fun storage_ty ->
   match storage_ty with
   | Ok (Ex_ty storage_ty) ->
-    Script_ir_translator.parse_view ~elab_conf env.tezos_context storage_ty view
+    Script_ir_translator.parse_view ~elab_conf env.mavryk_context storage_ty view
     >>= fun x ->
     (match x with
     | Ok (map, _) -> Lwt_result_syntax.return @@ ()
@@ -487,9 +497,9 @@ let failure_interpret ?options (instr : ('a, 's, 'b, 'u) descr) (bef : 'a) stack
     : _ interpret_res tzresult Lwt.t
   =
   let ( >>= ) = Lwt_syntax.( let* ) in
-  Option.value ~default:(make_options ()) (Option.map Lwt.return options)
+  Option.value ~default:(make_options ()) (Option.map ~f:Lwt.return options)
   >>= fun options ->
-  let { tezos_context; source; self; payer; amount; chain_id; balance; now; level } =
+  let { mavryk_context; source; self; payer; amount; chain_id; balance; now; level } =
     options
   in
   let descr = instr in
@@ -512,7 +522,7 @@ let failure_interpret ?options (instr : ('a, 's, 'b, 'u) descr) (bef : 'a) stack
   in
   Script_interpreter.Internals.step_descr
     no_trace_logger
-    tezos_context
+    mavryk_context
     step_constants
     instr
     bef
@@ -528,7 +538,7 @@ let failure_interpret ?options (instr : ('a, 's, 'b, 'u) descr) (bef : 'a) stack
 
 let pack (data_ty : ('a, _) ty) (data : 'a) : bytes tzresult Lwt.t =
   Lwt.bind (dummy_environment ()) (fun env ->
-      pack_data env.tezos_context data_ty data
+      pack_data env.mavryk_context data_ty data
       >>=?? fun (packed, _) -> Lwt_result.return packed)
 
 let strings_of_prims = Michelson_v1_primitives.strings_of_prims
@@ -545,7 +555,7 @@ let to_bytes michelson =
 let to_hex michelson = Lwt.map Hex.of_bytes (to_bytes michelson)
 
 (*
-  original function: `expr_to_address_in_context` in `/tezos/src/proto_alpha/lib_protocol/global_constants_storage.ml`
+  original function: `expr_to_address_in_context` in `/mavryk/src/proto_alpha/lib_protocol/global_constants_storage.ml`
   modified to just get the hash out of a script without any need for the raw context
 *)
 let expr_to_address_in_context : Script_repr.expr -> Script_expr_hash.t option =

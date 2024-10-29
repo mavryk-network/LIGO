@@ -2,79 +2,28 @@
 
 module Location = Simple_utils.Location
 module Var = Simple_utils.Var
-module List = Simple_utils.List
-module Ligo_string = Simple_utils.Ligo_string
-module Int64 = Caml.Int64
 open Ligo_prim
 open Types
-open Simple_utils.PP_helpers
+module PP_helpers = Simple_utils.PP_helpers
 
-let rec type_content : Format.formatter -> type_content -> unit =
- fun ppf tc ->
-  match tc with
-  | T_variable tv -> Type_var.pp ppf tv
-  | T_sum row -> Row.PP.sum_type type_expression Layout.pp ppf row
-  | T_record row -> Row.PP.record_type type_expression Layout.pp ppf row
-  | T_arrow a -> Arrow.pp type_expression ppf a
-  | T_constant tc -> type_injection ppf tc
-  | T_singleton x -> Literal_value.pp ppf x
-  | T_for_all x -> Abstraction.pp_forall type_expression ppf x
-
-
-and type_injection ppf { language; injection; parameters } =
-  ignore language;
-  Format.fprintf
-    ppf
-    "%s%a"
-    (Literal_types.to_string injection)
-    (list_sep_d_par type_expression)
-    parameters
-
-
-and bool ppf : unit = Format.fprintf ppf "bool"
-
-and option ppf (te : type_expression) : unit =
-  let t = Combinators.get_t_option te in
-  match t with
-  | Some t -> Format.fprintf ppf "option (%a)" type_expression t
-  | None -> Format.fprintf ppf "option ('a)"
-
-
-and type_expression ppf (te : type_expression) : unit =
-  (* TODO: we should have a way to hook custom pretty-printers for some types and/or track the "origin" of types as they flow through the constraint solver. This is a temporary quick fix *)
-  if Option.is_some (Combinators.get_t_bool te)
-  then bool ppf
-  else if Option.is_some (Combinators.get_t_option te)
-  then option ppf te
-  else Format.fprintf ppf "%a" type_content te.type_content
-
-
-let rec type_content_orig : Format.formatter -> type_content -> unit =
- fun ppf tc ->
-  match tc with
-  | T_variable tv -> Type_var.pp ppf tv
-  | T_sum row -> Row.PP.sum_type type_expression (fun _ _ -> ()) ppf row
-  | T_record row -> Row.PP.record_type type_expression (fun _ _ -> ()) ppf row
-  | T_arrow a -> Arrow.pp type_expression ppf a
-  | T_constant tc -> type_injection ppf tc
-  | T_singleton x -> Literal_value.pp ppf x
-  | T_for_all x -> Abstraction.pp_forall type_expression ppf x
-
-
-and type_expression_orig ppf (te : type_expression) : unit =
-  (* TODO: we should have a way to hook custom pretty-printers for some types and/or track the "origin" of types as they flow through the constraint solver. This is a temporary quick fix *)
-  match te.orig_var with
-  | None ->
-    if Option.is_some (Combinators.get_t_bool te)
-    then bool ppf
-    else if Option.is_some (Combinators.get_t_option te)
-    then option ppf te
-    else Format.fprintf ppf "%a" type_content_orig te.type_content
-  | Some v -> Ast_core.(PP.type_expression ppf (t_variable ~loc:te.location v ()))
-
-
-let type_expression_annot ppf (te : type_expression) =
-  Format.fprintf ppf " : %a" type_expression te
+let ( type_content
+    , _type_injection
+    , bool
+    , option
+    , type_expression
+    , _type_content_orig
+    , _type_expression_orig
+    , type_expression_annot )
+  =
+  Ast_typed.PP.(
+    ( type_content
+    , type_injection
+    , bool
+    , option
+    , type_expression
+    , type_content_orig
+    , type_expression_orig
+    , type_expression_annot ))
 
 
 let rec expression ppf (e : expression) =
@@ -129,7 +78,7 @@ and declaration ppf (x : declaration) =
   | D_irrefutable_match x -> Pattern_decl.pp expression type_expression ppf x
 
 
-and context ppf (x : context) = list_sep declaration (tag "\n") ppf x
+and context ppf (x : context) = PP_helpers.(list_sep declaration (tag "\n") ppf x)
 
 module With_name_tbl = struct
   module Type_var_name_tbl : sig
@@ -190,7 +139,7 @@ module With_name_tbl = struct
             (* User-defined name. We'd like to try keep the name. However
                a collision could occur if we've previously used this name.
 
-               We resolve the collision by adding a number to the end until we reach 
+               We resolve the collision by adding a number to the end until we reach
                a unique name *)
             let name = Type_var.to_name_exn tvar in
             let curr_name = ref name in
@@ -218,9 +167,11 @@ module With_name_tbl = struct
       | T_arrow arr -> Arrow.pp pp ppf arr
       | T_constant constant -> pp_constant ~name_of_tvar ppf constant
       | T_singleton lit -> Literal_value.pp ppf lit
-      | T_for_all for_all -> pp_forall ~name_of_tvar ppf for_all
+      | T_for_all for_all | T_abstraction for_all -> pp_forall ~name_of_tvar ppf for_all
       | T_sum row -> Row.PP.sum_type pp (fun _ _ -> ()) ppf row
-      | T_record row -> Row.PP.record_type pp (fun _ _ -> ()) ppf row)
+      | T_record row -> Row.PP.record_type pp (fun _ _ -> ()) ppf row
+      | T_exists tv -> Format.fprintf ppf "^%s" (name_of_tvar tv)
+      | T_union _ -> impossible_because_no_union_in_ast_aggregated ())
 
 
   and pp_constant ~name_of_tvar ppf { injection; parameters; _ } =
@@ -228,7 +179,7 @@ module With_name_tbl = struct
       ppf
       "%s%a"
       (Literal_types.to_string injection)
-      (list_sep_d_par (pp ~name_of_tvar))
+      (PP_helpers.list_sep_d_par (pp ~name_of_tvar))
       parameters
 
 

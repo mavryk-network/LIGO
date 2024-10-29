@@ -1,8 +1,8 @@
 FROM mavrykdynamics/mavryk:latest as mavkit-client
-FROM mavrykdynamics/ligo:atlas as ligo-compiler
+FROM mavrykdynamics/ligo:1.6.0 as ligo-compiler
 FROM ubuntu:20.04 as web-ide-builder
 
-LABEL maintainer="infra@marigold.dev"
+LABEL maintainer="infra@trili.tech"
 LABEL stage=webide-new-builder
 ARG GHC_VERSION=9.0.2
 ARG LTS_SLUG=lts-19.0

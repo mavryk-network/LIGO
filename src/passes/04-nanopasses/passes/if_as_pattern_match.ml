@@ -1,7 +1,7 @@
 open Ast_unified
 open Pass_type
-open Simple_utils.Trace
 open Errors
+module Trace = Simple_utils.Trace
 module Location = Simple_utils.Location
 include Flag.No_arg ()
 
@@ -12,7 +12,7 @@ let compile ~raise:_ =
     match Location.unwrap e with
     | E_cond { test; ifso; ifnot } ->
       let cases =
-        List.Ne.of_list
+        Nonempty_list.
           [ Case.
               { pattern =
                   Some (p_variant ~loc:(get_e_loc ifso) (Label.of_string "True") None)
@@ -21,20 +21,20 @@ let compile ~raise:_ =
           ; Case.
               { pattern =
                   Some (p_variant ~loc:(get_e_loc ifso) (Label.of_string "False") None)
-              ; rhs = Option.value_map ifnot ~default:(e_unit ~loc) ~f:Fun.id
+              ; rhs = Core.Option.value_map ifnot ~default:(e_unit ~loc) ~f:Fun.id
               }
           ]
       in
       let test =
         e_annot (test, tv_bool ~loc:Location.generated ()) ~loc:(get_e_loc test)
       in
-      e_match ~loc { expr = test; disc_label = None; cases }
+      e_match ~loc { expr = test; cases }
     | e -> make_e ~loc e
   in
   Fold { idle_fold with expr }
 
 
-let reduction ~raise =
+let reduction ~(raise : _ Trace.raise) =
   { Iter.defaults with
     expr =
       (function

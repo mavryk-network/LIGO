@@ -9,7 +9,6 @@
   nanopasses
   unification
   predefined
-  environment
   compiler_options
   main_warnings
   syntax_types
@@ -17,13 +16,10 @@
   simple-diff)
  (preprocess
   (pps
+   ppx_jane
    ppx_poly_constructor
    ppx_woo
    ppx_map
-   ppx_sexp_conv
-   ppx_compare
-   ppx_let
-   ppx_here
-   ppx_hash
    ppx_import
+   ppx_deriving.map
    ppx_deriving_yojson)))

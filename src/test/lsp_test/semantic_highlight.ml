@@ -1,21 +1,14 @@
 open Lsp_helpers
 open Lsp_test_helpers.Handlers
 open Lsp_test_helpers.Common
+open Ppx_yojson_conv_lib.Yojson_conv.Primitives
 module Requests = Ligo_lsp.Server.Requests
-open Requests.Handler
 open Range.Construct
 
 module ModifiersSet = struct
-  module Compare = struct
-    type t = SemanticTokenModifiers.t
+  include Set.Make (SemanticTokenModifiers)
 
-    let compare = Caml.compare
-  end
-
-  include Caml.Set.Make (Compare)
-
-  let yojson_of_t =
-    yojson_of_list SemanticTokenModifiers.yojson_of_t <@ Caml.List.of_seq <@ to_seq
+  let yojson_of_t = yojson_of_list SemanticTokenModifiers.yojson_of_t <@ Set.to_list
 end
 
 module Token = struct
@@ -57,7 +50,7 @@ let decompile_tokens (encoded_tokens : int array) : Token.t list =
         List.init ~f:Fn.id (Array.length Requests.all_modifiers)
         |> List.fold_left ~init:ModifiersSet.empty ~f:(fun acc i ->
                if modifiers land (1 lsl i) <> 0
-               then ModifiersSet.add Requests.all_modifiers.(i) acc
+               then Set.add acc Requests.all_modifiers.(i)
                else acc)
       in
       aux
@@ -73,10 +66,12 @@ let decompile_tokens (encoded_tokens : int array) : Token.t list =
 let semantic_highlight_test ({ file_name; range } : semantic_highlight_test) : unit =
   let actual_semantic_tokens, _diagnostics =
     test_run_session
-    @@ let@ file_name = open_file @@ normalize_path file_name in
-       match range with
-       | Some range -> Requests.on_req_semantic_tokens_range file_name range
-       | None -> Requests.on_req_semantic_tokens_full file_name
+    @@
+    let open Handler.Let_syntax in
+    let%bind file_name = open_file @@ normalize_path file_name in
+    match range with
+    | Some range -> Requests.on_req_semantic_tokens_range file_name range
+    | None -> Requests.on_req_semantic_tokens_full file_name
   in
   match actual_semantic_tokens with
   | None -> failwith "Expected some semantic tokens list, got None"

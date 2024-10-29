@@ -10,12 +10,10 @@ const booleanLogic: bool =
     false ==
     (false && true) ==
     (false || false)
-const tez_amount: mav = 42mav
-const tez_amount2: mav = tez_amount + 7mumav // == 42000007mumav
-const mv1address: address =
-  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
-const kt1address: address =
-  "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;
+const mav_amount: mav = 42mav
+const mav_amount2: mav = mav_amount + 7mumav // == 42000007mumav
+const tz1address: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
+const kt1address: address = "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD";
 const my_str : string = "Hello World!";
 const verbatim_str : string = `verbatim string`;
 const add_int: int = 3 + 4;
@@ -41,8 +39,7 @@ type middle_name = option<string>;
 const a_middle_name : middle_name = Some("Foo");
 const no_middle_name : middle_name = None();
 const age: int = 5
-const someAddress: address =
-  "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
+const someAddress: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
 type person = {
   age: int,
   name: string
@@ -56,11 +53,11 @@ const john : person = {
 const name_: string = john.name
 type prices = map<nat, mav>;
 
-const prices: prices = Map.literal(list([
+const prices: prices = Map.literal([
   [10n, 60mumav],
   [50n, 30mumav],
   [100n, 10mumav]
-]));
+]);
 
 const price: option<mav> = Map.find_opt(50n, prices)
 
@@ -79,8 +76,8 @@ type animal =
 | ["Cat"];
 namespace FA0_inferred {
   type storage = int;
-  @entry const add = (s : int, k : int) : [list<operation>, int] => [list([]), s + k];
-  @entry const extra = (s : int, k : int) : [list<operation>, int] => [list([]), s - k];
+  @entry const add = (s : int, k : int) : [list<operation>, int] => [[], s + k];
+  @entry const extra = (s : int, k : int) : [list<operation>, int] => [[], s - k];
 }
 interface FA0_INTF {
   type storage;
@@ -91,7 +88,7 @@ interface FA0_EXT_INTF extends FA0_INTF {
   @entry const add : (s : int, k : storage) => [list<operation>, storage];
 }
 namespace FA0 implements FA0_INTF {
-  type storage = int;
-  @entry const add = (s : int, k : int) : [list<operation>, int] => [list([]), s + k];
-  @entry const extra = (s : int, k : int) : [list<operation>, int] => [list([]), s - k];
+  export type storage = int;
+  @entry const add = (s : int, k : int) : [list<operation>, int] => [[], s + k];
+  @entry const extra = (s : int, k : int) : [list<operation>, int] => [[], s - k];
 }

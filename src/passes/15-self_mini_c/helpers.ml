@@ -1,6 +1,5 @@
-module Pair = Simple_utils.Pair
-module Triple = Simple_utils.Triple
 open Mini_c
+open Ligo_prim
 
 type mapper_type = type_expression -> type_expression
 
@@ -70,38 +69,38 @@ let rec map_expression : mapper -> expression -> expression =
   | E_rec { func = af; rec_binder } ->
     let body = self af.body in
     return @@ E_rec { func = { af with body }; rec_binder }
-  | E_application farg ->
-    let farg' = Pair.map ~f:self farg in
+  | E_application (farg1, farg2) ->
+    let farg' = self farg1, self farg2 in
     return @@ E_application farg'
   | E_iterator (s, ((name, tv), body), exp) ->
-    let exp', body' = Pair.map ~f:self (exp, body) in
+    let exp', body' = self exp, self body in
     return @@ E_iterator (s, ((name, tv), body'), exp')
   | E_fold (((name, tv), body), col, init) ->
-    let body', col', init = Triple.map ~f:self (body, col, init) in
+    let body', col', init = self body, self col, self init in
     return @@ E_fold (((name, tv), body'), col', init)
   | E_fold_right (((name, tv), body), (col, el_ty), init) ->
-    let body', col', init = Triple.map ~f:self (body, col, init) in
+    let body', col', init = self body, self col, self init in
     return @@ E_fold_right (((name, tv), body'), (col', el_ty), init)
-  | E_if_bool cab ->
-    let cab' = Triple.map ~f:self cab in
+  | E_if_bool (cab1, cab2, cab3) ->
+    let cab' = self cab1, self cab2, self cab3 in
     return @@ E_if_bool cab'
   | E_if_none (c, n, ((name, tv), s)) ->
-    let c', n', s' = Triple.map ~f:self (c, n, s) in
+    let c', n', s' = self c, self n, self s in
     return @@ E_if_none (c', n', ((name, tv), s'))
   | E_if_cons (c, n, (((hd, hdtv), (tl, tltv)), cons)) ->
-    let c', n', cons' = Triple.map ~f:self (c, n, cons) in
+    let c', n', cons' = self c, self n, self cons in
     return @@ E_if_cons (c', n', (((hd, hdtv), (tl, tltv)), cons'))
   | E_if_left (c, ((name_l, tvl), l), ((name_r, tvr), r)) ->
-    let c', l', r' = Triple.map ~f:self (c, l, r) in
+    let c', l', r' = self c, self l, self r in
     return @@ E_if_left (c', ((name_l, tvl), l'), ((name_r, tvr), r'))
   | E_let_in (expr, inline, ((v, tv), body)) ->
-    let expr', body' = Pair.map ~f:self (expr, body) in
+    let expr', body' = self expr, self body in
     return @@ E_let_in (expr', inline, ((v, tv), body'))
   | E_tuple exprs ->
     let exprs = List.map ~f:self exprs in
     return @@ E_tuple exprs
   | E_let_tuple (expr, (xs, body)) ->
-    let expr', body' = Pair.map ~f:self (expr, body) in
+    let expr', body' = self expr, self body in
     return @@ E_let_tuple (expr', (xs, body'))
   | E_proj (expr, i, n) ->
     let expr = self expr in
@@ -146,3 +145,38 @@ let map_sub_level_expression : mapper -> anon_function -> anon_function =
   let ({ binder; body } : anon_function) = e in
   let body = map_expression f body in
   { binder; body }
+
+
+(* Conservative purity test: ok to treat pure things as impure, must
+   not treat impure things as pure. *)
+
+let rec is_pure : expression -> bool =
+ fun e ->
+  match e.content with
+  | E_literal _ | E_closure _ | E_rec _ | E_variable _ -> true
+  | E_if_bool (cond, bt, bf)
+  | E_if_none (cond, bt, (_, bf))
+  | E_if_cons (cond, bt, (_, bf))
+  | E_if_left (cond, (_, bt), (_, bf)) -> List.for_all ~f:is_pure [ cond; bt; bf ]
+  | E_let_in (e1, _, (_, e2)) -> List.for_all ~f:is_pure [ e1; e2 ]
+  | E_tuple exprs -> List.for_all ~f:is_pure exprs
+  | E_let_tuple (e1, (_, e2)) -> List.for_all ~f:is_pure [ e1; e2 ]
+  | E_proj (e, _i, _n) -> is_pure e
+  | E_update (expr, _i, update, _n) -> List.for_all ~f:is_pure [ expr; update ]
+  | E_constant c ->
+    Constant.constant'_is_pure c.cons_name && List.for_all ~f:is_pure c.arguments
+  | E_global_constant (_hash, _args) ->
+    (* hashed code can be impure :( *)
+    false
+  | E_create_contract _ (* very not pure *) | E_inline_michelson _ -> false
+  | E_raw_michelson _ -> true
+  (* TODO E_let_mut_in is pure when the rhs is pure and the body's
+         only impurity is assign/deref of the bound mutable variable *)
+  | E_let_mut_in _ | E_assign _ | E_deref _ -> false
+  (* these could be pure through the exception above for
+         E_let_mut_in *)
+  | E_for _ | E_for_each _ -> false
+  (* never pure in any important case *)
+  | E_while _ -> false
+  (* I'm not sure about these. Maybe can be tested better? *)
+  | E_application _ | E_iterator _ | E_fold _ | E_fold_right _ -> false

@@ -8,9 +8,10 @@ module Directive = Preprocessor.Directive
 
 (* Utility modules and types *)
 
-module SMap = Map.Make (String)
 module Wrap = Lexing_shared.Wrap
 module Attr = Lexing_shared.Attr
+
+let empty_map = Map.empty (module String)
 
 let sprintf = Printf.sprintf
 
@@ -50,6 +51,7 @@ module T =
     | Int      of (lexeme * Z.t) Wrap.t
     | Nat      of (lexeme * Z.t) Wrap.t
     | Mumav    of (lexeme * Int64.t) Wrap.t
+    | Mav      of (lexeme * Q.t) Wrap.t
     | Ident    of lexeme Wrap.t              (* foo  *)
     | UIdent   of lexeme Wrap.t              (* Foo  *)
     | EIdent   of lexeme Wrap.t              (* @foo *)
@@ -183,6 +185,7 @@ module T =
     | Int      t
     | Nat      t -> [fst t#payload]
     | Mumav    t -> [fst t#payload]
+    | Mav      t -> [fst t#payload]
     | Ident    t
     | UIdent   t
     | EIdent   t -> [t#payload]
@@ -421,14 +424,16 @@ module T =
 
     let keywords =
       let add map (key, data) =
-        match SMap.add ~key ~data map with
+        match Map.add ~key ~data map with
           `Ok map -> map
         | `Duplicate -> map in
       let apply map mk_kwd =
         let lexemes = to_lexeme (mk_kwd Region.ghost) in
         List.fold_left ~f:(fun map lex -> add map (lex, mk_kwd))
                        ~init:map lexemes
-      in List.fold_left ~f:apply ~init:SMap.empty keywords
+      in List.fold_left ~f:apply ~init:empty_map keywords
+
+    let keywords_list = Map.keys keywords
 
     (* Ghost keywords *)
 
@@ -668,14 +673,16 @@ module T =
 
     let symbols =
       let add map (key, data) =
-        match SMap.add ~key ~data map with
+        match Map.add ~key ~data map with
           `Ok map -> map
         | `Duplicate -> map in
       let apply map mk_sym =
         let lexemes = to_lexeme (mk_sym Region.ghost) in
         List.fold_left ~f:(fun map lex -> add map (lex, mk_sym))
                        ~init:map lexemes
-      in List.fold_left ~f:apply ~init:SMap.empty symbols
+      in List.fold_left ~f:apply ~init:empty_map symbols
+
+    let symbols_list = Map.keys symbols
 
     (* Ghost symbols *)
 
@@ -789,6 +796,7 @@ module T =
     let wrap_int      z = wrap (Z.to_string z, z)
     let wrap_nat      z = wrap (Z.to_string z ^ "n", z)
     let wrap_mumav    m = wrap (Int64.to_string m ^ "mumav", m)
+    let wrap_mav      t = wrap (Q.to_string t ^ "mav", t)
     let wrap_ident    i = wrap i
     let wrap_uident   i = wrap i
     let wrap_eident   i = wrap i
@@ -806,6 +814,7 @@ module T =
     let ghost_int      z = wrap_int      z   Region.ghost
     let ghost_nat      z = wrap_nat      z   Region.ghost
     let ghost_mumav    m = wrap_mumav    m   Region.ghost
+    let ghost_mav      t = wrap_mav      t   Region.ghost
     let ghost_ident    i = wrap_ident    i   Region.ghost
     let ghost_uident   i = wrap_uident   i   Region.ghost
     let ghost_eident   i = wrap_eident   i   Region.ghost
@@ -818,6 +827,7 @@ module T =
     let ghost_Int      z = Int      (ghost_int z)
     let ghost_Nat      z = Nat      (ghost_nat z)
     let ghost_Mumav    m = Mumav    (ghost_mumav m)
+    let ghost_Mav      t = Mav      (ghost_mav t)
     let ghost_Ident    i = Ident    (ghost_ident i)
     let ghost_UIdent   i = UIdent   (ghost_uident i)
     let ghost_EIdent   i = EIdent   (ghost_eident i)
@@ -875,6 +885,7 @@ module T =
     | "Int"      -> "1"
     | "Nat"      -> "1n"
     | "Mumav"    -> "1mumav"
+    | "Mav"      -> "1mav"
     | "String"   -> "\"a string\""
     | "Verbatim" -> "{|verbatim|}"
     | "Bytes"    -> "0xAA"
@@ -993,8 +1004,9 @@ module T =
     (* FROM TOKENS TO TOKEN STRINGS AND REGIONS *)
 
     let comments (w : _ Wrap.t) =
-      if Caml.(w#comments = [] && w#line_comment = None) then ""
-      else " + comment(s)"
+      match w#comments, w#line_comment with
+        [], None -> ""
+      | _ -> " + comment(s)"
 
     let proj_token = function
       (* Preprocessing directives *)
@@ -1028,6 +1040,9 @@ module T =
     | Mumav t ->
         let s, n = t#payload in
         t#region, sprintf "Mumav (%S, %s)" s (Int64.to_string n)
+    | Mav t ->
+        let s, n = t#payload in
+        t#region, sprintf "Mav (%S, %s)" s (Q.to_string n)
     | Ident t ->
         t#region, sprintf "Ident %S%s" t#payload (comments t)
     | UIdent t ->
@@ -1142,8 +1157,9 @@ module T =
     | SEMI_ELSE (t1, t2) ->
         let region   = Region.cover t1#region t2#region
         and comments =
-          if Caml.(t1#comments = []) && Caml.(t2#comments = []) then ""
-          else " + comments"
+          match t1#comments, t2#comments with
+            [], [] -> ""
+          | _ -> " + comments"
         in region, sprintf "SEMI_ELSE%s" comments
 
     (* End-Of-File *)
@@ -1171,6 +1187,7 @@ module T =
     | Int      w
     | Nat      w -> w#comments
     | Mumav    w -> w#comments
+    | Mav      w -> w#comments
     | Ident    w
     | UIdent   w
     | EIdent   w -> w#comments
@@ -1289,7 +1306,7 @@ module T =
     type kwd_err = Invalid_keyword
 
     let mk_kwd ident region =
-      match SMap.find keywords ident with
+      match Map.find keywords ident with
         Some mk_kwd -> Ok (mk_kwd region)
       |        None -> Error Invalid_keyword
 
@@ -1324,11 +1341,14 @@ module T =
       Error (Wrong_nat_syntax "Example: \"12334 as nat\".") *)
 
     (* Mumav *)
-
-    type mumav_err = Wrong_mumav_syntax of string
-
     let mk_mumav nat ~suffix int64 region =
-      Ok (Mumav (wrap (nat ^ suffix, int64) region))
+      Mumav (wrap (nat ^ suffix, int64) region)
+    
+    (* Mav *)
+    let mk_mav nat ~suffix q region =
+      Mav (wrap (nat ^ suffix, q) region)
+
+    (* Natural numbers *)
 
 (*  let mk_mumav _nat ~suffix:_ _int64 _region =
       Error (Wrong_mumav_syntax "Example: \"1234 as mumav\".") *)
@@ -1342,14 +1362,14 @@ module T =
     type sym_err = Invalid_symbol of string
 
     let mk_sym lexeme region =
-      match SMap.find symbols lexeme with
+      match Map.find symbols lexeme with
         Some mk_sym -> Ok (mk_sym region)
       |        None -> Error (Invalid_symbol lexeme)
 
     (* Identifiers *)
 
     let mk_ident value region =
-      match SMap.find keywords value with
+      match Map.find keywords value with
         Some mk_kwd -> mk_kwd region
       |        None -> Ident (wrap value region)
 

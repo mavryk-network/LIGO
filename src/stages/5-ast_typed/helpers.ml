@@ -1,9 +1,8 @@
-module Location = Simple_utils.Location
-module List = Simple_utils.List
-module Ligo_string = Simple_utils.Ligo_string
-module Pair = Simple_utils.Pair
+open Core
 open Ligo_prim
 open Types
+module Location = Simple_utils.Location
+module Ligo_pair = Simple_utils.Ligo_pair
 
 let remove_empty_annotation (ann : string option) : string option =
   match ann with
@@ -12,11 +11,9 @@ let remove_empty_annotation (ann : string option) : string option =
   | None -> None
 
 
-(* These tables are used during inference / for substitution *)
-module TMap = Simple_utils.Map.Make (Type_var)
-
 (* Free type variables in a type *)
-module VarSet = Caml.Set.Make (Type_var)
+
+module VarSet = Set.Make (Type_var)
 
 (* Substitutes a type variable `v` for a type `t` in the type `u`. In
    principle, variables could be captured. But in case a binder
@@ -31,7 +28,7 @@ let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
     let type1 = self v t type1 in
     let type2 = self v t type2 in
     { u with type_content = T_arrow { type1; type2; param_names } }
-  | T_abstraction { ty_binder; kind; type_ } when VarSet.mem ty_binder fv ->
+  | T_abstraction { ty_binder; kind; type_ } when Set.mem fv ty_binder ->
     let ty_binder' = Type_var.fresh ~loc () in
     let type_ = self ty_binder (Combinators.t_variable ~loc ty_binder' ()) type_ in
     let ty_binder = ty_binder' in
@@ -39,7 +36,7 @@ let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
   | T_abstraction { ty_binder; kind; type_ } when not (Type_var.equal ty_binder v) ->
     let type_ = self v t type_ in
     { u with type_content = T_abstraction { ty_binder; kind; type_ } }
-  | T_for_all { ty_binder; kind; type_ } when VarSet.mem ty_binder fv ->
+  | T_for_all { ty_binder; kind; type_ } when Set.mem fv ty_binder ->
     let ty_binder' = Type_var.fresh ~loc () in
     let type_ = self ty_binder (Combinators.t_variable ~loc ty_binder' ()) type_ in
     let ty_binder = ty_binder' in
@@ -50,9 +47,9 @@ let rec subst_type ?(fv = VarSet.empty) v t (u : type_expression) =
   | T_constant { language; injection; parameters } ->
     let parameters = List.map ~f:(self v t) parameters in
     { u with type_content = T_constant { language; injection; parameters } }
-  | T_sum (row, orig_label) ->
+  | T_sum row ->
     let row = Row.map (self v t) row in
-    { u with type_content = T_sum (row, orig_label) }
+    { u with type_content = T_sum row }
   | T_record row ->
     let row = Row.map (self v t) row in
     { u with type_content = T_record row }
@@ -71,10 +68,19 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
   else (
     let return expression_content = { e' with expression_content } in
     match e'.expression_content with
-    | E_matching { matchee = e; disc_label; cases } ->
+    | E_matching { matchee = e; cases } ->
       let res, e' = self init e in
       let res, cases' = fold_map_cases f res cases in
-      res, return @@ E_matching { matchee = e'; disc_label; cases = cases' }
+      res, return @@ E_matching { matchee = e'; cases = cases' }
+    | E_union_injected inj ->
+      let res, inj = Union.Injected.fold_map self Tuple2.create init inj in
+      res, return @@ E_union_injected inj
+    | E_union_match match_ ->
+      let res, match_ = Union.Match.fold_map self Tuple2.create init match_ in
+      res, return @@ E_union_match match_
+    | E_union_use use ->
+      let res, use = Union.Use.fold_map self init use in
+      res, return @@ E_union_use use
     | E_accessor { struct_; path } ->
       let res, struct_ = self init struct_ in
       res, return @@ E_accessor { struct_; path }
@@ -90,7 +96,7 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
       res, return @@ E_constructor { c with element = e' }
     | E_application { lamb; args } ->
       let ab = lamb, args in
-      let res, (a, b) = Pair.fold_map ~f:self ~init ab in
+      let res, (a, b) = Ligo_pair.fold_map ~f:self ~init ab in
       res, return @@ E_application { lamb = a; args = b }
     | E_let_in { let_binder; rhs; let_result; attributes } ->
       let res, rhs = self init rhs in
@@ -137,8 +143,12 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
     | E_while w ->
       let res, w = While_loop.fold_map self init w in
       res, return @@ E_while w
-    | (E_deref _ | E_literal _ | E_variable _ | E_contract _ | E_module_accessor _) as e'
-      -> init, return e')
+    | ( E_deref _
+      | E_literal _
+      | E_variable _
+      | E_contract _
+      | E_module_accessor _
+      | E_error _ ) as e' -> init, return e')
 
 
 and fold_map_case
@@ -181,6 +191,7 @@ and fold_map_declaration m acc (x : declaration) =
     let acc', module_ = (fold_map_expression_in_module_expr m) acc module_ in
     acc', { x with wrap_content = D_module_include module_ }
   | D_signature sig_ -> acc, { x with wrap_content = D_signature sig_ }
+  | D_import import -> acc, { x with wrap_content = D_import import }
 
 
 and fold_map_decl m = fold_map_declaration m
@@ -218,17 +229,24 @@ let rec fold_map_type_expression
  fun te ~init ~f ->
   let self te = fold_map_type_expression te ~f in
   let init, te = f init te in
+  let fold_map_record ~init row =
+    Record.fold_map row.Row.fields ~init ~f:(fun init field -> self field ~init)
+  in
+  let fold_map_list ~init = List.fold_map ~init ~f:(fun init elt -> self elt ~init) in
   let return type_content = { te with type_content } in
   match te.type_content with
-  | (T_variable _ | T_singleton _) as tc -> init, return tc
+  | (T_variable _ | T_exists _ | T_singleton _) as tc -> init, return tc
   | T_constant { parameters; language; injection } ->
-    let init, parameters = List.fold_map parameters ~init ~f in
+    let init, parameters = fold_map_list parameters ~init in
     init, return @@ T_constant { parameters; language; injection }
-  | T_sum (row, orig_label) ->
-    let init, fields = Record.fold_map row.fields ~init ~f in
-    init, return @@ T_sum ({ row with fields }, orig_label)
+  | T_sum row ->
+    let init, fields = fold_map_record ~init row in
+    init, return @@ T_sum { row with fields }
+  | T_union union ->
+    let init, fields = Union.fold_map f init union in
+    init, return @@ T_union union
   | T_record row ->
-    let init, fields = Record.fold_map row.fields ~init ~f in
+    let init, fields = fold_map_record ~init row in
     init, return @@ T_record { row with fields }
   | T_arrow { type1; type2; param_names } ->
     let init, type1 = self type1 ~init in
@@ -266,6 +284,21 @@ let map_expression : f:(expression -> bool * expression) -> expression -> expres
        expr
 
 
+let subst_var ~old_var ~new_var expr =
+  map_expression
+    ~f:(fun e ->
+      let e =
+        match e.expression_content with
+        | E_variable x ->
+          if Value_var.equal x old_var
+          then { e with expression_content = E_variable new_var }
+          else e
+        | _ -> e
+      in
+      true, e)
+    expr
+
+
 let map_program f prg = snd @@ fold_map_program (fun () exp -> true, (), f exp) () prg
 
 (* An [IdMap] is a [Map] augmented with an [id] field (which is wrapped around the map [value] field).
@@ -286,7 +319,7 @@ let map_program f prg = snd @@ fold_map_program (fun () exp -> true, (), f exp) 
 let global_id = ref 0
 
 module IdMap = struct
-  module type OrderedType = Caml.Map.OrderedType
+  module type OrderedType = Stdlib.Map.OrderedType
 
   module type IdMapSig = sig
     type key
@@ -296,7 +329,7 @@ module IdMap = struct
   (* of module type S *)
 
   module Make (Ord : OrderedType) : IdMapSig with type key = Ord.t = struct
-    module Map = Simple_utils.Map.Make (Ord)
+    module Map = Stdlib.Map.Make (Ord)
 
     type key = Ord.t
 
@@ -338,7 +371,8 @@ let get_views : program -> (Value_var.t * Location.t) list =
       | D_value _
       | D_irrefutable_match _
       | D_module_include _
-      | D_signature _ -> acc
+      | D_signature _
+      | D_import _ -> acc
     in
     (* TODO: This would be easier to use the signature instead of the module *)
     List.fold_right ~init:[] ~f module_
@@ -358,7 +392,8 @@ let fetch_view_type : declaration -> (type_expression * type_expression Binder.t
   | D_type _
   | D_module _
   | D_module_include _
-  | D_signature _ -> None
+  | D_signature _
+  | D_import _ -> None
 
 
 let map_orig_var ~f t =

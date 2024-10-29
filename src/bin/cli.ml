@@ -1,12 +1,59 @@
-open Cli_helpers
+open Core
 module Constants = Commands.Constants
 module Default_options = Compiler_options.Default_options
 module Raw_options = Compiler_options.Raw_options
+module PP_helpers = Simple_utils.PP_helpers
+module Display = Simple_utils.Display
 
-let is_dev = ref true
+let pp_quoted ppf s = Format.fprintf ppf "`%s`" s
+
+module Deprecated_param : sig
+  (** A deprecated parameter is a parameter that will always be ignored
+      and will raise a warning when passed a non-empty value. *)
+  type t = unit Command.Param.t
+
+  (** Creates a deprecated flag, printing a warning when [Some _] is parsed
+      from the flag. *)
+  val flag
+    :  ?full_flag_required:unit
+    -> ?aliases:string list
+    -> ?replacement:string
+    -> string
+    -> 'a option Command.Flag.t
+    -> doc:string
+    -> t
+end = struct
+  type t = unit Command.Param.t
+
+  let flag ?full_flag_required ?aliases ?replacement name spec ~doc =
+    let open Command.Param in
+    let doc =
+      Format.asprintf
+        "%s (deprecated%a)"
+        doc
+        (Format.pp_print_option (fun ppf r ->
+             Format.fprintf ppf ", use %a instead" pp_quoted r))
+        replacement
+    in
+    flag ?full_flag_required ?aliases name spec ~doc
+    |> map ~f:(function
+           | None -> ()
+           | Some _ ->
+             Format.eprintf
+               "Warning: the flag %a%a is deprecated and will be ignored\n%!"
+               pp_quoted
+               ("-" ^ name)
+               (Format.pp_print_option (fun ppf aliases ->
+                    Format.fprintf
+                      ppf
+                      " (aliases: %a)"
+                      (Format.pp_print_list pp_quoted)
+                      aliases))
+               aliases)
+end
 
 let file_type =
-  Core.Command.Arg_type.create Fn.id ~complete:(fun _ ~part ->
+  Command.Arg_type.create Fn.id ~complete:(fun _ ~part ->
       let completions =
         (* `compgen -f` handles some fiddly things nicely, e.g. completing "foo" and
          "foo/" appropriately. *)
@@ -15,9 +62,9 @@ let file_type =
         let completions = In_channel.input_lines chan_in in
         ignore (Ligo_unix.close_process_in chan_in);
         List.map (List.sort ~compare:String.compare completions) ~f:(fun comp ->
-            match Caml.Sys.is_directory comp with
-            | true -> comp ^ "/"
-            | _ | (exception _) -> comp)
+            match Sys_unix.is_directory comp with
+            | `Yes -> comp ^ "/"
+            | `No | `Unknown | (exception _) -> comp)
       in
       match completions with
       | [ dir ] when String.is_suffix dir ~suffix:"/" ->
@@ -36,7 +83,7 @@ let create_arg_type_with_static_completion
     ~(items : (string * a) list)
     ~(default : string -> a)
   =
-  Core.Command.Arg_type.create
+  Command.Arg_type.create
     ~complete:(fun _ ~part ->
       List.filter (List.map ~f:fst items) ~f:(String.is_prefix ~prefix:part))
     (fun str ->
@@ -285,25 +332,11 @@ let steps =
 
 let protocol_version =
   let open Command.Param in
-  let open Environment.Protocols in
-  let plist =
-    Format.asprintf
-      "%a"
-      (Simple_utils.PP_helpers.list_sep_d_par Format.pp_print_string)
-      protocols_str
-  in
   let doc =
-    Format.asprintf
-      "PROTOCOL choose protocol's types/values pre-loaded into the LIGO environment %s. \
-       By default, the current protocol (%s) will be used"
-      plist
-      (variant_to_string current)
+    "PROTOCOL choose protocol's types/values pre-loaded into the LIGO environment"
   in
-  let protocol_type =
-    create_string_arg_type_with_static_completion ~items:protocols_str
-  in
-  let spec = optional_with_default Default_options.protocol_version protocol_type in
-  flag ~doc ~aliases:[ "--protocol" ] "p" spec
+  let spec = optional string in
+  Deprecated_param.flag ~doc ~aliases:[ "--protocol" ] "p" spec
 
 
 let cli_expr_inj =
@@ -335,7 +368,7 @@ let amount =
   let open Command.Param in
   let name = "--amount" in
   let doc =
-    "INT the tezos amount the Michelson interpreter will use for the transaction."
+    "INT the mavryk amount the Michelson interpreter will use for the transaction."
   in
   let spec = optional_with_default "0" string in
   flag ~doc name spec
@@ -450,6 +483,20 @@ let defs_only =
   flag ~doc name no_arg
 
 
+let parser_error_recovery : bool Command.Param.t =
+  let open Command.Param in
+  let name = "--parser-error-recovery" in
+  let doc = "Enable error-recovery in the parser." in
+  flag ~doc name no_arg
+
+
+let typer_error_recovery : bool Command.Param.t =
+  let open Command.Param in
+  let name = "--typer-error-recovery" in
+  let doc = "Enable error-recovery in the typer." in
+  flag ~doc name no_arg
+
+
 let disable_lsp_request_logging =
   let open Command.Param in
   let name = "--disable-lsp-requests-logging" in
@@ -509,7 +556,7 @@ let hide_sort : _ Command.Param.t =
   let doc =
     Format.asprintf
       "restrict sorts shown in s-exp. available sorts: %a"
-      (Simple_utils.PP_helpers.list String.pp)
+      (PP_helpers.list String.pp)
       all_sorts
   in
   let sort_type = create_string_arg_type_with_static_completion ~items:all_sorts in
@@ -526,7 +573,7 @@ let hide_sort : _ Command.Param.t =
 let preprocess_define : string list Command.Param.t =
   let open Command.Param in
   let doc = "pass a list of defines to the preprocessor" in
-  let sort_type = Core.Command.Arg_type.create Fun.id in
+  let sort_type = Command.Arg_type.create Fun.id in
   let spec =
     optional_with_default []
     @@ Command.Arg_type.comma_separated
@@ -546,7 +593,6 @@ let function_body =
 
 let display_format =
   let open Command.Param in
-  let open Simple_utils.Display in
   let name = "--display-format" in
   let doc =
     "FORMAT the format that will be used by the CLI. Available formats are 'dev', \
@@ -554,9 +600,9 @@ let display_format =
      still tweaking it), please contact us and use another format in the meanwhile."
   in
   flag ~doc ~aliases:[ "--format" ] name
-  @@ optional_with_default human_readable
+  @@ optional_with_default Display.human_readable
   @@ create_arg_type_with_static_completion
-       ~items:[ "human-readable", human_readable; "dev", dev; "json", json ]
+       ~items:Display.[ "human-readable", human_readable; "dev", dev; "json", json ]
        ~default:(fun _ -> failwith "todo")
 
 
@@ -662,8 +708,18 @@ let project_root =
   let spec = optional file_type in
   let spec =
     map_flag spec ~f:(function
-        | None -> Cli_helpers.find_project_root ()
-        | Some x -> Some x)
+        | None ->
+          let v =
+            Lsp_helpers.Path.(
+              Option.map
+                ~f:to_string
+                (Lsp_helpers.Project_root.get_project_root_from_dir @@ from_relative "."))
+          in
+          Analytics.set_project_root v;
+          v
+        | Some x ->
+          Analytics.set_project_root (Some x);
+          Some x)
   in
   flag ~doc name spec
 
@@ -735,6 +791,13 @@ let doc_args =
   flag ~doc name spec
 
 
+let array_as_list =
+  let open Command.Param in
+  let name = "--feature-infer-array-as-list" in
+  let doc = "Infer array as lists." in
+  flag ~doc name no_arg
+
+
 module Api = Ligo_api
 
 let ( <*> ) = Command.Param.( <*> )
@@ -742,8 +805,8 @@ let ( <$> ) f a = Command.Param.return f <*> a
 
 (* Command run function of type () -> () and catches exception inside.
 I use a mutable variable to propagate back the effect of the result of f *)
-let return = ref Done
-let reset_return () = return := Done
+let return = ref Cli_helpers.Done
+let reset_return () = return := Cli_helpers.Done
 
 let compile_file =
   let f
@@ -752,7 +815,7 @@ let compile_file =
       module_
       views
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       disable_michelson_typechecking
       experimental_disable_optimizations_for_debugging
@@ -774,13 +837,13 @@ let compile_file =
       warn_unused_rec
       warn_infinite_loop
       libraries
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~module_
         ~syntax
-        ~protocol_version
         ~disable_michelson_typechecking
         ~experimental_disable_optimizations_for_debugging
         ~enable_typed_opt
@@ -796,6 +859,7 @@ let compile_file =
         ~warn_infinite_loop
         ~libraries
         ~preprocess_define
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -805,7 +869,7 @@ let compile_file =
         ~source_file
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -859,7 +923,8 @@ let compile_file =
     <*> transpiled
     <*> warn_unused_rec
     <*> warn_infinite_loop
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let compile_parameter =
@@ -869,7 +934,7 @@ let compile_parameter =
       module_
       expression
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       amount
       balance
       sender
@@ -895,7 +960,6 @@ let compile_parameter =
       Raw_options.make
         ~syntax
         ~module_
-        ~protocol_version
         ~warning_as_error
         ~constants
         ~file_constants
@@ -913,7 +977,7 @@ let compile_parameter =
         ~source_file
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -975,7 +1039,7 @@ let compile_expression =
   let f
       syntax
       expression
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       init_file
       display_format
       no_colour
@@ -993,12 +1057,12 @@ let compile_expression =
       warn_infinite_loop
       libraries
       function_body
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~without_run
         ~no_stdlib
         ~warning_as_error
@@ -1010,6 +1074,7 @@ let compile_expression =
         ~libraries
         ~function_body
         ~preprocess_define
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -1018,7 +1083,7 @@ let compile_expression =
         ~raw_options
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1057,14 +1122,15 @@ let compile_expression =
     <*> warn_unused_rec
     <*> warn_infinite_loop
     <*> libraries
-    <*> function_body)
+    <*> function_body
+    <*> array_as_list)
 
 
 let compile_type =
   let f
       syntax
       expression
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       init_file
       display_format
       no_colour
@@ -1083,7 +1149,6 @@ let compile_type =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~no_stdlib
         ~warning_as_error
         ~project_root
@@ -1099,7 +1164,7 @@ let compile_type =
         ~raw_options
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1140,7 +1205,7 @@ let compile_storage =
       entry_point
       module_
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       amount
       balance
       sender
@@ -1176,7 +1241,6 @@ let compile_storage =
       Raw_options.make
         ~module_
         ~syntax
-        ~protocol_version
         ~warning_as_error
         ~constants
         ~file_constants
@@ -1195,7 +1259,7 @@ let compile_storage =
         ~source_file
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1260,7 +1324,7 @@ let compile_constant =
   let f
       syntax
       expression
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       init_file
       display_format
       no_colour
@@ -1273,12 +1337,12 @@ let compile_constant =
       warn_unused_rec
       warn_infinite_loop
       libraries
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~without_run
         ~warning_as_error
         ~project_root
@@ -1286,6 +1350,7 @@ let compile_constant =
         ~warn_infinite_loop
         ~libraries
         ~preprocess_define
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -1294,7 +1359,7 @@ let compile_constant =
         ~raw_options
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1328,7 +1393,8 @@ let compile_constant =
     <*> project_root
     <*> warn_unused_rec
     <*> warn_infinite_loop
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let compile_group =
@@ -1366,7 +1432,7 @@ let transpile_contract =
         ; metric_value = 1.0
         }
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics:[ cli_analytic; transpile_analytic ]
       ~return
@@ -1427,7 +1493,7 @@ let transpile_with_ast_contract =
         ; metric_value = 1.0
         }
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics:[ cli_analytic; transpile_analytic ]
       ~return
@@ -1476,7 +1542,7 @@ let transpile_with_ast_expression =
         ; metric_value = 1.0
         }
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics:[ cli_analytic; transpile_analytic ]
       ~return
@@ -1525,6 +1591,7 @@ let test =
       warn_unused_rec
       warn_infinite_loop
       libraries
+      array_as_list
       ()
     =
     let raw_options =
@@ -1537,6 +1604,7 @@ let test =
         ~cli_expr_inj
         ~test:true
         ~libraries
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -1546,7 +1614,7 @@ let test =
         ~source_file
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1577,7 +1645,8 @@ let test =
     <*> project_root
     <*> warn_unused_rec
     <*> warn_infinite_loop
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let test_expr =
@@ -1595,6 +1664,7 @@ let test_expr =
       warn_unused_rec
       warn_infinite_loop
       libraries
+      array_as_list
       ()
     =
     let raw_options =
@@ -1607,6 +1677,7 @@ let test_expr =
         ~cli_expr_inj
         ~test:true
         ~libraries
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -1615,7 +1686,7 @@ let test_expr =
         ~raw_options
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1647,7 +1718,8 @@ let test_expr =
     <*> project_root
     <*> warn_unused_rec
     <*> warn_infinite_loop
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let dry_run =
@@ -1663,7 +1735,7 @@ let dry_run =
       source
       now
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       no_colour
       skip_analytics
@@ -1673,18 +1745,19 @@ let dry_run =
       warn_unused_rec
       warn_infinite_loop
       libraries
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~module_
         ~syntax
-        ~protocol_version
         ~warning_as_error
         ~project_root
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -1694,7 +1767,7 @@ let dry_run =
         ~source_file
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1744,7 +1817,8 @@ let dry_run =
     <*> project_root
     <*> warn_unused_rec
     <*> warn_infinite_loop
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let evaluate_call =
@@ -1758,7 +1832,7 @@ let evaluate_call =
       source
       now
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       no_colour
       skip_analytics
@@ -1768,17 +1842,18 @@ let evaluate_call =
       warn_unused_rec
       warn_infinite_loop
       libraries
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~warning_as_error
         ~project_root
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -1788,7 +1863,7 @@ let evaluate_call =
         ~source_file
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1835,7 +1910,8 @@ let evaluate_call =
     <*> project_root
     <*> warn_unused_rec
     <*> warn_infinite_loop
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let evaluate_expr =
@@ -1848,7 +1924,7 @@ let evaluate_expr =
       source
       now
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       no_colour
       skip_analytics
@@ -1858,17 +1934,18 @@ let evaluate_expr =
       warn_unused_rec
       warn_infinite_loop
       libraries
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~warning_as_error
         ~project_root
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -1878,7 +1955,7 @@ let evaluate_expr =
         ~source_file
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1915,7 +1992,8 @@ let evaluate_expr =
     <*> project_root
     <*> warn_unused_rec
     <*> warn_infinite_loop
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let interpret =
@@ -1923,7 +2001,7 @@ let interpret =
       expression
       init_file
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       amount
       balance
       sender
@@ -1936,16 +2014,17 @@ let interpret =
       warn_unused_rec
       warn_infinite_loop
       libraries
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~project_root
         ~warn_unused_rec
         ~warn_infinite_loop
         ~libraries
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -1962,7 +2041,7 @@ let interpret =
           ~raw_options
           ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -1997,7 +2076,8 @@ let interpret =
     <*> project_root
     <*> warn_unused_rec
     <*> warn_infinite_loop
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let run_group =
@@ -2036,7 +2116,7 @@ let list_declarations =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2070,7 +2150,7 @@ let measure_contract =
       source_file
       entry_point
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       no_colour
       skip_analytics
@@ -2086,7 +2166,6 @@ let measure_contract =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~warning_as_error
         ~project_root
         ~warn_unused_rec
@@ -2102,7 +2181,7 @@ let measure_contract =
         ~source_file
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2140,7 +2219,7 @@ let measure_contract =
 let get_scope =
   let f
       source_file
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       libraries
       display_format
       no_colour
@@ -2148,16 +2227,19 @@ let get_scope =
       defs_only
       project_root
       no_stdlib
+      typer_error_recovery
+      parser_error_recovery
       ()
     =
     let raw_options =
       Raw_options.make
-        ~protocol_version
         ~libraries
         ~with_types
         ~defs_only
         ~project_root
         ~no_stdlib
+        ~typer_error_recovery
+        ~parser_error_recovery
         ()
     in
     let cli_analytics =
@@ -2167,7 +2249,7 @@ let get_scope =
         ~source_file
         ()
     in
-    return_with_custom_formatter ~skip_analytics:false ~cli_analytics ~return
+    Cli_helpers.return_with_custom_formatter ~skip_analytics:false ~cli_analytics ~return
     @@ fun () ->
     Lsp_helpers.Ligo_interface.Get_scope.get_scope_cli_result
       raw_options
@@ -2193,7 +2275,9 @@ let get_scope =
     <*> with_types
     <*> defs_only
     <*> project_root
-    <*> no_stdlib)
+    <*> no_stdlib
+    <*> typer_error_recovery
+    <*> parser_error_recovery)
 
 
 let resolve_config =
@@ -2206,7 +2290,7 @@ let resolve_config =
         ~source_file
         ()
     in
-    return_result_lwt
+    Cli_helpers.return_result_lwt
       ~skip_analytics:true
       ~cli_analytics
       ~return
@@ -2227,7 +2311,7 @@ let resolve_config =
 let dump_cst =
   let f
       (source_file, source_files)
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       libraries
       display_format
       with_types
@@ -2235,7 +2319,7 @@ let dump_cst =
       no_colour
       ()
     =
-    let raw_options = Raw_options.make ~protocol_version ~libraries ~with_types () in
+    let raw_options = Raw_options.make ~libraries ~with_types () in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
         ~command:"info_dump-cst"
@@ -2243,7 +2327,7 @@ let dump_cst =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
       ~return
       ~display_format
       ~skip_analytics
@@ -2303,7 +2387,7 @@ let preprocessed =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2344,10 +2428,18 @@ let pretty_print =
       skip_analytics
       project_root
       libraries
+      parser_error_recovery
       ()
     =
     let raw_options =
-      Raw_options.make ~syntax ~warning_as_error ~no_colour ~project_root ~libraries ()
+      Raw_options.make
+        ~syntax
+        ~warning_as_error
+        ~no_colour
+        ~project_root
+        ~libraries
+        ~parser_error_recovery
+        ()
     in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
@@ -2356,7 +2448,8 @@ let pretty_print =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
+      ~fast_fail:(not parser_error_recovery)
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2380,7 +2473,8 @@ let pretty_print =
      <*> no_colour
      <*> skip_analytics
      <*> project_root
-     <*> libraries)
+     <*> libraries
+     <*> parser_error_recovery)
 
 
 let print_graph =
@@ -2402,7 +2496,7 @@ let print_graph =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2439,9 +2533,18 @@ let print_cst =
       skip_analytics
       project_root
       libraries
+      parser_error_recovery
       ()
     =
-    let raw_options = Raw_options.make ~syntax ~no_colour ~project_root ~libraries () in
+    let raw_options =
+      Raw_options.make
+        ~syntax
+        ~no_colour
+        ~project_root
+        ~libraries
+        ~parser_error_recovery
+        ()
+    in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
         ~command:"print_cst"
@@ -2449,7 +2552,8 @@ let print_cst =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
+      ~fast_fail:(not parser_error_recovery)
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2473,7 +2577,8 @@ let print_cst =
      <*> no_colour
      <*> skip_analytics
      <*> project_root
-     <*> libraries)
+     <*> libraries
+     <*> parser_error_recovery)
 
 
 let print_ast_unified =
@@ -2498,7 +2603,7 @@ let print_ast_unified =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2550,7 +2655,7 @@ let print_ast_core =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2581,7 +2686,7 @@ let print_ast_typed =
       source_file
       type_doc
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       self_pass
       project_root
@@ -2591,6 +2696,9 @@ let print_ast_typed =
       no_colour
       skip_analytics
       libraries
+      typer_error_recovery
+      parser_error_recovery
+      array_as_list
       ()
     =
     let formatter =
@@ -2605,7 +2713,6 @@ let print_ast_typed =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~self_pass
         ~project_root
         ~warn_unused_rec
@@ -2613,6 +2720,9 @@ let print_ast_typed =
         ~test
         ~no_colour
         ~libraries
+        ~typer_error_recovery
+        ~parser_error_recovery
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -2622,7 +2732,8 @@ let print_ast_typed =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
+      ~fast_fail:(not (typer_error_recovery || parser_error_recovery))
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2654,14 +2765,17 @@ let print_ast_typed =
      <*> test_mode
      <*> no_colour
      <*> skip_analytics
-     <*> libraries)
+     <*> libraries
+     <*> typer_error_recovery
+     <*> parser_error_recovery
+     <*> array_as_list)
 
 
 let print_ast_aggregated =
   let f
       source_file
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       self_pass
       project_root
@@ -2671,12 +2785,13 @@ let print_ast_aggregated =
       no_colour
       skip_analytics
       libraries
+      typer_error_recovery
+      parser_error_recovery
       ()
     =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~self_pass
         ~project_root
         ~warn_unused_rec
@@ -2684,6 +2799,8 @@ let print_ast_aggregated =
         ~test
         ~no_colour
         ~libraries
+        ~typer_error_recovery
+        ~parser_error_recovery
         ()
     in
     let cli_analytics =
@@ -2693,7 +2810,8 @@ let print_ast_aggregated =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
+      ~fast_fail:(not (typer_error_recovery || parser_error_recovery))
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2724,7 +2842,9 @@ let print_ast_aggregated =
     <*> test_mode
     <*> no_colour
     <*> skip_analytics
-    <*> libraries)
+    <*> libraries
+    <*> typer_error_recovery
+    <*> parser_error_recovery)
 
 
 let print_module_signature =
@@ -2732,7 +2852,7 @@ let print_module_signature =
       source_file
       syntax
       module_
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       self_pass
       project_root
@@ -2742,12 +2862,12 @@ let print_module_signature =
       no_colour
       skip_analytics
       libraries
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~self_pass
         ~module_
         ~project_root
@@ -2756,6 +2876,7 @@ let print_module_signature =
         ~test
         ~no_colour
         ~libraries
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -2765,7 +2886,7 @@ let print_module_signature =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2792,14 +2913,15 @@ let print_module_signature =
     <*> test_mode
     <*> no_colour
     <*> skip_analytics
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let print_ast_expanded =
   let f
       source_file
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       no_colour
       skip_analytics
@@ -2809,18 +2931,19 @@ let print_ast_expanded =
       warn_infinite_loop
       test
       libraries
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~self_pass
         ~project_root
         ~warn_unused_rec
         ~warn_infinite_loop
         ~test
         ~libraries
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -2830,7 +2953,7 @@ let print_ast_expanded =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2861,14 +2984,15 @@ let print_ast_expanded =
     <*> warn_unused_rec
     <*> warn_infinite_loop
     <*> test_mode
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let print_mini_c =
   let f
       source_file
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       display_format
       optimize
       project_root
@@ -2877,17 +3001,18 @@ let print_mini_c =
       no_colour
       skip_analytics
       libraries
+      array_as_list
       ()
     =
     let raw_options =
       Raw_options.make
         ~syntax
-        ~protocol_version
         ~project_root
         ~warn_unused_rec
         ~warn_infinite_loop
         ~no_colour
         ~libraries
+        ~array_as_list
         ()
     in
     let cli_analytics =
@@ -2897,7 +3022,7 @@ let print_mini_c =
         ~source_file
         ()
     in
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics
       ~return
@@ -2928,7 +3053,8 @@ let print_mini_c =
     <*> warn_infinite_loop
     <*> no_colour
     <*> skip_analytics
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let print_group =
@@ -2972,13 +3098,13 @@ let init_library =
     in
     if template_list
     then
-      return_with_custom_formatter
+      Cli_helpers.return_with_custom_formatter
         ~skip_analytics:true
         ~cli_analytics:[ cli_analytic ]
         ~return
       @@ Ligo_init.list ~kind:`LIBRARY ~display_format ~no_colour
     else
-      return_with_custom_formatter
+      Cli_helpers.return_with_custom_formatter
         ~skip_analytics
         ~cli_analytics:[ cli_analytic; init_analytic ]
         ~return
@@ -3028,13 +3154,13 @@ let init_contract =
     in
     if template_list
     then
-      return_with_custom_formatter
+      Cli_helpers.return_with_custom_formatter
         ~skip_analytics:false
         ~cli_analytics:[ cli_analytic ]
         ~return
       @@ Ligo_init.list ~kind:`CONTRACT ~display_format ~no_colour
     else
-      return_with_custom_formatter
+      Cli_helpers.return_with_custom_formatter
         ~skip_analytics
         ~cli_analytics:[ cli_analytic; init_analytic ]
         ~return
@@ -3074,7 +3200,7 @@ let init_group =
 let changelog =
   let cli_analytic = Analytics.generate_cli_metric ~command:"changelog" in
   let f display_format no_colour skip_analytics () =
-    return_result
+    Cli_helpers.return_result
       ~skip_analytics
       ~cli_analytics:[ cli_analytic ]
       ~return
@@ -3091,7 +3217,7 @@ let changelog =
 let repl =
   let f
       syntax
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       amount
       balance
       sender
@@ -3103,18 +3229,17 @@ let repl =
       init_file
       project_root
       libraries
+      array_as_list
       ()
     =
-    let raw_options =
-      Raw_options.make ~syntax ~protocol_version ~project_root ~libraries ()
-    in
+    let raw_options = Raw_options.make ~syntax ~project_root ~libraries () in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
         ~command:"repl"
         ~raw_options
         ()
     in
-    return_with_custom_formatter ~skip_analytics ~cli_analytics ~return
+    Cli_helpers.return_with_custom_formatter ~skip_analytics ~cli_analytics ~return
     @@ Repl.main
          raw_options
          display_format
@@ -3144,7 +3269,8 @@ let repl =
     <*> skip_analytics
     <*> init_file
     <*> project_root
-    <*> libraries)
+    <*> libraries
+    <*> array_as_list)
 
 
 let install =
@@ -3155,7 +3281,10 @@ let install =
   in
   let cli_analytic = Analytics.generate_cli_metric ~command:"install" in
   let f project_root package_name cache_path ligo_registry esy_legacy skip_analytics () =
-    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    Cli_helpers.return_with_custom_formatter
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic ]
+      ~return
     @@ fun () ->
     Install.install ~project_root ~package_name ~cache_path ~ligo_registry ~esy_legacy
   in
@@ -3180,7 +3309,10 @@ let registry_forgot_password =
   in
   let cli_analytic = Analytics.generate_cli_metric ~command:"forgot_password" in
   let f username ligo_registry ligorc_path skip_analytics () =
-    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    Cli_helpers.return_with_custom_formatter
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic ]
+      ~return
     @@ fun () -> Forgot_password.main ~username ~ligo_registry ~ligorc_path
   in
   Command.basic
@@ -3197,7 +3329,10 @@ let registry_publish =
   in
   let cli_analytic = Analytics.generate_cli_metric ~command:"publish" in
   let f ligo_registry ligorc_path project_root dry_run skip_analytics () =
-    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    Cli_helpers.return_with_custom_formatter
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic ]
+      ~return
     @@ fun () -> Publish.publish ~ligo_registry ~ligorc_path ~project_root ~dry_run
   in
   Command.basic
@@ -3216,7 +3351,10 @@ let registry_unpublish =
   let readme () = "[BETA] Unpublishes a package from the registry" in
   let cli_analytic = Analytics.generate_cli_metric ~command:"unpublish" in
   let f package_name package_version ligo_registry ligorc_path skip_analytics () =
-    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    Cli_helpers.return_with_custom_formatter
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic ]
+      ~return
     @@ fun () ->
     Unpublish.unpublish
       ~name:package_name
@@ -3275,9 +3413,12 @@ let add_user =
   in
   let cli_analytic = Analytics.generate_cli_metric ~command:"add-user" in
   let f username email ligo_registry ligorc_path skip_analytics () =
-    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    Cli_helpers.return_with_custom_formatter
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic ]
+      ~return
     @@ fun () ->
-    let ( let* ) = Caml.Result.bind in
+    let ( let* ) v f = Result.bind v ~f in
     let* username =
       prompt_and_env_fallback
         ~fallback_env_var:"LIGO_USERNAME"
@@ -3313,9 +3454,12 @@ let login =
   in
   let cli_analytic = Analytics.generate_cli_metric ~command:"login" in
   let f username ligo_registry ligorc_path skip_analytics () =
-    return_with_custom_formatter ~skip_analytics ~cli_analytics:[ cli_analytic ] ~return
+    Cli_helpers.return_with_custom_formatter
+      ~skip_analytics
+      ~cli_analytics:[ cli_analytic ]
+      ~return
     @@ fun () ->
-    let ( let* ) = Caml.Result.bind in
+    let ( let* ) v f = Result.bind v ~f in
     let* username =
       prompt_and_env_fallback
         ~fallback_env_var:"LIGO_USERNAME"
@@ -3353,17 +3497,80 @@ module Lsp_server = struct
   module Requests = Ligo_lsp.Server.Requests
   module Server = Ligo_lsp.Server
 
-  let run ?(log_requests = true) capability_mode () =
+  (** Edits the LSP runtime metrics values and pushes them to the Prometheus aggregator. *)
+  let generate_lsp_runtime_analytics
+      (runtime_analytics : Server.runtime_analytics)
+      ~(session_id : Uuid.t)
+      ~(skip_analytics : bool)
+      : unit Lwt.t
+    =
+    let metrics =
+      let { Server.number_of_crashes_on_keystrokes; methods_times = _ } =
+        runtime_analytics
+      in
+      Analytics.generate_lsp_number_of_crashes
+        ~session_id
+        ~number_of_crashes_on_keystrokes
+        ()
+    in
+    Analytics.edit_metrics_values metrics;
+    Analytics.push_collected_metrics ~skip_analytics
+
+
+  let run
+      ?(log_requests : bool = true)
+      (capability_mode : Server.capability_mode)
+      ~(skip_analytics : bool)
+      ()
+    =
+    Analytics.set_is_running_lsp true;
+    let session_id = Uuid.create_random Random.State.default in
     let run_lsp () =
-      let s = new Server.lsp_server capability_mode in
+      let methods_times = Hashtbl.create (module String) in
+      let runtime_analytics =
+        ref { Server.number_of_crashes_on_keystrokes = 0; methods_times }
+      in
+      let s =
+        new Server.lsp_server
+          capability_mode
+          runtime_analytics
+          ~session_id
+          ~skip_analytics
+      in
       let server = Linol_lwt.Jsonrpc2.create_stdio (s :> Linol_lwt.Jsonrpc2.server) in
-      let shutdown () = Caml.(s#get_status = `ReceivedExit) in
+      let shutdown () = Poly.(s#get_status = `ReceivedExit) in
       let task = Linol_lwt.Jsonrpc2.run ~shutdown server in
-      match Linol_lwt.run task with
-      | () -> Ok ("", "")
-      | exception e ->
-        let e = Caml.Printexc.to_string e in
-        Error ("", e)
+      let analytics_job =
+        match capability_mode with
+        | Only_semantic_tokens -> Lwt.return_unit
+        | All_capabilities | No_semantic_tokens ->
+          Analytics.push_collected_metrics_scheduled
+            ~skip_analytics
+            ~time_between_pushes:(Time_float.Span.of_min 5.)
+            ~should_stop:shutdown
+            ~collect_metrics:(fun () ->
+              let metrics =
+                Hashtbl.fold methods_times ~init:[] ~f:(fun ~key:name ~data:times acc ->
+                    Analytics.generate_lsp_method_time ~session_id ~name ~times () @ acc)
+              in
+              Analytics.edit_metrics_values metrics;
+              Hashtbl.clear methods_times)
+      in
+      let result =
+        match Linol_lwt.run (Lwt.join [ task; analytics_job ]) with
+        | () -> Ok ("", "")
+        | exception e ->
+          let e = Exn.to_string e in
+          Error ("", e)
+      in
+      (* The LSP client doesn't always send the shutdown/exit methods, so we handle these
+         analytics that should be sent at the end of the execution here. *)
+      (match capability_mode with
+      | Only_semantic_tokens -> ()
+      | All_capabilities | No_semantic_tokens ->
+        Lwt_main.run
+        @@ generate_lsp_runtime_analytics !runtime_analytics ~session_id ~skip_analytics);
+      result
     in
     let with_request_logging f () =
       let reporter ppf =
@@ -3390,21 +3597,13 @@ module Lsp_server = struct
       Out_channel.with_file ~append:true log_file ~f:(fun outc ->
           Logs.set_reporter (reporter @@ Format.formatter_of_out_channel outc);
           (* Disable logs for anything that is not linol, as it causes crashes. *)
+          Logs.set_level ~all:true None;
           List.iter (Logs.Src.list ()) ~f:(fun src ->
               match Logs.Src.name src with
               | "linol" -> Logs.Src.set_level src (Some Logs.Debug)
-              | _ -> Logs.Src.set_level src None);
-          Logs.set_level (Some Logs.Debug);
-          let s = new Server.lsp_server capability_mode in
-          let server = Linol_lwt.Jsonrpc2.create_stdio (s :> Linol_lwt.Jsonrpc2.server) in
-          let shutdown () = Caml.(s#get_status = `ReceivedExit) in
-          let task = Linol_lwt.Jsonrpc2.run ~shutdown server in
+              | _ -> ());
           Format.eprintf "For LIGO language server logs, see %s\n%!" log_file;
-          match Linol_lwt.run task with
-          | () -> Ok ("", "")
-          | exception e ->
-            let e = Caml.Printexc.to_string e in
-            Error ("", e))
+          f ())
     in
     if log_requests then with_request_logging run_lsp () else run_lsp ()
 end
@@ -3426,19 +3625,28 @@ let capability_mode =
 let lsp =
   let summary = "[BETA] launch a LIGO lsp server" in
   let readme () = "[BETA] Run the lsp server which is used by editor extensions" in
-  let f disable_logging capability_mode () =
+  let f disable_logging capability_mode skip_analytics () =
     let log_requests = not disable_logging in
-    return_with_custom_formatter ~skip_analytics:true ~cli_analytics:[] ~return
-    @@ Lsp_server.run ~log_requests capability_mode
+    Cli_helpers.return_with_custom_formatter
+      ~skip_analytics:true
+      ~cli_analytics:[]
+      ~return
+    @@ Lsp_server.run ~log_requests capability_mode ~skip_analytics
   in
-  Command.basic ~summary ~readme (f <$> disable_lsp_request_logging <*> capability_mode)
+  Command.basic
+    ~summary
+    ~readme
+    (f <$> disable_lsp_request_logging <*> capability_mode <*> skip_analytics)
 
 
 let analytics_accept =
   let summary = "Accept analytics term" in
   let readme () = "Accept analytics term and store result in term_acceptance file" in
   let f () =
-    return_with_custom_formatter ~skip_analytics:true ~cli_analytics:[] ~return
+    Cli_helpers.return_with_custom_formatter
+      ~skip_analytics:true
+      ~cli_analytics:[]
+      ~return
     @@ fun () -> Analytics.update_term_acceptance "accepted"
   in
   Command.basic ~summary ~readme (Command.Param.return f)
@@ -3448,7 +3656,10 @@ let analytics_deny =
   let summary = "Refuse analytics term" in
   let readme () = "Refuse analytics term and store result in term_acceptance file" in
   let f () =
-    return_with_custom_formatter ~skip_analytics:true ~cli_analytics:[] ~return
+    Cli_helpers.return_with_custom_formatter
+      ~skip_analytics:true
+      ~cli_analytics:[]
+      ~return
     @@ fun () -> Analytics.update_term_acceptance "denied"
   in
   Command.basic ~summary ~readme (Command.Param.return f)
@@ -3467,19 +3678,19 @@ let doc =
       doc_args
       syntax
       skip_analytics
-      protocol_version
+      ((* DEPRECATED: protocol_version *) () as _protocol_version)
       type_doc
       mdx
       ()
     =
-    let raw_options = Raw_options.make ~syntax ~protocol_version () in
+    let raw_options = Raw_options.make ~syntax () in
     let cli_analytics =
       Analytics.generate_cli_metrics_with_syntax_and_protocol
         ~command:"doc"
         ~raw_options
         ()
     in
-    return_with_custom_formatter ~skip_analytics ~cli_analytics ~return
+    Cli_helpers.return_with_custom_formatter ~skip_analytics ~cli_analytics ~return
     @@ Ligo_docs.Doc.doc ~mdx ~type_doc ?output_directory raw_options directory doc_args
   in
   let summary = "[BETA] Generate a documentation for your project" in
@@ -3525,16 +3736,9 @@ let main =
 
 let run ?argv () =
   Printexc.record_backtrace true;
-  let build_info =
-    Format.sprintf
-      "Protocol built-in: %s"
-      Environment.Protocols.(variant_to_string in_use)
-  in
-  Command_unix.run ~build_info ~version:Version.version ?argv main;
+  Command_unix.run ~version:Version.version ?argv main;
   (* Effect to error code *)
   match !return with
   | Done -> 0
   | Compileur_Error -> 1
-  | Exception exn ->
-    ignore is_dev;
-    raise exn
+  | Exception exn -> raise exn

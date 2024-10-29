@@ -11,5 +11,5 @@ These examples demonstrate features of LIGO and act as a supplementary material 
 
 ## Running examples
 
-1. Run `npx ganache-cli --flavor tezos --seed alice` in the background.
+1. Run `npx ganache-cli --flavor mavryk --seed alice` in the background.
 2. Use `truffle migrate` to originate the contracts and `npm run test` to run the tests.

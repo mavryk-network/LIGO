@@ -22,7 +22,7 @@
       "source": {
         "type": "install",
         "source": [
-          "archive:https://packages.ligolang.org/-/api/@ligo/bigarray/-/@ligo/bigarray-1.0.0.tgz#sha1:b41eda30818d519b8c142fddffff55cdf37a1500"
+          "archive:https://packages.ligo.mavryk.org/-/api/@ligo/bigarray/-/@ligo/bigarray-1.0.0.tgz#sha1:b41eda30818d519b8c142fddffff55cdf37a1500"
         ]
       },
       "overrides": [],

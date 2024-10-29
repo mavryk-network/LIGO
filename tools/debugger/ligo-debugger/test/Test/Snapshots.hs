@@ -624,7 +624,7 @@ test_Snapshots = testGroup "Snapshots collection"
               , Range (LigoPosition 9 5) (LigoPosition 9 14) file2
               ]
             )
-          ++ [Range (LigoPosition 12 3) (LigoPosition 12 46) file2]
+          ++ [Range (LigoPosition 12 3) (LigoPosition 12 19) file2]
 
   , testCaseSteps "Execution history is lazy" \step -> do
       let file = contractsDir </> "infinite_contract.mligo"
@@ -1503,7 +1503,7 @@ test_Snapshots = testGroup "Snapshots collection"
               } | typ == intType -> pass
             snap -> unexpectedSnapshot snap
 
-    , testCaseSteps "Types from Tezos" \step -> do
+    , testCaseSteps "Types from Mavryk" \step -> do
         let file = contractsDir </> "mavryk-types.mligo"
         let runData = ContractRunData
               { crdProgram = file
@@ -1513,7 +1513,7 @@ test_Snapshots = testGroup "Snapshots collection"
               }
 
         testWithSnapshots runData do
-          let tezType = LigoTypeResolved (mkSimpleConstantType "Tez")
+          let mavType = LigoTypeResolved (mkSimpleConstantType "Mav")
           let timestampType = LigoTypeResolved (mkSimpleConstantType "Timestamp")
           let addressType = LigoTypeResolved (mkSimpleConstantType "Address")
           let saplingFooType = LigoTypeResolved
@@ -1525,7 +1525,7 @@ test_Snapshots = testGroup "Snapshots collection"
           void $ moveTill Forward
             $ isAtLine 8
 
-          liftIO $ step "Check types from Tezos module"
+          liftIO $ step "Check types from Mavryk module"
           checkSnapshot \case
             InterpretSnapshot
               { isStackFrames = StackFrame
@@ -1555,7 +1555,7 @@ test_Snapshots = testGroup "Snapshots collection"
               } | typ1 == saplingFooType
                 , typ2 == addressType
                 , typ3 == timestampType
-                , typ4 == tezType -> pass
+                , typ4 == mavType -> pass
             snap -> unexpectedSnapshot snap
 
     , testCaseSteps "Layout comb types" \step -> do

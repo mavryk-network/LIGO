@@ -1,5 +1,5 @@
 const AdvancedCounter = artifacts.require('AdvancedCounter')
-const taquito = require('@taquito/taquito')
+const taquito = require('@mavrykdynamics/taquito')
 
 contract('AdvancedCounter', () => {
     let instance = null

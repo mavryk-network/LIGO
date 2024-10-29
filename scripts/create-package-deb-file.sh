@@ -28,7 +28,7 @@ Priority: optional
 Architecture: amd64
 Maintainer: mavrykdynamics info@mavryk.io
 Description: ligo
-  A friendly Smart Contract Language for Tezos
+  A friendly Smart Contract Language for Mavryk
 EOF
 
 # Generate working directory

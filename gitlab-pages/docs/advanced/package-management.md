@@ -47,12 +47,12 @@ by simply placing a manifest file, `ligo.json` over there.
 
 ## LIGO registry
 
-The [LIGO registry](https://packages.ligolang.org/) is used to host LIGO packages. The LIGO registry contains the contracts/libraries along with their metadata. The packages which reside on the LIGO registry can be installed using the `ligo install` command.
+The [LIGO registry](https://packages.ligo.mavryk.org/) is used to host LIGO packages. The LIGO registry contains the contracts/libraries along with their metadata. The packages which reside on the LIGO registry can be installed using the `ligo install` command.
 
 ## Consuming
 
 To fetch (download) & maintain different versions of external libraries we need a package manager.
-LIGO libraries can be published to the [LIGO registry](https://packages.ligolang.org/) as well as [npm](https://www.npmjs.com/).
+LIGO libraries can be published to the [LIGO registry](https://packages.ligo.mavryk.org/) as well as [npm](https://www.npmjs.com/).
 Using `ligo install` command we can fetch these ligo libraries.
 
 Note:
@@ -132,13 +132,13 @@ let test =
 #include "main.jsligo"
 
 const test = (() => {
-    let storage = Test.compile_value(list([1, 2, 3]));
+    let storage = Test.compile_value([1, 2, 3]);
     let [addr, _, _] = Test.originate_from_file("./main.jsligo",
-    "main", (list([]) as list<string>), storage, 0mav);
+    "main", ([] as list<string>), storage, 0mav);
     let taddr : typed_address<parameter, storage> = Test.cast_address(addr);
     let contr : contract<parameter> = Test.to_contract(taddr);
     Test.transfer_to_contract_exn(contr, Reverse(), 1mumav);
-    assert (Test.get_storage(taddr) == list([3, 2, 1]))
+    assert (Test.get_storage(taddr) == [3, 2, 1])
 })();
 
 ```
@@ -165,7 +165,7 @@ $ ligo compile contract main.jsligo
 
 This will find the dependencies installed on the local machine, and compile the `main.mligo` file.
 
-To test the contract using LIGO's [testing framework](../advanced/testing.md) run the command
+To test the contract using LIGO's [testing framework](../testing/testing.md) run the command
 
 <Syntax syntax="cameligo">
 
@@ -253,7 +253,7 @@ Included directives:
   #import "file_path" "module_name";;
 In  [1]: #import "@ligo/bigarray/lib/bigarray.mligo" "BA";;
 Out [1]: Done.
-In  [2]: BA.concat (list([1, 2, 3]))(list([4, 5, 6]));;
+In  [2]: BA.concat ([1, 2, 3])([4, 5, 6]);;
 Out [2]: CONS(1 , CONS(2 , CONS(3 , CONS(4 , CONS(5 , CONS(6 , LIST_EMPTY()))))))
 In  [3]:
 ```
@@ -358,13 +358,13 @@ let reverse (type a) (xs : a list) : a list =
 /* LIGO library for working with lists */
 
 export const concat = <T>(xs : list<T>, ys : list<T>) : list<T> => {
-    let f = ([x, ys] : [T, list<T>]) : list<T> => list([x, ...ys]);
+    let f = ([x, ys] : [T, list<T>]) : list<T> => [x, ...ys];
     return List.fold_right(f, xs, ys)
 }
 
 export const reverse = <T>(xs : list<T>) : list<T> => {
-    let f = ([ys, x] : [list<T>, T]) : list<T> => list([x, ...ys]);
-    return List.fold_left(f, (list([]) as list<T>), xs)
+    let f = ([ys, x] : [list<T>, T]) : list<T> => [x, ...ys];
+    return List.fold_left(f, [], xs)
 }
 
 ```
@@ -399,15 +399,15 @@ let test_reverse =
 #include "list.jsligo"
 
 const test_concat = (() => {
-    let xs = list([1, 2, 3]);
-    let ys = list([4, 5, 6]);
+    let xs : list<int> = [1, 2, 3];
+    let ys : list<int> = [4, 5, 6];
     let zs = concat(xs, ys);
-    assert (zs == list([1, 2, 3, 4, 5, 6]))
+    assert (zs == [1, 2, 3, 4, 5, 6])
 })();
 
 const test_reverse = (() => {
-    let xs = list([1, 2, 3]);
-    assert (reverse(xs) == list([3, 2, 1]))
+    let xs : list<int> = [1, 2, 3];
+    assert (reverse(xs) == [3, 2, 1])
 })();
 
 ```
@@ -455,7 +455,7 @@ This would create a `.ligorc` in the home directory.
 ### Publishing
 
 LIGO packages can be published to a central repository at
-[`packages.ligolang.org`](https://packages.ligolang.org/) with the `ligo publish` command.
+[`packages.ligo.mavryk.org`](https://packages.ligo.mavryk.org/) with the `ligo publish` command.
 
 ```bash
 $ ligo publish

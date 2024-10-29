@@ -2,7 +2,7 @@
  * This contract was made only for testing `Mavryk.open_chest` in LIGO,
  * and it should not be used.
  * Check
- *   https://gitlab.com/tezos/tezos/-/blob/master/src/proto_alpha/lib_protocol/contracts/timelock_flip.mv
+ *   https://gitlab.com/mavos/mavos/-/blob/master/src/proto_alpha/lib_protocol/contracts/timelock_flip.mv
  *)
 
 module C = struct

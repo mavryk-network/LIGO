@@ -1,13 +1,13 @@
+open Core
 open Ligo_prim
-module Row = Ast_typed.Row
-open Simple_utils
-open Trace
 open Errors
+module Row = Ast_typed.Row
+module Trace = Simple_utils.Trace
 
 (**
-  check_view_type checks against michelson restriction (usually defined in tezos/src/proto_alpha/lib_protocol/script_ir_translator.ml)
+  check_view_type checks against michelson restriction (usually defined in mavryk/src/proto_alpha/lib_protocol/script_ir_translator.ml)
 **)
-let check_view_type ~raise
+let check_view_type ~(raise : _ Trace.raise)
     :  err_data:Module_var.t * Ast_typed.type_expression Binder.t
     -> Ast_typed.contract_sig -> Ast_typed.type_expression -> unit
   =
@@ -28,7 +28,7 @@ let check_view_type ~raise
     | `Bad -> raise.error @@ bad_view_storage main_name c_storage view_loc
   in
   let () =
-    trace_option
+    Trace.trace_option
       ~raise
       (storage_view_contract
          view_loc
@@ -42,18 +42,20 @@ let check_view_type ~raise
     let self = type_check err in
     match t.type_content with
     | T_variable _ -> ()
+    | T_exists _ -> ()
     | T_constant { injection = Big_map; _ }
     | T_constant { injection = Sapling_state; _ }
     | T_constant { injection = Operation; _ }
     | T_constant { injection = Ticket; _ } -> raise.error err
     | T_constant x -> List.iter ~f:self x.parameters
-    | T_sum (row, _) | T_record row -> Row.iter self row
+    | T_sum row | T_record row -> Row.iter self row
     | T_arrow _ ->
       (* lambdas are always OK *)
       ()
     | T_singleton _ -> ()
     | T_abstraction x -> self x.type_
     | T_for_all x -> self x.type_
+    | T_union _ -> failwith "Union types should have been removed in a earlier pass!"
   in
   let () = type_check (type_view_io_out view_loc return) return in
   let () = type_check (type_view_io_in view_loc arg) arg in

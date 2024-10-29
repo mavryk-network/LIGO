@@ -1,9 +1,15 @@
-open Simple_utils.Utils
-module List = Simple_utils.List
+open Core
 open Unification_shared.Helpers
-module Option = Simple_utils.Option
+module Utils = Simple_utils.Utils
+module Ligo_option = Simple_utils.Ligo_option
+module Ligo_string = Simple_utils.Ligo_string
+module Ne_list = Simple_utils.Ne_list
 module O = Ast_unified
 module I = Cst.Jsligo
+
+(* Utilities *)
+
+let ( <@ ) f g x = f (g x)
 
 (* Generics *)
 
@@ -21,23 +27,23 @@ let split_for_all_opt = function
 
 let ghost : string I.wrap = I.Wrap.ghost ""
 
-let sep_or_term_to_nelist : ('a, 'b) Utils.sep_or_term -> 'a List.Ne.t option =
+let sep_or_term_to_nelist : ('a, 'b) Utils.sep_or_term -> 'a Nonempty_list.t option =
   Option.map ~f:(function
-      | `Sep x -> nsepseq_to_nseq x
-      | `Term x -> nseq_map fst x)
+      | `Sep x -> Utils.nsepseq_to_ne_list x
+      | `Term x -> Nonempty_list.map ~f:fst x)
 
 
-let nsep_or_term_to_nelist : ('a, 'b) Utils.nsep_or_term -> 'a List.Ne.t = function
-  | `Sep x -> nsepseq_to_nseq x
-  | `Term x -> nseq_map fst x
+let nsep_or_term_to_nelist : ('a, 'b) Utils.nsep_or_term -> 'a Ne_list.t = function
+  | `Sep x -> Utils.nsepseq_to_ne_list x
+  | `Term x -> Nonempty_list.map ~f:fst x
 
 
 let nsep_or_term_hd : ('a, 'b) Utils.nsep_or_term -> 'a * ('a, 'b) Utils.sep_or_term
   = function
   | `Sep (a, []) -> a, None
   | `Sep (a, (b, a_) :: tl) -> a, Some (`Sep (a_, tl))
-  | `Term ((a, s), []) -> a, None
-  | `Term ((a, s), (a_, b) :: tl) -> a, Some (`Term ((a_, b), tl))
+  | `Term [ (a, s) ] -> a, None
+  | `Term ((a, s) :: (a_, b) :: tl) -> a, Some (`Term ((a_, b) :: tl))
 
 
 module TODO_do_in_parsing = struct
@@ -73,10 +79,10 @@ module TODO_do_in_parsing = struct
     =
     (* if the statement is a block containing a single instruction,
        we do not want to emit a ClauseBlock, but a ClauseInstr *)
-    let single_stmt_block (x : I.statement) = List.Ne.singleton @@ (x, None) in
+    let single_stmt_block (x : I.statement) = Nonempty_list.singleton (x, None) in
     match Location.unwrap @@ compile_statement x with
     | O.S_instr (I.S_Block { value = { inside; _ }; _ }) ->
-      (match nseq_to_list inside with
+      (match Nonempty_list.to_list inside with
       | [ (one, _) ] ->
         (match Location.unwrap @@ compile_statement one with
         | S_instr i -> O.Test_clause.ClauseInstr i
@@ -107,11 +113,11 @@ module TODO_do_in_parsing = struct
 
   let selection_path (t : I.namespace_selection) =
     match t with
-    | M_Alias p -> List.Ne.singleton p
+    | M_Alias p -> Nonempty_list.singleton p
     | M_Path path ->
       let I.{ namespace_path; property = last; _ } = path.value in
-      let init = nsepseq_to_list namespace_path in
-      List.Ne.of_list (init @ [ last ])
+      let init = Utils.nsepseq_to_ne_list namespace_path in
+      Ne_list.append init (Nonempty_list.singleton last)
 
 
   let compile_rows = O.Non_linear_rows.make
@@ -153,16 +159,16 @@ let rec expr : Eq.expr -> Folding.expr =
   in
   let compile_function (type_vars : I.generics option) parameters rhs_type fun_body =
     let type_params =
-      let open Simple_utils.Option in
+      let open Ligo_option in
       let* type_vars in
       let* tvs = sep_or_term_to_nelist type_vars.value.inside in
-      return (List.Ne.map TODO_do_in_parsing.esc_tvar tvs)
+      Option.return (Nonempty_list.map ~f:TODO_do_in_parsing.esc_tvar tvs)
     in
     let parameters =
       match parameters with
       | I.ParParams x ->
         x.value.inside
-        |> sep_or_term_to_list
+        |> Utils.sep_or_term_to_list
         |> List.map ~f:TODO_do_in_parsing.pattern_to_param
       | NakedParam x -> [ TODO_do_in_parsing.pattern_to_param x ]
     in
@@ -188,9 +194,9 @@ let rec expr : Eq.expr -> Folding.expr =
     let _lexeme, b = b#payload in
     return @@ E_literal (Literal_bytes (Hex.to_bytes b))
   | E_String str ->
-    return @@ E_literal (Literal_string (Simple_utils.Ligo_string.Standard str#payload))
+    return @@ E_literal (Literal_string (Ligo_string.Standard str#payload))
   | E_Verbatim str ->
-    return @@ E_literal (Literal_string (Simple_utils.Ligo_string.Verbatim str#payload))
+    return @@ E_literal (Literal_string (Ligo_string.Verbatim str#payload))
   | E_Add plus -> return @@ compile_bin_op PLUS plus
   | E_Sub minus -> return @@ compile_bin_op MINUS minus
   | E_Mult times -> return @@ compile_bin_op STAR times
@@ -208,28 +214,19 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_Equal eq -> return @@ compile_bin_op DEQ eq
   | E_Neq ne -> return @@ compile_bin_op EQ_SLASH_EQ ne
   | E_App { value = expr, args; _ } ->
-    let args = sepseq_to_list args.value.inside in
+    let args = Utils.sepseq_to_list args.value.inside in
     return @@ E_call (expr, Location.wrap ~loc @@ args)
   | E_CtorApp (Variant { value = { attributes = _; tuple }; region = _ }) ->
     return
     @@
     (match tuple with
-    | _sharp, ZeroArg ctor -> E_ctor_app (ctor_app_kind_to_expr ctor, None)
-    | _sharp, MultArg (ctor, args) ->
+    | ZeroArg ctor -> E_ctor_app (ctor_app_kind_to_expr ctor, None)
+    | MultArg (ctor, args) ->
       let args = nsep_or_term_to_nelist args.value.inside in
       E_ctor_app (ctor_app_kind_to_expr ctor, Some args))
-  | E_CtorApp (Bracketed { value = { attributes = _; sharp = _; tuple }; region = _ }) ->
-    let ({ ctor; args } : I.expr I.bracketed_variant_args) = tuple.value.inside in
-    return
-    @@
-    (match args with
-    | None -> E_ctor_app (ctor, None)
-    | Some (_comma, args) ->
-      let args = sep_or_term_to_nelist args in
-      E_ctor_app (ctor, args))
   | E_CtorApp (Legacy { value = { attributes = _; tuple }; region = _ }) ->
     let ({ ctor; args } : I.expr I.legacy_variant_args) = tuple.value.inside in
-    let args = List.Ne.of_list_opt @@ List.map ~f:snd args in
+    let args = Ne_list.of_list_opt @@ List.map ~f:snd args in
     return @@ E_ctor_app (E_String ctor, args)
   | E_Array { value = items; _ } ->
     let items =
@@ -238,7 +235,7 @@ let rec expr : Eq.expr -> Folding.expr =
         | Some _, e -> Rest_entry e
       in
       Option.value_map items.inside ~default:[] ~f:(fun lst ->
-          List.map ~f:translate_array_item (nsep_or_term_to_list lst))
+          List.map ~f:translate_array_item (Utils.nsep_or_term_to_list lst))
     in
     return @@ E_array items
   | E_Object { value; _ } ->
@@ -257,7 +254,7 @@ let rec expr : Eq.expr -> Folding.expr =
         ~loc
         O.Object_.{ field_id; field_rhs = Option.map ~f:snd property_rhs }
     in
-    return @@ E_object (List.map ~f (sep_or_term_to_list value.inside))
+    return @@ E_object (List.map ~f (Utils.sep_or_term_to_list value.inside))
   | E_Update { value = { inside; _ }; _ } ->
     let I.{ _object; updates; _ } = inside in
     let f x =
@@ -275,7 +272,7 @@ let rec expr : Eq.expr -> Folding.expr =
         ~loc
         O.Object_.{ field_id; field_rhs = Option.map ~f:snd property_rhs }
     in
-    let updates = List.map ~f (sep_or_term_to_list updates) in
+    let updates = List.map ~f (Utils.sep_or_term_to_list updates) in
     return @@ E_object_update { object_ = _object; updates }
   | E_Proj { value = { object_or_array; property_path }; _ } ->
     let f : I.selection -> _ O.Selection.t = function
@@ -286,12 +283,12 @@ let rec expr : Eq.expr -> Folding.expr =
         let comp = (r_fst comp).inside#payload in
         Component_num comp
     in
-    let property_path = nseq_map f property_path in
-    return @@ E_proj (object_or_array, nseq_to_list @@ property_path)
+    let property_path = Nonempty_list.map ~f property_path in
+    return @@ E_proj (object_or_array, Nonempty_list.to_list property_path)
   | E_NamePath { value = { namespace_path; property; _ }; _ } ->
     let property_as_open = TODO_do_in_parsing.is_open property in
     let namespace_path =
-      nsepseq_to_nseq @@ nsepseq_map TODO_do_in_parsing.mvar namespace_path
+      Utils.nsepseq_to_ne_list @@ Utils.nsepseq_map TODO_do_in_parsing.mvar namespace_path
     in
     return
     @@ E_module_open_in
@@ -311,7 +308,7 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_CodeInj { value = { language; code; _ }; _ } ->
     let language = w_fst language in
     return @@ E_raw_code { language; code }
-  (* | E_Seq seq -> return @@ E_sequence (nsepseq_to_list seq.value) *)
+  (* | E_Seq seq -> return @@ E_sequence (Utils.nsepseq_to_list seq.value) *)
   | E_Assign { value = { arg1; op; arg2 }; _ } ->
     let loc =
       Location.lift @@ Region.cover (I.expr_to_region arg1) (I.expr_to_region arg2)
@@ -384,7 +381,7 @@ let rec expr : Eq.expr -> Folding.expr =
   | E_ContractOf
       { value = { namespace_path = { value = { inside = selection; _ }; _ }; _ }; _ } ->
     let selection = TODO_do_in_parsing.selection_path selection in
-    let lst = List.Ne.map TODO_do_in_parsing.mvar selection in
+    let lst = Nonempty_list.map ~f:TODO_do_in_parsing.mvar selection in
     return @@ E_contract lst
   | E_PreIncr { region = _; value = { op; arg = expr } } ->
     let loc = Location.lift op#region in
@@ -404,6 +401,10 @@ let rec expr : Eq.expr -> Folding.expr =
     return @@ E_postfix { post_op; expr }
   | E_Nat n -> return @@ E_literal (Literal_nat (snd n#payload))
   | E_Mumav m -> return @@ E_literal (Literal_mumav (Z.of_int64 (snd m#payload)))
+  | E_Mav m ->
+    let mumav_bigint = Q.(to_bigint (mul (of_int 1_000_000) (snd m#payload))) in
+    let mumav_int64 = Z.to_int64 mumav_bigint in
+    return @@ E_literal (Literal_mumav (Z.of_int64 mumav_int64))
   | E_BitAnd bitand -> return @@ compile_bin_op WORD_LAND bitand
   | E_BitNeg bitneg -> return @@ compile_unary_op WORD_NOT bitneg
   | E_BitOr bitor -> return @@ compile_bin_op WORD_LOR bitor
@@ -421,7 +422,7 @@ let rec expr : Eq.expr -> Folding.expr =
     let match_clauses =
       match clauses.value.inside with
       | AllClauses (clauses, default_expr) ->
-        let clauses = List.Ne.map aux clauses in
+        let clauses = Nonempty_list.map ~f:aux clauses in
         let default_opt = Option.map ~f:(fun x -> x.value.default_expr) default_expr in
         O.Match_tc39.AllClauses (clauses, default_opt)
       | DefaultClause { value; _ } -> O.Match_tc39.DefaultClause value.default_expr
@@ -450,20 +451,20 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
   | T_ForAll { value = generics, t; _ } ->
     let ty_binders =
       List.map ~f:TODO_do_in_parsing.esc_tvar
-      @@ sep_or_term_to_list (r_fst generics).inside
+      @@ Utils.sep_or_term_to_list (r_fst generics).inside
     and kind = Ligo_prim.Kind.Type
     and type_ = t in
     return @@ O.T_for_alls { ty_binders; kind; type_ }
   | T_Attr (attr, t) -> return @@ O.T_attr (TODO_do_in_parsing.conv_attr attr, t)
   | T_Array { value = { inside; _ }; _ } ->
-    let t = List.Ne.of_list @@ nsep_or_term_to_list inside in
+    let t = Utils.nsep_or_term_to_ne_list inside in
     return @@ T_prod t
-  | T_Variant { value = variants; region } ->
-    let variants = nsep_or_pref_to_list variants in
+  | T_Sum { value = variants; region } ->
+    let variants = Utils.nsep_or_pref_to_list variants in
     let destruct : I.type_expr I.variant_kind -> _ = function
       | Variant { value = { tuple; attributes }; region = _ } ->
         let ctor, ctor_params =
-          match snd tuple with
+          match tuple with
           | I.ZeroArg ctor -> ctor, None
           | MultArg (ctor, args) ->
             let args = nsep_or_term_to_nelist args.value.inside in
@@ -474,40 +475,15 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
           | CtorStr s -> s
           | CtorName s -> s
         in
-        let ctor_params : (I.type_expr, I.comma) nsep_or_term option =
-          Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params
+        let ctor_params : (I.type_expr, I.comma) Utils.nsep_or_term option =
+          Option.map
+            ~f:(fun x -> `Sep (Utils.nsepseq_of_ne_list ~sep:ghost x))
+            ctor_params
         in
         let ty =
           match ctor_params with
           | None -> None
-          | Some (`Sep (t, []) | `Term ((t, _), _)) -> Some t
-          | Some ctor_params ->
-            let inside : I.array_type =
-              Region.wrap_ghost
-              @@ I.{ lbracket = ghost; inside = ctor_params; rbracket = ghost }
-            in
-            Some (I.T_Array inside)
-        in
-        TODO_do_in_parsing.labelize ctor, ty, TODO_do_in_parsing.conv_attrs attributes
-      | Bracketed { value = { tuple; sharp; attributes }; region = _ } ->
-        let ({ ctor; args } : I.type_expr I.bracketed_variant_args) =
-          tuple.value.inside
-        in
-        let ctor =
-          match ctor with
-          | T_String s -> s
-          | _ -> failwith "Expected string from parser."
-        in
-        let ctor_params =
-          Option.value_map ~default:None ~f:(sep_or_term_to_nelist <@ snd) args
-        in
-        let ctor_params : (I.type_expr, I.comma) nsep_or_term option =
-          Option.map ~f:(fun x -> `Sep (nsepseq_of_nseq ~sep:ghost x)) ctor_params
-        in
-        let ty =
-          match ctor_params with
-          | None -> None
-          | Some (`Sep (t, []) | `Term ((t, _), _)) -> Some t
+          | Some (`Sep (t, []) | `Term ((t, _) :: _)) -> Some t
           | Some ctor_params ->
             let inside : I.array_type =
               Region.wrap_ghost
@@ -519,12 +495,12 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
       | Legacy { value = { attributes; tuple }; region } ->
         let ({ ctor; args } : I.type_expr I.legacy_variant_args) = tuple.value.inside in
         let ctor_params =
-          args |> List.map ~f:(fun (x, y) -> y, x) |> List.Ne.of_list_opt
+          args |> List.map ~f:(fun (x, y) -> y, x) |> Ne_list.of_list_opt
         in
         let ty =
           match ctor_params with
           | None -> None
-          | Some ((t, _), []) -> Some t
+          | Some [ (t, _) ] -> Some t
           | Some ctor_params ->
             let inside : I.array_type =
               { value =
@@ -537,7 +513,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
         TODO_do_in_parsing.labelize ctor, ty, TODO_do_in_parsing.conv_attrs attributes
     in
     let variants = variants |> List.map ~f:destruct |> TODO_do_in_parsing.compile_rows in
-    return @@ T_sum_raw (variants, None)
+    return @@ T_sum_raw variants
   | T_Object { value = { inside = ne_elements; _ }; region } ->
     let fields =
       let destruct (I.{ property_id; property_rhs; attributes } : _ I.property) =
@@ -550,14 +526,16 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
         let property_rhs = Option.map ~f:snd property_rhs in
         property_id, property_rhs, TODO_do_in_parsing.conv_attrs attributes
       in
-      let lst = List.map ~f:(destruct <@ r_fst) @@ sep_or_term_to_list ne_elements in
+      let lst =
+        List.map ~f:(destruct <@ r_fst) @@ Utils.sep_or_term_to_list ne_elements
+      in
       O.Non_linear_rows.make lst
     in
     return @@ T_record_raw fields
   | T_App t ->
     let constr, args = t.value in
     let args = args.value.inside in
-    let type_args = List.Ne.of_list @@ nsep_or_term_to_list args in
+    let type_args = Utils.nsep_or_term_to_ne_list args in
     return @@ T_app { constr; type_args }
   | T_Fun { value = fta, _, te2; _ } ->
     let fun_type_args =
@@ -572,7 +550,7 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
         let type_expr = snd type_expr in
         { name = (TODO_do_in_parsing.get_var name)#payload; type_expr }
       in
-      List.map ~f:compile_fun_type_arg (sep_or_term_to_list fta.value.inside)
+      List.map ~f:compile_fun_type_arg (Utils.sep_or_term_to_list fta.value.inside)
     in
     let type_expr = te2 in
     return @@ T_named_fun (fun_type_args, type_expr)
@@ -587,8 +565,8 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     let s, z = t#payload in
     return @@ T_nat (s, z)
   | T_NamePath { value = { namespace_path; property; _ }; _ } ->
-    let namespace_path = List.Ne.of_list @@ nsepseq_to_list namespace_path in
-    let module_path = List.Ne.map TODO_do_in_parsing.mvar namespace_path in
+    let namespace_path = Utils.nsepseq_to_ne_list namespace_path in
+    let module_path = Nonempty_list.map ~f:TODO_do_in_parsing.mvar namespace_path in
     let field_as_open, property =
       match TODO_do_in_parsing.field_as_open_t property with
       | Some t -> true, t
@@ -602,19 +580,11 @@ let rec ty_expr : Eq.ty_expr -> Folding.ty_expr =
     return @@ T_module_access { module_path; field; field_as_open }
   | T_ParameterOf { value = { namespace_path; _ }; region } ->
     let namespace_path = TODO_do_in_parsing.selection_path namespace_path in
-    let namespace_path = List.Ne.map TODO_do_in_parsing.mvar namespace_path in
+    let namespace_path = Nonempty_list.map ~f:TODO_do_in_parsing.mvar namespace_path in
     return @@ T_contract_parameter namespace_path
   | T_Union t ->
-    let fields =
-      let destruct_obj (x : I.type_expr I._object)
-          : unit * I.type_expr * O.Attribute.t list
-        =
-        (), I.T_Object x, []
-      in
-      let lst = List.map ~f:destruct_obj (nsep_or_pref_to_list t.value) in
-      O.Non_linear_disc_rows.make lst
-    in
-    Location.wrap ~loc @@ O.T_disc_union fields
+    let summands = Utils.nsep_or_pref_to_list t.value in
+    Location.wrap ~loc @@ O.T_union summands
 
 
 let pattern : Eq.pattern -> Folding.pattern =
@@ -625,27 +595,27 @@ let pattern : Eq.pattern -> Folding.pattern =
   | P_Attr (attr, p) -> return @@ O.P_attr (TODO_do_in_parsing.conv_attr attr, p)
   | P_CtorApp variant ->
     (match variant with
-    | Variant { value = { attributes = _; tuple = _, app }; _ } ->
+    | Variant { value = { attributes = _; tuple }; _ } ->
       let ctor, args =
-        match app with
+        match tuple with
         | ZeroArg ctor -> ctor, []
-        | MultArg (ctor, args) -> ctor, nsep_or_term_to_list args.value.inside
+        | MultArg (ctor, args) -> ctor, Utils.nsep_or_term_to_list args.value.inside
       in
       let ctor =
         match ctor with
         | CtorStr ctor -> ctor
         | CtorName ctor -> ctor
       in
-      return @@ P_ctor_app (P_String ctor, args)
-    | Bracketed { value = { attributes = _; sharp = _; tuple }; _ } ->
-      let ({ ctor; args } : I.pattern I.bracketed_variant_args) = tuple.value.inside in
-      let args = Option.value_map ~default:[] ~f:(sep_or_term_to_list <@ snd) args in
-      return @@ P_ctor_app (ctor, args)
+      return @@ P_ctor_app (P_String ctor :: args)
     | Legacy { value = { attributes = _; tuple }; _ } ->
       let ({ ctor; args } : I.pattern I.legacy_variant_args) = tuple.value.inside in
-      return @@ P_ctor_app (P_String ctor, List.map ~f:snd args))
+      return @@ P_ctor_app (P_String ctor :: List.map ~f:snd args))
   | P_NamePath { value = { namespace_path; property; _ }; _ } ->
-    let module_path = nseq_map TODO_do_in_parsing.mvar (nsepseq_to_nseq namespace_path) in
+    let module_path =
+      Nonempty_list.map
+        ~f:TODO_do_in_parsing.mvar
+        (Utils.nsepseq_to_ne_list namespace_path)
+    in
     return @@ P_mod_access { module_path; field = property; field_as_open = false }
   | P_False _ -> return @@ P_ctor (Ligo_prim.Label.of_string "False")
   | P_True _ -> return @@ P_ctor (Ligo_prim.Label.of_string "True")
@@ -654,11 +624,13 @@ let pattern : Eq.pattern -> Folding.pattern =
   | P_Int v -> return @@ P_literal (Literal_int (snd (w_fst v)))
   | P_Nat v -> return @@ P_literal (Literal_nat (snd (w_fst v)))
   | P_Mumav v -> return @@ P_literal (Literal_mumav (Z.of_int64 (snd (w_fst v))))
+  | P_Mav v ->
+    let mumav_bigint = Q.(to_bigint (mul (of_int 1_000_000) (snd (w_fst v)))) in
+    let mumav_int64 = Z.to_int64 mumav_bigint in
+    return @@ P_literal (Literal_mumav (Z.of_int64 mumav_int64))
   | P_Bytes v -> return @@ P_literal (Literal_bytes (Hex.to_bytes (snd (w_fst v))))
-  | P_String v ->
-    return @@ P_literal (Literal_string (Simple_utils.Ligo_string.standard (w_fst v)))
-  | P_Verbatim v ->
-    return @@ P_literal (Literal_string (Simple_utils.Ligo_string.verbatim (w_fst v)))
+  | P_String v -> return @@ P_literal (Literal_string (Ligo_string.standard (w_fst v)))
+  | P_Verbatim v -> return @@ P_literal (Literal_string (Ligo_string.verbatim (w_fst v)))
   | P_Typed { value = pattern, (_, ty); _ } -> return @@ P_typed (ty, pattern)
   | P_Object { value = { inside = p; _ }; _ } ->
     let p = Utils.sep_or_term_to_list p in
@@ -679,7 +651,7 @@ let pattern : Eq.pattern -> Folding.pattern =
     let lps = List.map ~f:compile_property_pattern p in
     return @@ P_pun_record lps
   | P_Array { value = { inside = p; _ }; _ } ->
-    let p = sep_or_term_to_list p in
+    let p = Utils.sep_or_term_to_list p in
     (match p with
     | lst ->
       let f (v : I.pattern I.element) =
@@ -690,15 +662,17 @@ let pattern : Eq.pattern -> Folding.pattern =
       return @@ P_tuple_with_ellipsis (List.map ~f p))
 
 
-(* in JSLIGO, instruction ; statements and declaration are all statement *)
+(* in JSLIGO, instruction ; statements and declaration are all statements *)
 
 let block : Eq.block -> Folding.block =
  fun statements ->
   let locs =
-    nseq_map (fun x -> Location.lift @@ I.statement_to_region @@ fst x) statements
+    Nonempty_list.map
+      ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x)
+      statements
   in
-  let loc = List.Ne.fold_right1 ~f:Location.cover locs in
-  let statements = nseq_map fst statements in
+  let loc = Ne_list.fold_right1 ~f:Location.cover locs in
+  let statements = Nonempty_list.map ~f:fst statements in
   Location.wrap ~loc statements
 
 
@@ -706,9 +680,11 @@ let block : Eq.block -> Folding.block =
 let mod_expr : Eq.mod_expr -> Folding.mod_expr =
  fun statements ->
   let locs =
-    nseq_map (fun x -> Location.lift @@ I.statement_to_region @@ fst x) statements
+    Nonempty_list.map
+      ~f:(fun x -> Location.lift @@ I.statement_to_region @@ fst x)
+      statements
   in
-  let loc = List.Ne.fold_right1 ~f:Location.cover locs in
+  let loc = Ne_list.fold_right1 ~f:Location.cover locs in
   Location.wrap ~loc (O.M_body I.{ statements; eof = ghost })
 
 
@@ -737,7 +713,7 @@ and instruction : Eq.instruction -> Folding.instruction =
  fun i ->
   let loc = Location.lift (I.statement_to_region i) in
   let return = Location.wrap ~loc in
-  let single_stmt_block (x : I.statement) = List.Ne.singleton @@ (x, None) in
+  let single_stmt_block (x : I.statement) = Nonempty_list.singleton @@ (x, None) in
   match i with
   | S_Continue _ -> return @@ O.I_continue
   | S_Block s -> return @@ O.I_block s.value.inside
@@ -756,8 +732,8 @@ and instruction : Eq.instruction -> Folding.instruction =
       match cases.value.inside with
       | AllCases (cases, default) ->
         let cases =
-          List.Ne.map
-            (fun case ->
+          Nonempty_list.map
+            ~f:(fun case ->
               let I.{ expr; case_body; _ } = case.Region.value in
               O.Switch.{ expr; case_body })
             cases
@@ -785,7 +761,7 @@ and instruction : Eq.instruction -> Folding.instruction =
   | S_For s ->
     let I.{ range; for_body; _ } = s.value in
     let I.{ initialiser; condition; afterthought; _ } = range.value.inside in
-    let afterthought = Option.map afterthought ~f:Utils.nsepseq_to_nseq in
+    let afterthought = Option.map afterthought ~f:Utils.nsepseq_to_ne_list in
     return @@ I_for_stmt { initialiser; condition; afterthought; statement = for_body }
   (* impossible, if triggered, look at functions 'statement' *)
   | S_Directive _ | S_Decl _ | S_Export _ | S_Attr _ -> assert false
@@ -804,10 +780,10 @@ and declaration : Eq.declaration -> Folding.declaration =
     let rhs_type = Option.map ~f:snd rhs_type in
     let generics, rhs_type = split_for_all_opt rhs_type in
     let type_params =
-      let open Simple_utils.Option in
+      let open Ligo_option in
       let* generics in
       let* tvs = sep_or_term_to_nelist (r_fst generics).inside in
-      return (List.Ne.map TODO_do_in_parsing.esc_tvar tvs)
+      Option.return (Nonempty_list.map ~f:TODO_do_in_parsing.esc_tvar tvs)
     in
     { type_params; pattern; rhs_type; let_rhs = rhs_expr }
   in
@@ -818,7 +794,7 @@ and declaration : Eq.declaration -> Folding.declaration =
       match namespace_type with
       | None -> O.Mod_decl.{ signatures = []; filter = false }
       | Some { region; value = _, value } ->
-        O.Mod_decl.{ signatures = nsepseq_to_list value; filter = false }
+        O.Mod_decl.{ signatures = Utils.nsepseq_to_list value; filter = false }
     in
     let name = TODO_do_in_parsing.mvar namespace_name in
     let mod_expr = namespace_body.value.inside in
@@ -829,8 +805,8 @@ and declaration : Eq.declaration -> Folding.declaration =
       | ImportAlias { value = { alias; namespace_path; _ }; _ } ->
         let alias = TODO_do_in_parsing.mvar alias in
         let module_path =
-          List.Ne.map
-            TODO_do_in_parsing.mvar
+          Nonempty_list.map
+            ~f:TODO_do_in_parsing.mvar
             (TODO_do_in_parsing.selection_path namespace_path)
         in
         O.Import.Import_rename { alias; module_path }
@@ -844,7 +820,7 @@ and declaration : Eq.declaration -> Folding.declaration =
           | Some imported -> imported
           | None -> failwith "Expected imported name?"
         in
-        let imported = List.Ne.map TODO_do_in_parsing.esc_var imported in
+        let imported = Nonempty_list.map ~f:TODO_do_in_parsing.esc_var imported in
         let module_str = file_path#payload in
         O.Import.Import_selected { imported; module_str }
     in
@@ -855,13 +831,15 @@ and declaration : Eq.declaration -> Folding.declaration =
     let extends : I.intf_expr list =
       match intf_extends with
       | None -> []
-      | Some { region; value = _, value } -> nsepseq_to_list value
+      | Some { region; value = _, value } -> Utils.nsepseq_to_list value
     in
     return @@ O.D_signature { name; sig_expr = I_Body intf_body; extends }
   | D_Value { value; _ } ->
     let I.{ kind; bindings } = value in
     let bindings =
-      List.Ne.map (compile_val_binding <@ r_fst) (nsepseq_to_nseq bindings)
+      Nonempty_list.map
+        ~f:(compile_val_binding <@ r_fst)
+        (Utils.nsepseq_to_ne_list bindings)
     in
     (match kind with
     | `Let _ -> return @@ O.D_multi_var bindings
@@ -870,10 +848,10 @@ and declaration : Eq.declaration -> Folding.declaration =
     let I.{ name; type_expr; generics; _ } = value in
     let name = TODO_do_in_parsing.esc_tvar name in
     let params =
-      let open Simple_utils.Option in
+      let open Ligo_option in
       let* generics in
       let* tvs = sep_or_term_to_nelist (r_fst generics).inside in
-      return (List.Ne.map TODO_do_in_parsing.esc_tvar tvs)
+      Option.return (Nonempty_list.map ~f:TODO_do_in_parsing.esc_tvar tvs)
     in
     return @@ O.D_type_abstraction { name; params; type_expr }
   | D_Fun { value; _ } ->
@@ -887,13 +865,13 @@ and declaration : Eq.declaration -> Folding.declaration =
       E_Function (return_region function_expr)
     in
     let type_params =
-      let open Simple_utils.Option in
+      let open Ligo_option in
       let* generics in
       let* tvs = sep_or_term_to_nelist generics.value.inside in
-      return (List.Ne.map TODO_do_in_parsing.esc_tvar tvs)
+      Option.return (Nonempty_list.map ~f:TODO_do_in_parsing.esc_tvar tvs)
     in
     let pattern : I.pattern = P_Var fun_name in
-    return @@ O.D_multi_const ({ type_params; pattern; rhs_type = None; let_rhs }, [])
+    return @@ O.D_multi_const [ { type_params; pattern; rhs_type = None; let_rhs } ]
 
 
 and program_entry : Eq.program_entry -> Folding.program_entry =
@@ -907,21 +885,23 @@ and program_entry : Eq.program_entry -> Folding.program_entry =
 
 
 and program : Eq.program -> Folding.program = function
-  | { statements; eof = _ } -> List.map ~f:fst @@ nseq_to_list statements
+  | { statements; eof = _ } -> List.map ~f:fst @@ Nonempty_list.to_list statements
 
 
 and sig_expr : Eq.sig_expr -> Folding.sig_expr = function
   | I_Body { value = { inside; lbrace = _; rbrace = _ }; region } ->
     let loc = Location.lift region in
-    let sig_items = sep_or_term_to_list inside in
+    let sig_items = Utils.sep_or_term_to_list inside in
     Location.wrap ~loc @@ O.S_body sig_items
   | I_Path selection ->
     let selection = TODO_do_in_parsing.selection_path selection in
     let locs =
-      List.Ne.map (fun (n : I.namespace_name) -> Location.lift n#region) selection
+      Nonempty_list.map
+        ~f:(fun (n : I.namespace_name) -> Location.lift n#region)
+        selection
     in
-    let loc = List.Ne.fold_right1 ~f:Location.cover locs in
-    let value = List.Ne.map TODO_do_in_parsing.mvar selection in
+    let loc = Ne_list.fold_right1 ~f:Location.cover locs in
+    let value = Nonempty_list.map ~f:TODO_do_in_parsing.mvar selection in
     Location.wrap ~loc @@ O.S_path value
 
 
@@ -949,7 +929,7 @@ and sig_entry : Eq.sig_entry -> Folding.sig_entry =
       | None -> []
       | Some generics ->
         List.map ~f:TODO_do_in_parsing.esc_tvar
-        @@ sep_or_term_to_list (r_fst generics).inside
+        @@ Utils.sep_or_term_to_list (r_fst generics).inside
     in
     (match type_rhs with
     | None -> return ~loc @@ O.S_type_var var

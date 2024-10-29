@@ -376,6 +376,8 @@ val curry : &#39;a &#39;b &#39;c.((&#39;a * &#39;b) -&gt; &#39;c) -&gt; &#39;a -
 <SyntaxTitle syntax="jsligo">
 let curry: &lt;a, b, c&gt;(&#95;: (&#95;: [a, b]) =&gt; c) =&gt; (&#95;: a) =&gt; (&#95;: b) =&gt; c
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Tuple2.curry` is encouraged for a smoother migration.
+
 <Syntax syntax="cameligo">
 
 The call `curry f x y` has the same value as `f (x,y)`.
@@ -395,6 +397,8 @@ val uncurry : &#39;a &#39;b &#39;c.(&#39;a -&gt; &#39;b -&gt; &#39;c) -&gt; (&#3
 <SyntaxTitle syntax="jsligo">
 let uncurry: &lt;a, b, c&gt;(&#95;: (&#95;: a) =&gt; (&#95;: b) =&gt; c) =&gt; (&#95;: [a, b]) =&gt; c
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Tuple2.uncurry` is encouraged for a smoother migration.
+
 <Syntax syntax="cameligo">
 
 The call `uncurry f (x,y)` has the same value as `f x y`.
@@ -414,6 +418,8 @@ val fst : &#39;a &#39;b.(&#39;a * &#39;b) -&gt; &#39;a
 <SyntaxTitle syntax="jsligo">
 let fst: &lt;a, b&gt;(&#95;: [a, b]) =&gt; a
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Tuple2.get1` is encouraged for a smoother migration.
+
 Projecting the first component of a pair
 
 
@@ -423,6 +429,8 @@ val snd : &#39;a &#39;b.(&#39;a * &#39;b) -&gt; &#39;b
 <SyntaxTitle syntax="jsligo">
 let snd: &lt;a, b&gt;(&#95;: [a, b]) =&gt; b
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Tuple2.get2` is encouraged for a smoother migration.
+
 Projecting the second component of a pair.
 
 
@@ -466,6 +474,8 @@ val assert&#95;with&#95;error : bool -&gt; string -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let assert&#95;with&#95;error: (&#95;: bool) =&gt; (&#95;: string) =&gt; unit
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Assert.Error.assert` is encouraged for a smoother migration.
+
 <Syntax syntax="cameligo">
 
 The call `assert_with_error cond error` terminates the execution
@@ -489,6 +499,8 @@ val assert : bool -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let assert: (&#95;: bool) =&gt; unit
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
 <Syntax syntax="cameligo">
 
 The call `assert cond` terminates the execution with the string
@@ -512,6 +524,8 @@ val assert&#95;some&#95;with&#95;error : &#39;a.&#39;a option -&gt; string -&gt;
 <SyntaxTitle syntax="jsligo">
 let assert&#95;some&#95;with&#95;error: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; (&#95;: string) =&gt; unit
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Assert.Error.some` is encouraged for a smoother migration.
+
 <Syntax syntax="cameligo">
 
 The call `assert_some_with_error opt err` terminates the execution
@@ -535,6 +549,8 @@ val assert&#95;some : &#39;a.&#39;a option -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let assert&#95;some: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; unit
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Assert.some` is encouraged for a smoother migration.
+
 <Syntax syntax="cameligo">
 
 The call `assert_some opt` terminates the execution with the
@@ -556,6 +572,8 @@ val assert&#95;none&#95;with&#95;error : &#39;a.&#39;a option -&gt; string -&gt;
 <SyntaxTitle syntax="jsligo">
 let assert&#95;none&#95;with&#95;error: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; (&#95;: string) =&gt; unit
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Assert.Error.none` is encouraged for a smoother migration.
+
 <Syntax syntax="cameligo">
 
 The call `assert_none_with_error opt err` terminates the execution
@@ -579,6 +597,8 @@ val assert&#95;none : &#39;a.&#39;a option -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let assert&#95;none: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; unit
 </SyntaxTitle>
+**Deprecated:** In a future version, this function will be deprecated, and using `Assert.none` is encouraged for a smoother migration.
+
 <Syntax syntax="cameligo">
 
 The call `assert_none opt` terminates the execution with the string
@@ -695,20 +715,47 @@ let ediv: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: b) =&gt; external&#95;ediv&lt;a, 
 <Syntax syntax="cameligo">
 
 The call `ediv z1 z2`, where `z1` and `z2` are either of type
-  `int` or `nat`, returns `None` if `z2` is zero; otherwise, it
-  returns the pair `(q,r)`, where `q` is the quotient and `r` the
-  positive remainder, as is the convention of the mathematical
-  Euclidian division.
+    `int` or `nat`, returns `None` if `z2` is zero; otherwise, it
+    returns the pair `(q,r)`, where `q` is the quotient and `r` the
+    positive remainder, as is the convention of the mathematical
+    Euclidian division. The function `ediv` is also overloaded to work
+    on values of type `mav`. When `z1` and `z2` are of type `mav` and
+    `z2` is nonzero, we get a `nat` quotient and a `mav`
+    remainder. When `z1` is a `mav` and `z2` is a nonzero `nat`, the
+    calls yields a quotient and a remainder both of type `mav`.
 
 </Syntax>
 
 <Syntax syntax="jsligo">
 
 The call `ediv(z1, z2)`, where `z1` and `z2` are either of type
-  `int` or `nat`, returns `None()` if `z2` is zero; otherwise, it
-  returns the pair `[q,r]`, where `q` is the quotient and `r` the
-  positive remainder, as is the convention of the mathematical
-  Euclidian division.
+    `int` or `nat`, returns `None()` if `z2` is zero; otherwise, it
+    returns the pair `[q,r]`, where `q` is the quotient and `r` the
+    positive remainder, as is the convention of the mathematical
+    Euclidian division. The function `ediv` is also overloaded to work
+    on values of type `mav`. When `z1` and `z2` are of type `mav` and
+    `z2` is nonzero, we get a `nat` quotient and a `mav`
+    remainder. When `z1` is a `mav` and `z2` is a nonzero `nat`, the
+    calls yields a quotient and a remainder both of type `mav`.
+
+</Syntax>
+
+
+<SyntaxTitle syntax="cameligo">
+type &#39;elt big&#95;set = &#39;elt Big&#95;set.t
+</SyntaxTitle>
+<SyntaxTitle syntax="jsligo">
+type big&#95;set&lt;elt&gt; = Big&#95;set.t&lt;elt&gt;
+</SyntaxTitle>
+<Syntax syntax="cameligo">
+
+The type of the big sets is based on `big_map`.
+
+</Syntax>
+
+<Syntax syntax="jsligo">
+
+The type of the big sets is based on `big_map`.
 
 </Syntax>
 

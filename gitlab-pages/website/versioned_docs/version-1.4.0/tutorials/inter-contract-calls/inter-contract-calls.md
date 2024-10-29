@@ -30,7 +30,7 @@ However, there are legit reasons for using internal operations, including the fo
 
 ## Internal transactions in LIGO
 
-The simplest example of an internal transaction is sending Tez to a contract. Note that in Mavryk, implicit accounts owned by people holding private keys are contracts as well. Implicit accounts have no code and accept _unit_ as the parameter. Consider the following code snippet:
+The simplest example of an internal transaction is sending Mav to a contract. Note that in Mavryk, implicit accounts owned by people holding private keys are contracts as well. Implicit accounts have no code and accept _unit_ as the parameter. Consider the following code snippet:
 
 <Syntax syntax="cameligo">
 
@@ -318,7 +318,7 @@ You may notice that we can abuse the `IsWhitelisted` entrypoint to pause and unp
 So far, we have covered only one type of operation – transaction. But we can _originate_ contracts from LIGO a well! There is a special instruction `Mavryk.create_contract`. It accepts four arguments:
 1. Contract code. Note that the code must be an inline function that does not use any existing bindings.
 2. Optional delegate.
-3. The amount of Tez to send to the contract upon origination.
+3. The amount of Mav to send to the contract upon origination.
 4. The initial storage value.
 
 For example, we can create a new counter contract with

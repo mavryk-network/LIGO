@@ -1,4 +1,4 @@
-const { MichelsonMap } = require("@taquito/taquito")
+const { MichelsonMap } = require("@mavrykdynamics/taquito")
 
 const AccessController = artifacts.require("AccessController")
 const PausableToken = artifacts.require("PausableToken")

@@ -1,0 +1,13 @@
+type storage = int;
+type parameter = int;
+
+type remote_param = | ["Sub", int]; // Note the leading vertical bar.
+
+@entry
+const main = (_p: parameter, s: storage): [list<operation>, storage] => {
+  let contract_addr =
+    Mavryk.get_entrypoint(
+      "%sub", // Corresponds to the `Sub` variant of `remote_param`.
+      "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe");
+  return [[Mavryk.transaction(Sub(2), 2mumav, contract_addr)], s];
+};

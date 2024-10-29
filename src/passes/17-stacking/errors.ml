@@ -1,5 +1,6 @@
-module Michelson = Tezos_utils.Michelson
-open Simple_utils.Display
+module Michelson = Mavryk_utils.Michelson
+module Display = Simple_utils.Display
+module Ligo_Error = Simple_utils.Error
 
 type stacking_error =
   [ `Stacking_corner_case of string * string
@@ -9,8 +10,7 @@ type stacking_error =
   | `Stacking_could_not_tokenize_michelson of string
   | `Stacking_could_not_parse_michelson of string
   | `Stacking_untranspilable of int Michelson.t * int Michelson.t
-  | `Stacking_unsupported_primitive of
-    Ligo_prim.Constant.constant' * Environment.Protocols.t
+  | `Stacking_unsupported_primitive of Ligo_prim.Constant.constant'
   ]
 [@@deriving poly_constructor { prefix = "stacking_" }]
 
@@ -29,19 +29,19 @@ let untranspilable m_type m_data =
 
 
 let error_ppformat
-    : display_format:string display_format -> Format.formatter -> stacking_error -> unit
+    :  display_format:string Display.display_format -> Format.formatter -> stacking_error
+    -> unit
   =
  fun ~display_format f a ->
   match display_format with
   | Human_readable | Dev ->
     (match a with
-    | `Stacking_unsupported_primitive (c, p) ->
+    | `Stacking_unsupported_primitive c ->
       Format.fprintf
         f
-        "@[<hv>unsupported primitive %a in protocol %s@]"
+        "@[<hv>unsupported primitive %a@]"
         Ligo_prim.Constant.pp_constant'
         c
-        (Environment.Protocols.variant_to_string p)
     | `Stacking_corner_case (loc, msg) ->
       let s =
         Format.asprintf
@@ -79,17 +79,13 @@ let error_ppformat
         value)
 
 
-let error_json : stacking_error -> Simple_utils.Error.t =
+let error_json : stacking_error -> Ligo_Error.t =
  fun e ->
-  let open Simple_utils.Error in
+  let open Ligo_Error in
   match e with
-  | `Stacking_unsupported_primitive (c, p) ->
+  | `Stacking_unsupported_primitive c ->
     let message =
-      Format.asprintf
-        "@[<hv>unsupported primitive %a in protocol %s@]"
-        Ligo_prim.Constant.pp_constant'
-        c
-        (Environment.Protocols.variant_to_string p)
+      Format.asprintf "@[<hv>unsupported primitive %a@]" Ligo_prim.Constant.pp_constant' c
     in
     let content = make_content ~message () in
     make ~stage ~content

@@ -15,8 +15,6 @@ module Checksum : sig
   val check_integrity : string -> expected:string -> (unit, error) result
 end
 
-val find_project_root : unit -> string option
-
 type return =
   | Done
   | Compileur_Error
@@ -32,7 +30,8 @@ val return_with_custom_formatter
   -> unit
 
 val return_result_lwt
-  :  cli_analytics:Analytics.analytics_inputs
+  :  ?fast_fail:bool
+  -> cli_analytics:Analytics.analytics_inputs
   -> skip_analytics:bool
   -> return:return ref
   -> ?show_warnings:bool
@@ -47,7 +46,8 @@ val return_result_lwt
   -> unit
 
 val return_result
-  :  cli_analytics:Analytics.analytics_inputs
+  :  ?fast_fail:bool
+  -> cli_analytics:Analytics.analytics_inputs
   -> skip_analytics:bool
   -> return:return ref
   -> ?show_warnings:bool

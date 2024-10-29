@@ -25,9 +25,9 @@ let pp_ct : Format.formatter -> constant_val -> unit =
     Format.fprintf
       ppf
       "%a(%a)"
-      Mavryk_protocol.Protocol.Alpha_context.Contract.pp
+      Contract.pp
       c.address
-      (PP_helpers.option PP_helpers.string)
+      (PP_helpers.option Entrypoint_repr.pp)
       c.entrypoint
   | C_mumav n -> Format.fprintf ppf "%smumav" (Z.to_string n)
   | C_key_hash c -> Format.fprintf ppf "%a" Mavryk_crypto.Signature.Public_key_hash.pp c
@@ -72,8 +72,8 @@ let rec pp_value ~no_colour : Format.formatter -> value -> unit =
         in
         Format.fprintf ppf "{%a}" (list_sep aux (tag " ; ")) (Record.to_list recmap))
     | V_Michelson (Ty_code { micheline_repr = { code; _ }; _ } | Untyped_code code) ->
-      Format.fprintf ppf "%a" Tezos_utils.Michelson.pp code
-    | V_Michelson_contract code -> Format.fprintf ppf "%a" Tezos_utils.Michelson.pp code
+      Format.fprintf ppf "%a" Mavryk_utils.Michelson.pp code
+    | V_Michelson_contract code -> Format.fprintf ppf "%a" Mavryk_utils.Michelson.pp code
     | V_Ast_contract { main; views = _ } ->
       Format.fprintf ppf "%a" Ast_aggregated.PP.expression main
     | V_Mutation (l, _, s) ->

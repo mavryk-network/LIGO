@@ -33,7 +33,7 @@ Limits:
 * **Operation gas limit** ensures that there is some space in a block to fit more than one operation in.
 
 Fees:
-* **Burn fee** is used to prevent blockchain bloat. Users need to _burn_ a certain amount of Tez for each byte of storage they use so that the size of the entire chain stays reasonable.
+* **Burn fee** is used to prevent blockchain bloat. Users need to _burn_ a certain amount of Mav for each byte of storage they use so that the size of the entire chain stays reasonable.
 * **Execution fee** acts as an incentive for the bakers.
 
 ### What should I optimise for?
@@ -59,7 +59,7 @@ Thus, to reduce the origination cost, you need to reduce the size of the contrac
 
 When you make a **transaction** to a contract, things get a little more complicated:
 * You still must respect the *operation size limit*, which is proportional to the size of the parameter you pass to the contract. You may hit this limit if you try to pass a huge lambda or a container with a lot of items to a contract.
-* If, as a result of executing the contract, the size of the contract's storage exceeds its maximum historical size, you will have to pay a _burn fee_ for the excess bytes (`0.00025ꜩ/B * excess_bytes`). This may be a bit hard to grasp, but if you think about it, this behaviour is reasonable: Mavryk burns money for storage no more than once, and never mints Tez back for the storage you free. Imagine the following sequence of operations:
+* If, as a result of executing the contract, the size of the contract's storage exceeds its maximum historical size, you will have to pay a _burn fee_ for the excess bytes (`0.00025ꜩ/B * excess_bytes`). This may be a bit hard to grasp, but if you think about it, this behaviour is reasonable: Mavryk burns money for storage no more than once, and never mints Mav back for the storage you free. Imagine the following sequence of operations:
    - The contract gets originated; let us assume the storage size is 500 bytes. The originator burns `0.06425ꜩ + 0.00025ꜩ/B * 500B = 0.18925ꜩ`.
    - During some transaction, the storage size decreases to 400 bytes.
    - You submit an operation that increases the storage size to 505 bytes. Since 500 bytes have been paid for already, you only need to burn `5B * 0.00025ꜩ/B = 0.00125ꜩ`.
@@ -100,7 +100,7 @@ At each phase, a certain amount of gas is consumed. It would be a rough but usef
   - `ε` – the average instruction cost.
 * the amount of gas consumed at phases 5–6 is proportional to `size(storage)`.
 
-These approximations are not exactly true: real deserialisation gas consumption also depends on the inherent complexity of the code and data types, converting to a typed representation depends on the actual data and code being converted, and interpreter gas consumption is the sum of the instruction costs. However, such simplified formula makes it possible to lower the dimensionality of the problem and simplify analysis, while not losing much in terms of general trends. For detailed info on gas consumption, please refer to the [Mavryk gas model description](https://gitlab.com/tezos/tezos/-/blob/52a074ab3eb43ad0087804b8521f36cb517f7c28/docs/whitedoc/gas_consumption.rst).
+These approximations are not exactly true: real deserialisation gas consumption also depends on the inherent complexity of the code and data types, converting to a typed representation depends on the actual data and code being converted, and interpreter gas consumption is the sum of the instruction costs. However, such simplified formula makes it possible to lower the dimensionality of the problem and simplify analysis, while not losing much in terms of general trends. For detailed info on gas consumption, please refer to the [Mavryk gas model description](https://gitlab.com/mavryk-network/mavryk-protocol/-/blob/52a074ab3eb43ad0087804b8521f36cb517f7c28/docs/whitedoc/gas_consumption.rst).
 
 According to our approximations, the formula for the total gas consumption would be:
 ```
@@ -147,7 +147,7 @@ Is there a list of cases when you should certainly prefer using big map over reg
 
 ### Excess storage
 
-When you make a transaction that writes something to persistent memory, you need to burn a certain amount of Tez. The amount depends on the difference between the number of bytes written and the maximum historical size of the called contract. Such storage burn applies to contract code, regular storage, and lazy storage – basically, any byte that increases the size of the context needs to be paid for. You should try to avoid patterns like event logs that may extend the storage indefinitely.
+When you make a transaction that writes something to persistent memory, you need to burn a certain amount of Mav. The amount depends on the difference between the number of bytes written and the maximum historical size of the called contract. Such storage burn applies to contract code, regular storage, and lazy storage – basically, any byte that increases the size of the context needs to be paid for. You should try to avoid patterns like event logs that may extend the storage indefinitely.
 
 ## Common optimisation techniques
 

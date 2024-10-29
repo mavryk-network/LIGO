@@ -1,12 +1,12 @@
 (* code quality: medium 2021-05-05 *)
 module Display = Simple_utils.Display
 module Runned_result = Simple_utils.Runned_result
-open Simple_utils.Trace
+module Trace = Simple_utils.Trace
 open Main_errors
 module Raw_options = Compiler_options.Raw_options
 
 let make_options
-    ?tezos_context
+    ?mavryk_context
     ?constants
     ?now
     ?sender
@@ -23,7 +23,7 @@ let make_options
       Lwt.bind (test_environment ()) (fun env ->
           make_options
             ~env
-            ?tezos_context
+            ?mavryk_context
             ?constants
             ?now
             ?sender
@@ -42,16 +42,10 @@ type test =
   | Test_suite of (string * test list)
   | Test of test_case
 
-let options =
-  Compiler_options.make
-    ~raw_options:(Raw_options.make ())
-    ~protocol_version:Environment.Protocols.in_use
-    ()
-
-
+let options = Compiler_options.make ~raw_options:(Raw_options.make ()) ()
 let loc = Location.test
 
-let test_format : 'a Simple_utils.Display.format =
+let test_format : 'a Display.format =
   { (* do not display anything if test succeed *)
     pp =
       (fun ~display_format ~no_colour _ _ ->
@@ -63,20 +57,20 @@ let test_format : 'a Simple_utils.Display.format =
 
 
 let wrap_test_w ~no_colour name f =
-  try_with
+  Trace.try_with
     (fun ~raise ~catch ->
       let () = f ~raise () in
       List.iter ~f:(fun w ->
           Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev ~no_colour) w)
-      @@ catch.warnings ())
+      @@ catch.Trace.warnings ())
     (fun ~catch error ->
       let value = Error (test_err_tracer name error) in
       let format = Display.bind_format test_format Formatter.error_format in
-      let disp = Simple_utils.Display.Displayable { value; format } in
-      let s = Simple_utils.Display.convert ~display_format:Dev ~no_colour disp in
+      let disp = Display.Displayable { value; format } in
+      let s = Display.convert ~display_format:Dev ~no_colour disp in
       List.iter ~f:(fun w ->
           Format.printf "%a\n" (Main_warnings.pp ~display_format:Dev ~no_colour) w)
-      @@ catch.warnings ();
+      @@ catch.Trace.warnings ();
       Format.printf "%s\n" s;
       Stdlib.raise Alcotest.Test_error)
 
@@ -98,13 +92,13 @@ let test_w_all name test =
 
 
 let wrap_test ~no_colour name f =
-  try_with
+  Trace.try_with
     (fun ~raise ~catch:_ -> f ~raise ())
     (fun ~catch:_ error ->
       let value = Error (test_err_tracer name error) in
       let format = Display.bind_format test_format Formatter.error_format in
-      let disp = Simple_utils.Display.Displayable { value; format } in
-      let s = Simple_utils.Display.convert ~display_format:Dev ~no_colour disp in
+      let disp = Display.Displayable { value; format } in
+      let s = Display.convert ~display_format:Dev ~no_colour disp in
       Format.printf "%s\n" s;
       raise Alcotest.Test_error)
 
@@ -221,7 +215,7 @@ let pack_payload ~raise (program : Ast_typed.program) (payload : Ast_unified.exp
     Ligo_compile.Of_mini_c.compile_expression ~raise ~options mini_c
   in
   let payload_ty = code.expr_ty in
-  let%bind (payload : _ Tezos_utils.Michelson.michelson) =
+  let%bind (payload : _ Mavryk_utils.Michelson.michelson) =
     Ligo_run.Of_michelson.evaluate_expression ~raise code.expr code.expr_ty
   in
   Ligo_run.Of_michelson.pack_payload ~raise payload payload_ty
@@ -359,7 +353,7 @@ let run_typed_program_with_imperative_input
   let res =
     Decompile.Of_michelson.decompile_expression
       ~raise
-      ty
+      (Ligo_compile.Of_aggregated.compile_type_expression ~raise ty)
       (Runned_result.Success michelson_output)
   in
   match res with
@@ -395,7 +389,7 @@ let run_typed_program_with_imperative_input_twice
   let res =
     Decompile.Of_michelson.decompile_expression
       ~raise
-      ty
+      (Ligo_compile.Of_aggregated.compile_type_expression ~raise ty)
       (Runned_result.Success michelson_output)
   in
   match res with
@@ -406,7 +400,7 @@ let run_typed_program_with_imperative_input_twice
 let expect ~raise ?options program entry_point input expecter =
   let result =
     Lwt_main.run
-    @@ trace ~raise (test_run_tracer entry_point)
+    @@ Trace.trace ~raise (test_run_tracer entry_point)
     @@ run_typed_program_with_imperative_input ?options program entry_point input
   in
   expecter result
@@ -415,7 +409,7 @@ let expect ~raise ?options program entry_point input expecter =
 let expect_twice ~raise ?options program entry_point input1 input2 expecter =
   let result =
     Lwt_main.run
-    @@ trace ~raise (test_run_tracer entry_point)
+    @@ Trace.trace ~raise (test_run_tracer entry_point)
     @@ run_typed_program_with_imperative_input_twice
          ?options
          program
@@ -427,18 +421,18 @@ let expect_twice ~raise ?options program entry_point input1 input2 expecter =
 
 
 let expect_fail ~raise ?options program entry_point input =
-  trace ~raise (test_run_tracer entry_point)
+  Trace.trace ~raise (test_run_tracer entry_point)
   @@ fun ~raise ->
-  Assert.assert_fail ~raise test_expected_to_fail
+  Trace.Assert.assert_fail ~raise test_expected_to_fail
   @@ fun ~raise ->
   Lwt_main.run
   @@ run_typed_program_with_imperative_input ~raise ?options program entry_point input
 
 
 let expect_fail_twice ~raise ?options program entry_point input1 input2 =
-  trace ~raise (test_run_tracer entry_point)
+  Trace.trace ~raise (test_run_tracer entry_point)
   @@ fun ~raise ->
-  Assert.assert_fail ~raise test_expected_to_fail
+  Trace.Assert.assert_fail ~raise test_expected_to_fail
   @@ fun ~raise ->
   Lwt_main.run
   @@ run_typed_program_with_imperative_input_twice
@@ -504,7 +498,7 @@ let expect_string_failwith_twice
 let expect_eq ~raise ?options program entry_point input expected =
   let expected = expression_to_core ~raise expected in
   let expecter result =
-    trace_option ~raise (test_expect_tracer expected result)
+    Trace.trace_option ~raise (test_expect_tracer expected result)
     @@ Ast_core.Misc.assert_value_eq (expected, result)
   in
   expect ~raise ?options program entry_point input expecter
@@ -513,7 +507,7 @@ let expect_eq ~raise ?options program entry_point input expected =
 let expect_eq_twice ~raise ?options program entry_point input1 input2 expected =
   let expected = expression_to_core ~raise expected in
   let expecter result =
-    trace_option ~raise (test_expect_tracer expected result)
+    Trace.trace_option ~raise (test_expect_tracer expected result)
     @@ Ast_core.Misc.assert_value_eq (expected, result)
   in
   expect_twice ~raise ?options program entry_point input1 input2 expecter
@@ -521,7 +515,7 @@ let expect_eq_twice ~raise ?options program entry_point input1 input2 expected =
 
 let expect_eq_core ~raise ?options program entry_point input expected =
   let expecter result =
-    trace_option ~raise (test_expect_tracer expected result)
+    Trace.trace_option ~raise (test_expect_tracer expected result)
     @@ Ast_core.Misc.assert_value_eq (expected, result)
   in
   expect ~raise ?options program entry_point input expecter
@@ -529,7 +523,7 @@ let expect_eq_core ~raise ?options program entry_point input expected =
 
 let expect_evaluate ~raise (program : Ast_typed.program) entry_point expecter =
   let open Lwt.Let_syntax in
-  trace ~raise (test_run_tracer entry_point)
+  Trace.trace ~raise (test_run_tracer entry_point)
   @@ fun ~raise ->
   Lwt_main.run
   @@
@@ -554,7 +548,9 @@ let expect_evaluate ~raise (program : Ast_typed.program) entry_point expecter =
   let res =
     Decompile.Of_michelson.decompile_expression
       ~raise
-      aggregated.type_expression
+      (Ligo_compile.Of_aggregated.compile_type_expression
+         ~raise
+         aggregated.type_expression)
       (Runned_result.Success res_michelson)
   in
   let res' =
@@ -568,7 +564,7 @@ let expect_evaluate ~raise (program : Ast_typed.program) entry_point expecter =
 let expect_eq_evaluate ~raise (program : Ast_typed.program) entry_point expected =
   let expected = expression_to_core ~raise expected in
   let expecter result =
-    trace_option ~raise (test_expect_tracer expected result)
+    Trace.trace_option ~raise (test_expect_tracer expected result)
     @@ Ast_core.Misc.assert_value_eq (expected, result)
   in
   expect_evaluate ~raise program entry_point expecter
@@ -586,7 +582,7 @@ let expect_eq_n_trace_aux_twice
   let aux n =
     let input1, input2 = make_input n in
     let expected = make_expected n in
-    trace ~raise (test_expect_n_tracer n)
+    Trace.trace ~raise (test_expect_n_tracer n)
     @@ expect_eq_twice ?options program entry_point input1 input2 expected
   in
   let _ = List.map ~f:aux lst in
@@ -597,7 +593,7 @@ let expect_eq_n_aux ~raise ?options lst program entry_point make_input make_expe
   let aux n =
     let input = make_input n in
     let expected = make_expected n in
-    trace ~raise (test_expect_eq_n_tracer n)
+    Trace.trace ~raise (test_expect_eq_n_tracer n)
     @@ expect_eq ?options program entry_point input expected
   in
   let () = List.iter ~f:aux lst in
@@ -609,7 +605,7 @@ let expect_eq_n_aux_twice ~raise ?options lst program entry_point make_input mak
   let aux n =
     let input1, input2 = make_input n in
     let expected = make_expected n in
-    trace ~raise (test_expect_eq_n_tracer n)
+    Trace.trace ~raise (test_expect_eq_n_tracer n)
     @@ expect_eq_twice ?options program entry_point input1 input2 expected
   in
   let () = List.iter ~f:aux lst in
@@ -648,8 +644,7 @@ let compile_main ~raise f () =
   let open Lwt.Let_syntax in
   let typed_prg = get_program ~raise f () in
   let typed_prg =
-    Simple_utils.Trace.trace ~raise self_ast_typed_tracer
-    @@ Self_ast_typed.all_program typed_prg
+    Trace.trace ~raise self_ast_typed_tracer @@ Self_ast_typed.all_program typed_prg
   in
   let _, contract_info =
     Option.value_exn ~message:"not a contract"
@@ -669,12 +664,8 @@ let compile_main ~raise f () =
   @@ let%bind michelson_prg =
        Ligo_compile.Of_mini_c.compile_contract ~raise ~options mini_c
      in
-     let%map _contract : _ Tezos_utils.Michelson.michelson Lwt.t =
+     let%map _contract : _ Mavryk_utils.Michelson.michelson Lwt.t =
        (* fails if the given entry point is not a valid contract *)
-       Ligo_compile.Of_michelson.build_contract
-         ~raise
-         ~protocol_version:Environment.Protocols.in_use
-         michelson_prg
-         []
+       Ligo_compile.Of_michelson.build_contract ~raise michelson_prg []
      in
      ()

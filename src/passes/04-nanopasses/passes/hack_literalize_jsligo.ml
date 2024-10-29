@@ -1,6 +1,5 @@
 open Ast_unified
 open Pass_type
-open Simple_utils.Trace
 open Errors
 
 (* 
@@ -26,15 +25,7 @@ let compile ~raise:_ =
       (match get_e e, get_t t with
       (* Conversion of number literals s*)
       | E_literal (Literal_int i), T_var tv ->
-        if Ty_variable.is_name tv "nat"
-        then e_nat_z ~loc i
-        else if Ty_variable.is_name tv "mav"
-        then (
-          let mumav = Z.mul (Z.of_int 1_000_000) i in
-          e_mumav_z ~loc mumav)
-        else if Ty_variable.is_name tv "mumav"
-        then e_mumav_z ~loc i
-        else unchanged ()
+        if Ty_variable.is_name tv "mumav" then e_mumav_z ~loc i else unchanged ()
       (* Type-annotated code injection *)
       | E_raw_code { language; code }, _ ->
         e_raw_code ~loc { language; code = e_annot ~loc (code, t) }
@@ -44,32 +35,15 @@ let compile ~raise:_ =
   Fold { idle_fold with expr = pass_expr }
 
 
-let reduction ~raise =
-  let expr : _ expr_ -> unit =
-   fun e ->
-    match Location.unwrap e with
-    | E_annot (e, t) ->
-      (match get_e e, get_t t with
-      | E_literal (Literal_int _), T_var tv ->
-        if Ty_variable.is_name tv "nat"
-           || Ty_variable.is_name tv "mav"
-           || Ty_variable.is_name tv "mumav"
-        then raise.error (wrong_reduction __MODULE__)
-        else ()
-      | _ -> ())
-    | _ -> ()
-  in
-  { Iter.defaults with expr }
-
-
 let name = __MODULE__
 let decompile ~raise:_ = Nothing
+let reduction ~raise:_ = Iter.defaults
 
 open Unit_test_helpers.Expr
 
 let%expect_test "number_42_as_nat" =
   {| (E_annot ((E_literal (Literal_int 42)) (T_var nat))) |} |-> compile;
-  [%expect {| (E_literal (Literal_nat 42)) |}]
+  [%expect {| (E_annot ((E_literal (Literal_int 42)) (T_var nat))) |}]
 
 let%expect_test "number_42_as_mumav" =
   {| (E_annot ((E_literal (Literal_int 42)) (T_var mumav))) |} |-> compile;
@@ -77,7 +51,7 @@ let%expect_test "number_42_as_mumav" =
 
 let%expect_test "number_42_as_tez" =
   {| ( E_annot ((E_literal (Literal_int 42)) (T_var mav))) |} |-> compile;
-  [%expect {|(E_literal (Literal_mumav 42000000)) |}]
+  [%expect {|(E_annot ((E_literal (Literal_int 42)) (T_var mav))) |}]
 
 let%expect_test "code_inj" =
   {|

@@ -17,6 +17,8 @@ let yojson_of_voting_powers : voting_powers -> Display.json = function
       ]
 
 
+open Ppx_yojson_conv_lib.Yojson_conv.Primitives
+
 type contract_env =
   { now : string option
   ; level : z option
@@ -33,7 +35,7 @@ type contract_env =
 type evaluated_michelson = (Mini_c.meta, string) Scoping.Micheline.node
 
 let yojson_of_evaluated_michelson (em : evaluated_michelson) : Display.json =
-  let open Tezos_utils.Michelson in
+  let open Mavryk_utils.Michelson in
   let str_mich = Format.asprintf "%a" (pp_comment ?comment:None) em in
   `String str_mich
 
@@ -50,7 +52,10 @@ type config =
 [@@deriving yojson_of]
 
 let pp_type_expression ~raise ~syntax f type_expr =
-  let core_type_expr = Checking.untype_type_expression type_expr in
+  let core_type_expr =
+    Trace.trace ~raise Main_errors.checking_tracer
+    @@ Checking.untype_type_expression type_expr
+  in
   try
     let unified_type_expr =
       Trace.trace ~raise Main_errors.nanopasses_tracer

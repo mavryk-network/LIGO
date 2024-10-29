@@ -4,15 +4,19 @@
  (instrumentation
   (backend bisect_ppx))
  (preprocess
-  (pps ppx_here ppx_let lwt_ppx))
+  (pps ppx_jane lwt_ppx))
  (libraries
+  core
   ast_aggregated
   ligo_interpreter
-  tezos-memory-proto-alpha
+  ligo.mavryk-memory-proto-alpha
   main_errors
   ligo_compile
   build
   fuzz
   ligo_run
   self_ast_typed
-  bls12-381))
+  bls12-381
+  core_unix
+  core_unix.sys_unix
+  core_kernel.nonempty_list))

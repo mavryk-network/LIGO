@@ -20,6 +20,7 @@ module Abstractions = Abstractions
 module Type_app = Type_app
 module Type_abs = Type_abs
 module Tuple = Tuple
+module Union = Union
 
 (* Value level constructs *)
 module Access_label = Access_label
@@ -35,6 +36,7 @@ module Raw_code = Raw_code
 module Ascription = Ascription
 module Constructor = Constructor
 module Match_expr = Match_expr
+module Array_repr = Array_repr
 module Record = Record
 module Accessor (Path : Access_path.S) = Accessor.Make (Path)
 module Update (Path : Access_path.S) = Update.Make (Path)
@@ -60,6 +62,8 @@ module Value_decl (Attr : Declaration.Attr) = Declaration.Value_decl (Attr)
 module Type_decl (Attr : Declaration.Attr) = Declaration.Type_decl (Attr)
 module Module_decl (Attr : Declaration.Attr) = Declaration.Module_decl (Attr)
 module Signature_decl (Attr : Declaration.Attr) = Declaration.Signature_decl (Attr)
+module Import_decl = Declaration.Import_decl
+module Import_decl_ext = Declaration.Import_decl_ext
 module Value_attr = Value_attr
 module Sig_item_attr = Sig_item_attr
 module Sig_type_attr = Sig_type_attr

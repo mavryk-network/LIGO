@@ -2,9 +2,9 @@
 
 (* Vendor dependencies *)
 
-module Region = Simple_utils.Region
-module Std    = Simple_utils.Std
-module Unit   = LexerLib.Unit
+module Region  = Simple_utils.Region
+module Std     = Simple_utils.Std
+module LexUnit = LexerLib.LexUnit
 
 (* LIGO dependencies *)
 
@@ -41,15 +41,15 @@ module Make (Token : TOKEN) =
     let fail acc region error =
       let units = List.rev acc
       and msg = error_to_string error in
-      Stdlib.Error (units, Region.{value=msg; region})
+      Error (units, Region.{value=msg; region})
 
     (* Checking the style *)
 
-    type units = Token.t Unit.t list
+    type units = Token.t LexUnit.t list
 
     type message = string Region.reg
 
-    type result = (units, units * message) Stdlib.result
+    type nonrec result = (units, units * message) result
 
     let rec filter ~add_warning acc = function
       [] -> Ok (List.rev acc)

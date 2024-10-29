@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npx truffle test",
-    "start-sandbox": "npx ganache-cli --flavor tezos --seed alice"
+    "start-sandbox": "npx ganache-cli --flavor mavryk --seed alice"
   },
   "keywords": [
     "ligo"

@@ -1,13 +1,10 @@
 (library
  (name ligo_coq_ocaml)
  (public_name ligo.coq_ocaml)
- (flags
-  (:standard \ -open Core)
-  -w
-  "-33-39")
+ (flags -w "-33-39")
  (libraries core zarith mavkit-libs.micheline sexplib)
  (preprocess
-  (pps ppx_sexp_conv)))
+  (pps ppx_jane)))
 
 (coq.extraction
  (prelude extraction)

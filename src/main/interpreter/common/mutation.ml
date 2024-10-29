@@ -1,10 +1,10 @@
-open Simple_utils.Trace
+open Ligo_prim
 open Errors
+module Trace = Simple_utils.Trace
 module LT = Ligo_interpreter.Types
 module LC = Ligo_interpreter.Combinators
-open Ligo_prim
 
-let get_syntax ~raise syntax loc =
+let get_syntax ~(raise : _ Trace.raise) syntax loc =
   let of_syntax () =
     match syntax with
     | Some syntax -> syntax
@@ -15,32 +15,37 @@ let get_syntax ~raise syntax loc =
   | Some r ->
     let file = r#file in
     let syntax =
-      Simple_utils.Trace.to_stdlib_result
+      Trace.to_stdlib_result
+        ~fast_fail:Fast_fail
         (Syntax.of_string_opt (Syntax_types.Syntax_name "auto") (Some file))
     in
     (match syntax with
-    | Ok (r, _) -> r
+    | Ok (r, (), _) -> r
     | Error _ -> of_syntax ())
 
 
 let mutate_some_contract
-    :  raise:(interpreter_error, _) raise -> ?syntax:_ -> Z.t -> Ast_aggregated.expression
-    -> (Ast_aggregated.expression * LT.mutation) option
+    :  raise:(interpreter_error, _) Trace.raise -> ?syntax:_ -> Z.t
+    -> Ast_aggregated.expression -> (Ast_aggregated.expression * LT.mutation) option
   =
  fun ~raise ?syntax z main ->
   let n = Z.to_int z in
   let module Fuzzer = Fuzz.Ast_aggregated.Mutator in
   let f (e, (l, m)) =
     let syntax = get_syntax ~raise syntax l in
-    let s = Fuzz.Ast_aggregated.expression_to_string ~syntax m in
+    let s =
+      Trace.trace ~raise Main_errors.checking_tracer
+      @@ Fuzz.Ast_aggregated.expression_to_string ~syntax m
+    in
     e, (l, m, s)
   in
   Option.map ~f @@ Fuzzer.some_mutate_expression ~n main
 
 
 let mutate_some_value
-    :  raise:(interpreter_error, _) raise -> ?syntax:_ -> Location.t -> Z.t -> LT.value
-    -> Ast_aggregated.type_expression -> (Ast_aggregated.expression * LT.mutation) option
+    :  raise:(interpreter_error, _) Trace.raise -> ?syntax:_ -> Location.t -> Z.t
+    -> LT.value -> Ast_aggregated.type_expression
+    -> (Ast_aggregated.expression * LT.mutation) option
   =
  fun ~raise ?syntax loc z v v_type ->
   let n = Z.to_int z in
@@ -48,14 +53,17 @@ let mutate_some_value
   let module Fuzzer = Fuzz.Ast_aggregated.Mutator in
   let f (e, (loc, m)) =
     let syntax = get_syntax ~raise syntax loc in
-    let s = Fuzz.Ast_aggregated.expression_to_string ~syntax m in
+    let s =
+      Trace.trace ~raise Main_errors.checking_tracer
+      @@ Fuzz.Ast_aggregated.expression_to_string ~syntax m
+    in
     e, (loc, m, s)
   in
   Option.map ~f @@ Fuzzer.some_mutate_expression ~n expr
 
 
 let rec value_gen
-    :  raise:(interpreter_error, _) raise -> ?small:bool
+    :  raise:(interpreter_error, _) Trace.raise -> ?small:bool
     -> ?known_addresses:LT.Contract.t list -> Ast_aggregated.type_expression
     -> LT.value QCheck.Gen.t
   =
