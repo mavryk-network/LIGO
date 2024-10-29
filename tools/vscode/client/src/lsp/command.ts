@@ -4,7 +4,7 @@ import { LanguageClient, NotificationType } from 'vscode-languageclient/node'
 import { ligoOutput } from './commands/common'
 
 import * as lc from './commands/ligoCommands'
-import * as tc from './commands/tezosCommands'
+import * as tc from './commands/mavrykCommands'
 import * as ui from './ui'
 import * as ex from '../common/exceptions'
 import { LigoContext } from '../common/LigoContext'

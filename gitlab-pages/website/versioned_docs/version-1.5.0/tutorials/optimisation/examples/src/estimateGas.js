@@ -1,6 +1,6 @@
 const taquito = require("@mavrykdynamics/taquito")
 
-const { initializeMavryk, Artifacts } = require("./tezos")
+const { initializeMavryk, Artifacts } = require("./mavryk")
 
 function printEstimate(description, est) {
     console.log(description)
