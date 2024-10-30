@@ -5,7 +5,7 @@
 add-changelog-entry:
   stage: post-build-action
   tags:
-    - saas-linux-2xlarge-amd64 
+    - saas-linux-small-amd64  
   extends : .nix
   needs: []
   before_script:
