@@ -71,7 +71,8 @@ vscode-extension:
     - !reference [.vscode_extension_mr_changes]
     - !reference [.dev]
     - !reference [.vscode_production]
-  needs: [debugger-build, debugger-build-macos]
+  needs: [debugger-build]
+  # needs: [debugger-build, debugger-build-macos]
   tags:
     - saas-linux-2xlarge-amd64
   image: node:18-buster
