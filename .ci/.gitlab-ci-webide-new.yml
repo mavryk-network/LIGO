@@ -6,7 +6,7 @@ include:
 webide-backend:
   stage: tools-build
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   rules: &webide_mr_dev
     - !reference [.webide_mr_changes]
     - !reference [.dev]
@@ -17,7 +17,7 @@ webide-backend:
 webide-frontend:
   stage: tools-build
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   rules: *webide_mr_dev
   needs: []
   script:
@@ -26,7 +26,7 @@ webide-frontend:
 webide-backend-checks:
   stage: tools-check
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   rules: *webide_mr_dev
   needs: [webide-backend]
   script:
@@ -42,7 +42,7 @@ webide-backend-checks:
 webide-frontend-checks:
   stage: tools-check
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   rules: *webide_mr_dev
   needs: [webide-frontend]
   script:

@@ -6,7 +6,7 @@ webide-define-image-tag:
   extends: .docker-image
   stage: pretooling
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   needs:
     - job: changelog
       artifacts: false
@@ -40,7 +40,7 @@ webide-new-backend-build:
   extends: .docker-image
   stage: build
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   needs:
     - job: changelog
       artifacts: false
@@ -60,7 +60,7 @@ webide-new-frontend-build:
   extends: .docker-image
   stage: build
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   needs:
     - job: changelog
       artifacts: false
@@ -85,7 +85,7 @@ webide-new-backend-build-and-push-backend:
   extends: .docker-image
   stage: deploy
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   needs:
     - job: webide-define-image-tag
       artifacts: true 
@@ -105,7 +105,7 @@ webide-new-frontend-build-and-push:
   extends: .docker-image
   stage: deploy
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   needs:
     - job: webide-define-image-tag
       artifacts: true
@@ -130,7 +130,7 @@ webide-new-release-backend-build-and-push:
   extends: .docker-image
   stage: deploy
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   needs:
     - job: webide-define-image-tag
       artifacts: true
@@ -150,7 +150,7 @@ webide-new-release-frontend-build-and-push:
   extends: .docker-image
   stage: deploy
   tags:
-    - saas-linux-xlarge-amd64 
+    - saas-linux-2xlarge-amd64 
   needs:
     - job: webide-define-image-tag
       artifacts: true
