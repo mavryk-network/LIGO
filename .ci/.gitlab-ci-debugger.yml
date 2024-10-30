@@ -113,6 +113,7 @@ debugger-test-ligo-latest:
   stage: tools-check
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
@@ -126,6 +127,7 @@ debugger-test-static-debugger-binary:
   stage: tools-check
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   rules: *debugger_mr_dev
   needs: [debugger-build]
   allow_failure: true
@@ -136,6 +138,7 @@ debugger-build-and-publish-build-base-image:
   stage: push
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   variables:
     DEBUGGER_BASE_IMAGE: "${CI_REGISTRY}/${CI_PROJECT_PATH}/debugger-build-base:latest"
   rules:

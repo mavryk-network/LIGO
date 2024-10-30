@@ -44,6 +44,7 @@ changelog:
   stage: pretooling
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   script:
     - FORCE_GENERATION=$([ -n "$CI_COMMIT_TAG" ] && echo "false" || echo "true")
     - ./scripts/changelog-generation.sh ${FORCE_GENERATION}
@@ -68,6 +69,7 @@ docker_build:
   stage: build
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
@@ -110,6 +112,7 @@ docker_extract:
   stage: docker-extract
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
@@ -149,6 +152,7 @@ check-generated-highlighting:
   stage: tooling
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   dependencies:
     - docker_extract
   script:
@@ -168,6 +172,7 @@ check-generated-highlighting:
   stage: push
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   image: docker:19.03.5
   services:
     - docker:19.03.5-dind
@@ -176,6 +181,7 @@ docker_push_ligo:
   stage: push
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   extends: .docker-image
   dependencies:
     - docker_build
@@ -201,6 +207,7 @@ docker_push_ligo_ci:
   stage: push
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   extends: .docker-image
   dependencies:
     - docker_build
@@ -225,6 +232,7 @@ xrefcheck:
   stage: tooling
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   needs:
     - job: changelog
       artifacts: true
@@ -285,6 +293,7 @@ algolia-crawl:
   stage: push
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   needs:
     - job: pages
   script:

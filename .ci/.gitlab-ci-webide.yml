@@ -7,6 +7,7 @@ webide-define-image-tag:
   stage: pretooling
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   needs:
     - job: changelog
       artifacts: false
@@ -41,6 +42,7 @@ webide-new-backend-build:
   stage: build
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   needs:
     - job: changelog
       artifacts: false
@@ -61,6 +63,7 @@ webide-new-frontend-build:
   stage: build
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   needs:
     - job: changelog
       artifacts: false
@@ -86,6 +89,7 @@ webide-new-backend-build-and-push-backend:
   stage: deploy
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   needs:
     - job: webide-define-image-tag
       artifacts: true 
@@ -106,6 +110,7 @@ webide-new-frontend-build-and-push:
   stage: deploy
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   needs:
     - job: webide-define-image-tag
       artifacts: true
@@ -131,6 +136,7 @@ webide-new-release-backend-build-and-push:
   stage: deploy
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   needs:
     - job: webide-define-image-tag
       artifacts: true
@@ -151,6 +157,7 @@ webide-new-release-frontend-build-and-push:
   stage: deploy
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   needs:
     - job: webide-define-image-tag
       artifacts: true

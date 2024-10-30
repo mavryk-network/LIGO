@@ -6,6 +6,7 @@ add-changelog-entry:
   stage: post-build-action
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   extends : .nix
   needs: []
   before_script:

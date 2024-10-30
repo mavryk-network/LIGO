@@ -7,6 +7,7 @@ webide-backend:
   stage: tools-build
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   rules: &webide_mr_dev
     - !reference [.webide_mr_changes]
     - !reference [.dev]
@@ -18,6 +19,7 @@ webide-frontend:
   stage: tools-build
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   rules: *webide_mr_dev
   needs: []
   script:
@@ -27,6 +29,7 @@ webide-backend-checks:
   stage: tools-check
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   rules: *webide_mr_dev
   needs: [webide-backend]
   script:
@@ -43,6 +46,7 @@ webide-frontend-checks:
   stage: tools-check
   tags:
     - gcp-ubuntu
+    - saas-linux-2xlarge-amd64
   rules: *webide_mr_dev
   needs: [webide-frontend]
   script:
