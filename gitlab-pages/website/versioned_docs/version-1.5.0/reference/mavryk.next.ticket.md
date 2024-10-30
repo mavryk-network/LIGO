@@ -1,5 +1,5 @@
 ---
-id: tezos.next.ticket-reference
+id: mavryk.next.ticket-reference
 title: ticket
 hide_table_of_contents: true
 ---

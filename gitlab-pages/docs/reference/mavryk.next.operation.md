@@ -1,5 +1,5 @@
 ---
-id: tezos.next.operation-reference
+id: mavryk.next.operation-reference
 title: operation
 hide_table_of_contents: true
 ---

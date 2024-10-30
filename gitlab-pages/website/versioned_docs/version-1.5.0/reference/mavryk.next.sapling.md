@@ -1,5 +1,5 @@
 ---
-id: tezos.next.sapling-reference
+id: mavryk.next.sapling-reference
 title: sapling
 hide_table_of_contents: true
 ---

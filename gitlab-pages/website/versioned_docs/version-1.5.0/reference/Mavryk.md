@@ -1,6 +1,6 @@
 ---
 id: mavryk-reference
-title: tezos
+title: mavryk
 hide_table_of_contents: true
 ---
 import Syntax from '@theme/Syntax';

@@ -1,5 +1,5 @@
 ---
-id: tezos.next.view-reference
+id: mavryk.next.view-reference
 title: view
 hide_table_of_contents: true
 ---

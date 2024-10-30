@@ -1,5 +1,5 @@
 ---
-id: tezos.next-reference
+id: mavryk.next-reference
 title: next
 hide_table_of_contents: true
 ---
@@ -8,16 +8,16 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 
 
-[module operation](tezos.next.operation.md)
+[module operation](mavryk.next.operation.md)
 
 
-[module view](tezos.next.view.md)
+[module view](mavryk.next.view.md)
 
 
-[module ticket](tezos.next.ticket.md)
+[module ticket](mavryk.next.ticket.md)
 
 
-[module sapling](tezos.next.sapling.md)
+[module sapling](mavryk.next.sapling.md)
 
 
 <SyntaxTitle syntax="cameligo">

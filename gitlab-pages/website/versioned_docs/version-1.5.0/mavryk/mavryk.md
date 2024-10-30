@@ -1,5 +1,5 @@
 ---
-id: tezos
+id: mavryk
 title: Mavryk
 ---
 
