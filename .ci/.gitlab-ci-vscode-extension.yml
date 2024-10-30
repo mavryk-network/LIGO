@@ -9,7 +9,6 @@ variables:
 vscode-extension-test:
   stage: tools-check
   tags:
-    - gcp-ubuntu
     - saas-linux-2xlarge-amd64
   rules: &vscode_extension_mr_dev
     - !reference [.vscode_extension_mr_changes]
@@ -24,7 +23,6 @@ vscode-extension-test:
 vscode-extension-extest:
   stage: tools-check
   tags:
-    - gcp-ubuntu
     - saas-linux-2xlarge-amd64
   rules: *vscode_extension_mr_dev
   needs: [docker_extract, debugger-build]
@@ -37,7 +35,6 @@ vscode-extension-extest:
 vscode-extension-extest-deploy:
   stage: tools-check
   tags:
-    - gcp-ubuntu
     - saas-linux-2xlarge-amd64
   rules: *vscode_extension_mr_dev
   needs: [docker_extract, debugger-build]
@@ -51,7 +48,6 @@ vscode-extension-extest-deploy:
 emacs-lsp-client-test:
   stage: tools-check
   tags:
-    - gcp-docker
     - saas-linux-2xlarge-amd64
   image: silex/emacs:27.2-ci-cask
   variables:
@@ -77,7 +73,6 @@ vscode-extension:
     - !reference [.vscode_production]
   needs: [debugger-build, debugger-build-macos]
   tags:
-    - gcp-docker
     - saas-linux-2xlarge-amd64
   image: node:18-buster
   script:
@@ -97,7 +92,6 @@ vscode-extension-publish:
     - !reference [.vscode_production]
   needs: [vscode-extension]
   tags:
-    - gcp-docker
     - saas-linux-2xlarge-amd64
   image: node:18-buster
   when: manual
