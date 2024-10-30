@@ -24,6 +24,7 @@ debugger-danger-instant-checks:
   needs: []
   allow_failure: true
   interruptible: true
+  tags:
     - saas-linux-2xlarge-amd64
   image: ruby:3.2.2
   before_script: &install_danger
@@ -38,6 +39,7 @@ debugger-danger-hlint:
   rules: *debugger_danger_checks
   needs: []
   interruptible: true
+  tags:
     - saas-linux-2xlarge-amd64
   image: ruby:3.2.2
   before_script:
@@ -55,6 +57,7 @@ debugger-danger-premerge-checks:
   needs: ["debugger-danger-instant-checks"]  # To get messages in MRs ordered right
   when: always
   interruptible: true
+  tags:
     - saas-linux-2xlarge-amd64
   image: ruby:3.2.2
   before_script: *install_danger
@@ -86,21 +89,22 @@ debugger-build:
     paths:
       - Linux
 
-debugger-build-macos:
-  stage: tools-build
-  rules: *debugger_mr_dev
-  needs: []
-  tags:
-    - i7-mac
-  script:
-    - mkdir -p Darwin/bin
-    - OUT_DIR="$PWD/Darwin/bin"
-    - cd tools/debugger/ligo-debugger
-    - stack build --ghc-options '-Werror' --copy-bins --local-bin-path="$OUT_DIR"
-    - ../../scripts/relink-mac-binary.sh "$OUT_DIR/ligo-debugger" ../lib
-  artifacts:
-    paths:
-      - Darwin
+# TODO: Find a intel macos
+# debugger-build-macos:
+#   stage: tools-build
+#   rules: *debugger_mr_dev
+#   needs: []
+#   tags:
+#     - i7-mac
+#   script:
+#     - mkdir -p Darwin/bin
+#     - OUT_DIR="$PWD/Darwin/bin"
+#     - cd tools/debugger/ligo-debugger
+#     - stack build --ghc-options '-Werror' --copy-bins --local-bin-path="$OUT_DIR"
+#     - ../../scripts/relink-mac-binary.sh "$OUT_DIR/ligo-debugger" ../lib
+#   artifacts:
+#     paths:
+#       - Darwin
 
 debugger-test-ligo-latest:
   stage: tools-check
