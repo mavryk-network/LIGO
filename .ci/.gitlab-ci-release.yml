@@ -365,8 +365,8 @@ update-bottle-reference:
   tags:
     - saas-linux-2xlarge-amd64
   needs:
-      - job: bottle-sonoma-i7
-        artifacts: true
+      # - job: bottle-sonoma-i7
+      #   artifacts: true
       - job: bottle-sonoma-m1
         artifacts: true
       - job: build_release_env_vars
