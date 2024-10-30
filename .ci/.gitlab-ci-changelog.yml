@@ -5,7 +5,7 @@
 add-changelog-entry:
   stage: post-build-action
   tags:
-    - gitlab-org-docker
+    - saas-linux-medium-amd64
   extends : .nix
   needs: []
   before_script:
