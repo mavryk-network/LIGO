@@ -4,8 +4,8 @@ class Ligo < Formula
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules
-  url "https://gitlab.com/mavryk-network/ligo.git", tag: "1.6.0", revision: "86548dbd16776c30fd47e5fdf48631cfffecaea3"
-  version "1.6.0"
+  url "https://gitlab.com/mavryk-network/ligo.git", tag: "1.7.0", revision: "86548dbd16776c30fd47e5fdf48631cfffecaea3"
+  version "1.7.0"
   head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
 
@@ -32,7 +32,7 @@ class Ligo < Formula
 
   def install
     # ligo version is taken from the environment variable in build-time
-    ENV["LIGO_VERSION"] = "1.6.0"
+    ENV["LIGO_VERSION"] = "1.7.0"
     # avoid opam prompts
     ENV["OPAMYES"] = "true"
 

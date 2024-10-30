@@ -1,11 +1,11 @@
-class LigoAT150 < Formula
+class LigoAT170 < Formula
   desc "Friendly Smart Contract Language for Mavryk"
   homepage "https://ligo.mavryk.org/"
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules
-  url "https://gitlab.com/mavryk-network/ligo.git", tag: "1.5.0", revision: "8a71b265ec531cb26861a9a07816da4751651f5b"
-  version "1.5.0"
+  url "https://gitlab.com/mavryk-network/ligo.git", tag: "1.7.0", revision: "fd3f18b3a95b952d6247d1109aa8adb5f6d74a33"
+  version "1.7.0"
   head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
 
@@ -32,7 +32,7 @@ class LigoAT150 < Formula
 
   def install
     # ligo version is taken from the environment variable in build-time
-    ENV["LIGO_VERSION"] = "1.5.0"
+    ENV["LIGO_VERSION"] = "1.7.0"
     # avoid opam prompts
     ENV["OPAMYES"] = "true"
 
