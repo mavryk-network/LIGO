@@ -43,7 +43,7 @@ include:
 changelog:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   script:
     - FORCE_GENERATION=$([ -n "$CI_COMMIT_TAG" ] && echo "false" || echo "true")
     - ./scripts/changelog-generation.sh ${FORCE_GENERATION}
@@ -67,7 +67,7 @@ changelog:
 docker_build:
   stage: build
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
@@ -109,7 +109,7 @@ docker_build:
 docker_extract:
   stage: docker-extract
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
@@ -148,7 +148,7 @@ docker_extract:
 check-generated-highlighting:
   stage: tooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   dependencies:
     - docker_extract
   script:
@@ -167,7 +167,7 @@ check-generated-highlighting:
 .docker-image:
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   image: docker:19.03.5
   services:
     - docker:19.03.5-dind
@@ -175,7 +175,7 @@ check-generated-highlighting:
 docker_push_ligo:
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   extends: .docker-image
   dependencies:
     - docker_build
@@ -200,7 +200,7 @@ docker_push_ligo:
 docker_push_ligo_ci:
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   extends: .docker-image
   dependencies:
     - docker_build
@@ -224,7 +224,7 @@ docker_push_ligo_ci:
 xrefcheck:
   stage: tooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   needs:
     - job: changelog
       artifacts: true
@@ -240,7 +240,7 @@ xrefcheck:
 .website:
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   image: node:20.2.0-buster
   needs:
     - job: changelog
@@ -284,7 +284,7 @@ pages-attempt:
 algolia-crawl:
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   needs:
     - job: pages
   script:
@@ -302,7 +302,7 @@ deploy_website_preview:
   stage: deploy
   image: node:20.2.0-buster
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   needs:
     - job: pages-attempt
       artifacts: true

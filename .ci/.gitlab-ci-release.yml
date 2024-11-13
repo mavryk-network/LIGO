@@ -7,7 +7,7 @@
 initialize-ssh:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   only:
     # prefixed by release /^release/.*/
     - /^release/.*/
@@ -24,7 +24,7 @@ initialize-ssh:
 initialize-git:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   dependencies:
     - initialize-ssh
   only:
@@ -38,7 +38,7 @@ initialize-git:
 trigger_new_minor_version_generation:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   dependencies:
     - initialize-git
   script:
@@ -53,7 +53,7 @@ trigger_new_minor_version_generation:
 build_release_env_vars:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   script:
     - RELEASE_VERSION=${CI_COMMIT_BRANCH#"release/"}
     - echo "RELEASE_VERSION=${RELEASE_VERSION}" >> releaseversion.env
@@ -69,9 +69,9 @@ build_release_env_vars:
 # Following script is executed when branch is created
 #######################################################################
 create-tag:
-  stage: release   
-  tags: 
-    - saas-linux-medium-amd64
+  stage: release
+  tags:
+    - ubuntu-amd64
   script:
     - git remote rm origin && git remote add origin "git@gitlab.com:mavryk-network/ligo.git"
     # Don't want to tag for testing
@@ -100,7 +100,7 @@ create-tag:
 determine_new_stable_version:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   before_script:
     # Have to be done here because we are using an image for this job.
     - apt-get update
@@ -154,7 +154,7 @@ docker-m1:
 release:
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   image: registry.gitlab.com/gitlab-org/release-cli
   rules:
     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]+/'
@@ -193,7 +193,7 @@ release:
 create_docker_stable_version:
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   rules:
     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.0/'
       when: always
@@ -214,7 +214,7 @@ update_release_metadata:
   extends: .submodule-clone
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   image: node:20.12.0-buster
   rules:
     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.0/'
@@ -262,7 +262,7 @@ update_release_metadata:
 initialize-aur-repo:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   script:
     - git clone "ssh://aur@aur.archlinux.org/ligo-bin.git"
   needs:
@@ -278,7 +278,7 @@ initialize-aur-repo:
 generate-homebrew-version:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   needs:
     - job: build_release_env_vars
       artifacts: true
@@ -363,7 +363,7 @@ bottle-sonoma-m1:
 update-bottle-reference:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   needs:
       # - job: bottle-sonoma-i7
       #   artifacts: true
@@ -387,7 +387,7 @@ update-bottle-reference:
 update-ligo-bin-PKGBUILD:
   stage: pretooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   script:
     - LAST_TAG_JOB_ID=`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_TAG_JOB_ID`
     - ./.ci/scripts/AUR/create_new_pkgbuild_version.sh https://gitlab.com/mavryk-network/ligo/-/jobs/$LAST_TAG_JOB_ID/artifacts/raw/ligo.deb $RELEASE_VERSION
@@ -407,7 +407,7 @@ update-ligo-bin-PKGBUILD:
 create-AUR-package:
   stage: tooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   image: archlinux:base-devel
   script: 
     - useradd -m ligo-user
@@ -429,7 +429,7 @@ create-AUR-package:
 calculate_nix_SRI:
   stage: tooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   rules:
     - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null) 
       when: always
@@ -447,7 +447,7 @@ calculate_nix_SRI:
 update-repository-status:
   stage: tooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   image: node:20.12.0-buster
   before_script:
     # Have to be done here because we are using an image for this job.
@@ -491,7 +491,7 @@ update-repository-status:
 create-doc-update-MR:
   stage: tooling
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   script:
     - HOST=${CI_PROJECT_URL} CI_PROJECT_ID=${CI_PROJECT_ID} CI_COMMIT_REF_NAME=${CI_COMMIT_REF_NAME} PRIVATE_TOKEN=${TOKEN_API} ./.ci/scripts/auto_merge_request.sh
   rules:
@@ -503,7 +503,7 @@ create-doc-update-MR:
 publish-AUR-package:
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   script:
     - cd ligo-bin
     - git remote rm origin && git remote add origin ssh://aur@aur.archlinux.org/ligo-bin.git
@@ -529,7 +529,7 @@ publish-AUR-package:
 publish-nixpkg:
   stage: push
   tags:
-    - saas-linux-medium-amd64
+    - ubuntu-amd64
   script:
     - git clone "https://github.com/NixOS/nixpkgs.git"
     - PRECEDENT_LIGO_VERSION_NIX=$(.ci/scripts/nix/retrieve_version.sh nixpkgs/pkgs/development/compilers/ligo/default.nix)
