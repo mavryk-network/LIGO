@@ -6,4 +6,13 @@ RUN nix-env -iA \
       nixpkgs.wget \
       nixpkgs.bash \
       nixpkgs.gnused \
+      nixpkgs.rsync \
+      nixpkgs.unzip \
+      nixpkgs.jq \
+      nixpkgs.gnumake \
+      nixpkgs.gcc \
+      nixpkgs.gnum4 \
+      nixpkgs.gnupatch \
+      nixpkgs.bc \
+      nixpkgs.opam \
       nixpkgs.gnugrep

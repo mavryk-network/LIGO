@@ -276,7 +276,7 @@ The signature `S` is best construed as a simplification and
 specialisation of the interface of `LexCore`, which is a private module,
 therefore cannot be accessed by the clients of this library. We shall
 explain `LexCore` in section about
-[the LexCore interface](#the-core-interface).
+[the LexCore interface](#the-lexcore-interface).
 
 The purpose of the functor `Make` is to take that low-level
 representation of a lexer by instantiating `LexCore` with a module of
@@ -642,7 +642,7 @@ different from the other methods in `mk_`. Indeed they return a value
 of type `Markup.t`, but no new state. There is a technical reason
 which can only be understood by looking at
 [the State Implementation](#the-state-implementation) and
-[the LexCore Implementation](#the-core-implementation).
+[the LexCore Implementation](#the-lexcore-implementation).
 
 ### The LexCore Interface
 
@@ -962,7 +962,7 @@ failed, either due to an internal error or an error in the input file.
 
 The function `lexbuf_from_input` creates a lexing buffer from the
 variety of possible inputs modelled by the type `input`. See
-[the LexCore Interface](#the-core-interface). Two points of note:
+[the LexCore Interface](#the-lexcore-interface). Two points of note:
 
   1. In the case of `Buffer` as an input, we check whether the input
      configuration `config` registers a file name: if so, the lexing
@@ -975,7 +975,7 @@ variety of possible inputs modelled by the type `input`. See
 
 The next section is about lexing errors and is worth detailing here.
 As we saw in the description of
-[the LexCore Interface](#the-core-interface), we do not export
+[the LexCore Interface](#the-lexcore-interface), we do not export
 exceptions. Nevertheless, it is convenient to use one exception in
 case of error in the semantic actions of the implementation. That is:
 
@@ -1073,7 +1073,7 @@ let fail region error =
 ### The function `open_stream`
 
 As we saw in the section about
-[the LexCore Interface](#the-core-interface), the function `open_stream`
+[the LexCore Interface](#the-lexcore-interface), the function `open_stream`
 exported by the module `LexCore` is only used by `API` to instantiate the
 sundry kinds of lexers it offers. The functions is made of four parts.
 

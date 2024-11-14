@@ -36,7 +36,7 @@ A smart contract is composed of three elements:
 - Its storage: data that is dedicated to and can be read and written by the contract
 - Its code: one or more entrypoints, which are a kind of function that can be called either from outside the chain or from other contracts
 
-For more information about smart contracts on Mavryk, see [Smart contracts](https://docs.mavryk.org/smart-contracts) on docs.mavryk.org.
+For more information about smart contracts on Mavryk, see [Smart contracts](https://docs.tezos.org/smart-contracts) on docs.tezos.org.
 
 ## Writing the smart contract code
 

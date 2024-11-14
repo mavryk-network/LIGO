@@ -19,8 +19,7 @@ support are:
 * `ligo run dry-run`
 
 We will show how to use the first two, while an example on how to use
-the third one was already explained
-[here](first-contract.md#dry-running-a-contract).
+the third one was already explained.
 
 ### Testing with `ligo run test`
 

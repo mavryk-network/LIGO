@@ -3,9 +3,6 @@ id: layout-comb-how
 title: How to deal with the change of the default datatype layout to @layout comb ?
 ---
 
-See [Why did the default datatype layout change to `@layout comb` ?](layout-comb-why.md)
-for background about this change.
-
 ## Easy way out
 
 To take the easy way out, set the `LIGO_LEGACY_LAYOUT_TREE`

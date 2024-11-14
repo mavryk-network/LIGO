@@ -150,7 +150,7 @@
       "preprocessor/error"
     ],
     "MAVRYK FEATURES": [
-      "mavryk/tezos"
+      "mavryk/mavryk"
     ],
     "bytes": [
       "mavryk/bytes/bytes",

@@ -224,7 +224,7 @@
 	'ligo-font-lock-todo-face)
 
 (defgroup ligo nil
-  "Support for LIGO code.";  :link '(url-link "https://www.ligo.mavryk.org/")
+  "Support for LIGO code.";  :link '(url-link "https://ligo.mavryk.org/")
   :group 'languages)
 
 (defcustom ligo-bin "ligo"
