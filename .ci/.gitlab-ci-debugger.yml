@@ -70,6 +70,13 @@ debugger-danger-premerge-checks:
 debugger-build:
   stage: tools-build
   image: mavrykdynamics/nix-image:2.25.1-amd64
+  services:
+  - docker:dind
+  variables:
+    DOCKER_VERSION: 19.03.5
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   tags:
     - ubuntu-amd64
   rules: &debugger_mr_dev
@@ -112,6 +119,13 @@ debugger-test-ligo-latest:
   tags:
     - ubuntu-amd64
   image: mavrykdynamics/nix-image:2.25.1-amd64
+  services:
+  - docker:${DOCKER_VERSION}-dind
+  variables:
+    DOCKER_VERSION: 19.03.5
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always

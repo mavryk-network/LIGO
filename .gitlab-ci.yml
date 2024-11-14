@@ -44,6 +44,13 @@ include:
   tags:
     - ubuntu-amd64
   image: mavrykdynamics/nix-image:2.25.1-amd64
+  services:
+  - docker:${DOCKER_VERSION}-dind
+  variables:
+    DOCKER_VERSION: 19.03.5
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
 
 changelog:
   stage: pretooling
@@ -91,6 +98,7 @@ docker_build:
     - git submodule update --init --recursive # because of a gitlab caching issue
     - git branch
     - ls -la
+    - ls .ci/scripts/pipeline_optimization
     - .ci/scripts/pipeline_optimization/mr_dockerfile_pre_process.sh
     - VERSION=$(./scripts/version.sh)
     - DOCKER_BUILDKIT=1 docker build .
