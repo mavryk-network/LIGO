@@ -3,4 +3,5 @@ RUN nix-env -iA \
       nixpkgs.docker \
       nixpkgs.git \
       nixpkgs.curl \
-      nixpkgs.wget
+      nixpkgs.wget \
+      nixpkgs.bash

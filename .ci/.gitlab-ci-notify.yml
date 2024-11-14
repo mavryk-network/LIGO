@@ -2,7 +2,7 @@ notify-christian-on-frontend-change:
   stage: post-build-action
   tags:
     - ubuntu-amd64
-  image: mavrykdynamics/nix-image:2.25.1-amd64
+  image: mavrykdynamics/nix-image:2.25.1
   script:
     - MESSAGE="Someone edited frontend https://gitlab.com/mavryk-network/ligo/-/merge_requests/$CI_MERGE_REQUEST_IID"
     - "curl -d \"text=${MESSAGE}\" -d 'channel=UC5125SQP' -H \"Authorization: Bearer ${SLACK_LIGO_ALERTER_TOKEN}\" -X POST https://slack.com/api/chat.postMessage --trace-ascii /dev/stdout"

@@ -69,7 +69,7 @@ debugger-danger-premerge-checks:
 
 debugger-build:
   stage: tools-build
-  image: mavrykdynamics/nix-image:2.25.1-amd64
+  image: mavrykdynamics/nix-image:2.25.1
   services:
   - docker:dind
   variables:
@@ -118,7 +118,7 @@ debugger-test-ligo-latest:
   stage: tools-check
   tags:
     - ubuntu-amd64
-  image: mavrykdynamics/nix-image:2.25.1-amd64
+  image: mavrykdynamics/nix-image:2.25.1
   services:
   - docker:${DOCKER_VERSION}-dind
   variables:
