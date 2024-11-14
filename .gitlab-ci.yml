@@ -40,11 +40,16 @@ include:
     - find "$CI_PROJECT_DIR" -path "$CI_PROJECT_DIR/.git" -prune -o "(" -type d -a -not -perm -u=w ")" -exec chmod --verbose u+w {} ";"
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
 
-changelog:
+.nix-image:
+  tags:
+    - ubuntu-amd64
   image: nixos/nix:2.25.1-amd64
+
+changelog:
   stage: pretooling
   tags:
     - ubuntu-amd64
+  extends: .nix-image
   script:
     - FORCE_GENERATION=$([ -n "$CI_COMMIT_TAG" ] && echo "false" || echo "true")
     - ./scripts/changelog-generation.sh ${FORCE_GENERATION}
@@ -64,11 +69,24 @@ changelog:
       - release-notes.md
       - release-notes.txt
 
+.docker-image:
+  tags:
+    - ubuntu-amd64
+  image: docker:${DOCKER_VERSION}
+  services:
+    - docker:${DOCKER_VERSION}-dind
+  variables:
+    DOCKER_VERSION: 19.03.5
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+
 # TODO: https://docs.gitlab.com/ee/ci/yaml/#onlychangesexceptchanges ?
 docker_build:
   stage: build
   tags:
     - ubuntu-amd64
+  extends: .docker-image
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
@@ -82,6 +100,8 @@ docker_build:
     - job: changelog
       artifacts: true
   script:
+    - apk update
+    - apk add git
     - git submodule update --init --recursive # because of a gitlab caching issue
     - .ci/scripts/pipeline_optimization/mr_dockerfile_pre_process.sh
     - VERSION=$(./scripts/version.sh)
@@ -111,6 +131,7 @@ docker_extract:
   stage: docker-extract
   tags:
     - ubuntu-amd64
+  extends: .docker-image
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
@@ -169,9 +190,14 @@ check-generated-highlighting:
   stage: push
   tags:
     - ubuntu-amd64
-  image: docker:19.03.5
+  image: docker:${DOCKER_VERSION}
   services:
-    - docker:19.03.5-dind
+    - docker:${DOCKER_VERSION}-dind
+  variables:
+    DOCKER_VERSION: 19.03.5
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
 
 docker_push_ligo:
   stage: push
