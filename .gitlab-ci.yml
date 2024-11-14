@@ -43,7 +43,7 @@ include:
 .nix-image:
   tags:
     - ubuntu-amd64
-  image: mavrykdynamics/nix-image:2.25.1
+  image: mavrykdynamics/ci-nix:0.0.1
   services:
   - docker:${DOCKER_VERSION}-dind
   variables:
