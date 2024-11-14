@@ -41,6 +41,7 @@ include:
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
 
 changelog:
+  image: nixos/nix:2.25.1-amd64
   stage: pretooling
   tags:
     - ubuntu-amd64
