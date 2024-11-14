@@ -4,4 +4,6 @@ RUN nix-env -iA \
       nixpkgs.git \
       nixpkgs.curl \
       nixpkgs.wget \
-      nixpkgs.bash
+      nixpkgs.bash \
+      nixpkgs.gnused \
+      nixpkgs.gnugrep
