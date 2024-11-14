@@ -1,8 +1,8 @@
-FROM alpine:3.18 as ligo-builder
+FROM alpine:3.20 as ligo-builder
 
 WORKDIR /ligo
 
-ADD https://github.com/ocaml/opam/releases/download/2.1.0/opam-2.1.0-x86_64-linux /usr/local/bin/opam
+ADD https://github.com/ocaml/opam/releases/download/2.2.1/opam-2.2.1-x86_64-linux /usr/local/bin/opam
 
 # Install native deps needed for Mavryk (etc?)
 # Adapted from https://github.com/asbjornenge/mavryk-docker

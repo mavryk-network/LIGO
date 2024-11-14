@@ -45,9 +45,9 @@ include:
     - ubuntu-amd64
   image: mavrykdynamics/ci-nix:0.0.2
   services:
-  - docker:${DOCKER_VERSION}-dind
+  - docker:25.0.6-dind
   variables:
-    DOCKER_VERSION: 19.03.5
+    DOCKER_VERSION: 25.0.6
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
