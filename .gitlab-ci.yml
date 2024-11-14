@@ -96,9 +96,7 @@ docker_build:
       artifacts: true
   script:
     - git submodule update --init --recursive # because of a gitlab caching issue
-    - git branch
-    - ls -la
-    - ls .ci/scripts/pipeline_optimization
+    - sleep 3600
     - .ci/scripts/pipeline_optimization/mr_dockerfile_pre_process.sh
     - VERSION=$(./scripts/version.sh)
     - DOCKER_BUILDKIT=1 docker build .
