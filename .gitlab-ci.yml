@@ -105,9 +105,6 @@ docker_build:
   script:
     - git submodule update --init --recursive # because of a gitlab caching issue
     - cat changelog.md > gitlab-pages/docs/intro/changelog.md
-    - cat changelog.md
-    - ls gitlab-pages/docs/intro
-    - pwd
     - .ci/scripts/pipeline_optimization/mr_dockerfile_pre_process.sh
     - VERSION=$(sh ./scripts/version.sh)
     - DOCKER_BUILDKIT=1 docker build .
