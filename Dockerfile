@@ -1,8 +1,8 @@
-FROM alpine:3.20 as ligo-builder
+FROM alpine:3.18 as ligo-builder
 
 WORKDIR /ligo
 
-ADD https://github.com/ocaml/opam/releases/download/2.2.1/opam-2.2.1-x86_64-linux /usr/local/bin/opam
+ADD https://github.com/ocaml/opam/releases/download/2.1.0/opam-2.1.0-x86_64-linux /usr/local/bin/opam
 
 # Install native deps needed for Mavryk (etc?)
 # Adapted from https://github.com/asbjornenge/mavryk-docker
@@ -23,7 +23,7 @@ RUN apk update && apk upgrade && apk --no-cache add \
 ENV RUSTFLAGS='--codegen target-feature=-crt-static'
 # Make sure BLST_PORTABLE is used to build mavryk sub-module
 # If this flag is not setup, old processor can raise an illegal hardware instruction when Mavryk emit ADX instructions
-ENV ENV BLST_PORTABLE=y
+ENV ENV BLST_PORTABLE=ygit 
 
 # Install opam switch & deps
 COPY scripts/setup_switch.sh /ligo/scripts/setup_switch.sh
