@@ -45,7 +45,7 @@ include:
     - ubuntu-amd64
   image: mavrykdynamics/ci-nix:0.0.2
   services:
-  - docker:25.0.6-dind
+  - docker:25.0.5-dind
   variables:
     DOCKER_VERSION: 25.0.6
     DOCKER_TLS_CERTDIR: ""

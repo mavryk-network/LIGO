@@ -3,6 +3,13 @@ notify-christian-on-frontend-change:
   tags:
     - ubuntu-amd64
   image: mavrykdynamics/ci-nix:0.0.2
+  services:
+  - docker:25.0.5-dind
+  variables:
+    DOCKER_VERSION: 25.0.6
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   script:
     - MESSAGE="Someone edited frontend https://gitlab.com/mavryk-network/ligo/-/merge_requests/$CI_MERGE_REQUEST_IID"
     - "curl -d \"text=${MESSAGE}\" -d 'channel=UC5125SQP' -H \"Authorization: Bearer ${SLACK_LIGO_ALERTER_TOKEN}\" -X POST https://slack.com/api/chat.postMessage --trace-ascii /dev/stdout"
