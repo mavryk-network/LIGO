@@ -17,7 +17,5 @@ RUN nix-env -iA \
       nixpkgs.opam \
       nixpkgs.gnugrep \
       nixpkgs.sudo \
+      nixpkgs.mustache-go \
       nixpkgs.shadow
-
-ENV DOCKER_TLS_CERTDIR=""
-ENV DOCKER_HOST="unix:///var/run/docker.sock"

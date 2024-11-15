@@ -2,7 +2,7 @@ notify-christian-on-frontend-change:
   stage: post-build-action
   tags:
     - ubuntu-amd64
-  image: mavrykdynamics/ci-nix:0.0.2
+  image: mavrykdynamics/ci-nix:0.0.3
   services:
   - docker:25.0.5-dind
   variables:
