@@ -80,8 +80,16 @@ changelog:
 docker_build:
   stage: build
   tags:
-    - ubuntu-amd64
-  extends: .nix-image
+    - ubuntu-amd64  
+  image: registry.gitlab.com/tezos/docker-images/ci-docker:v1.10.0
+  services:
+  - docker:${DOCKER_VERSION}-dind
+  variables:
+    DOCKER_VERSION: 24.0.6
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    CI_DOCKER_HUB: "false"
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
