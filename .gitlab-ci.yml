@@ -107,6 +107,7 @@ docker_build:
     - cat changelog.md > gitlab-pages/docs/intro/changelog.md
     - .ci/scripts/pipeline_optimization/mr_dockerfile_pre_process.sh
     - VERSION=$(sh ./scripts/version.sh)
+    - sleep 3600
     - DOCKER_BUILDKIT=1 docker build .
       --build-arg=ligo_version="$VERSION"
       --target ligo-builder
