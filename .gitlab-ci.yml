@@ -40,14 +40,8 @@ include:
     - find "$CI_PROJECT_DIR" -path "$CI_PROJECT_DIR/.git" -prune -o "(" -type d -a -not -perm -u=w ")" -exec chmod --verbose u+w {} ";"
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
 
-.nix-image:
-  tags:
-    - ubuntu-amd64
-  image: mavrykdynamics/ci-nix:0.0.3
-  services:
-  - docker:25.0.5-dind
+.dind-config:
   variables:
-    DOCKER_VERSION: 25.0.6
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
@@ -56,7 +50,10 @@ changelog:
   stage: pretooling
   tags:
     - ubuntu-amd64
-  extends: .nix-image
+  services:
+  - docker:25.0.5-dind
+  image: mavrykdynamics/ci-nix:0.0.3
+  extends: .dind-config
   script:
     - FORCE_GENERATION=$([ -n "$CI_COMMIT_TAG" ] && echo "false" || echo "true")
     - sh ./scripts/changelog-generation.sh ${FORCE_GENERATION}
@@ -81,15 +78,11 @@ docker_build:
   stage: build
   tags:
     - ubuntu-amd64  
-  image: registry.gitlab.com/tezos/docker-images/ci-docker:v1.10.0
+  image: mavrykdynamics/ci-debian:0.0.1
+  extends: .dind-config
   services:
-  - docker:${DOCKER_VERSION}-dind
-  variables:
-    DOCKER_VERSION: 24.0.6
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-    CI_DOCKER_HUB: "false"
+  - docker:27.3.1-dind
+  extends: .dind-config
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
@@ -133,7 +126,10 @@ docker_extract:
   stage: docker-extract
   tags:
     - ubuntu-amd64
-  extends: .nix-image
+  image: mavrykdynamics/ci-debian:0.0.1
+  extends: .dind-config
+  services:
+  - docker:27.3.1-dind
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
@@ -173,7 +169,10 @@ check-generated-highlighting:
   stage: tooling
   tags:
     - ubuntu-amd64
-  extends: .nix-image
+  image: mavrykdynamics/ci-debian:0.0.1
+  extends: .dind-config
+  services:
+  - docker:27.3.1-dind
   dependencies:
     - docker_extract
   script:
@@ -255,7 +254,8 @@ xrefcheck:
   stage: tooling
   tags:
     - ubuntu-amd64
-  extends: .nix-image
+  image: mavrykdynamics/ci-debian:0.0.1
+  extends: .dind-config
   needs:
     - job: changelog
       artifacts: true
