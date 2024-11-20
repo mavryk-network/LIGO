@@ -1,43 +1,84 @@
-FROM alpine:3.17.3 as debugger-build-base
-# Install GHC 9.0.2 using ghcup
-RUN apk update \
-  && apk add \
-       autoconf automake bash binutils-gold curl dpkg fakeroot file \
-       findutils g++ gcc git make perl shadow tar xz \
-  && apk add \
-       brotli brotli-static \
-       bzip2 bzip2-dev bzip2-static \
-       curl libcurl curl-static \
-       freetype freetype-dev freetype-static \
-       gmp-dev \
-       libffi libffi-dev \
-       libpng libpng-static \
-       ncurses-dev ncurses-static \
-       openssl-dev openssl-libs-static \
-       pcre pcre-dev \
-       pcre2 pcre2-dev \
-       sdl2 sdl2-dev \
-       sdl2_image sdl2_image-dev \
-       sdl2_mixer sdl2_mixer-dev \
-       sdl2_ttf sdl2_ttf-dev \
-       xz xz-dev \
-       zlib zlib-dev zlib-static \
-  && ln -s /usr/lib/libncursesw.so.6 /usr/lib/libtinfo.so.6
-ENV GHCUP_INSTALL_BASE_PREFIX=/usr/local
-RUN curl --fail --output /bin/ghcup \
-      'https://downloads.haskell.org/ghcup/x86_64-linux-ghcup' \
- && chmod 0755 /bin/ghcup \
- && ghcup upgrade --target /bin/ghcup \
- && ghcup install cabal --set \
- && /usr/local/.ghcup/bin/cabal update
-ENV PATH="/usr/local/.ghcup/bin:$PATH"
-RUN ghcup install ghc 9.0.2 --set
-# Install stack
-RUN wget -qO- https://get.haskellstack.org/ | sh
+FROM ubuntu:20.04 as debugger-build-base
+
+ARG GHC_VERSION=9.0.2
+ARG LTS_SLUG=lts-21.4
+ARG PID1_VERSION=0.1.2.0
+ARG STACK_VERSION=3.1.1
+ARG CUDA_VERSION=10.0
+ARG JVM_PATH=/usr/lib/jvm/java-8-openjdk-amd64
+ARG LLVM_PATH=/usr/lib/llvm-9
+ARG BOOTSTRAP_COMMIT=70317ea1c42e6caae625059980575157cf9525ed
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG VARIANT=build
+ARG STACK_ROOT=/home/stackage/.stack
+
+#
+# Set encoding to UTF-8 and PATH to find GHC and cabal/stack-installed binaries.
+#
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    PATH=/root/.local/bin:/usr/local/cuda-$CUDA_VERSION/bin:$STACK_ROOT/programs/x86_64-linux/ghc-$GHC_VERSION/bin:$PATH \
+    CUDA_PATH=/usr/local/cuda-$CUDA_VERSION \
+    CPATH=$JVM_PATH/include:$JVM_PATH/include/linux:$LLVM_PATH/include
+
+#
+# Install pre-requisites
+#
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget netbase ca-certificates g++ gcc libc6-dev libffi-dev libgmp-dev \
+    make xz-utils zlib1g-dev git gnupg libtinfo-dev jq && \
+    rm -rf /var/lib/apt/lists/*
+
+#
+# Use Stackage's debian-bootstrap.sh script to install system libraries and
+# tools required to build any Stackage package.
+# Re-installs 'stack' *after* running debian-bootstrap.sh since that may have
+# installed a different version.
+# In the case of 'small' image, just install Stack and GHC.
+#
+
+RUN wget -qO- https://github.com/commercialhaskell/stack/releases/download/v$STACK_VERSION/stack-$STACK_VERSION-linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C /usr/bin '*/stack' && \
+    rm -rf /var/lib/apt/lists/* && \
+    cd $STACK_ROOT && \
+    find . -type f -not -path "./programs/x86_64-linux/ghc-$GHC_VERSION/*" -exec rm '{}' \; && \
+    find . -type d -print0 |sort -rz |xargs -0 rmdir 2>/dev/null || true
+
+#
+# Configure Stack to use the GHC installed in the Docker image rather than installing its own
+#
+
+RUN mkdir /etc/stack/ && \
+    echo "system-ghc: true" >/etc/stack/config.yaml
+
+#
+# Use 'stack' to install basic Haskell tools like alex, happy, and cpphs. We
+# remove most of the STACK_ROOT afterward to save space, but keep the 'share'
+# files that some of these tools require.
+#
+
+RUN stack --resolver=$LTS_SLUG --local-bin-path=/usr/bin install \
+    happy alex cpphs gtk2hs-buildtools hscolour hlint hindent && \
+    cd $STACK_ROOT && \
+    find . -type f -not -path './snapshots/*/share/*' -and -not -path "./programs/x86_64-linux/ghc-$GHC_VERSION/*" -exec rm '{}' \; && \
+    find . -type d -print0 |sort -rz |xargs -0 rmdir 2>/dev/null || true
+
+#
+# Install 'pid1' init daemon
+#
+
+RUN wget -O- "https://github.com/fpco/pid1/releases/download/v$PID1_VERSION/pid1-$PID1_VERSION-linux-x86_64.tar.gz" | tar xzf - -C /usr/local && \
+    chown root:root /usr/local/sbin && \
+    chown root:root /usr/local/sbin/pid1
+#
 
 FROM debugger-build-base as debugger-build
 # Install native debugger deps
-RUN apk update && apk add libsodium-static libsodium-dev zlib-static zlib-dev pkgconfig
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libclang-dev libsodium-dev pkg-config liblzma-dev && \
+    rm -rf /var/lib/apt/lists/*
 # Prebuild all deps without sources for better caching
 RUN mkdir /ligo-debugger
 WORKDIR /ligo-debugger
@@ -49,4 +90,4 @@ RUN stack build --system-ghc --ghc-options '-Werror -optl=-static -optl=-pthread
 # Actually build the debugger
 COPY ligo-debugger .
 # gcc-wrapper.sh is a workaround for https://gitlab.haskell.org/ghc/ghc/-/issues/20168
-RUN stack build --system-ghc --ghc-options '-Werror -optl=-static -optl=-pthread -pgml=/ligo-debugger/gcc-wrapper.sh' --copy-bins --local-bin-path="$PWD" --test --no-run-tests
+RUN stack build --system-ghc --ghc-options '-optl=-static -optl=-pthread -pgml=/ligo-debugger/gcc-wrapper.sh' --copy-bins --local-bin-path="$PWD" --test --no-run-tests
