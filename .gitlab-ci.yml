@@ -79,7 +79,7 @@ changelog:
 docker_build:
   stage: build
   tags:
-    - ubuntu-amd64  
+    - ubuntu-amd64
   image: mavrykdynamics/ci-debian:0.0.1
   extends: .dind-config
   services:

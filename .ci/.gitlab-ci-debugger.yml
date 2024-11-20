@@ -69,11 +69,10 @@ debugger-danger-premerge-checks:
 
 debugger-build:
   stage: tools-build
-  image: mavrykdynamics/ci-nix:0.0.3
+  image: mavrykdynamics/ci-debian:0.0.1
   services:
-  - docker:25.0.5-dind
+  - docker:27.3.1-dind
   variables:
-    DOCKER_VERSION: 25.0.6
     DOCKER_TLS_CERTDIR: ""
     DOCKER_HOST: tcp://docker:2375
     DOCKER_DRIVER: overlay2
@@ -118,20 +117,18 @@ debugger-test-ligo-latest:
   stage: tools-check
   tags:
     - ubuntu-amd64
-  image: mavrykdynamics/ci-nix:0.0.3
+  image: mavrykdynamics/ci-debian:0.0.1
   services:
-  - docker:25.0.5-dind
-  variables:
-    DOCKER_VERSION: 25.0.6
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
+  - docker:27.3.1-dind
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
   needs: [docker_extract, debugger-build]
   variables:
     LIGO_TEST_FLAGS: "-r"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   script: *run_ligo_debugger_tests
   after_script: *cleanup_ligo_debugger_test
 
@@ -149,8 +146,14 @@ debugger-build-and-publish-build-base-image:
   stage: push
   tags:
     - ubuntu-amd64
+  image: mavrykdynamics/ci-debian:0.0.1
+  services:
+  - docker:27.3.1-dind
   variables:
     DEBUGGER_BASE_IMAGE: "${CI_REGISTRY}/${CI_PROJECT_PATH}/debugger-build-base:latest"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   rules:
     - !reference [.dev]
   script:
