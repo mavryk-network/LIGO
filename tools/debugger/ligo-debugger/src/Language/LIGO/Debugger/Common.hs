@@ -29,6 +29,7 @@ import Unsafe qualified
 import Data.HashMap.Strict ((!?))
 import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty (groupBy)
+import Data.Maybe (listToMaybe)
 import Data.Set qualified as S
 import Data.Set qualified as Set
 import Data.Vinyl (Rec (RNil, (:&)))

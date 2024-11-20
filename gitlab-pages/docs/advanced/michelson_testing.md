@@ -13,7 +13,7 @@ test contracts in Michelson:
 
 * [PyMavryk](https://pymavryk.mavryk.org/)
 
-* [Cleveland](https://gitlab.com/morley-framework/morley/-/blob/9455cd384b2ab897fb7b31822abca3730a4ad08b/code/cleveland/testingEDSL.md)
+* [Cleveland](https://gitlab.com/mavryk-network/morley/-/blob/9455cd384b2ab897fb7b31822abca3730a4ad08b/code/cleveland/testingEDSL.md)
 
 Another alternative is to use Mavryk's binary `mavryk-client`
 directly. There's a new

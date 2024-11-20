@@ -39,7 +39,7 @@ import Control.AbortingThreadPool qualified as AbortingThreadPool
 import Control.DelayedValues (Manager (mComputation))
 import Control.DelayedValues qualified as DV
 
-import Protocol.DAP (respond, respondAndAlso, submitEvent)
+import Protocol.DAP (respond, respondAndAlso, submitEvent, ScopesRequest(..), VariablesRequest(..), TerminateRequest(..))
 import Protocol.DAP qualified as DAP hiding (mkHandler)
 import Protocol.DAP qualified as DAP.LowLevel (mkHandler)
 import Protocol.DAP.Serve.IO (StopAdapter (..))
@@ -355,7 +355,7 @@ instance HasSpecificMessages LIGO where
 
     let currentStackFrame = snap
           & isStackFrames
-          & flip (^?!) (ix (DAP.unStackFrameId req.frameId - 1))
+          & flip (^?!) (ix (DAP.unStackFrameId (frameId req) - 1))
 
     let stackItems = currentStackFrame
           & sfStack
@@ -403,7 +403,7 @@ instance HasSpecificMessages LIGO where
       case isStatus snap of
         InterpretRunning (EventExpressionEvaluated typ (Just value))
           -- We want to show $it variable only in the top-most stack frame.
-          | req.frameId == DAP.StackFrameId 1 -> do
+          | (frameId req) == DAP.StackFrameId 1 -> do
             let applicationMeta = extractApplicationMeta value
             itVal <- decompileValue (PreLigoConvertInfo value typ) valConvertManager
             preConvertAppliedArguments <- traverse applicationMetaConv applicationMeta
@@ -470,7 +470,7 @@ instance HasSpecificMessages LIGO where
 
   handleVariablesRequest req = do
     vars <- _dsVariables <$> readDAPSessionState
-    case vars ^? ix req.variablesReference of
+    case vars ^? ix (variablesReference req) of
       Nothing ->
         throwM $ PluginCommunicationException "The referred variable does not exist"
       Just vs ->
@@ -492,7 +492,7 @@ instance HasSpecificMessages LIGO where
 terminateHandler :: DAP.Handler (RIO LIGO)
 terminateHandler = mkLigoHandler \req@DAP.TerminateRequest{} -> do
   resetDAPState
-  unless (req.restart == Just True) do
+  unless ((restart req) == Just True) do
     lServState <- getServerState
     whenJust (lsVarsComputeThreadPool lServState) \pool ->
       AbortingThreadPool.close pool

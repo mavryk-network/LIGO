@@ -55,7 +55,7 @@ groupByKey
   -> [(k, [v])]
 groupByKey f g =
   extractGroup
-  . groupBy ((==) `on` f)
+  . Data.List.groupBy ((==) `on` f)
   . sortOn f
   where
     extractGroup :: [[a]] -> [(k, [v])]

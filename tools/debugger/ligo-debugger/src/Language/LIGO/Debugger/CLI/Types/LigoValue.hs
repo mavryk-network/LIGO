@@ -20,6 +20,7 @@ import Data.Fixed (Fixed (MkFixed))
 import Data.HashMap.Strict qualified as HM
 import Data.Text qualified as T
 import Data.Text.Lazy.Builder (Builder)
+import Data.Maybe (listToMaybe)
 import Data.Time (nominalDiffTimeToSeconds)
 import Data.Time.Clock.System (SystemTime (MkSystemTime), systemToUTCTime)
 import Data.Time.Format.ISO8601 (iso8601Show)
@@ -423,7 +424,7 @@ buildLigoValue' lang mode ligoType = \case
       LTCConstant LigoTypeConstant{..} <- _lteTypeContent <$> unLigoType ligoType
       pure (_ltcParameters, T.toLower _ltcInjection)
 
-    innerTypeFromConstant = LigoType (listToMaybe . fst =<< typesFromConstantAndName)
+    innerTypeFromConstant = LigoType (Data.Maybe.listToMaybe . fst =<< typesFromConstantAndName)
     (keyType, valueType) = maybe (LigoType Nothing, LigoType Nothing) (bimap LigoType LigoType)
       case typesFromConstantAndName of
         Just ([k, v], _) -> pure (Just k, Just v)
