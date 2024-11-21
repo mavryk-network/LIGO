@@ -49,7 +49,7 @@ let%expect_test "number_42_as_mumav" =
   {| (E_annot ((E_literal (Literal_int 42)) (T_var mumav))) |} |-> compile;
   [%expect {| (E_literal (Literal_mumav 42))  |}]
 
-let%expect_test "number_42_as_tez" =
+let%expect_test "number_42_as_mav" =
   {| ( E_annot ((E_literal (Literal_int 42)) (T_var mav))) |} |-> compile;
   [%expect {|(E_annot ((E_literal (Literal_int 42)) (T_var mav))) |}]
 

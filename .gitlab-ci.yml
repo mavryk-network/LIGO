@@ -274,7 +274,7 @@ xrefcheck:
   stage: push
   tags:
     - ubuntu-amd64
-  image: node:20.2.0-buster
+  image: node:18.19.1-buster
   needs:
     - job: changelog
       artifacts: true
@@ -333,7 +333,7 @@ algolia-crawl:
 
 deploy_website_preview:
   stage: deploy
-  image: node:20.2.0-buster
+  image: node:18.19.1-buster
   tags:
     - ubuntu-amd64
   needs:

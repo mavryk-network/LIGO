@@ -2319,17 +2319,17 @@ const nat_mul_mav : mav = 1n * 100mumav
 
 const mav_mul_nat : mav = 100mumav * 10n
 
-const mav_div_tez1 : nat = 100mumav / 1mumav
+const mav_div_mav1 : nat = 100mumav / 1mumav
 
-const mav_div_tez2 : nat = 100mumav / 90mumav
+const mav_div_mav2 : nat = 100mumav / 90mumav
 
-const mav_div_tez3 : nat = 100mumav / 110mumav
+const mav_div_mav3 : nat = 100mumav / 110mumav
 
-const mav_mod_tez1 : mav = 100mumav mod 1mumav
+const mav_mod_mav1 : mav = 100mumav mod 1mumav
 
-const mav_mod_tez2 : mav = 100mumav mod 90mumav
+const mav_mod_mav2 : mav = 100mumav mod 90mumav
 
-const mav_mod_tez3 : mav = 100mumav mod 110mumav
+const mav_mod_mav3 : mav = 100mumav mod 110mumav
 
 type storage_t is timestamp
 
