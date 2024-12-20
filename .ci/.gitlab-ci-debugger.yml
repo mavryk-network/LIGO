@@ -72,6 +72,10 @@ debugger-build:
   image: mavrykdynamics/ci-debian:0.0.1
   services:
   - docker:27.3.1-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   tags:
     - ubuntu-amd64
   rules: &debugger_mr_dev
@@ -122,6 +126,9 @@ debugger-test-ligo-latest:
   needs: [docker_extract, debugger-build]
   variables:
     LIGO_TEST_FLAGS: "-r"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   script: *run_ligo_debugger_tests
   after_script: *cleanup_ligo_debugger_test
 
@@ -144,6 +151,9 @@ debugger-build-and-publish-build-base-image:
   - docker:27.3.1-dind
   variables:
     DEBUGGER_BASE_IMAGE: "${CI_REGISTRY}/${CI_PROJECT_PATH}/debugger-build-base:latest"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
   rules:
     - !reference [.dev]
   script:
