@@ -42,12 +42,6 @@ include:
     - find "$CI_PROJECT_DIR" -path "$CI_PROJECT_DIR/.git" -prune -o "(" -type d -a -not -perm -u=w ")" -exec chmod --verbose u+w {} ";"
     - export COMMIT_DATE="$(git show --no-patch --format=%ci)"
 
-.dind-config:
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
-
 changelog:
   stage: pretooling
   tags:
@@ -55,7 +49,6 @@ changelog:
   services:
   - docker:25.0.5-dind
   image: mavrykdynamics/ci-nix:0.0.3
-  extends: .dind-config
   script:
     - FORCE_GENERATION=$([ -n "$CI_COMMIT_TAG" ] && echo "false" || echo "true")
     - sh ./scripts/changelog-generation.sh ${FORCE_GENERATION}
@@ -81,10 +74,8 @@ docker_build:
   tags:
     - ubuntu-amd64
   image: mavrykdynamics/ci-debian:0.0.1
-  extends: .dind-config
   services:
   - docker:27.3.1-dind
-  extends: .dind-config
   rules:
     - if: '$CI_COMMIT_REF_NAME =~ /^release/ && $CI_PROJECT_PATH == "mavryk-network/ligo"  &&  $TRIGGER_DOC_UPDATE != null'
       when: always
@@ -129,7 +120,6 @@ docker_extract:
   tags:
     - ubuntu-amd64
   image: mavrykdynamics/ci-debian:0.0.1
-  extends: .dind-config
   services:
   - docker:27.3.1-dind
   rules:
@@ -172,7 +162,6 @@ check-generated-highlighting:
   tags:
     - ubuntu-amd64
   image: mavrykdynamics/ci-debian:0.0.1
-  extends: .dind-config
   services:
   - docker:27.3.1-dind
   dependencies:
@@ -199,9 +188,6 @@ check-generated-highlighting:
     - docker:19.03.5-dind
   variables:
     DOCKER_VERSION: 19.03.5
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
 
 docker_push_ligo:
   stage: push
@@ -257,7 +243,6 @@ xrefcheck:
   tags:
     - ubuntu-amd64
   image: mavrykdynamics/ci-debian:0.0.1
-  extends: .dind-config
   needs:
     - job: changelog
       artifacts: true
@@ -343,7 +328,6 @@ deploy_website_preview:
     - apt-get update
     - apt-get install -y --no-install-recommends jq
     - npm install netlify-cli@17.6.0
-    - sleep 3600
     - npx netlify deploy --site $NETLIFY_SITE_ID_LIGOLANG --dir=./public --auth $NETLIFY_AUTH_TOKEN --json --alias="$CI_MERGE_REQUEST_IID-$CI_COMMIT_SHORT_SHA" > netlify.json
     - export NETLIFY_DEPLOY_URL=$(jq -r .deploy_url netlify.json)
     - export NETLIFY_DEPLOY_LOGS=$(jq -r .logs netlify.json)
