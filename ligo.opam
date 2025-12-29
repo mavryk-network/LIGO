@@ -8,6 +8,7 @@ authors: ["Gabriel Alfour" "Christian Rinderknecht"]
 license: "MIT"
 homepage: "https://ligo.mavryk.org"
 bug-reports: "https://gitlab.com/mavryk-network/ligo/issues"
+available: [ available & opam-repository-url != "default" | opam-repository-url = "https://github.com/ocaml/opam-repository-archive.git" ]
 depends: [
   "core" {>= "v0.16.0"}
   "core_unix" {>= "v0.16.0"}
