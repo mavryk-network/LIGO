@@ -1,3 +1,0 @@
-type result<success,failure> =
-| ["Ok", success]
-| ["Error", failure]

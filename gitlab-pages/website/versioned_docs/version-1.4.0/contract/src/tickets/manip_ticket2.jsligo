@@ -1,3 +1,0 @@
-const ta = Option.unopt(Mavryk.create_ticket(1, 10n));
-const tb = Option.unopt(Mavryk.create_ticket(1, 5n));
-const tc = Mavryk.join_tickets([ta, tb]);

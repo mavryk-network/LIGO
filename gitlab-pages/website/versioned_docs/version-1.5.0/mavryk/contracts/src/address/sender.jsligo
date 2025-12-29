@@ -1,1 +1,0 @@
-const sender: address = Mavryk.get_sender();
