@@ -98,6 +98,7 @@ build: [
   ]
 ]
 dev-repo: "git+https://gitlab.com/ligolang/ligo.git"
+available: [ available & opam-repository-url != "default" | opam-repository-url = "https://github.com/ocaml/opam-repository-archive.git" ]
 pin-depends: [
   [ "ocaml-recovery-parser.0.2.4" "git+https://github.com/serokell/ocaml-recovery-parser.git#e05c872d1a0e8074940d995b57556121eddbf0f2" ]
   [ "linol.0.5" "git+https://github.com/c-cube/linol.git#7730eabf98f657059920369b41d43e657a231ed5" ]
