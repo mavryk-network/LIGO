@@ -27,8 +27,8 @@ ENV ENV BLST_PORTABLE=ygit
 
 # Install opam switch & deps
 COPY scripts/setup_switch.sh /ligo/scripts/setup_switch.sh
-RUN opam update \
-  && sh scripts/setup_switch.sh
+RUN sh scripts/setup_switch.sh \
+  && opam update
 COPY scripts/install_opam_deps.sh /ligo/scripts/install_opam_deps.sh
 COPY vendors /ligo/vendors
 COPY vendored-dune /ligo/vendored-dune
