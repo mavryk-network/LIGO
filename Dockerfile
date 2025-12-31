@@ -26,6 +26,10 @@ ENV RUSTFLAGS='--codegen target-feature=-crt-static'
 ENV ENV BLST_PORTABLE=ygit 
 
 # Install opam switch & deps
+# Clone opam archive repository locally to avoid network issues during opam setup
+RUN git clone --depth=1 https://github.com/ocaml/opam-repository-archive.git /tmp/opam-repository-archive || \
+    (echo "Warning: Failed to clone archive repository, will use remote URL" && rm -rf /tmp/opam-repository-archive)
+
 COPY scripts/setup_switch.sh /ligo/scripts/setup_switch.sh
 RUN sh scripts/setup_switch.sh \
   && opam update

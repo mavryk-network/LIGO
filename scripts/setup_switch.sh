@@ -6,10 +6,16 @@ printf '' | opam switch create . ocaml-base-compiler.4.14.1 --no-install || true
 eval $(opam config env)
 
 # Add opam archive repository for accessing archived package versions
-# Check if archive repo already exists before adding
+# Use local clone if available (avoids network issues), otherwise use remote URL
 if ! opam repository list | grep -q "archive"; then
   echo "Adding archive repository..."
-  opam repository add archive https://github.com/ocaml/opam-repository-archive.git
+  if [ -d "/tmp/opam-repository-archive" ]; then
+    echo "Using local archive repository clone"
+    opam repository add archive "file:///tmp/opam-repository-archive"
+  else
+    echo "Using remote archive repository"
+    opam repository add archive https://github.com/ocaml/opam-repository-archive.git
+  fi
 fi
 
 # Ensure default repository URL is correct
