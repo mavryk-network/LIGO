@@ -10,7 +10,7 @@ depends: [
   "aches" {= "1.0.0"}
   "aches-lwt" {= "1.0.0"}
   "alcotest" {= "1.7.0" & with-test}
-  "alcotest-lwt" {= "1.7.0"}
+  "alcotest-lwt" {= "1.9.0"}
   "angstrom" {= "0.16.0"}
   "asetmap" {= "0.8.1"}
   "asn1-combinators" {= "0.2.6"}
@@ -156,6 +156,7 @@ depends: [
   "ocp-indent" {= "1.8.1"}
   "ocplib-endian" {= "1.2"}
   "octavius" {= "1.2.2"}
+  "odoc" {= "2.1.1" & with-doc}
   "odoc-parser" {= "1.0.1"}
   "optint" {= "0.3.0"}
   "ordering" {= "3.15.0"}
@@ -262,6 +263,7 @@ depends: [
   "trace" {= "0.7"}
   "trie" {= "1.0.0"}
   "typerep" {= "v0.16.0"}
+  "tyxml" {= "4.6.0" & with-doc}
   "uchar" {= "0.0.2"}
   "uri" {= "4.4.0"}
   "uri-sexp" {= "4.4.0"}
@@ -288,7 +290,7 @@ build: [["dune" "subst"] {dev} [
   "@runtest" {with-test}
   "@doc" {with-doc}
 ]]
-dev-repo: "git+https://gitlab.com/ligolang/ligo.git"
+dev-repo: "git+https://gitlab.com/mavryk-network/ligo.git"
 pin-depends: [
   [
     "linol.0.5"
@@ -302,7 +304,4 @@ pin-depends: [
     "ocaml-recovery-parser.0.2.4"
     "git+https://github.com/serokell/ocaml-recovery-parser.git#0.2.4"
   ]
-]
-maintainer: [
-  "LigoLang <contact@ligo.mavryk.org>" "TriliTech <contact@trili.tech>"
 ]

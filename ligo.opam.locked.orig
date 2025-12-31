@@ -11,7 +11,7 @@ depends: [
   "aches" {= "1.0.0"}
   "aches-lwt" {= "1.0.0"}
   "alcotest" {= "1.7.0" & with-test}
-  "alcotest-lwt" {= "1.7.0"}
+  "alcotest-lwt" {= "1.9.0"}
   "angstrom" {= "0.15.0"}
   "asetmap" {= "0.8.1"}
   "asn1-combinators" {= "0.2.6"}
