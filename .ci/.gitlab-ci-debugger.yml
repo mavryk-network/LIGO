@@ -71,7 +71,8 @@ debugger-build:
   stage: tools-build
   image: mavrykdynamics/ci-debian:0.0.1
   services:
-  - docker:27.3.1-dind
+  - name: docker:27.3.1-dind
+    command: ["--mtu=1400"]
   tags:
     - ubuntu-amd64
   rules: &debugger_mr_dev
@@ -115,7 +116,8 @@ debugger-test-ligo-latest:
     - ubuntu-amd64
   image: mavrykdynamics/ci-debian:0.0.1
   services:
-  - docker:27.3.1-dind
+  - name: docker:27.3.1-dind
+    command: ["--mtu=1400"]
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
@@ -141,7 +143,8 @@ debugger-build-and-publish-build-base-image:
     - ubuntu-amd64
   image: mavrykdynamics/ci-debian:0.0.1
   services:
-  - docker:27.3.1-dind
+  - name: docker:27.3.1-dind
+    command: ["--mtu=1400"]
   variables:
     DEBUGGER_BASE_IMAGE: "${CI_REGISTRY}/${CI_PROJECT_PATH}/debugger-build-base:latest"
   rules:
