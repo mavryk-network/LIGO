@@ -49,8 +49,8 @@ depends: [
   "conf-cmake" {= "1"}
   "conf-findutils" {= "1"}
   "conf-g++" {= "1.0"}
-  "conf-gmp" {= "4"}
-  "conf-gmp-powm-sec" {= "3"}
+  "conf-gmp" {= "5"}
+  "conf-gmp-powm-sec" {= "4"}
   "conf-pkg-config" {= "3"}
   "conf-rust-2021" {= "1"}
   "conf-which" {= "1"}

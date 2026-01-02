@@ -65,7 +65,7 @@ webide-new-frontend-build:
     - job: changelog
       artifacts: false
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^[w;W]eb[I;i]de-/'      
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^[w;W]eb[I;i]de-/'
       when: never
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
@@ -73,8 +73,11 @@ webide-new-frontend-build:
         - tools/vscode/syntaxes
       when: always
   script:
-    - docker buildx build --build-context syntaxes=tools/vscode/syntaxes tools/webide-new/ligo-webide-frontend/ligo-ide
+    # Copy syntaxes into build context for older Docker compatibility
+    - cp -r tools/vscode/syntaxes tools/webide-new/ligo-webide-frontend/ligo-ide/syntaxes-temp
+    - docker build tools/webide-new/ligo-webide-frontend/ligo-ide
   after_script:
+    - rm -rf tools/webide-new/ligo-webide-frontend/ligo-ide/syntaxes-temp || true
     - docker image rm "${WEBIDE_FRONTEND_NEW_IMAGE_TAG}" >/dev/null 2>&1 || true
 
 #######################################################################
@@ -112,18 +115,21 @@ webide-new-frontend-build-and-push:
   rules:
     - if: ($CI_MERGE_REQUEST_EVENT_TYPE == "merge_train")
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^[w;W]eb[I;i]de-/'      
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TITLE =~ /^[w;W]eb[I;i]de-/'
       when: always
   script:
-    - docker buildx build --build-context syntaxes=tools/vscode/syntaxes
+    # Copy syntaxes into build context for older Docker compatibility
+    - cp -r tools/vscode/syntaxes tools/webide-new/ligo-webide-frontend/ligo-ide/syntaxes-temp
+    - docker build
       --build-arg backend_url=backend-ligo-webide-v2${NPR_ENVIRONMENT}.dev.gke.kanvas.trili.tech
       --build-arg http_protocol=https
-      -f tools/webide-new/ligo-webide-frontend/ligo-ide/Dockerfile 
-      tools/webide-new/ligo-webide-frontend/ligo-ide 
+      -f tools/webide-new/ligo-webide-frontend/ligo-ide/Dockerfile
+      tools/webide-new/ligo-webide-frontend/ligo-ide
       -t ${WEBIDE_FRONTEND_NEW_IMAGE_TAG}
     - echo "${CI_JOB_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
     - docker push "${WEBIDE_FRONTEND_NEW_IMAGE_TAG}"
   after_script:
+    - rm -rf tools/webide-new/ligo-webide-frontend/ligo-ide/syntaxes-temp || true
     - docker image rm "${WEBIDE_FRONTEND_NEW_IMAGE_TAG}" >/dev/null 2>&1 || true
 
 webide-new-release-backend-build-and-push:
@@ -161,13 +167,16 @@ webide-new-release-frontend-build-and-push:
         - tools/vscode/syntaxes
       when: always
   script:
-    - docker buildx build --build-context syntaxes=tools/vscode/syntaxes
+    # Copy syntaxes into build context for older Docker compatibility
+    - cp -r tools/vscode/syntaxes tools/webide-new/ligo-webide-frontend/ligo-ide/syntaxes-temp
+    - docker build
       --build-arg backend_url=ligo-ide-backend.mavryk.network
       --build-arg http_protocol=https
-      -f tools/webide-new/ligo-webide-frontend/ligo-ide/Dockerfile 
-      tools/webide-new/ligo-webide-frontend/ligo-ide 
+      -f tools/webide-new/ligo-webide-frontend/ligo-ide/Dockerfile
+      tools/webide-new/ligo-webide-frontend/ligo-ide
       -t ${WEBIDE_FRONTEND_NEW_IMAGE_TAG}-release
     - echo "${CI_JOB_TOKEN}" | docker login -u gitlab-ci-token --password-stdin registry.gitlab.com
     - docker push "${WEBIDE_FRONTEND_NEW_IMAGE_TAG}-release"
   after_script:
+    - rm -rf tools/webide-new/ligo-webide-frontend/ligo-ide/syntaxes-temp || true
     - docker image rm "${WEBIDE_FRONTEND_NEW_IMAGE_TAG}-release" >/dev/null 2>&1 || true
