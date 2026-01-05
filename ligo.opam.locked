@@ -27,6 +27,7 @@ depends: [
   "base_bigstring" {= "v0.16.0"}
   "base_quickcheck" {= "v0.16.0"}
   "bheap" {= "2.0.0"}
+  "bigarray-compat" {= "1.1.0"}
   "bigstring" {= "0.3"}
   "bigstringaf" {= "0.9.1"}
   "bin_prot" {= "v0.16.0"}
@@ -213,10 +214,10 @@ depends: [
   "psq" {= "0.2.1"}
   "ptime" {= "1.2.0"}
   "pure-splitmix" {= "0.3"}
-  "qcheck" {= "0.91"}
-  "qcheck-alcotest" {= "0.91"}
-  "qcheck-core" {= "0.91"}
-  "qcheck-ounit" {= "0.91"}
+  "qcheck" {= "0.27"}
+  "qcheck-alcotest" {= "0.27"}
+  "qcheck-core" {= "0.27"}
+  "qcheck-ounit" {= "0.27"}
   "re" {= "1.14.0"}
   "react" {= "1.2.2"}
   "repr" {= "0.7.0"}
@@ -249,8 +250,8 @@ depends: [
   "stdlib-shims" {= "0.3.0"}
   "stdune" {= "3.20.2"}
   "stringext" {= "1.6.0"}
-  "tar" {= "3.3.0"}
-  "tar-unix" {= "3.3.0"}
+  "tar" {= "2.6.0"}
+  "tar-unix" {= "2.6.0"}
   "terminal" {= "0.5.0"}
   "terminal_size" {= "0.2.0"}
   "tezos-rust-libs" {= "1.6"}

@@ -117,6 +117,7 @@
    (= 0.5))
   (linol-lwt
    (= 0.5))
+  bigarray-compat
   data-encoding
   ; For building, testing, or documentation 
   (dune

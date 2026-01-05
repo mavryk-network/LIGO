@@ -758,7 +758,7 @@ let%expect_test _ =
   [%expect
     {|
     Everything at the top-level was executed.
-    - test exited with value (1304n , 1510n , 1510n). |}]
+    - test exited with value (1305n , 1510n , 1510n). |}]
 
 let () = Sys_unix.chdir pwd
 let () = Sys_unix.chdir "../../test/contracts/interpreter_tests/"
@@ -1296,7 +1296,7 @@ let%expect_test _ =
     {|
     edpktom5rsehpEY6Kp2NShwsnpaaEjWxKFMJ3Rjp99VMJuHS93wxD6
     Everything at the top-level was executed.
-    - test exited with value Success (1718n). |}]
+    - test exited with value Success (1719n). |}]
 
 let () = Sys_unix.chdir pwd
 let () = Sys_unix.chdir "../../test/contracts/interpreter_tests/"
@@ -1305,7 +1305,7 @@ let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test_tickets_and_bigmaps.mligo" ];
   [%expect
     {|
-    Success (2671n)
+    Success (2672n)
     Everything at the top-level was executed.
     - test_one exited with value (). |}]
 

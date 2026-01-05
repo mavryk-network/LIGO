@@ -71,6 +71,7 @@ depends: [
   "ocaml-recovery-parser" {= "0.2.4"}
   "linol" {= "0.5"}
   "linol-lwt" {= "0.5"}
+  "bigarray-compat"
   "data-encoding"
   "dune" {>= "3.8" & "3.8" >= build}
   "coq" {>= "8.12" & < "8.14" & build}
