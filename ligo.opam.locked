@@ -157,6 +157,7 @@ depends: [
   "ocp-indent" {= "1.9.0"}
   "ocplib-endian" {= "1.2"}
   "octavius" {= "1.2.2"}
+  "odoc" {= "2.1.1" & with-doc}
   "odoc-parser" {= "1.0.1"}
   "optint" {= "0.3.0"}
   "ordering" {= "3.20.2"}
