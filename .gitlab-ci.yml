@@ -187,12 +187,14 @@ check-generated-highlighting:
   stage: push
   tags:
     - ubuntu-amd64
-  image: docker:19.03.5
+  image: docker:24.0
   services:
-    - name: docker:19.03.5-dind
+    - name: docker:24.0-dind
       command: ["--mtu=1400"]
   variables:
-    DOCKER_VERSION: 19.03.5
+    DOCKER_VERSION: 24.0
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: "/certs"
 
 docker_push_ligo:
   stage: push
@@ -323,7 +325,7 @@ algolia-crawl:
 
 deploy_website_preview:
   stage: deploy
-  image: node:18.19.1-buster
+  image: node:18.19.1-bookworm
   tags:
     - ubuntu-amd64
   needs:

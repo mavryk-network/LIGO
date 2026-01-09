@@ -7,6 +7,7 @@ variables:
   MAVKIT_VERSION: "v16.1"
 
 vscode-extension-test:
+  extends: .docker-image
   stage: tools-check
   tags:
     - ubuntu-amd64
@@ -21,6 +22,7 @@ vscode-extension-test:
     - docker image rm lsp-vscode-test:$CI_JOB_ID
 
 vscode-extension-extest:
+  extends: .docker-image
   stage: tools-check
   tags:
     - ubuntu-amd64
@@ -33,6 +35,7 @@ vscode-extension-extest:
     - docker image rm lsp-vscode-test:$CI_JOB_ID
 
 vscode-extension-extest-deploy:
+  extends: .docker-image
   stage: tools-check
   tags:
     - ubuntu-amd64
@@ -49,9 +52,9 @@ emacs-lsp-client-test:
   stage: tools-check
   tags:
     - ubuntu-amd64
-  image: silex/emacs:27.2-ci-cask
+  image: silex/emacs:29.1-ci-cask
   variables:
-    EMACS: "emacs-27.2"
+    EMACS: "emacs-29.1"
   rules:
     - !reference [.dev]
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
