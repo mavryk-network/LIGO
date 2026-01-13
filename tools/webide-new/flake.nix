@@ -3,7 +3,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
-    mavryk-packaging.url = "github:serokell/mavryk-packaging";
+    mavryk-packaging.url = "github:mavryk-network/mavryk-packaging";
     haskell-nix.url = "github:input-output-hk/haskell.nix";
     haskell-nix = {
       inputs.hackage.follows = "hackage";
