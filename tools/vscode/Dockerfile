@@ -1,4 +1,4 @@
-FROM node:18-buster
+FROM node:18-bullseye
 
 # Install vscode runtime dependencies that will later be used by vscode downloaded separately.
 # Extest doesn't work with vscode installed this way for some reason >:(

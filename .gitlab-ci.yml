@@ -267,7 +267,7 @@ xrefcheck:
   stage: push
   tags:
     - ubuntu-amd64
-  image: node:18.19.1-buster
+  image: node:18.19.1-bullseye
   needs:
     - job: changelog
       artifacts: true

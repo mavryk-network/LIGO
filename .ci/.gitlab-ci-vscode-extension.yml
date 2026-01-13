@@ -78,7 +78,7 @@ vscode-extension:
   # needs: [debugger-build, debugger-build-macos]
   tags:
     - ubuntu-amd64
-  image: node:18.19.1-buster
+  image: node:18.19.1-bullseye
   script:
     - mkdir -p tools/vscode/bin
     - cp -r Linux tools/vscode/bin
@@ -97,7 +97,7 @@ vscode-extension-publish:
   needs: [vscode-extension]
   tags:
     - ubuntu-amd64
-  image: node:18.19.1-buster
+  image: node:18.19.1-bullseye
   when: manual
   script:
     - yarn global add @vscode/vsce ovsx
