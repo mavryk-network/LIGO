@@ -50,7 +50,6 @@
   tar
   tar-unix
   lambda-term
-  parse-argv
   msgpck
   ppx_deriving
   ppx_deriving_yojson
@@ -67,13 +66,14 @@
    (>= 2.3.0))
   irmin
   (cmdliner
-   (= 1.1.0))
+   (>= 1.2.0))
   ocaml-compiler-libs
   simple-diff
   stdint
   (ocaml-migrate-parsetree
    (= 2.3.0))
-  alcotest-lwt
+  (alcotest-lwt
+   (>= 1.9.0))
   qcheck-alcotest
   irmin-pack
   pure-splitmix
@@ -117,6 +117,7 @@
    (= 0.5))
   (linol-lwt
    (= 0.5))
+  bigarray-compat
   data-encoding
   ; For building, testing, or documentation 
   (dune

@@ -26,7 +26,6 @@ depends: [
   "tar"
   "tar-unix"
   "lambda-term"
-  "parse-argv"
   "msgpck"
   "ppx_deriving"
   "ppx_deriving_yojson"
@@ -38,12 +37,12 @@ depends: [
   "lwt_ppx"
   "bisect_ppx" {>= "2.3.0"}
   "irmin"
-  "cmdliner" {= "1.1.0"}
+  "cmdliner" {>= "1.2.0"}
   "ocaml-compiler-libs"
   "simple-diff"
   "stdint"
   "ocaml-migrate-parsetree" {= "2.3.0"}
-  "alcotest-lwt"
+  "alcotest-lwt" {>= "1.9.0"}
   "qcheck-alcotest"
   "irmin-pack"
   "pure-splitmix"
@@ -72,6 +71,7 @@ depends: [
   "ocaml-recovery-parser" {= "0.2.4"}
   "linol" {= "0.5"}
   "linol-lwt" {= "0.5"}
+  "bigarray-compat"
   "data-encoding"
   "dune" {>= "3.8" & "3.8" >= build}
   "coq" {>= "8.12" & < "8.14" & build}

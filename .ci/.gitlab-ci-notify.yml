@@ -4,7 +4,8 @@ notify-christian-on-frontend-change:
     - ubuntu-amd64
   image: mavrykdynamics/ci-nix:0.0.3
   services:
-  - docker:25.0.5-dind
+  - name: docker:25.0.5-dind
+    command: ["--mtu=1400"]
   variables:
     DOCKER_VERSION: 25.0.6
   script:

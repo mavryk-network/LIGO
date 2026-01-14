@@ -1,9 +1,8 @@
-# syntax=docker/dockerfile:1.4
-# To run the build on this image, you have to change the build context for ../../../ with the following command 
+# To build this image locally, first copy the syntaxes directory:
+# cp -r ../../../vscode/syntaxes ./syntaxes-temp
+# Then run: docker build .
+# For newer Docker with buildx, you can use:
 # docker buildx build --build-context syntaxes=../../../vscode/syntaxes .
-# Because this project is using some file from ../../../vscode/syntaxes through symlink.
-
-# Here symlink gonna be replaced by the files themself
 
 ARG BUILDER_IMAGE="node:18"
 ARG RUNNER_IMAGE="joseluisq/static-web-server:2.9-alpine"
@@ -24,8 +23,9 @@ ARG backend_url
 ARG http_protocol
 ENV HTTP_PROTOCOL=$http_protocol
 ENV BACKEND_URL=$backend_url
-ENV NODE_OPTIONS=--openssl-legacy-provider 
-COPY --from=syntaxes . ./src/ligo-components/ligo-project/Project/languages/syntaxes/
+ENV NODE_OPTIONS=--openssl-legacy-provider
+# Copy syntaxes from temp directory (copied by CI before build)
+COPY syntaxes-temp ./src/ligo-components/ligo-project/Project/languages/syntaxes/
 RUN echo $(ls ./src/ligo-components/ligo-project/Project/languages/syntaxes/)
 RUN yarn build:react-prod
 

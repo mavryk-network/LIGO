@@ -1,4 +1,4 @@
-FROM node:18-buster
+FROM node:18-bullseye
 
 # Install vscode runtime dependencies that will later be used by vscode downloaded separately.
 # Extest doesn't work with vscode installed this way for some reason >:(
@@ -20,7 +20,7 @@ RUN apt-get -y install xvfb xclip
 
 
 ARG MAVKIT_VERSION="v16.1"
-RUN wget -q https://github.com/serokell/mavryk-packaging/releases/download/${MAVKIT_VERSION}-1/mavkit-client -O /usr/bin/mavkit-client
+RUN wget -q https://github.com/mavryk-network/mavryk-packaging/releases/download/${MAVKIT_VERSION}-1/mavkit-client -O /usr/bin/mavkit-client
 RUN chmod +x /usr/bin/mavkit-client
 
 # Some runtime dependency for ligo
