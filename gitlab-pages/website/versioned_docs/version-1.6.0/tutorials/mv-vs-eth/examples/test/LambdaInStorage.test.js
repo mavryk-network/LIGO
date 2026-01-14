@@ -1,4 +1,4 @@
-const taquito = require('@mavrykdynamics/taquito')
+const webmavryk = require('@mavrykdynamics/webmavryk')
 const LambdaInStorage = artifacts.require('LambdaInStorage')
 
 contract('LambdaInStorage', () => {
@@ -19,8 +19,8 @@ contract('LambdaInStorage', () => {
         const code =
             [ { "prim": "DUP" }, { "prim": "MUL" } ]
         await instance.setFunction(code)
-        await instance.callFunction(taquito.UnitValue)
-        await instance.callFunction(taquito.UnitValue)
+        await instance.callFunction(webmavryk.UnitValue)
+        await instance.callFunction(webmavryk.UnitValue)
         const storage = await instance.storage()
         expect(storage.value.toString()).to.equal('256')
     })
@@ -32,8 +32,8 @@ contract('LambdaInStorage', () => {
             [ { "prim": "PUSH", "args": [ { "prim": "int" }, { "int": "1" } ] },
               { "prim": "ADD" } ]
         await instance.setFunction(code)
-        await instance.callFunction(taquito.UnitValue)
-        await instance.callFunction(taquito.UnitValue)
+        await instance.callFunction(webmavryk.UnitValue)
+        await instance.callFunction(webmavryk.UnitValue)
         const storage = await instance.storage()
         expect(storage.value.toString()).to.equal('258')
     })

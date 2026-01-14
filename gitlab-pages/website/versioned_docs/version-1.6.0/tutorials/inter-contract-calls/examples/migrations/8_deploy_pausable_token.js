@@ -1,4 +1,4 @@
-const { MichelsonMap } = require("@mavrykdynamics/taquito")
+const { MichelsonMap } = require("@mavrykdynamics/webmavryk")
 
 const AccessController = artifacts.require("AccessController")
 const PausableToken = artifacts.require("PausableToken")
@@ -10,7 +10,7 @@ module.exports = async deployer => {
         PausableToken,
         {
             ledger: MichelsonMap.fromLiteral({
-                "tz1aGaUhwbYDrwwBZobdgBEbCSG3HTPjH2ZJ": 100
+                "mv1D1eVV688difqMJENSEnon47yBpJM7JS7N": 100
             }),
             owner: controller.address,
             paused: false

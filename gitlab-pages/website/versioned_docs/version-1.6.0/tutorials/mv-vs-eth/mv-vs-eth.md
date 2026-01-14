@@ -336,7 +336,7 @@ Mavryk has special support for parameters encoded with variant types. If the par
 
 `mavryk-client call contract counter from alice --entrypoint '%subtract' --arg 100`
 
-Truffle (and Taquito library, which Truffle for Mavryk uses under the hood), also treats entrypoints specially. We can call our `add` entrypoint as follows:
+Truffle (and WebMavryk library, which Truffle for Mavryk uses under the hood), also treats entrypoints specially. We can call our `add` entrypoint as follows:
 ```solidity
 const Counter = artifacts.require('Counter')
 let counterInstance = await Counter.deployed()
@@ -388,7 +388,7 @@ let doMultiplyBy4 = (store : storage) : int => doMultiplyBy2(doMultiplyBy2(store
 Here:
 1. `multiplyBy2` is _private_ (in Solidity terms): we cannot call it directly from outside of the contract.
 2. `multiplyBy4` is _public:_ we can call it both from inside the contract and using the `%multiplyBy4` entrypoint.
-3. `%multiplyBy16` is _external:_ there is no function `multiplyBy16` in the contract so we cannot call it from inside the source code, but there is an entrypoint `%multiplyBy16` encoded in the parameter, so we can use mavryk-client or Taquito to call it externally.
+3. `%multiplyBy16` is _external:_ there is no function `multiplyBy16` in the contract so we cannot call it from inside the source code, but there is an entrypoint `%multiplyBy16` encoded in the parameter, so we can use mavryk-client or WebMavryk to call it externally.
 
 There is no analogue of `internal` methods in LIGO because LIGO contracts do not support inheritance.
 

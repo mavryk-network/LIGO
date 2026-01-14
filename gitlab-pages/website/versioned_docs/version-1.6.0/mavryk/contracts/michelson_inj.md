@@ -152,7 +152,7 @@ the Michelson code in order to inject it.
 
 This is achieved by the special hook `[%of_file ...]`, where the
 ellipsis is a string containing a file path to a Michelson file with
-extension `.tz`.
+extension `.mv`.
 
 </Syntax>
 
@@ -160,7 +160,7 @@ extension `.tz`.
 
 This is achieved by the special hook `(of_file ...)`, where the
 ellipsis is a *verbatim* string containing a file path to a Michelson
-file with extension `.tz`.
+file with extension `.mv`.
 
 </Syntax>
 
@@ -170,13 +170,13 @@ file with extension `.tz`.
 
 This is achieved by the special hook `[%create_contract_of_file ...]`,
 where the ellipsis is a string containg the file path to a Michelson
-file with extension `.tz`.
+file with extension `.mv`.
 
 ```cameligo group=michelson_inj
 [@entry]
 let main (param : unit) () : operation list * unit =
   let op, _addr =
-    [%create_contract_of_file "gitlab-pages/docs/mavryk/contracts/src/compiled.tz"]
+    [%create_contract_of_file "gitlab-pages/docs/mavryk/contracts/src/compiled.mv"]
     None 1mav param
   in [op], ()
 ```
@@ -187,13 +187,13 @@ let main (param : unit) () : operation list * unit =
 
 This is achieved by the special hook `(create_contract_of_file ...)`,
 where the ellipsis is a *verbatim* string containg the file path to a
-Michelson file with extension `.tz`.
+Michelson file with extension `.mv`.
 
 ```jsligo group=michelson_inj
 @entry
 const main = (param: unit, _storage: unit) : [list<operation>, unit] => {
   const [op, _addr] =
-    (create_contract_of_file `gitlab-pages/docs/mavryk/contracts/src/compiled.tz`)
+    (create_contract_of_file `gitlab-pages/docs/mavryk/contracts/src/compiled.mv`)
     (None(), 1mav, param)
   return [[op], []];
 }
@@ -201,7 +201,7 @@ const main = (param: unit, _storage: unit) : [list<operation>, unit] => {
 
 </Syntax>
 
-where `compiled.tz` contains
+where `compiled.mv` contains
 
 ```michelson
 { parameter unit ;

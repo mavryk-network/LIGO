@@ -510,7 +510,7 @@ The following example shows how a contract can invoke another by
 emitting a transaction operation at the end of an entrypoint.
 
 > The same technique can be used to transfer tokens to an implicit
-> account (tz1, ...): all you have to do is use a unit value as the
+> account (mv1, ...): all you have to do is use a unit value as the
 > parameter of the smart contract.
 
 In our case, we have a `counter` contract that accepts an action of

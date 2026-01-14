@@ -632,7 +632,7 @@ Address
 <div className="example">
 
 ```jsligo
-const tz1address: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
+const mv1address: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
 const kt1address: address = "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD";
 ```
 

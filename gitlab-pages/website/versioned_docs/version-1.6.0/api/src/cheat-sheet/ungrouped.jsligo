@@ -12,7 +12,7 @@ const booleanLogic: bool =
     (false || false)
 const mav_amount: mav = 42mav
 const mav_amount2: mav = mav_amount + 7mumav // == 42000007mumav
-const tz1address: address =
+const mv1address: address =
   "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 const kt1address: address =
   "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;

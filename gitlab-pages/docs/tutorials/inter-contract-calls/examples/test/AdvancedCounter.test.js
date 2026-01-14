@@ -1,5 +1,5 @@
 const AdvancedCounter = artifacts.require('AdvancedCounter')
-const taquito = require('@mavrykdynamics/taquito')
+const webmavryk = require('@mavrykdynamics/webmavryk')
 
 contract('AdvancedCounter', () => {
     let instance = null
@@ -24,7 +24,7 @@ contract('AdvancedCounter', () => {
     describe('%reset', async () => {
         it('should set the value of the counter to zero', async () => {
             await instance.set('1002003004005006007008009001000')
-            await instance.reset(taquito.UnitValue)
+            await instance.reset(webmavryk.UnitValue)
             const storage = await instance.storage()
             expect(storage.toString()).to.equal('0')
         })
@@ -32,14 +32,14 @@ contract('AdvancedCounter', () => {
 
     describe('%add', async () => {
         it('should increase the storage by the parameter', async () => {
-            await instance.reset(taquito.UnitValue)
+            await instance.reset(webmavryk.UnitValue)
             await instance.add(42)
             const storage = await instance.storage()
             expect(storage.toString()).to.equal('42')
         })
     
         it('should work multiple times', async () => {
-            await instance.reset(taquito.UnitValue)
+            await instance.reset(webmavryk.UnitValue)
             await instance.add(99)
             await instance.add(101)
             await instance.add(800)
@@ -50,14 +50,14 @@ contract('AdvancedCounter', () => {
 
     describe('%subtract', async () => {
         it('should decrease the storage by the parameter', async () => {
-            await instance.reset(taquito.UnitValue)
+            await instance.reset(webmavryk.UnitValue)
             await instance.subtract(42)
             const storage = await instance.storage()
             expect(storage.toString()).to.equal('-42')
         })
     
         it('should work multiple times', async () => {
-            await instance.reset(taquito.UnitValue)
+            await instance.reset(webmavryk.UnitValue)
             await instance.subtract(1000)
             await instance.subtract(100)
             await instance.subtract(10)

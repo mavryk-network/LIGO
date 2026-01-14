@@ -13,9 +13,9 @@ ways to write literal values of type `mav`:
 
   * units of millionth of `mav`, using the suffix `mumav` after a
     natural number, like `10000mumav` or `0mumav`;
-  * units of `mav`, using the suffix `tz` or `mav`, like `3mv` or
+  * units of `mav`, using the suffix `mv` or `mav`, like `3mv` or
     `3mav`;
-  * decimal amounts of `tz` or `mav`, like `12.3mv` or `12.4mav`.
+  * decimal amounts of `mv` or `mav`, like `12.3mv` or `12.4mav`.
 
 > The type is `mav`, *not* `mumav` --- which is a suffix to write
 > literals.

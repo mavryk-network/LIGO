@@ -7,100 +7,100 @@
   resolved "https://registry.npmjs.org/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
-"@airgap/beacon-blockchain-substrate@^3.3.4":
+"@airgap/mavlet-blockchain-substrate@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-blockchain-substrate/-/beacon-blockchain-substrate-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-blockchain-substrate/-/mavlet-blockchain-substrate-3.3.4.tgz"
   integrity sha512-MyenUYbJdb/ufR7k3+TdL0Uur1PvXHxGbh+u4riN3vTeULC0d+LSZx7qsWM45fpDYtfyOhB0akQHp9s+1MU/rQ==
   dependencies:
-    "@airgap/beacon-types" "^3.3.4"
-    "@airgap/beacon-ui" "^3.3.4"
+    "@airgap/mavlet-types" "^3.3.4"
+    "@airgap/mavlet-ui" "^3.3.4"
 
-"@airgap/beacon-blockchain-tezos@^3.3.4":
+"@airgap/mavlet-blockchain-tezos@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-blockchain-tezos/-/beacon-blockchain-tezos-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-blockchain-tezos/-/mavlet-blockchain-tezos-3.3.4.tgz"
   integrity sha512-sUK2d5pMYjulMPs0Cw/+XuDf5BiBnhkRbA8vDjdNicB9l0rws74iLcjCTBfX6AeO66FPxF4C2sx5nHqSxLwgjw==
   dependencies:
-    "@airgap/beacon-types" "^3.3.4"
-    "@airgap/beacon-ui" "^3.3.4"
+    "@airgap/mavlet-types" "^3.3.4"
+    "@airgap/mavlet-ui" "^3.3.4"
 
-"@airgap/beacon-core@^3.3.4":
+"@airgap/mavlet-core@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-core/-/beacon-core-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-core/-/mavlet-core-3.3.4.tgz"
   integrity sha512-9LqTDXdlliC2WsDzBr6sf1Xl9iegtvyWgb7tnZvIIx9iUdd7UjKseh0FFm9bdUt8hVLd8PD516HZQxrUokymHw==
   dependencies:
-    "@airgap/beacon-types" "^3.3.4"
-    "@airgap/beacon-utils" "^3.3.4"
+    "@airgap/mavlet-types" "^3.3.4"
+    "@airgap/mavlet-utils" "^3.3.4"
     "@stablelib/ed25519" "^1.0.3"
     "@stablelib/nacl" "^1.0.4"
     "@stablelib/utf8" "^1.0.1"
     "@stablelib/x25519-session" "^1.0.4"
     bs58check "2.1.2"
 
-"@airgap/beacon-dapp@^3.3.4":
+"@airgap/mavlet-dapp@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-dapp/-/beacon-dapp-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-dapp/-/mavlet-dapp-3.3.4.tgz"
   integrity sha512-fMjRFN2r3S3uZpUuc9KEIhgFoesNdNN/NRIAEInyLC9AB41Z+C9UKd/mISQwd5hJips5CWpTXnuYHnfEk4+Erw==
   dependencies:
-    "@airgap/beacon-core" "^3.3.4"
-    "@airgap/beacon-transport-matrix" "^3.3.4"
-    "@airgap/beacon-transport-postmessage" "^3.3.4"
-    "@airgap/beacon-ui" "^3.3.4"
+    "@airgap/mavlet-core" "^3.3.4"
+    "@airgap/mavlet-transport-matrix" "^3.3.4"
+    "@airgap/mavlet-transport-postmessage" "^3.3.4"
+    "@airgap/mavlet-ui" "^3.3.4"
     qrcode-generator "1.4.4"
 
-"@airgap/beacon-sdk@^3.0.0":
+"@airgap/mavlet-sdk@^3.0.0":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-sdk/-/beacon-sdk-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-sdk/-/mavlet-sdk-3.3.4.tgz"
   integrity sha512-9feyD9vOHqPU6L5JBn6yGWFzvcxStTSmvMIjHRX1tAz8gwAzQxormc6jlXqNK8vNgU1CbLY38kbcMcp/gQTlvw==
   dependencies:
-    "@airgap/beacon-blockchain-substrate" "^3.3.4"
-    "@airgap/beacon-blockchain-tezos" "^3.3.4"
-    "@airgap/beacon-core" "^3.3.4"
-    "@airgap/beacon-dapp" "^3.3.4"
-    "@airgap/beacon-transport-matrix" "^3.3.4"
-    "@airgap/beacon-transport-postmessage" "^3.3.4"
-    "@airgap/beacon-types" "^3.3.4"
-    "@airgap/beacon-ui" "^3.3.4"
-    "@airgap/beacon-utils" "^3.3.4"
-    "@airgap/beacon-wallet" "^3.3.4"
+    "@airgap/mavlet-blockchain-substrate" "^3.3.4"
+    "@airgap/mavlet-blockchain-tezos" "^3.3.4"
+    "@airgap/mavlet-core" "^3.3.4"
+    "@airgap/mavlet-dapp" "^3.3.4"
+    "@airgap/mavlet-transport-matrix" "^3.3.4"
+    "@airgap/mavlet-transport-postmessage" "^3.3.4"
+    "@airgap/mavlet-types" "^3.3.4"
+    "@airgap/mavlet-ui" "^3.3.4"
+    "@airgap/mavlet-utils" "^3.3.4"
+    "@airgap/mavlet-wallet" "^3.3.4"
 
-"@airgap/beacon-transport-matrix@^3.3.4":
+"@airgap/mavlet-transport-matrix@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-transport-matrix/-/beacon-transport-matrix-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-transport-matrix/-/mavlet-transport-matrix-3.3.4.tgz"
   integrity sha512-bxTBFXcgKyP/n+yMSoL6L/3C4ZVso1DxK5XGxcOvOLLenA67wh4TnPMBasWzBi13BbMAVhiExuNNTWaytamgcw==
   dependencies:
-    "@airgap/beacon-core" "^3.3.4"
-    "@airgap/beacon-utils" "^3.3.4"
+    "@airgap/mavlet-core" "^3.3.4"
+    "@airgap/mavlet-utils" "^3.3.4"
     axios "0.24.0"
 
-"@airgap/beacon-transport-postmessage@^3.3.4":
+"@airgap/mavlet-transport-postmessage@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-transport-postmessage/-/beacon-transport-postmessage-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-transport-postmessage/-/mavlet-transport-postmessage-3.3.4.tgz"
   integrity sha512-Tlf8Tr7f1nzZOX8ag8aR9UBkxR9stTJXRBSrouQ0Ex8JIPHkrV6Noz+Xg7lziwUlbaJ7ukbElKHrXh17+iIjQQ==
   dependencies:
-    "@airgap/beacon-core" "^3.3.4"
-    "@airgap/beacon-types" "^3.3.4"
-    "@airgap/beacon-utils" "^3.3.4"
+    "@airgap/mavlet-core" "^3.3.4"
+    "@airgap/mavlet-types" "^3.3.4"
+    "@airgap/mavlet-utils" "^3.3.4"
 
-"@airgap/beacon-types@^3.3.4":
+"@airgap/mavlet-types@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-types/-/beacon-types-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-types/-/mavlet-types-3.3.4.tgz"
   integrity sha512-4lk0uBw5hsC3ujpVflJovZPCks+MWpjlQi205a3REvYe4cWLZCIvaJcx8oLJTtUEgXIS0xeIQ3QAxXXsgW4xEA==
   dependencies:
     "@types/chrome" "0.0.163"
 
-"@airgap/beacon-ui@^3.3.4":
+"@airgap/mavlet-ui@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-ui/-/beacon-ui-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-ui/-/mavlet-ui-3.3.4.tgz"
   integrity sha512-/J2r0wbH6xWHoni9HFF0ojrQaGKicRQZf3XTz2deI+x9glXJ2RC6J1V6uzIyUHfsgJwpe0vz6COzYA0wVdnUCw==
   dependencies:
-    "@airgap/beacon-core" "^3.3.4"
-    "@airgap/beacon-transport-postmessage" "^3.3.4"
-    "@airgap/beacon-types" "^3.3.4"
-    "@airgap/beacon-utils" "^3.3.4"
+    "@airgap/mavlet-core" "^3.3.4"
+    "@airgap/mavlet-transport-postmessage" "^3.3.4"
+    "@airgap/mavlet-types" "^3.3.4"
+    "@airgap/mavlet-utils" "^3.3.4"
 
-"@airgap/beacon-utils@^3.3.4":
+"@airgap/mavlet-utils@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-utils/-/beacon-utils-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-utils/-/mavlet-utils-3.3.4.tgz"
   integrity sha512-jxcbq5AbQU8eD4WnloTwvt5//kVjOW43yv+dznzpI+wZmYagOljPb8L/E93zuMhrXxP6plijD+Dn68RhLzfUSg==
   dependencies:
     "@stablelib/nacl" "^1.0.3"
@@ -108,14 +108,14 @@
     "@stablelib/utf8" "^1.0.1"
     bs58check "2.1.2"
 
-"@airgap/beacon-wallet@^3.3.4":
+"@airgap/mavlet-wallet@^3.3.4":
   version "3.3.4"
-  resolved "https://registry.npmjs.org/@airgap/beacon-wallet/-/beacon-wallet-3.3.4.tgz"
+  resolved "https://registry.npmjs.org/@airgap/mavlet-wallet/-/mavlet-wallet-3.3.4.tgz"
   integrity sha512-nRzt+1qtJlro2/ryUNE0e8oWWuedng10qKpPZo6CX3eS97AhTVaQ8MpgXzzgMxIqrCXyfWmvzsvPb3GcxwjJ4g==
   dependencies:
-    "@airgap/beacon-core" "^3.3.4"
-    "@airgap/beacon-transport-matrix" "^3.3.4"
-    "@airgap/beacon-transport-postmessage" "^3.3.4"
+    "@airgap/mavlet-core" "^3.3.4"
+    "@airgap/mavlet-transport-matrix" "^3.3.4"
+    "@airgap/mavlet-transport-postmessage" "^3.3.4"
 
 "@babel/code-frame@7.12.11":
   version "7.12.11"
@@ -355,58 +355,58 @@
   dependencies:
     defer-to-connect "^2.0.1"
 
-"@taquito/core@^17.1.0":
+"@webmavryk/core@^17.1.0":
   version "17.1.0"
-  resolved "https://registry.npmjs.org/@taquito/core/-/core-17.1.0.tgz"
+  resolved "https://registry.npmjs.org/@webmavryk/core/-/core-17.1.0.tgz"
   integrity sha512-tfdgC7/Q5U9lN3UzvuJYf8Z7iBWyOtqILRuWRGFM6VtSXwNwcNK62f8FNKAgyHahFkVA4vVdD9zrt8NbM/TB2g==
 
-"@taquito/http-utils@^17.1.0":
+"@webmavryk/http-utils@^17.1.0":
   version "17.1.0"
-  resolved "https://registry.npmjs.org/@taquito/http-utils/-/http-utils-17.1.0.tgz"
+  resolved "https://registry.npmjs.org/@webmavryk/http-utils/-/http-utils-17.1.0.tgz"
   integrity sha512-vkArbB7h9jMAf6apOERBoUYi/ARiBF5xuJunsPf/hECXz0kjaKGI7dKC6PsWJrvhfR/cACXKu4CAKG41WDNprw==
   dependencies:
-    "@taquito/core" "^17.1.0"
+    "@webmavryk/core" "^17.1.0"
     axios "0.26.0"
 
-"@taquito/local-forging@^17.1.0":
+"@webmavryk/local-forging@^17.1.0":
   version "17.1.0"
-  resolved "https://registry.npmjs.org/@taquito/local-forging/-/local-forging-17.1.0.tgz"
+  resolved "https://registry.npmjs.org/@webmavryk/local-forging/-/local-forging-17.1.0.tgz"
   integrity sha512-vKjjMDoVxgxbjYFhREaNtuI0OT6Jnty6+x+Tfzuk7alLf8zwDBvDXyXz+47WgFZb4Y3RtojRlnpIP4EhbtLnJQ==
   dependencies:
-    "@taquito/core" "^17.1.0"
-    "@taquito/utils" "^17.1.0"
+    "@webmavryk/core" "^17.1.0"
+    "@webmavryk/utils" "^17.1.0"
     bignumber.js "^9.1.0"
 
-"@taquito/michel-codec@^17.1.0":
+"@webmavryk/michel-codec@^17.1.0":
   version "17.1.0"
-  resolved "https://registry.npmjs.org/@taquito/michel-codec/-/michel-codec-17.1.0.tgz"
+  resolved "https://registry.npmjs.org/@webmavryk/michel-codec/-/michel-codec-17.1.0.tgz"
   integrity sha512-PjXySJonM77a6uoEOJwGxcz0+1kckahsepMMkjDDdkNhLjTExnNLY5bDoNwzvKj3Ag53zhIWzGwNb4qls1C0XQ==
   dependencies:
-    "@taquito/core" "^17.1.0"
+    "@webmavryk/core" "^17.1.0"
 
-"@taquito/michelson-encoder@^17.1.0":
+"@webmavryk/michelson-encoder@^17.1.0":
   version "17.1.0"
-  resolved "https://registry.npmjs.org/@taquito/michelson-encoder/-/michelson-encoder-17.1.0.tgz"
+  resolved "https://registry.npmjs.org/@webmavryk/michelson-encoder/-/michelson-encoder-17.1.0.tgz"
   integrity sha512-1sYJp3QENlX2FoT/8poB+CcTH52S5RgIhVM4N0VOWR2MF8+y2SRVjMfrStfC9oDrH4jTt/ESQQFThcyw9XVEMg==
   dependencies:
-    "@taquito/rpc" "^17.1.0"
-    "@taquito/utils" "^17.1.0"
+    "@webmavryk/rpc" "^17.1.0"
+    "@webmavryk/utils" "^17.1.0"
     bignumber.js "^9.1.0"
     fast-json-stable-stringify "^2.1.0"
 
-"@taquito/rpc@^17.1.0":
+"@webmavryk/rpc@^17.1.0":
   version "17.1.0"
-  resolved "https://registry.npmjs.org/@taquito/rpc/-/rpc-17.1.0.tgz"
+  resolved "https://registry.npmjs.org/@webmavryk/rpc/-/rpc-17.1.0.tgz"
   integrity sha512-/nzsGMxHbZOea4C9BnmXGaQVYwERNKF9IwFzdrBVTS7m+lfoRku9QfV88b3K77wXvcpZYSuXa1x4tJIXS8hHXw==
   dependencies:
-    "@taquito/core" "^17.1.0"
-    "@taquito/http-utils" "^17.1.0"
-    "@taquito/utils" "^17.1.0"
+    "@webmavryk/core" "^17.1.0"
+    "@webmavryk/http-utils" "^17.1.0"
+    "@webmavryk/utils" "^17.1.0"
     bignumber.js "^9.1.0"
 
-"@taquito/signer@^17.0.0":
+"@webmavryk/signer@^17.0.0":
   version "17.1.0"
-  resolved "https://registry.npmjs.org/@taquito/signer/-/signer-17.1.0.tgz"
+  resolved "https://registry.npmjs.org/@webmavryk/signer/-/signer-17.1.0.tgz"
   integrity sha512-TuDUMcDEURlD8EFse4UtUr7M+XhZOFEIOug2aAsn4428DZngCPq968e3YOAu67VTOaEkWNp4ILvEj/p9lyB1gQ==
   dependencies:
     "@stablelib/blake2b" "^1.0.1"
@@ -415,37 +415,37 @@
     "@stablelib/nacl" "^1.0.4"
     "@stablelib/pbkdf2" "^1.0.1"
     "@stablelib/sha512" "^1.0.1"
-    "@taquito/taquito" "^17.1.0"
-    "@taquito/utils" "^17.1.0"
+    "@webmavryk/webmavryk" "^17.1.0"
+    "@webmavryk/utils" "^17.1.0"
     "@types/bn.js" "^5.1.1"
     bip39 "3.0.4"
     elliptic "^6.5.4"
     pbkdf2 "^3.1.2"
     typedarray-to-buffer "^4.0.0"
 
-"@taquito/taquito@^17.0.0", "@taquito/taquito@^17.1.0":
+"@webmavryk/webmavryk@^17.0.0", "@webmavryk/webmavryk@^17.1.0":
   version "17.1.0"
-  resolved "https://registry.npmjs.org/@taquito/taquito/-/taquito-17.1.0.tgz"
+  resolved "https://registry.npmjs.org/@webmavryk/webmavryk/-/webmavryk-17.1.0.tgz"
   integrity sha512-hmIPgSun3sH40ay1xk4YHR37nhqhjIaRxACZLWkX5vr+N7amFKfPWxUJvI1mlTuT8GFQsVVQMtYMLMs8YOh04Q==
   dependencies:
-    "@taquito/core" "^17.1.0"
-    "@taquito/http-utils" "^17.1.0"
-    "@taquito/local-forging" "^17.1.0"
-    "@taquito/michel-codec" "^17.1.0"
-    "@taquito/michelson-encoder" "^17.1.0"
-    "@taquito/rpc" "^17.1.0"
-    "@taquito/utils" "^17.1.0"
+    "@webmavryk/core" "^17.1.0"
+    "@webmavryk/http-utils" "^17.1.0"
+    "@webmavryk/local-forging" "^17.1.0"
+    "@webmavryk/michel-codec" "^17.1.0"
+    "@webmavryk/michelson-encoder" "^17.1.0"
+    "@webmavryk/rpc" "^17.1.0"
+    "@webmavryk/utils" "^17.1.0"
     bignumber.js "^9.1.0"
     rxjs "^7.8.1"
 
-"@taquito/utils@^17.1.0":
+"@webmavryk/utils@^17.1.0":
   version "17.1.0"
-  resolved "https://registry.npmjs.org/@taquito/utils/-/utils-17.1.0.tgz"
+  resolved "https://registry.npmjs.org/@webmavryk/utils/-/utils-17.1.0.tgz"
   integrity sha512-ob5Zth16vhyFq/RP5wr3t11M8jdnwMA1dmxNljVwwBuDW/qHgHr6lBS8hFOVe6ZTwf4DO+3lRYRHiaBaXS82Hw==
   dependencies:
     "@stablelib/blake2b" "^1.0.1"
     "@stablelib/ed25519" "^1.0.3"
-    "@taquito/core" "^17.1.0"
+    "@webmavryk/core" "^17.1.0"
     "@types/bs58check" "^2.1.0"
     bignumber.js "^9.1.0"
     blakejs "^1.2.1"

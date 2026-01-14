@@ -13,7 +13,7 @@
   "author": "Serokell",
   "license": "MIT",
   "dependencies": {
-    "@mavrykdynamics/taquito": "^19.0.2"
+    "@mavrykdynamics/webmavryk": "^2.0.0"
   },
   "devDependencies": {
     "ganache-cli": "6.11.0-tezos.0",

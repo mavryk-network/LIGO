@@ -134,7 +134,7 @@ Address
 <div className="example">
 
 ```cameligo
-let tz1address : address =
+let mv1address : address =
   ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 let kt1address : address =
   ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
@@ -632,7 +632,7 @@ Address
 <div className="example">
 
 ```jsligo
-const tz1address: address =
+const mv1address: address =
   "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address;
 const kt1address: address =
   "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;

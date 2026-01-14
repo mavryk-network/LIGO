@@ -10,7 +10,7 @@ hash of the public key of a peer.
 
 - If that peer is a smart contract, the address starts with `KT1`.
 
-- If the peer is a user account, the address starts with `tz1`, `tz2`, `tz3`, or `tz4`.
+- If the peer is a user account, the address starts with `mv1`, `mv2`, `mv3`, or `mv4`.
 
 The `address` type represents a well-formed Mavryk address.
 However, the type being well-formed does not automatically mean that the address is valid and identifies a real account.

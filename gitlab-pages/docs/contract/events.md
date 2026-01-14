@@ -43,4 +43,4 @@ const emitEvents = (_: unit, storage: int): [list<operation>, int] => {
 By convention, the event tag is a percent symbol and the name of the entrypoint that emitted the event or "default" if the contract does not use entrypoints, such as `%myEntrypoint`.
 However, you can use any string composed of these valid characters as the tag: ('a'..'z' | 'A'..'Z' | '_' | '.' | '%' | '@' | '0'..'9').
 
-For more information about events and responding to them, see [Events](https://docs.tezos.org/smart-contracts/events) on docs.tezos.org.
+For more information about events and responding to them, see [Events](https://documentation.mavryk.org/smart-contracts/events) on documentation.mavryk.org.

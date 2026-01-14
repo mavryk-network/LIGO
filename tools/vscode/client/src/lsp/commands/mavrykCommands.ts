@@ -1,6 +1,6 @@
 import * as vscode from 'vscode'
-import { MavrykToolkit } from '@mavrykdynamics/taquito';
-import { importKey } from '@mavrykdynamics/taquito-signer';
+import { MavrykToolkit } from '@mavrykdynamics/webmavryk';
+import { importKey } from '@mavrykdynamics/webmavryk-signer';
 
 import fetch from 'node-fetch';
 import { basename } from 'path';

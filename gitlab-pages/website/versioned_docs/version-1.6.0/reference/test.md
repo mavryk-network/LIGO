@@ -512,7 +512,7 @@ let read&#95;contract&#95;from&#95;file: &lt;p, s&gt;(&#95;: string) =&gt; miche
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.Contract.from_file` from `Test.Next` is encouraged for a smoother migration.
 
-Reads a contract from a `.tz` file.
+Reads a contract from a `.mv` file.
 
 
 <SyntaxTitle syntax="cameligo">

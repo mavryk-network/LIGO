@@ -119,7 +119,7 @@ the command we use for creating a mockup instance on the directory
 
 ```shell skip
 mavryk-client \
-  --protocol PtEdoTezd3RHSC31mpxxo1npxFjoWWcFgQtxapi51Z8TLu6v6Uq \
+  --protocol PtBoreasK2KPuKbeYtXeEdudEHS7YcMFHE9amwheUc4kejTxgRi \
   --base-dir /tmp/mockup \
   --mode mockup \
   create mockup

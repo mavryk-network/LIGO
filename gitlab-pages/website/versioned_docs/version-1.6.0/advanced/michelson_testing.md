@@ -88,12 +88,12 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 
 
 Instead of outputting the resulted compiled code in the screen, we can
-tell LIGO to write it in a file called `mockup_testme.tz`:
+tell LIGO to write it in a file called `mockup_testme.mv`:
 
 <Syntax syntax="cameligo">
 
 ```shell
-ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.mligo --output-file mockup_testme.tz
+ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.mligo --output-file mockup_testme.mv
 ```
 
 </Syntax>
@@ -101,7 +101,7 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 <Syntax syntax="jsligo">
 
 ```shell
-ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.jsligo --output-file mockup_testme.tz
+ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.jsligo --output-file mockup_testme.mv
 ```
 
 </Syntax>
@@ -119,7 +119,7 @@ the command we use for creating a mockup instance on the directory
 
 ```shell skip
 mavryk-client \
-  --protocol PtEdoTezd3RHSC31mpxxo1npxFjoWWcFgQtxapi51Z8TLu6v6Uq \
+  --protocol PtBoreasK2KPuKbeYtXeEdudEHS7YcMFHE9amwheUc4kejTxgRi \
   --base-dir /tmp/mockup \
   --mode mockup \
   create mockup
@@ -138,9 +138,9 @@ We can list the addresses returned above by running:
 ```shell skip
 mockup-client list known addresses
 # Outputs:
-# bootstrap5: tz1ddb9NMYHZi5UzPdzTZMYQQZoMub195zgv (unencrypted sk known)
-# bootstrap4: tz1b7tUupMgCNw2cCLpKTkSD1NZzB5TkP2sv (unencrypted sk known)
-# bootstrap3: tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU (unencrypted sk known)
+# bootstrap5: mv1GvL4GYjch8gDBcnAejHBfNqNWVHoenSVS (unencrypted sk known)
+# bootstrap4: mv1SHJm7osyS2G9ge4kjbmUMS3xr36VQWRKe (unencrypted sk known)
+# bootstrap3: mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe (unencrypted sk known)
 # bootstrap2: mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k (unencrypted sk known)
 # bootstrap1: mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe (unencrypted sk known)
 ```
@@ -151,7 +151,7 @@ Mavryk:
 ```shell skip
 mockup-client originate contract mockup_testme \
               transferring 0 from bootstrap1 \
-              running "`cat mockup_testme.tz`" \
+              running "`cat mockup_testme.mv`" \
               --init \"foo\" --burn-cap 0.1
 ```
 

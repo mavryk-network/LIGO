@@ -3,12 +3,12 @@ const path = require("path")
 const { promisify } = require("util")
 const readFile = promisify(fs.readFile)
 
-const taquito = require("@mavrykdynamics/taquito")
-const { InMemorySigner } = require("@mavrykdynamics/taquito-signer")
+const webmavryk = require("@mavrykdynamics/webmavryk")
+const { InMemorySigner } = require("@mavrykdynamics/webmavryk-signer")
 
 async function initializeMavryk(networkConfig) {
     const uri = `${networkConfig.host}:${networkConfig.port}`
-    const Mavryk = new taquito.MavrykToolkit(uri)
+    const Mavryk = new webmavryk.MavrykToolkit(uri)
     Mavryk.setProvider({
         signer: new InMemorySigner(networkConfig.secretKey),
     })

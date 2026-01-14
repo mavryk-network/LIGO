@@ -1,4 +1,4 @@
-const taquito = require('@mavrykdynamics/taquito')
+const webmavryk = require('@mavrykdynamics/webmavryk')
 
 const HelloLigoV1 = artifacts.require("HelloLigoV1")
 const HelloLigoV2 = artifacts.require("HelloLigoV2")

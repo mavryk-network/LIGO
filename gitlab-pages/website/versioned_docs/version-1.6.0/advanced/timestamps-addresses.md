@@ -145,7 +145,7 @@ const not_tomorrow: bool = (Mavryk.get_now() == in_24_hrs);
 
 ## Addresses
 
-The `address` type in LIGO denotes Mavryk addresses (tz1, tz2, tz3,
+The `address` type in LIGO denotes Mavryk addresses (mv1, mv2, mv3,
 KT1, ...). Currently, addresses are created by casting a string to the
 `address` type. Beware of failures if the address is invalid. Consider
 the following examples.

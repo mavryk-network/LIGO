@@ -12,7 +12,7 @@ let booleanLogic : bool =
     (false || false)
 let mav : mav = 42mav
 let mav : mav = 7mumav
-let tz1address : address =
+let mv1address : address =
   ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 let kt1address : address =
   ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)

@@ -1,6 +1,6 @@
-const taquito = require("@mavrykdynamics/taquito")
+const webmavryk = require("@mavrykdynamics/webmavryk")
 
-const { initializeMavryk, Artifacts } = require("./tezos")
+const { initializeMavryk, Artifacts } = require("./mavryk")
 
 function printEstimate(description, est) {
     console.log(description)
@@ -42,21 +42,21 @@ async function estimateGas(networkConfig, buildDir) {
 
     const EffectfulBindingV1 = await artifacts.getContract("EffectfulBindingV1")
     op = await EffectfulBindingV1.methods
-                                 .increment(taquito.UnitValue)
+                                 .increment(webmavryk.UnitValue)
                                  .toTransferParams({})
     est = await Mavryk.estimate.transfer(op)
     printEstimate("effectful_binding/EffectfulBindingV1 (wrong inlining)", est)
 
     const EffectfulBindingV2 = await artifacts.getContract("EffectfulBindingV2")
     op = await EffectfulBindingV2.methods
-                                 .increment(taquito.UnitValue)
+                                 .increment(webmavryk.UnitValue)
                                  .toTransferParams({})
     est = await Mavryk.estimate.transfer(op)
     printEstimate("effectful_binding/EffectfulBindingV2 (function inlining)", est)
 
     const EffectfulBindingV3 = await artifacts.getContract("EffectfulBindingV3")
     op = await EffectfulBindingV3.methods
-                                 .increment(taquito.UnitValue)
+                                 .increment(webmavryk.UnitValue)
                                  .toTransferParams({})
     est = await Mavryk.estimate.transfer(op)
     printEstimate("effectful_binding/EffectfulBindingV3 (no inlining)", est)

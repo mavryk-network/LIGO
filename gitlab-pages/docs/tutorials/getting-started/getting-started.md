@@ -36,7 +36,7 @@ A smart contract is composed of three elements:
 - Its storage: data that is dedicated to and can be read and written by the contract
 - Its code: one or more entrypoints, which are a kind of function that can be called either from outside the chain or from other contracts
 
-For more information about smart contracts on Mavryk, see [Smart contracts](https://docs.tezos.org/smart-contracts) on docs.tezos.org.
+For more information about smart contracts on Mavryk, see [Smart contracts](https://documentation.mavryk.org/smart-contracts) on documentation.mavryk.org.
 
 ## Writing the smart contract code
 
@@ -357,7 +357,7 @@ Run this command to compile the contract:
 <Syntax syntax="cameligo">
 
 ```bash
-ligo compile contract counter.mligo -m Counter -o counter.tz
+ligo compile contract counter.mligo -m Counter -o counter.mv
 ```
 
 </Syntax>
@@ -365,12 +365,12 @@ ligo compile contract counter.mligo -m Counter -o counter.tz
 <Syntax syntax="jsligo">
 
 ```bash
-ligo compile contract counter.jsligo -m Counter -o counter.tz
+ligo compile contract counter.jsligo -m Counter -o counter.mv
 ```
 
 </Syntax>
 
-The command writes the output of the compilation to the file `counter.tz`.
+The command writes the output of the compilation to the file `counter.mv`.
 The compiled Michelson contract looks like this:
 
 ```michelson
@@ -423,20 +423,20 @@ The Ghostnet test network is just like the Mavryk mainnet, so you can use it to 
    - If you just installed Mavkit for the first time, run this command:
 
       ```bash
-      mavkit-client -E https://rpc.ghostnet.teztnets.com config init
+      mavkit-client -E https://basenet.rpc.mavryk.network config init
       ```
 
    - If you already had Mavkit installed, run this command:
 
       ```bash
-      mavkit-client -E https://rpc.ghostnet.teztnets.com config update
+      mavkit-client -E https://basenet.rpc.mavryk.network config update
       ```
 
-1. Verify that you are using Ghostnet by running `mavkit-client config show` and verifying that the `endpoint` field shows `https://rpc.ghostnet.teztnets.com`, as in this example:
+1. Verify that you are using Ghostnet by running `mavkit-client config show` and verifying that the `endpoint` field shows `https://basenet.rpc.mavryk.network`, as in this example:
 
    ```
    { "base_dir": "/Users/me/.mavryk-client",
-     "endpoint": "https://rpc.ghostnet.teztnets.com", "web_port": 8080,
+     "endpoint": "https://basenet.rpc.mavryk.network", "web_port": 8080,
      "confirmations": 0 }
    ```
 
@@ -459,18 +459,18 @@ The Ghostnet test network is just like the Mavryk mainnet, so you can use it to 
    ```
 
    The Mavkit client prints the address of the new wallet in the `hash` field.
-   The wallet address begins with `tz1`, as in this example:
+   The wallet address begins with `mv1`, as in this example:
 
    ```bash
-   Hash: tz1dW9Mk...........H67L
+   Hash: mv1dW9Mk...........H67L
    Public Key: edp.............................bjbeDj
    ```
 
    You need the wallet address to send funds to the wallet, to deploy the contract, and to send transactions to the contract.
 
-1. Copy your account's address, which starts with `tz1`.
+1. Copy your account's address, which starts with `mv1`.
 
-1. In a web browser, go to the Ghostnet faucet at https://faucet.ghostnet.teztnets.com/.
+1. In a web browser, go to the Ghostnet faucet at https://basenet.faucet.mavryk.network/.
 
 1. Paste your address into the "Fund any address" field and send some mav to your account.
 20 mav is enough to start with, and you can always return to the faucet for more.
@@ -494,7 +494,7 @@ To deploy (or originate) the contract you need:
 1. Get the compiled code of the contract by running this command, where `[FILENAME]` is the name of your LIGO file.
 
    ```bash
-   ligo compile contract [FILENAME] -m Counter -o counter.tz
+   ligo compile contract [FILENAME] -m Counter -o counter.mv
    ```
 
 1. Get the compiled value of the contract storage by running this command:
@@ -514,7 +514,7 @@ To deploy (or originate) the contract you need:
    ```bash
    mavkit-client originate contract counter \
      transferring 0 from local_wallet \
-     running counter.tz \
+     running counter.mv \
      --init 5 --burn-cap 0.5
    ```
 

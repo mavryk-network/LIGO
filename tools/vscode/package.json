@@ -451,9 +451,9 @@
         "extest-deploy": "npm run build-tests && extest setup-and-run --yarn --offline --code_version 1.81.1 client/out/test/vsc-test/commands-deploy.test.js"
     },
     "dependencies": {
-        "@mavrykdynamics/beacon-sdk": "^4.2.3",
-        "@mavrykdynamics/taquito-signer": "^19.2.3",
-        "@mavrykdynamics/taquito": "^19.2.3",
+        "@mavrykdynamics/mavlet-sdk": "^4.2.3",
+        "@mavrykdynamics/webmavryk-signer": "^2.0.0",
+        "@mavrykdynamics/webmavryk": "^2.0.0",
         "@vscode/debugadapter-testsupport": "1.55.1",
         "@vscode/debugprotocol": "1.55.1",
         "axios": "^1.4.0",

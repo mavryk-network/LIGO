@@ -1,5 +1,5 @@
 const CreateAndCall = artifacts.require('CreateAndCall')
-const taquito = require('@mavrykdynamics/taquito')
+const webmavryk = require('@mavrykdynamics/webmavryk')
 
 contract('CreateAndCall', () => {
     let instance = null
@@ -10,7 +10,7 @@ contract('CreateAndCall', () => {
 
     describe('%createAndCall', async () => {
         before(async () => {
-            await instance.createAndCall(taquito.UnitValue)
+            await instance.createAndCall(webmavryk.UnitValue)
         })
 
         it('should put the address to storage', async () => {
@@ -26,14 +26,14 @@ contract('CreateAndCall', () => {
             // of 41 to the storage, so the resulting value 
             // should be 42.
             const storage = await instance.storage()
-            const createdInstance = await tezos.contract.at(storage[0])
+            const createdInstance = await mavryk.contract.at(storage[0])
             const newContractStorage = await createdInstance.storage() 
             expect(newContractStorage.toString()).to.equal('42')
         })
 
         it('should be callable several times', async () => {
             for (let i = 0; i < 9; ++i) {
-                await instance.createAndCall(taquito.UnitValue)
+                await instance.createAndCall(webmavryk.UnitValue)
             }
             const storage = await instance.storage()
             expect(storage).to.be.an('array')

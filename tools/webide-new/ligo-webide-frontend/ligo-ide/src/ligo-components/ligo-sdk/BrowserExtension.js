@@ -2,13 +2,13 @@ import redux from "~/base-components/redux";
 import networks from "./networks";
 
 export default class BrowserExtension {
-  constructor(beacon) {
-    this.name = "Beacon";
+  constructor(mavlet) {
+    this.name = "Mavlet";
     this._accounts = [];
     this._enabled = false;
     this._enabled = true;
-    this.tezos = beacon;
-    this.initialize(beacon);
+    this.tezos = mavlet;
+    this.initialize(mavlet);
   }
 
   get isEnabled() {
@@ -32,5 +32,5 @@ export default class BrowserExtension {
     });
   }
 
-  async initialize(beacon) {}
+  async initialize(mavlet) {}
 }

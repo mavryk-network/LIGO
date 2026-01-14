@@ -1,4 +1,4 @@
-const taquito = require('@mavrykdynamics/taquito')
+const webmavryk = require('@mavrykdynamics/webmavryk')
 
 const LargeEntrypointV1 = artifacts.require("LargeEntrypointV1")
 const LargeEntrypointV2 = artifacts.require("LargeEntrypointV2")
@@ -60,7 +60,7 @@ const large_entrypoint = [
 module.exports = async (deployer)  => {
     await deployer.deploy(LargeEntrypointV1, 0)
 
-    const bigMap = new taquito.MichelsonMap()
+    const bigMap = new webmavryk.MichelsonMap()
     bigMap.set(true, large_entrypoint)
     await deployer.deploy(
         LargeEntrypointV2,

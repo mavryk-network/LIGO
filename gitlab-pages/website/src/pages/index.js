@@ -124,7 +124,7 @@ export default function Home() {
             <News />
           </HomeSection>
         </div>
-        <HomeSection
+        {/* <HomeSection
           id="community"
           ref={containerRef}
           title={
@@ -136,8 +136,8 @@ export default function Home() {
           subtitle={"Developers all over the world are building the future of Ligo together."}
         >
           <Community discordMembers={discordMembers} packages={packages} />
-        </HomeSection>
-        <div className={styles.container}>
+        </HomeSection> */}
+        {/* <div className={styles.container}>
           <HomeSection
             id="open-sources"
             title={"Open Sources"}
@@ -145,7 +145,7 @@ export default function Home() {
           >
             <HomepagePartners />
           </HomeSection>
-        </div>
+        </div> */}
       </main>
     </Layout>
   );

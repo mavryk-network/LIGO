@@ -13,7 +13,7 @@
   "author": "Serokell",
   "license": "MIT",
   "dependencies": {
-    "@mavrykdynamics/taquito": "^7.1.0-beta.0",
+    "@mavrykdynamics/webmavryk": "^2.0.0",
     "npm": "^6.14.10"
   },
   "devDependencies": {

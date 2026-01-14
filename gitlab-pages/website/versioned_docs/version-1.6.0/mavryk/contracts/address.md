@@ -17,7 +17,7 @@ There are two ways to define and handle adresses.
 ### The `address` type
 
 The `address` type in LIGO denotes *a well-formed* Mavryk address of
-any kind (`tz1`, `tz2`, `tz3`, `tz4`, `KT1` etc.). Currently, such
+any kind (`mv1`, `mv2`, `mv3`, `mv4`, `KT1` etc.). Currently, such
 addresses are created by casting a string to the `address`
 type. Beware of failures if the address is invalid. Consider the
 following examples.

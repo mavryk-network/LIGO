@@ -271,10 +271,10 @@ let decrement (_ : unit) (s : storage) : result = [], s - 1
 ```jsligo group=a2
 let main = (parameter: bytes, storage: int): [list<operation>, int] => {
   if (parameter == 0xbc1ecb8e) {
-    return [list([]), storage + 1]
+    return [[], storage + 1]
   } else {
     if (parameter == 0x36e44653) {
-      return [list([]), storage - 1]
+      return [[], storage - 1]
     } else {
       return (failwith("Unknown entrypoint"))
     }
@@ -289,10 +289,10 @@ type storage = int;
 type result = [list<operation>, int]
 
 @entry
-const increment = (_u : unit, s : storage) : result => [list([]), s + 1]
+const increment = (_u : unit, s : storage) : result => [[], s + 1]
 
 @entry
-const decrement = (_u : unit, s : storage) : result => [list([]), s - 1]
+const decrement = (_u : unit, s : storage) : result => [[], s - 1]
 ```
 
 </Syntax>
@@ -323,10 +323,10 @@ type storage = int;
 type result = [list<operation>, int]
 
 @entry
-const add = (i : int, s : storage) : result => [list([]), s + i]
+const add = (i : int, s : storage) : result => [[], s + i]
 
 @entry
-const subtract = (i : int, s : storage) : result => [list([]), s - i]
+const subtract = (i : int, s : storage) : result => [[], s - i]
 ```
 
 </Syntax>
@@ -336,7 +336,7 @@ Mavryk has special support for parameters encoded with variant types. If the par
 
 `mavryk-client call contract counter from alice --entrypoint '%subtract' --arg 100`
 
-Truffle (and Taquito library, which Truffle for Mavryk uses under the hood), also treats entrypoints specially. We can call our `add` entrypoint as follows:
+Truffle (and WebMavryk library, which Truffle for Mavryk uses under the hood), also treats entrypoints specially. We can call our `add` entrypoint as follows:
 ```solidity
 const Counter = artifacts.require('Counter')
 let counterInstance = await Counter.deployed()
@@ -379,8 +379,8 @@ let doMultiplyBy2 = (store : storage) : int => store * 2;
 
 let doMultiplyBy4 = (store : storage) : int => doMultiplyBy2(doMultiplyBy2(store));
 
-@entry const multiplyBy4 = (_u : unit, s : storage) : result => [list([]), doMultiplyBy4(s)]
-@entry const multiplyBy16 = (_u : unit, s : storage) : result => [list([]), doMultiplyBy4(doMultiplyBy4(s))]
+@entry const multiplyBy4 = (_u : unit, s : storage) : result => [[], doMultiplyBy4(s)]
+@entry const multiplyBy16 = (_u : unit, s : storage) : result => [[], doMultiplyBy4(doMultiplyBy4(s))]
 ```
 
 </Syntax>
@@ -388,7 +388,7 @@ let doMultiplyBy4 = (store : storage) : int => doMultiplyBy2(doMultiplyBy2(store
 Here:
 1. `multiplyBy2` is _private_ (in Solidity terms): we cannot call it directly from outside of the contract.
 2. `multiplyBy4` is _public:_ we can call it both from inside the contract and using the `%multiplyBy4` entrypoint.
-3. `%multiplyBy16` is _external:_ there is no function `multiplyBy16` in the contract so we cannot call it from inside the source code, but there is an entrypoint `%multiplyBy16` encoded in the parameter, so we can use mavryk-client or Taquito to call it externally.
+3. `%multiplyBy16` is _external:_ there is no function `multiplyBy16` in the contract so we cannot call it from inside the source code, but there is an entrypoint `%multiplyBy16` encoded in the parameter, so we can use mavryk-client or WebMavryk to call it externally.
 
 There is no analogue of `internal` methods in LIGO because LIGO contracts do not support inheritance.
 
@@ -421,7 +421,7 @@ type storage = int;
 
 @entry
 const compute = (func: ((v : int) => int), s: storage) : [list<operation>, int] =>
-  [list([]), func(s)]
+  [[], func(s)]
 ```
 
 We can then call this contract with the parameter of the form `Compute ((x : int) => x * x + 2 * x + 1)`. Try this out with:
@@ -474,11 +474,11 @@ const call = (fn: option<((x : int) => int)>, value: int) : int => {
 
 @entry
 const setFunction = (fn : ((v : int) => int), s : storage) : result =>
-  [list([]), {...s, fn: Some(fn)}];
+  [[], {...s, fn: Some(fn)}];
 
 @entry
 const callFunction = (_u : unit, s : storage) : result =>
-  [list([]), {...s, value: call(s.fn, s.value)}];
+  [[], {...s, value: call(s.fn, s.value)}];
 ```
 
 Now we can _upgrade_ a part of the implementation by calling our contract with `SetFunction ((x : int) => ...)`.
@@ -597,10 +597,10 @@ type parameter = ["DoSomething"] | ["DoSomethingCont", int];
 let doSomething = ([p, s]: [unit, int]) => {
   /* The callee should call `%doSomethingCont` with the value we want */
   let op = Mavryk.transaction ...;
-  return [list([op]), s]
+  return [[], s]
 }
 
-let doSomethingCont = ([p, s]: [int, int]) => [(list([]) as list<operation>), p + s];
+let doSomethingCont = ([p, s]: [int, int]) => [([] as list<operation>), p + s];
 ```
 
 </Syntax>

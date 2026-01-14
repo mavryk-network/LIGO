@@ -1,4 +1,4 @@
-const taquito = require('@mavrykdynamics/taquito')
+const webmavryk = require('@mavrykdynamics/webmavryk')
 
 const EffectfulBindingV1 = artifacts.require("EffectfulBindingV1")
 const EffectfulBindingV2 = artifacts.require("EffectfulBindingV2")

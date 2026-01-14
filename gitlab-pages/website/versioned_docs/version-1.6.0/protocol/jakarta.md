@@ -19,7 +19,7 @@ type tx_rollup_l2_address
 <SyntaxTitle syntax="jsligo">
 type tx_rollup_l2_address
 </SyntaxTitle>
-A type used to identify accounts on transaction rollups’ legders. Values of type tx_rollup_l2_address are 20-byte hashes of a BLS public keys (with a string notation based of a base58 encoding, prefixed with tz4).
+A type used to identify accounts on transaction rollups’ legders. Values of type tx_rollup_l2_address are 20-byte hashes of a BLS public keys (with a string notation based of a base58 encoding, prefixed with mv4).
 
 ### New primitives
 

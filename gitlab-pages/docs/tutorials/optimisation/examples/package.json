@@ -1,5 +1,5 @@
 {
-  "name": "optimization-taquito",
+  "name": "optimization-webmavryk",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,8 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@mavrykdynamics/taquito-signer": "^19.0.2",
-    "@mavrykdynamics/taquito": "^19.0.2",
+    "@mavrykdynamics/webmavryk-signer": "^2.0.0",
+    "@mavrykdynamics/webmavryk": "^2.0.0",
     "truffle": "5.5.0-tezos.4"
   },
   "devDependencies": {
