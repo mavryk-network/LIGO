@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkwebsite=globalThis.webpackChunkwebsite||[]).push([[23791],{47270(a){a.exports=JSON.parse('{"label":"migration","permalink":"/blog/tags/migration","allTagsPath":"/blog/tags","count":1}')}}]);
