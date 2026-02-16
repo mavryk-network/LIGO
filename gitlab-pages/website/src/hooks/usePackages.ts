@@ -14,6 +14,9 @@ export default function usePackages() {
       .then((response) => response.json())
       .then((data) => {
         setPackages((data && data.length) || DEFAULT_PACKAGES);
+      })
+      .catch(() => {
+        // Silently fall back to default when fetch fails (e.g., offline/local dev)
       });
 
     return () => {

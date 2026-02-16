@@ -384,9 +384,9 @@ If you see any errors, make sure your code looks like the code in the previous s
 ## Setting up the Mavkit client and a local wallet
 
 The Mavkit client is a command-line tool that lets you send transactions to Mavryk, including deploying and calling smart contracts.
-These instructions show how to install the client, connect it to the Ghostnet test network, and get some mav tokens to pay transaction fees.
+These instructions show how to install the client, connect it to the Basenet test network, and get some mav tokens to pay transaction fees.
 
-The Ghostnet test network is just like the Mavryk mainnet, so you can use it to try out your contracts in a live environment before you deploy them to mainnet.
+The Basenet test network is just like the Mavryk mainnet, so you can use it to try out your contracts in a live environment before you deploy them to mainnet.
 
 1. Install the Mavkit client, which sends transactions to Mavryk.
 (The Mavkit suite includes many programs, but for now all you need is the Mavkit client.)
@@ -418,7 +418,7 @@ The Ghostnet test network is just like the Mavryk mainnet, so you can use it to 
 
 1. Verify that you have at least version 20 of the Mavkit client by running `mavkit-client --version` and verifying that the version is at least 20.0.
 
-1. Set the Mavkit client to use the Ghostnet test network:
+1. Set the Mavkit client to use the Basenet test network:
 
    - If you just installed Mavkit for the first time, run this command:
 
@@ -432,7 +432,7 @@ The Ghostnet test network is just like the Mavryk mainnet, so you can use it to 
       mavkit-client -E https://basenet.rpc.mavryk.network config update
       ```
 
-1. Verify that you are using Ghostnet by running `mavkit-client config show` and verifying that the `endpoint` field shows `https://basenet.rpc.mavryk.network`, as in this example:
+1. Verify that you are using Basenet by running `mavkit-client config show` and verifying that the `endpoint` field shows `https://basenet.rpc.mavryk.network`, as in this example:
 
    ```
    { "base_dir": "/Users/me/.mavryk-client",
@@ -470,7 +470,7 @@ The Ghostnet test network is just like the Mavryk mainnet, so you can use it to 
 
 1. Copy your account's address, which starts with `mv1`.
 
-1. In a web browser, go to the Ghostnet faucet at https://basenet.faucet.mavryk.network/.
+1. In a web browser, go to the Basenet faucet at https://basenet.faucet.mavryk.network/.
 
 1. Paste your address into the "Fund any address" field and send some mav to your account.
 20 mav is enough to start with, and you can always return to the faucet for more.
@@ -522,7 +522,7 @@ To deploy (or originate) the contract you need:
    It includes these parts:
 
       - It uses the Mavkit client `originate contract` command to originate the contract and assigns the local name `counter` to the contract
-      - It includes 0 tokens from your wallet with the transaction, but the `--burn-cap` argument allows the transaction to take up to 0.1 XTZ from your wallet for fees.
+      - It includes 0 tokens from your wallet with the transaction, but the `--burn-cap` argument allows the transaction to take up to 0.1 MVRK from your wallet for fees.
       - It sets the initial value of the contract storage with the `--init` argument.
 
    If the contract deploys successfully, Mavkit shows the address of the new contract, as in this example:
@@ -539,9 +539,9 @@ To deploy (or originate) the contract you need:
 
 1. Verify that the contract deployed successfully by finding it on a block explorer:
 
-   1. Open a Mavryk block explorer such as [TzKT](https://tzkt.io) or [Better Call Dev](https://better-call.dev/).
+   1. Open a Mavryk block explorer such as [Nexus](https://nexus.mavryk.org).
 
-   1. Set the explorer to Ghostnet instead of Mainnet.
+   1. Set the explorer to Basenet instead of Mainnet.
 
    1. Paste the contract address into the search field and press Enter.
 

@@ -24,23 +24,11 @@
 .section__title-highlighted {
   background: linear-gradient(
     90deg,
-    var(--ligo-base-color_blue-lighter) 0%,
-    var(--ligo-base-color_purple) 100%
+    var(--ligo-base-color_indigo) 0%,
+    var(--ligo-base-color_cyan) 100%
   );
   background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-[data-theme="light"] {
-  .section__title-highlighted {
-    background: linear-gradient(
-      90deg,
-      var(--ligo-base-color_blue) 0%,
-      var(--ligo-base-color_purple) 100%
-    );
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
 }
 
 @media screen and (min-width: breakpoints.$ligo-breakpoint_sm) {

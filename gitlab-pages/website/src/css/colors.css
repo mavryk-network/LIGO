@@ -3,6 +3,13 @@
  * should not change things here, just add more colors variants like transparent
  */
 :root {
+  --ligo-base-color_indigo-dark: #4A44CC;
+  --ligo-base-color_indigo: #5F58FF;
+  --ligo-base-color_indigo-light: #7A74FF;
+  --ligo-base-color_indigo-transparent: #5F58FFbe;
+  --ligo-base-color_cyan: #78DDFF;
+  --ligo-base-color_cyan-transparent: #78DDFFbe;
+
   --ligo-base-color_purple: #9f329f;
   --ligo-base-color_purple-transparent: #9f329fbe;
   --ligo-base-color-secondary-brand-color: #fc683a;

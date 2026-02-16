@@ -88,9 +88,9 @@ const config = {
           { to: "docs/intro/introduction", label: "Docs", position: "left", target: "_self" },
           { to: "docs/reference/toplevel-reference", label: "API", position: "left" },
           { to: "docs/faq/intro", label: "FAQ", position: "left" },
-          { to: "blog", label: "Blog", position: "left" },
-          { to: "https://packages.ligo.mavryk.org/packages", label: "Registry", position: "right" },
-          { to: "https://ide.mavryk.network/", label: "Web IDE", position: "right" },
+          // { to: "blog", label: "Blog", position: "left" },
+          // { to: "https://packages.ligo.mavryk.org/packages", label: "Registry", position: "right" },
+          { to: "https://ide.mavryk.org/", label: "Web IDE", position: "right" },
         ],
       },
       footer: {

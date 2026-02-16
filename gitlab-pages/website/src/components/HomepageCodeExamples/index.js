@@ -44,7 +44,7 @@ function CodeExamples(props) {
           )}
         </Highlight>
         <a
-          href="https://ligo-webide-v2.gcp.marigold.dev/share/bc3fc573a724b6851dde8ec4607671f3"
+          href="https://ide.mavryk.org/share/bc3fc573a724b6851dde8ec4607671f3"
           className={styles["code-examples__cta"]}
         >
           try jsligo online
@@ -66,7 +66,7 @@ function CodeExamples(props) {
           )}
         </Highlight>
         <a
-          href="https://ligo-webide-v2.gcp.marigold.dev/share/4466658a67a99308725b4954ed51dc29"
+          href="https://ide.mavryk.org/share/4466658a67a99308725b4954ed51dc29"
           className={styles["code-examples__cta"]}
         >
           try cameligo online

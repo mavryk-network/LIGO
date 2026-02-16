@@ -274,15 +274,15 @@ and more on how to write and test namespace/module contracts
 For deploying the contract on Mavryk, we will use the `mavkit-client` interface as we did on the previous section.
 
 First, you will need an account address. You can get one using any wallet listed [here](https://mavryk.org/learn/store-and-use/).
-Once you have your first account configured, go to a [faucet](https://faucet.marigold.dev/), select the `ghostnet` testnet and claim `XTZ` tokens. clikc on the faucet and you will receive some tokens to play with.
+Once you have your first account configured, go to a [faucet](https://faucet.marigold.dev/), select the `basenet` testnet and claim `MVRK` tokens. clikc on the faucet and you will receive some tokens to play with.
 
-Then we are going to point the Mavryk client to a Ghostnet testnet node
+Then we are going to point the Mavryk client to a Basenet testnet node
 
 ```zsh
-mavkit-client --endpoint https://ghostnet.ecadinfra.com/ config update
+mavkit-client --endpoint https://basenet.rpc.mavryk.org/ config update
 ```
 
-Ghostnet is a testnet, which is a separate network from the Mavryk mainnet, which can be used for testing.
+Basenet is a testnet, which is a separate network from the Mavryk mainnet, which can be used for testing.
 
 Export the mnemonic from your wallet (almost every wallet does it, look on settings or read wallet documentation to see how to do it), then import your account locally. Type on the terminal
 
@@ -292,21 +292,21 @@ mavkit-client import keys from mnemonic myWallet
 
 Paste the mnemonic when prompt appears
 
-You are now ready to originate your contract with your user. On your wallet, copy your public hash key address `mv1...` or `mv2...` and replace the placeholder `<my_tz_address...>` on the command you need to run :
+You are now ready to originate your contract with your user. On your wallet, copy your public hash key address `mv1...` or `mv2...` and replace the placeholder `<my_mv_address...>` on the command you need to run :
 
 ```zsh
 mavkit-client originate contract counter \
-              transferring 0 from <my_tz_address...> \
+              transferring 0 from <my_mv_address...> \
               running counter.mv \
               --init 10 --burn-cap 0.1 --force
 ```
 
-Again, you will receive several messages from the node and you should get the confirmation that the contract has been published. Note the `KT1...` address available in logs, you'll be able to find your contract onto an indexer like `tzkt` through url like `https://ghostnet.tzkt.io/KT1.../` don't forget to put your `KT1` address
+Again, you will receive several messages from the node and you should get the confirmation that the contract has been published. Note the `KT1...` address available in logs, you'll be able to find your contract onto an indexer like `nexus` through url like `https://nexus.mavryk.org/explorer/contract/KT1.../` don't forget to put your `KT1` address
 
 You can know call your contract with
 
 ```zsh
-mavkit-client call counter from <my_tz_address...> \
+mavkit-client call counter from <my_mv_address...> \
              --arg "(Left (Right 32))" \
              --burn-cap 0.1
 ```
@@ -330,7 +330,7 @@ ligo compile parameter main.jsligo "Increment (32)" -m Counter
 
 </Syntax>
 
-If you do so, back to `tzkt`, you will see several information on the operation, including the new contract storage.
+If you do so, back to `nexus`, you will see several information on the operation, including the new contract storage.
 
 
 ## Testing the Michelson contract locally

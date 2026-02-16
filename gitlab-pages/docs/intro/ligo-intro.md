@@ -78,7 +78,7 @@ For critical code, LIGO also keeps its compiled output unbloated making **possib
 
 ### A set of tools already available
 
-- Quickly explore LIGO using [webide](https://ide.mavryk.network/local)
+- Quickly explore LIGO using [webide](https://ide.mavryk.org/local)
 - Quickly bootstrap a project with [registry](https://packages.ligo.mavryk.org/packages)
 - Improve development experience with our LSP server available in the
   [VS Code extension](https://marketplace.visualstudio.com/items?itemName=ligolang-publish.ligo-vscode)
@@ -92,7 +92,7 @@ For critical code, LIGO also keeps its compiled output unbloated making **possib
 
 ### Do you want to try LIGO?
 
-For a quick overview, [get-started]( https://ligo.mavryk.org/docs/tutorials/getting-started) is a good choice. [Webide](https://ide.mavryk.network/) can be used to avoid installation onto your laptop.
+For a quick overview, [get-started]( https://ligo.mavryk.org/docs/tutorials/getting-started) is a good choice. [Webide](https://ide.mavryk.org/) can be used to avoid installation onto your laptop.
 
 ### Do you want to learn LIGO?
 

@@ -163,7 +163,7 @@ const current_purchase_price : mav =
 
 Pedro is a standalone business owner, and in our case, he does not
 have to split profits and earnings of the taco shop with anyone. So
-for the sake of simplicity, we will payout all the earned XTZ directly
+for the sake of simplicity, we will payout all the earned MVRK directly
 to Pedro right after a successful purchase.
 
 This means that after all the *purchase conditions* of our contract

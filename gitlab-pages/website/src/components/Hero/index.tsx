@@ -38,7 +38,7 @@ const Hero = () => {
           Get started
         </LinkAsButton>
         <LinkAsButton
-          href="https://ide.mavryk.network/"
+          href="https://ide.mavryk.org/"
           aria-label="Try Ligo online"
           title="Go to our Web-IDE to try Ligo online"
           target="_blank"
