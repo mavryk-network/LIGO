@@ -14,7 +14,7 @@ const config = {
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.svg",
   projectName: "ligo",
-  organizationName: "Mavryk Dynamics",
+  organizationName: "mavryk-network",
   customFields: {
     REACT_APP_GOOGLE_ANALYTICS_ID: "G-V5S4SDLK4Z",
   },
