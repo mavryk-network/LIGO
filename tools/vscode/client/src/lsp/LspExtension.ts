@@ -20,9 +20,12 @@ import { changeLastContractPath } from './commands/common';
 import { LigoContext } from '../common/LigoContext';
 import { LigoProtocolClient } from '../common/LigoProtocolClient';
 
-import LigoServer from '../debugger/LigoServer';
 import { getBinaryPath, ligoBinaryInfo } from '../common/config';
 
+/**
+ * The main class for the language server. An instance of this object holds all
+ * the necessary state for launching and running the language server.
+ */
 export class LspExtension implements vscode.Disposable {
   private languageServerClient: LanguageClient;
   private semanticTokensClient: LanguageClient;
@@ -79,7 +82,12 @@ export class LspExtension implements vscode.Disposable {
     this.updateLigoButton(button);
   }
 
-
+  /**
+   * Registers all features needed for the language server's functioning,
+   * initializes all states, creates status bars buttons, and registers
+   * commands. This will launch two language servers: LIGO Language Server, and
+   * LIGO Semantic Tokens.
+   */
   public constructor(context: LigoContext, protocolClient: LigoProtocolClient) {
     let ligoPath: string = getBinaryPath(ligoBinaryInfo)
 
@@ -159,6 +167,7 @@ export class LspExtension implements vscode.Disposable {
     this.languageServerClient.start()
   }
 
+  /** Releases resources acquired by the language server. */
   public dispose(): Thenable<void> | undefined {
     this.semanticTokensClient?.stop();
     this.languageServerClient?.stop();

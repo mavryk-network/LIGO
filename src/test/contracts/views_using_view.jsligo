@@ -11,13 +11,13 @@ const basic = (_a: address, s: storage) : storage => x + s
 
 @view
 const not_funny = (_: unit, s: storage) : storage =>
-  basic(Tezos.get_sender(), x + s)
+  basic(Mavryk.get_sender(), x + s)
 
 @view
 const get_storage = (_: unit, s: storage) : storage => x + s
 
 @view
-const get_address = (_: unit, _s: storage) : address => Tezos.get_sender()
+const get_address = (_: unit, _s: storage) : address => Mavryk.get_sender()
 
 @view
 const super_not_funny = (_: unit, s: storage): storage =>
@@ -26,7 +26,7 @@ const super_not_funny = (_: unit, s: storage): storage =>
 @entry
 function main (action: parameter, _store: storage): @return {
   return [
-    (list([]) as list<operation>), // No operations
+    [], // No operations
     (match(action) { when(Default()): 0 })
   ]
 }

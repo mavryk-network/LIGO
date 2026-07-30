@@ -7,11 +7,12 @@
 module Trace = Simple_utils.Trace
 open Alcotest_extras
 
+let ( <@ ) f g x = f (g x)
+
 let remove_extra_spaces : string -> string =
-  Simple_utils.Function.(
-    String.concat ~sep:" "
-    <@ List.filter ~f:(not <@ String.equal "")
-    <@ String.split_on_chars ~on:[ ' '; '\r'; '\n' ])
+  String.concat ~sep:" "
+  <@ List.filter ~f:(not <@ String.equal "")
+  <@ String.split_on_chars ~on:[ ' '; '\r'; '\n' ]
 
 
 let get_defs ~(code : string) ~(syntax : Syntax_types.t) : Scopes.def list Lwt.t =
@@ -31,10 +32,13 @@ let get_defs ~(code : string) ~(syntax : Syntax_types.t) : Scopes.def list Lwt.t
            }
             : Lsp_helpers.Ligo_interface.Get_scope.defs_and_diagnostics)
     =
+    (* Path does not matter for the fields we want to get *)
     Lsp_helpers.Ligo_interface.Get_scope.get_defs_and_diagnostics
+      ~tzip16_download_options:`Disabled
       ~logger:(fun ~type_:_ _ -> Lwt.return_unit)
       options
-      (Raw_input_lsp { file = "test" ^ Syntax.to_ext syntax; code })
+      (Lsp_helpers.Path.from_relative @@ "test" ^ Syntax.to_ext syntax)
+      code
   in
   if not (List.is_empty errors)
   then (
@@ -44,7 +48,7 @@ let get_defs ~(code : string) ~(syntax : Syntax_types.t) : Scopes.def list Lwt.t
            ~no_colour:false
            ~display_format:Human_readable
     in
-    failf "%a" formatter errors);
+    fail @@ Format.asprintf "%a" formatter errors);
   Scopes.Types.flatten_defs definitions
 
 
@@ -70,7 +74,12 @@ let mk_decompiler_test { code; expected; syntax; name } =
       (* ^ E.g. "let x a = a + 1" creates two vdefs but the one for x is always first*)
       (match vdef.t with
       | Core t -> t
-      | Resolved ast_typed -> Checking.untype_type_expression ast_typed
+      | Resolved ast_typed ->
+        Trace.try_with
+          (fun ~raise ~catch:_ -> Checking.untype_type_expression ~raise ast_typed)
+          (fun ~catch:_ _ ->
+            failwith
+              "Got a vdef with a resolved type, but cannot decompile type expression")
       | Unresolved -> failwith "Got a vdef with unresolved type")
     | Type tdef :: _ ->
       Option.value_or_thunk
@@ -86,10 +95,12 @@ let mk_decompiler_test { code; expected; syntax; name } =
   in *)
   let ast_unified =
     let result =
-      Trace.to_stdlib_result @@ Nanopasses.decompile_ty_expr @@ Lwt_main.run ast_core
+      Trace.to_stdlib_result ~fast_fail:Fast_fail
+      @@ Nanopasses.decompile_ty_expr
+      @@ Lwt_main.run ast_core
     in
     match result with
-    | Ok (s, _warnings) -> s ~syntax
+    | Ok (s, (), _warnings) -> s ~syntax
     | Error (errors, _warnings) ->
       let errors_formatter =
         Nanopasses.Errors.error_ppformat ~no_colour:false ~display_format:Human_readable
@@ -310,7 +321,7 @@ let decompiler_ty_expr_tests =
       }
     ; { name = "disc union with 1 argument"
       ; code = {|type t = { x: "C" } | { x: "B" }|}
-      ; expected = {|{ x: "B" } | { x: "C" }|}
+      ; expected = {|{ x: "C" } | { x: "B" }|}
       ; syntax = JsLIGO
       }
     ; { name = "union"

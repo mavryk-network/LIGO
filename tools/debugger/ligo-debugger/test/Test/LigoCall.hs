@@ -21,9 +21,9 @@ import Morley.Michelson.Parser (MichelsonSource (MSName))
 import Morley.Michelson.Text (MText, mt)
 import Morley.Michelson.Typed qualified as T
 import Morley.Michelson.Untyped qualified as U
-import Morley.Tezos.Address (Constrained (Constrained), ImplicitAddress, ta, unImplicitAddress)
-import Morley.Tezos.Core
-  (ChainId (UnsafeChainId), parseChainId, timestampFromSeconds, timestampQuote, tz)
+import Morley.Mavryk.Address (Constrained (Constrained), ImplicitAddress, ta, unImplicitAddress)
+import Morley.Mavryk.Core
+  (ChainId (UnsafeChainId), parseChainId, timestampFromSeconds, timestampQuote, mv)
 
 import Language.LIGO.AST hiding ((<.>))
 import Language.LIGO.Debugger.CLI
@@ -87,7 +87,7 @@ test_ExpressionCompilation = testGroup "Compiling expression"
 
   , testGroup "Expressions starting from `-`"
     -- At the moment of writing, `ligo` does not accept negative numbers easily
-    -- See https://gitlab.com/ligolang/ligo/-/issues/1495
+    -- See https://gitlab.com/mavryk-network/ligo/-/issues/1495
     [ testCase "Negative numbers" do
         res <- evalExprOverContract1 "-3"
         res @?= U.ValueInt (-3)
@@ -112,17 +112,6 @@ test_ModuleNamesCollection = testGroup "Getting module names"
 
       ModuleNamesList res <- getAvailableModules file
       res @?= []
-  ]
-
-test_Versions :: TestTree
-test_Versions = testGroup "Ligo version management"
-  [ testGroup "Our versions base sanity"
-      [ testCase "Recommended version is treated as supported" $
-          isSupportedVersion recommendedVersion @?= VersionSupported
-
-      , testCase "Minimal supported version is actually treated as supported" $
-          isSupportedVersion minimalSupportedVersion @?= VersionSupported
-      ]
   ]
 
 -- | Corner cases that once broke in LIGO and we have to extra check them.
@@ -403,16 +392,16 @@ test_config_resolution = testGroup "LIGO config resolution"
             , parameter = Just [int||"some_param"|]
             , contractEnv = Just LigoContractEnv
                 { now = Just $ MichelsonJson [timestampQuote|2020-01-01T00:00:00Z|]
-                , balance = Just $ MichelsonJson [tz|1|]
-                , amount = Just $ MichelsonJson [tz|2|]
+                , balance = Just $ MichelsonJson [mv|1|]
+                , amount = Just $ MichelsonJson [mv|2|]
                 , self = Just [ta|KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b|]
-                , source = Just $ Constrained [ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|]
-                , sender = Just $ Constrained [ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|]
+                , source = Just $ Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
+                , sender = Just $ Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
                 , chainId = Just $ MichelsonJson $ unsafe $ parseChainId "NetXH12Aer3be93"
                 , level = Just $ MichelsonJson 10000
                 , votingPowers = Just $ mkVotingPowers
-                        [ ([ta|tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr|], 40)
-                        , ([ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|], 60)
+                        [ ([ta|mv1E97cthY1QUw8D1LuWNDiYzG8EGacuVt2K|], 40)
+                        , ([ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|], 60)
                         ]
                 }
             }
@@ -431,10 +420,10 @@ test_config_resolution = testGroup "LIGO config resolution"
             , parameter = Just [int||"some_param"|]
             , contractEnv = Just LigoContractEnv
                 { now = Just $ MichelsonJson [timestampQuote|2020-01-01T00:00:00Z|]
-                , balance = Just $ MichelsonJson [tz|1|]
-                , amount = Just $ MichelsonJson [tz|2|]
+                , balance = Just $ MichelsonJson [mv|1|]
+                , amount = Just $ MichelsonJson [mv|2|]
                 , self = Just [ta|KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b|]
-                , source = Just $ Constrained [ta|tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY|]
+                , source = Just $ Constrained [ta|mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq|]
                 , sender = Nothing
                 , chainId = Nothing
                 , level = Nothing
@@ -457,7 +446,7 @@ test_config_resolution = testGroup "LIGO config resolution"
             , contractEnv = Just LigoContractEnv
                 { now = Nothing
                 , balance = Nothing
-                , amount = Just $ MichelsonJson [tz|3|]
+                , amount = Just $ MichelsonJson [mv|3|]
                 , self = Nothing
                 , source = Nothing
                 , sender = Nothing

@@ -4,10 +4,10 @@
     "description": "LIGO VSCode extension includes syntax highlighting, debugger, and a language server for LIGO.",
     "author": "Serokell",
     "license": "MIT",
-    "version": "1.4.0",
+    "version": "1.7.0",
     "repository": {
         "type": "git",
-        "url": "https://gitlab.com/ligolang/ligo"
+        "url": "https://gitlab.com/mavryk-network/ligo"
     },
     "publisher": "ligolang-publish",
     "categories": [
@@ -87,9 +87,9 @@
                     "scope": "resource",
                     "type": "array",
                     "default": [],
-                    "markdownDescription": "Disable specific LIGO LSP features. For a list of features, see [the README.md](https://gitlab.com/ligolang/ligo/-/blob/dev/tools/vscode/README.md)."
+                    "markdownDescription": "Disable specific LIGO LSP features. For a list of features, see [the README.md](https://gitlab.com/mavryk-network/ligo/-/blob/dev/tools/vscode/README.md)."
                 },
-                "ligoLanguageServer.tezos_source_account": {
+                "ligoLanguageServer.mavryk_source_account": {
                     "scope": "resource",
                     "type": "string",
                     "default": "baker",
@@ -114,7 +114,7 @@
                         "null"
                     ],
                     "default": null,
-                    "markdownDescription": "Sets custom max line width for a formatted file. Default is 80. If a custom `printWidth` is set in `.ligopretty` file, this setting has no effect (see [the README.md](https://gitlab.com/ligolang/ligo/-/blob/dev/tools/vscode/README.md)). Requires LIGO 0.67.0 or newer."
+                    "markdownDescription": "Sets custom max line width for a formatted file. Default is 80. If a custom `printWidth` is set in `.ligopretty` file, this setting has no effect (see [the README.md](https://gitlab.com/mavryk-network/ligo/-/blob/dev/tools/vscode/README.md)). Requires LIGO 0.67.0 or newer."
                 },
                 "ligoLanguageServer.completionImplementation": {
                     "scope": "resource",
@@ -137,6 +137,18 @@
                     ],
                     "default": "on document link request",
                     "markdownDescription": "When should the language server publish diagnostics for files?\n - 'on doc update' means running checks on each keystroke which can lead to performance problems\n - 'on document link request' relies on the `textDocument/documentLink` request sent automatically by VSCode when the user stops typing\n - 'on save' checks a file and publishes diagnostics for it after the file was saved\nNote: the file is also always checked when the language server receives a request like hover/completion/etc"
+                },
+                "ligoLanguageServer.metadataChecksDownloading": {
+                    "scope": "resource",
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Allow metadata checks to visit specified external resources (relevant for e.g. TZIP-16 metadata)."
+                },
+                "ligoLanguageServer.metadataChecksDownloadTimeout": {
+                    "scope": "resource",
+                    "type": "number",
+                    "default": 10,
+                    "description": "Time limit (in seconds) for metadata checks that involve downloading from external resource.\nTakes effect only when metadata checks downloading is enabled."
                 },
                 "ligoDebugger.maxSteps": {
                     "scope": "resource",
@@ -199,12 +211,12 @@
             },
             {
                 "command": "ligo.deploy",
-                "title": "Tezos: Deploy the current contract",
+                "title": "Mavryk: Deploy the current contract",
                 "description": "Deploys the current contract on a given network"
             },
             {
                 "command": "ligo.generateDeployScript",
-                "title": "Tezos: Generate deploy script",
+                "title": "Mavryk: Generate deploy script",
                 "description": "Generates deploy script for a given contract"
             },
             {
@@ -314,43 +326,43 @@
                                 "properties": {
                                     "now": {
                                         "default": "2020-01-01T00:00:00Z",
-                                        "description": "Value returned by `Tezos.get_now()`"
+                                        "description": "Value returned by `Mavryk.get_now()`"
                                     },
                                     "level": {
                                         "default": 0,
-                                        "description": "Value returned by `Tezos.get_level()`"
+                                        "description": "Value returned by `Mavryk.get_level()`"
                                     },
                                     "sender": {
                                         "type": "string",
-                                        "default": "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY",
-                                        "description": "Value returned by `Tezos.get_sender()`"
+                                        "default": "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq",
+                                        "description": "Value returned by `Mavryk.get_sender()`"
                                     },
                                     "source": {
                                         "type": "string",
-                                        "default": "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY",
-                                        "description": "Value returned by `Tezos.get_source()`"
+                                        "default": "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq",
+                                        "description": "Value returned by `Mavryk.get_source()`"
                                     },
                                     "self": {
                                         "type": "string",
                                         "default": "KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b",
-                                        "description": "Value returned by `Tezos.get_self_address()`"
+                                        "description": "Value returned by `Mavryk.get_self_address()`"
                                     },
                                     "amount": {
                                         "default": 0,
-                                        "description": "Value returned by `Tezos.get_amount()`"
+                                        "description": "Value returned by `Mavryk.get_amount()`"
                                     },
                                     "balance": {
                                         "default": 0,
-                                        "description": "Value returned by `Tezos.get_balance()`"
+                                        "description": "Value returned by `Mavryk.get_balance()`"
                                     },
                                     "chainId": {
                                         "type": "string",
                                         "default": "NetXH12Aer3be93",
-                                        "description": "Value returned by `Tezos.get_chain_id()`"
+                                        "description": "Value returned by `Mavryk.get_chain_id()`"
                                     },
                                     "votingPowers": {
                                         "type": "object",
-                                        "description": "Voting power distribution, affects `Tezos.voting_power` and `Tezos.get_total_voting_power()`",
+                                        "description": "Voting power distribution, affects `Mavryk.voting_power` and `Mavryk.get_total_voting_power()`",
                                         "properties": {
                                             "kind": {
                                                 "enum": "simple"
@@ -407,7 +419,7 @@
                             "contractEnv": {
                                 "now": "${7:${CURRENT_YEAR}-${CURRENT_MONTH}-${CURRENT_DATE}T${CURRENT_HOUR}:${CURRENT_MINUTE}:${CURRENT_SECOND}Z}",
                                 "level": "${8:10000}",
-                                "sender": "${9:tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY}",
+                                "sender": "${9:mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq}",
                                 "source": "${10:$8}",
                                 "self": "${11:KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b}",
                                 "amount": "${12:0}",
@@ -416,7 +428,7 @@
                                 "votingPowers": {
                                     "kind": "simple",
                                     "contents": {
-                                        "tz1aZcxeRT4DDZZkYcU3vuBaaBRtnxyTmQRr": "100$0"
+                                        "mv1E97cthY1QUw8D1LuWNDiYzG8EGacuVt2K": "100$0"
                                     }
                                 }
                             }
@@ -439,13 +451,12 @@
         "extest-deploy": "npm run build-tests && extest setup-and-run --yarn --offline --code_version 1.81.1 client/out/test/vsc-test/commands-deploy.test.js"
     },
     "dependencies": {
-        "@airgap/beacon-sdk": "^3.0.0",
-        "@taquito/signer": "^17.0.0",
-        "@taquito/taquito": "^17.0.0",
+        "@mavrykdynamics/mavlet-sdk": "^4.2.3",
+        "@mavrykdynamics/webmavryk-signer": "^2.0.0",
+        "@mavrykdynamics/webmavryk": "^2.0.0",
         "@vscode/debugadapter-testsupport": "1.55.1",
         "@vscode/debugprotocol": "1.55.1",
         "axios": "^1.4.0",
-        "detect-installer": "git+https://github.com/ligolang/detect-installer.git",
         "fs-extra": "^11.1.0",
         "node-fetch": "^3.2.3",
         "semver": "^7.3.5",
@@ -456,7 +467,7 @@
         "@types/copy-paste": "^1.1.30",
         "@types/glob": "^7.2.0",
         "@types/mocha": "^10.0.1",
-        "@types/node": "^20.1.0",
+        "@types/node": "^20.4.4",
         "@types/vscode": "^1.78.0",
         "@typescript-eslint/eslint-plugin": "^4.27.0",
         "@typescript-eslint/parser": "^4.27.0",

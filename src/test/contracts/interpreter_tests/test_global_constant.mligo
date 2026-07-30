@@ -1,3 +1,5 @@
+let assert = Assert.assert
+
 module C = struct
   type storage = int
   type parameter = unit
@@ -5,14 +7,15 @@ module C = struct
 
   let f (x : int) = x * 3 + 2
 
-  let ct : string = Test.register_constant (Test.eval f)
+  let ct : string =
+    Test.Next.State.register_constant (Test.Next.Michelson.eval f)
 
   [@entry]
   let main (() : parameter) (store : storage) : return =
-    ([] : operation list), ((Tezos.constant ct : int -> int) store)
+    ([] : operation list), ((Mavryk.constant ct : int -> int) store)
 end
 
 let test =
-  let orig = Test.originate (contract_of C) 1 0tez in
-  let _ = Test.transfer_exn orig.addr (Main ()) 0tez in
-  assert (Test.get_storage orig.addr = 5)
+  let orig = Test.Next.Originate.contract (contract_of C) 1 0mav in
+  let _ = Test.Next.Typed_address.transfer_exn orig.taddr (Main ()) 0mav in
+  assert (Test.Next.Typed_address.get_storage orig.taddr = 5)

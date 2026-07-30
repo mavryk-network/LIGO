@@ -20,7 +20,7 @@ const LigoVersion = () => {
 
   return !loading && version !== "Version" ? (
     <a
-      href={`//ligolang.org/docs/intro/changelog/#${version.replaceAll(".", "")}`}
+      href={`//ligo.mavryk.org/docs/intro/changelog/#${version.replaceAll(".", "")}`}
       target="_blank"
       rel="noreferrer"
     >

@@ -1,3 +1,5 @@
+module PP_helpers = Simple_utils.PP_helpers
+
 module Make (L : sig
   type t [@@deriving equal, compare, yojson, sexp]
 
@@ -11,7 +13,7 @@ struct
     }
   [@@deriving equal, compare, yojson, sexp]
 
-  let find_type (t : 'a t) (l : Label.t) : 'a option = Label.Map.find t.fields l
+  let find_type (t : 'a t) (l : Label.t) : 'a option = Map.find t.fields l
 
   let invariant t =
     Invariant.invariant [%here] t [%sexp_of: _] (fun () ->
@@ -43,7 +45,7 @@ struct
   let length t = Map.length t.fields
 
   let is_tuple t =
-    List.for_all ~f:(fun i -> Label.Map.mem t.fields i) @@ Label.range 0 (length t)
+    List.for_all ~f:(fun i -> Map.mem t.fields i) @@ Label.range 0 (length t)
 
 
   let to_tuple (t : 'a t) : 'a list =
@@ -60,24 +62,31 @@ struct
   let fold g init t = Map.fold t.fields ~init ~f:(fun ~key:_ ~data acc -> g acc data)
 
   module PP = struct
-    open Simple_utils.PP_helpers
-
     let row_element f ppf (k, elem) =
       Format.fprintf ppf "@[<h>%a -> %a@]" Label.pp k f elem
 
 
     let record_sep f g sep ppf (t : 'a t) =
       let lst = Map.to_alist t.fields in
-      Format.fprintf ppf "%a%a" (list_sep (row_element f) sep) lst g t.layout
+      Format.fprintf ppf "%a%a" (PP_helpers.list_sep (row_element f) sep) lst g t.layout
 
 
-    let variant_sep_d x layout = record_sep x layout (tag " ,@ ")
+    let variant_sep_d x layout = record_sep x layout (PP_helpers.tag " ,@ ")
 
     let tuple_or_record_type value layout ppf (t : 'a t) =
       if is_tuple t
-      then Tuple.pp value ppf (to_tuple t)
+      then
+        Format.fprintf
+          ppf
+          "@[<hv 2>( %a )@]"
+          PP_helpers.(list_sep value (tag " *@ "))
+          (to_tuple t)
       else
-        Format.fprintf ppf "@[<hv 7>record[%a]@]" (record_sep value layout (tag " ,@ ")) t
+        Format.fprintf
+          ppf
+          "@[<hv 7>record[%a]@]"
+          (record_sep value layout (PP_helpers.tag " ,@ "))
+          t
 
 
     let sum_type type_expression layout ppf sum =
@@ -110,7 +119,7 @@ module With_layout = struct
 
   let to_alist (t : 'a t) : (Label.t * 'a) list =
     List.map (Layout.to_list t.layout) ~f:(fun label ->
-        label, Label.Map.find_exn t.fields label)
+        label, Map.find_exn t.fields label)
 
 
   (* remaining operations are highly specific to layouts *)
@@ -129,7 +138,7 @@ module With_layout = struct
       match t with
       | Empty ->
         failwith (Format.asprintf "internal error: constructor not found @ %s" __LOC__)
-      | Leaf { name; _ } -> name, value, Label.Map.find_exn row.fields name
+      | Leaf { name; _ } -> name, value, Map.find_exn row.fields name
       | Node (l, r) ->
         (match get_left value with
         | Some value -> aux l value
@@ -160,7 +169,7 @@ module With_layout = struct
     in
     let rec aux (t : Layout.t) value =
       match t with
-      | Field { name; _ } -> [ name, value, Label.Map.find_exn row.fields name ]
+      | Field { name; _ } -> [ name, value, Map.find_exn row.fields name ]
       | Inner ts ->
         (match get_list (List.length ts) value with
         | None ->

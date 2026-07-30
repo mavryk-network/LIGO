@@ -1,16 +1,17 @@
-module Z = Simple_utils.Z
+module Ligo_z = Simple_utils.Ligo_z
+module Ligo_string = Simple_utils.Ligo_string
 
-type ligo_string = Simple_utils.Ligo_string.t [@@deriving eq, compare, yojson, hash, sexp]
+type ligo_string = Ligo_string.t [@@deriving eq, compare, yojson, hash, sexp]
 
 let bytes_to_yojson b = `String (Bytes.to_string b)
 let hash_fold_bytes st b = Hash.fold_string st (Bytes.to_string b)
 
 type t =
   | Literal_unit
-  | Literal_int of Z.t
-  | Literal_nat of Z.t
-  | Literal_timestamp of Z.t
-  | Literal_mutez of Z.t
+  | Literal_int of Ligo_z.t
+  | Literal_nat of Ligo_z.t
+  | Literal_timestamp of Ligo_z.t
+  | Literal_mumav of Ligo_z.t
   | Literal_string of ligo_string
   | Literal_bytes of bytes
   | Literal_address of string
@@ -35,8 +36,8 @@ let pp ppf (l : t) =
   | Literal_int z -> fprintf ppf "%a" Z.pp_print z
   | Literal_nat z -> fprintf ppf "+%a" Z.pp_print z
   | Literal_timestamp z -> fprintf ppf "+%a" Z.pp_print z
-  | Literal_mutez z -> fprintf ppf "%amutez" Z.pp_print z
-  | Literal_string s -> fprintf ppf "%a" Simple_utils.Ligo_string.pp s
+  | Literal_mumav z -> fprintf ppf "%amumav" Z.pp_print z
+  | Literal_string s -> fprintf ppf "%a" Ligo_string.pp s
   | Literal_bytes b -> fprintf ppf "0x%a" Hex.pp (Hex.of_bytes b)
   | Literal_address s -> fprintf ppf "@%S" s
   | Literal_operation o -> fprintf ppf "Operation(%a)" pp_operation o
@@ -65,7 +66,7 @@ let typeof lit =
   | Literal_int _ -> Literal_types.int
   | Literal_nat _ -> Literal_types.nat
   | Literal_timestamp _ -> Literal_types.timestamp
-  | Literal_mutez _ -> Literal_types.tez
+  | Literal_mumav _ -> Literal_types.mav
   | Literal_address _ -> Literal_types.address
   | Literal_operation _ -> Literal_types.operation
   | Literal_bls12_381_g1 _ -> Literal_types.bls12_381_g1

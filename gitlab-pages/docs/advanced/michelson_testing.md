@@ -11,17 +11,17 @@ There are multiple frameworks for testing Michelson contracts, we will
 not get into details, but here is a list of tutorials showing how to
 test contracts in Michelson:
 
-* [PyTezos](https://baking-bad.org/blog/2019/09/16/testing-michelson-tezos-contracts-with-pytezos-library/)
+* [PyMavryk](https://pymavryk.mavryk.org/)
 
-* [Cleveland](https://gitlab.com/morley-framework/morley/-/blob/9455cd384b2ab897fb7b31822abca3730a4ad08b/code/cleveland/testingEDSL.md)
+* [Cleveland](https://gitlab.com/mavryk-network/morley/-/blob/9455cd384b2ab897fb7b31822abca3730a4ad08b/code/cleveland/testingEDSL.md)
 
-Another alternative is to use Tezos's binary `tezos-client`
+Another alternative is to use Mavryk's binary `mavryk-client`
 directly. There's a new
-[mockup](https://tezos.gitlab.io/user/mockup.html) mode which is does
-not need a Tezos node to be running (albeit this is less similar to
-mainnet than running a Tezos sandbox node).
+[mockup](https://protocol.mavryk.org/user/mockup.html) mode which is does
+not need a Mavryk node to be running (albeit this is less similar to
+mainnet than running a Mavryk sandbox node).
 
-### Testing with `tezos-client`'s mockup
+### Testing with `mavryk-client`'s mockup
 
 We show the main steps that need to be done to use the mockup mode to
 test our LIGO contracts. As a first step, we need to compile our LIGO
@@ -54,7 +54,7 @@ type result = [list<operation>, storage];
 
 @entry
 const append = (s : string, store: storage): result =>
-  [list([]), store + s]
+  [[], store + s]
 ```
 
 </Syntax>
@@ -88,12 +88,12 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 
 
 Instead of outputting the resulted compiled code in the screen, we can
-tell LIGO to write it in a file called `mockup_testme.tz`:
+tell LIGO to write it in a file called `mockup_testme.mv`:
 
 <Syntax syntax="cameligo">
 
 ```shell
-ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.mligo --output-file mockup_testme.tz
+ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.mligo --output-file mockup_testme.mv
 ```
 
 </Syntax>
@@ -101,7 +101,7 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 <Syntax syntax="jsligo">
 
 ```shell
-ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.jsligo --output-file mockup_testme.tz
+ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.jsligo --output-file mockup_testme.mv
 ```
 
 </Syntax>
@@ -109,28 +109,28 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 Now it is time to test this Michelson code we obtained: we want to
 execute it using the mockup mode.
 
-Before anything, make sure you have installed `tezos-client`, a simple
-way to do so is by using opam (`opam install tezos-client`).
+Before anything, make sure you have installed `mavryk-client`, a simple
+way to do so is by using opam (`opam install mavryk-client`).
 
-We can list all the protocols available using `tezos-client list
+We can list all the protocols available using `mavryk-client list
 mockup protocols`. In this example, we will use Edo for testing, so
 the command we use for creating a mockup instance on the directory
 `/tmp/mockup/` is:
 
 ```shell skip
-tezos-client \
-  --protocol PtEdoTezd3RHSC31mpxxo1npxFjoWWcFgQtxapi51Z8TLu6v6Uq \
+mavryk-client \
+  --protocol PtBoreasK2KPuKbeYtXeEdudEHS7YcMFHE9amwheUc4kejTxgRi \
   --base-dir /tmp/mockup \
   --mode mockup \
   create mockup
 ```
 
-This command returns a list of Tezos addresses that we can use with
-the client in subsequent commands. As recommended in the Tezos
+This command returns a list of Mavryk addresses that we can use with
+the client in subsequent commands. As recommended in the Mavryk
 documentation, we can add a shell alias to avoid mistakes:
 
 ```shell
-alias mockup-client='tezos-client --mode mockup --base-dir /tmp/mockup'
+alias mockup-client='mavryk-client --mode mockup --base-dir /tmp/mockup'
 ```
 
 We can list the addresses returned above by running:
@@ -138,20 +138,20 @@ We can list the addresses returned above by running:
 ```shell skip
 mockup-client list known addresses
 # Outputs:
-# bootstrap5: tz1ddb9NMYHZi5UzPdzTZMYQQZoMub195zgv (unencrypted sk known)
-# bootstrap4: tz1b7tUupMgCNw2cCLpKTkSD1NZzB5TkP2sv (unencrypted sk known)
-# bootstrap3: tz1faswCTDciRzE4oJ9jn2Vm2dvjeyA9fUzU (unencrypted sk known)
-# bootstrap2: tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN (unencrypted sk known)
-# bootstrap1: tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx (unencrypted sk known)
+# bootstrap5: mv1GvL4GYjch8gDBcnAejHBfNqNWVHoenSVS (unencrypted sk known)
+# bootstrap4: mv1SHJm7osyS2G9ge4kjbmUMS3xr36VQWRKe (unencrypted sk known)
+# bootstrap3: mv1MLj377UstLn5gzHBr6FQtjM812NbB3RXe (unencrypted sk known)
+# bootstrap2: mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k (unencrypted sk known)
+# bootstrap1: mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe (unencrypted sk known)
 ```
 
 We are now ready to originate (or "deploy") the contract on our mockup
-Tezos:
+Mavryk:
 
 ```shell skip
 mockup-client originate contract mockup_testme \
               transferring 0 from bootstrap1 \
-              running "`cat mockup_testme.tz`" \
+              running "`cat mockup_testme.mv`" \
               --init \"foo\" --burn-cap 0.1
 ```
 

@@ -1,3 +1,5 @@
+module PP_helpers = Simple_utils.PP_helpers
+
 type constant' =
   | C_UNIT [@pure]
   | C_NIL [@pure]
@@ -176,7 +178,7 @@ type constant' =
   (* JsLIGO *)
   | C_POLYMORPHIC_ADD [@print "C_POLYMORPHIC_ADD"]
   | C_POLYMORPHIC_SUB [@print "C_POLYMORPHIC_SUB"]
-  | C_SUB_MUTEZ [@pure]
+  | C_SUB_MUMAV [@pure]
   | C_OPTION_MAP
   | C_OPT_OUT_ENTRY
 [@@deriving
@@ -203,7 +205,7 @@ let pp f ppf { cons_name; arguments } =
     "@[%a@[<hv 1>(%a)@]@]"
     pp_constant'
     cons_name
-    Simple_utils.PP_helpers.(list_sep_d f)
+    PP_helpers.(list_sep_d f)
     arguments
 
 

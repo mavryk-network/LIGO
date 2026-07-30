@@ -9,21 +9,21 @@
       Buy (  
         {
           profile=0x0501000000026869;
-          initial_controller=Some(("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address))
+          initial_controller=Some(("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address))
         }
       )
     storage: |
       {
         identities=Big_map.literal[
           (1, 
-          {owner=("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
-          controller=("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address);
+          {owner=("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address);
+          controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address);
           profile=0x0501000000026869}
           );
         ]; 
         next_id=2; 
-        name_price=0tez; 
-        skip_price=333mutez 
+        name_price=0mav; 
+        skip_price=333mumav 
       }
   deploy:
     entrypoint: main
@@ -31,14 +31,14 @@
       {
         identities=Big_map.literal[
           (1,
-          {owner=("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
-           controller=("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address);
+          {owner=("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address);
+           controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address);
            profile=0x0501000000026869}
           );
          ]; 
         next_id=2; 
-        name_price=10tez; 
-        skip_price=333mutez
+        name_price=10mav; 
+        skip_price=333mumav
       }
   evaluateValue:
     entrypoint: ""
@@ -47,36 +47,36 @@
     parameters: |
       { 
         profile=0x0501000000026869; 
-        initial_controller=Some(("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx": address))
+        initial_controller=Some(("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe": address))
       }, 
   
       { 
         identities=Big_map.literal[
           (1,
-           {owner=("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address); 
-            controller=("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address); 
+           {owner=("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address); 
+            controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address); 
             profile=0x0501000000026869}
           );
         ]; 
         next_id=2; 
-        name_price=0tez; 
-        skip_price=333mutez
+        name_price=0mav; 
+        skip_price=333mumav
       }
   generateDeployScript:
-    tool: tezos-client
+    tool: mavryk-client
     entrypoint: main
     storage: |
       {
         identities=Big_map.literal[
           (1,
-          {owner=("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address);
-           controller=("tz1gjaF81ZRRvdzjobyfVNsAeSC6PScjfQwN" : address);
+          {owner=("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address);
+           controller=("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address);
            profile=0x0501000000026869}
           );
          ]; 
         next_id=2; 
-        name_price=10tez; 
-        skip_price=333mutez
+        name_price=10mav; 
+        skip_price=333mumav
       }
 *_*)
 
@@ -115,8 +115,8 @@ type action =
 type storage = {
   identities: (id, id_details) big_map;
   next_id: int;
-  name_price: tez;
-  skip_price: tez;
+  name_price: mav;
+  skip_price: mav;
 }
 
 (** Preliminary thoughts on ids:
@@ -137,7 +137,7 @@ be to deter people from doing it just to chew up address space.
 
 let buy (parameter, storage: buy * storage) =
   let void: unit = 
-    if Tezos.get_amount () = storage.name_price
+    if Mavryk.get_amount () = storage.name_price
     then () 
     else (failwith "Incorrect amount paid.": unit)
   in
@@ -148,10 +148,10 @@ let buy (parameter, storage: buy * storage) =
   let controller: address =
     match initial_controller with
     | Some addr -> addr
-    | None -> Tezos.get_sender ()
+    | None -> Mavryk.get_sender ()
   in
   let new_id_details: id_details = {
-    owner = Tezos.get_sender () ;
+    owner = Mavryk.get_sender () ;
     controller = controller ;
     profile = profile ;
   }
@@ -166,7 +166,7 @@ let buy (parameter, storage: buy * storage) =
                         }
 
 let update_owner (parameter, storage: update_owner * storage) =
-  if (Tezos.get_amount () <> 0mutez)
+  if (Mavryk.get_amount () <> 0mumav)
   then (failwith "Updating owner doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -178,7 +178,7 @@ let update_owner (parameter, storage: update_owner * storage) =
     | None -> (failwith "This ID does not exist.": id_details)
   in
   let is_allowed: bool =
-    if Tezos.get_sender () = current_id_details.owner
+    if Mavryk.get_sender () = current_id_details.owner
     then true
     else (failwith "You are not the owner of this ID.": bool)
   in
@@ -196,7 +196,7 @@ let update_owner (parameter, storage: update_owner * storage) =
                         }
 
 let update_details (parameter, storage: update_details * storage) =
-  if (Tezos.get_amount () <> 0mutez)
+  if (Mavryk.get_amount () <> 0mumav)
   then (failwith "Updating details doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -209,7 +209,7 @@ let update_details (parameter, storage: update_details * storage) =
     | None -> (failwith "This ID does not exist.": id_details)
   in
   let is_allowed: bool =
-    if (Tezos.get_sender () = current_id_details.controller) || (Tezos.get_sender () = current_id_details.owner)
+    if (Mavryk.get_sender () = current_id_details.controller) || (Mavryk.get_sender () = current_id_details.owner)
     then true
     else (failwith ("You are not the owner or controller of this ID."): bool)
   in
@@ -241,7 +241,7 @@ let update_details (parameter, storage: update_details * storage) =
 (* Let someone skip the next identity so nobody has to take one that's undesirable *)
 let skip (p,storage: unit * storage) =
   let void: unit =
-    if Tezos.get_amount () = storage.skip_price
+    if Mavryk.get_amount () = storage.skip_price
     then ()
     else (failwith "Incorrect amount paid.": unit)
   in

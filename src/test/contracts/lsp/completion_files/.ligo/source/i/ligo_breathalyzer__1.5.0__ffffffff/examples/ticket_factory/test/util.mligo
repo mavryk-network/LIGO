@@ -26,13 +26,13 @@
 
 type originated = Breath.Contract.originated
 
-let originate_mint (level: Breath.Logger.level) (pl: bytes) (min_amount: tez) () =
+let originate_mint (level: Breath.Logger.level) (pl: bytes) (min_amount: mav) () =
   Breath.Contract.originate
     level
     "mint_sc"
     (contract_of Mint)
     { fixed_payload = pl; minimal_amount = min_amount }
-    0tez
+    0mav
 
 let originate_oven_with
     (level: Breath.Logger.level)
@@ -43,7 +43,7 @@ let originate_oven_with
   let (fresh_ticket, counter) = match ticket with
     | None -> (None : bytes ticket option), 0n
     | Some t ->
-      let (_, (_, qty)), fresh = Tezos.read_ticket t in
+      let (_, (_, qty)), fresh = Mavryk.read_ticket t in
       (Some fresh, qty)
   in
   Breath.Contract.originate
@@ -54,7 +54,7 @@ let originate_oven_with
     ; owner_address = actor.address
     ; mint_address = mint.originated_address
     ; qty_ticket = counter}
-    0tez
+    0mav
 
 let originate_oven_with_ticket
     (level: Breath.Logger.level)
@@ -71,17 +71,17 @@ let originate_oven
     () =
   originate_oven_with level (None: bytes ticket option) actor mint ()
 
-let request_mint (contract: (Oven parameter_of, Oven.storage) originated) (qty: tez) () =
+let request_mint (contract: (Oven parameter_of, Oven.storage) originated) (qty: mav) () =
   Breath.Contract.transfer_to contract Oven_request_mint qty
 
 let request_redeem (contract: (Oven parameter_of, Oven.storage) originated) () =
-  Breath.Contract.transfer_to contract Oven_request_redeem 0tez
+  Breath.Contract.transfer_to contract Oven_request_redeem 0mav
 
 let expected_mint_state
     (contract: (Mint parameter_of, Mint.storage) originated)
     (pl: bytes)
-    (ma: tez)
-    (current_balance: tez) : Breath.Result.result =
+    (ma: mav)
+    (current_balance: mav) : Breath.Result.result =
   let storage = Breath.Contract.storage_of contract in
   let balance = Breath.Contract.balance_of contract in
   let pl_expectation = Breath.Assert.is_equal "fixed payload" storage.fixed_payload pl in

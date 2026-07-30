@@ -1,8 +1,16 @@
 (library
  (name lsp_test_requests)
  (public_name ligo.lsp_test.requests)
+ (flags
+  (:standard
+   -alert
+   @all
+   -alert
+   -from_absolute_performance
+   -open
+   Ppx_yojson_conv_lib.Yojson_conv.Primitives))
  (preprocess
-  (pps ppx_yojson_conv ppx_expect))
+  (pps ppx_jane ppx_yojson_conv))
  (libraries
   lsp
   linol
@@ -16,7 +24,6 @@
   syntax_types
   fileutils)
  (inline_tests
-  (libraries simple-utils-unix simple-utils-unix.http_uri ligo.api)
   (deps
    (source_tree ../contracts))))
 

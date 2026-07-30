@@ -27,12 +27,12 @@ end
 
 let test_dyn =
   let init_storage = Test.storage_with_dynamic_entrypoints (contract_of  C) 42 in
-  let orig = Test.originate (contract_of C) init_storage 0mutez in
+  let orig = Test.originate (contract_of C) init_storage 0mumav in
   (* Call initial one *)
-  let _ = Test.transfer_exn orig.addr (Call_one ()) 1mutez in
+  let _ = Test.transfer_exn orig.addr (Call_one ()) 1mumav in
   let () = assert ((Test.get_storage orig.addr).storage = 1) in
   (* Change initial one and call it *)
   let f = fun () (i : int) : operation list * int -> [], i + 1 in
-  let _ = Test.transfer_exn orig.addr (Set_one f) 1mutez in
-  let _ = Test.transfer_exn orig.addr (Call_one ()) 1mutez in
+  let _ = Test.transfer_exn orig.addr (Set_one f) 1mumav in
+  let _ = Test.transfer_exn orig.addr (Call_one ()) 1mumav in
   assert ((Test.get_storage orig.addr).storage = 2)

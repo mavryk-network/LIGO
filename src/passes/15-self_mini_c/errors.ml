@@ -1,4 +1,7 @@
-open Simple_utils.Display
+module Display = Simple_utils.Display
+module Ligo_Error = Simple_utils.Error
+module Location = Simple_utils.Location
+module Snippet = Simple_utils.Snippet
 open Ligo_prim
 
 let stage = "self_mini_c"
@@ -13,16 +16,16 @@ type self_mini_c_error =
   | `Self_mini_c_create_contract_lambda of Constant.constant' * Mini_c.expression
   | `Self_mini_c_not_comparable of
     string * Mini_c.type_expression * Mini_c.type_expression
-  | `Self_mini_c_bad_capture of Simple_utils.Location.t * Mini_c.type_expression
+  | `Self_mini_c_bad_capture of Location.t * Mini_c.type_expression
   ]
 [@@deriving poly_constructor { prefix = "self_mini_c_" }]
 
 let error_ppformat
-    :  display_format:string display_format -> no_colour:bool -> Format.formatter
+    :  display_format:string Display.display_format -> no_colour:bool -> Format.formatter
     -> self_mini_c_error -> unit
   =
  fun ~display_format ~no_colour f a ->
-  let snippet_pp = Simple_utils.Snippet.pp ~no_colour in
+  let snippet_pp = Snippet.pp ~no_colour in
   match display_format with
   | Human_readable | Dev ->
     (match a with
@@ -30,7 +33,7 @@ let error_ppformat
     | `Self_mini_c_bad_self_address ->
       let s =
         Format.asprintf
-          "\"Tezos.self\" must be used directly and cannot be used via another function."
+          "\"Mavryk.self\" must be used directly and cannot be used via another function."
       in
       Format.pp_print_string f s
     | `Self_mini_c_not_a_function ->
@@ -50,7 +53,7 @@ let error_ppformat
     | `Self_mini_c_fvs_in_create_contract_lambda (e, v) ->
       Format.fprintf
         f
-        "@[<hv>%a@.Not all free variables could be inlined in Tezos.create_contract \
+        "@[<hv>%a@.Not all free variables could be inlined in Mavryk.create_contract \
          usage: %a.@]"
         snippet_pp
         e.location
@@ -59,7 +62,7 @@ let error_ppformat
     | `Self_mini_c_create_contract_lambda (_cst, e) ->
       Format.fprintf
         f
-        "@[<hv>%a@.Invalid usage of Tezos.create_contract.@.The first argument must be \
+        "@[<hv>%a@.Invalid usage of Mavryk.create_contract.@.The first argument must be \
          an inline function. @]"
         snippet_pp
         e.location
@@ -89,16 +92,16 @@ let error_ppformat
         t)
 
 
-let error_json : self_mini_c_error -> Simple_utils.Error.t =
+let error_json : self_mini_c_error -> Ligo_Error.t =
  fun e ->
-  let open Simple_utils.Error in
+  let open Ligo_Error in
   match e with
   | `Self_mini_c_corner_case message ->
     let content = make_content ~message () in
     make ~stage ~content
   | `Self_mini_c_bad_self_address ->
     let message =
-      "\"Tezos.self\" must be used directly and cannot be used via another function."
+      "\"Mavryk.self\" must be used directly and cannot be used via another function."
     in
     let content = make_content ~message () in
     make ~stage ~content
@@ -128,7 +131,7 @@ let error_json : self_mini_c_error -> Simple_utils.Error.t =
   | `Self_mini_c_fvs_in_create_contract_lambda (e, v) ->
     let message =
       Format.asprintf
-        "Not all free variables could be inlined in Tezos.create_contract usage: %a"
+        "Not all free variables could be inlined in Mavryk.create_contract usage: %a"
         Value_var.pp
         v
     in
@@ -138,7 +141,7 @@ let error_json : self_mini_c_error -> Simple_utils.Error.t =
   | `Self_mini_c_create_contract_lambda (_, e) ->
     let message =
       Format.sprintf
-        "Invalid usage of Tezos.create_contract.@.The first argument must be an inline \
+        "Invalid usage of Mavryk.create_contract.@.The first argument must be an inline \
          function."
     in
     let location = e.location in

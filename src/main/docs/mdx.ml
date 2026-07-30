@@ -1,20 +1,23 @@
 (* Creates files like gitlab-pages/website/versioned_docs/version-1.2.0/reference/toplevel.md
    from LIGO source files *)
 
+open Core
 open PPrint
 open Ligo_prim
-open Simple_utils
-open Simple_utils.Function
+module Trace = Simple_utils.Trace
+module Location = Simple_utils.Location
+
+let ( <@ ) f g x = f (g x)
 
 (** FIXME see
-    https://tezos-dev.slack.com/archives/GQ635HR0U/p1708798904488879?thread_ts=1708795057.966149&cid=GQ635HR0U
+    https://mavryk-dev.slack.com/archives/GQ635HR0U/p1708798904488879?thread_ts=1708795057.966149&cid=GQ635HR0U
     *)
 (* let link ~text ~target = string @@ Format.sprintf {|<a href="%s">%s</a>|} target text *)
 
 let link ~text ~target = !^"[" ^^ text ^^ !^"](" ^^ target ^^ !^")"
 
 let unlines : document list -> document =
-  separate (hardline ^^ hardline) <@ List.filter ~f:(Caml.( != ) empty)
+  separate (hardline ^^ hardline) <@ List.filter ~f:(fun d -> not @@ is_empty d)
 
 
 (**  file_name is either "toplevel.md" or "A.B.md" where "A.B" is some module / module type *)
@@ -116,7 +119,11 @@ let add_comments (doc_opt : document option) (value : document) : document =
   | None -> value
 
 
-let vdef_doc (comments : document option) (name : string) (t : Scopes.Types.type_case)
+let vdef_doc
+    ~(raise : (Checking.Errors.typer_error, Main_warnings.all) Trace.raise)
+    (comments : document option)
+    (name : string)
+    (t : Scopes.Types.type_case)
     : document
   =
   let p (syntax : Syntax_types.t) =
@@ -125,12 +132,13 @@ let vdef_doc (comments : document option) (name : string) (t : Scopes.Types.type
       | JsLIGO -> !^"let" ^//^ !^name ^^ colon
       | CameLIGO -> !^"val" ^//^ !^name ^//^ colon
     in
-    Docs_utils.decompile_type_case ~escape_html_characters:true ~syntax ~prefix t
+    Docs_utils.decompile_type_case ~raise ~escape_html_characters:true ~syntax ~prefix t
   in
   add_comments comments @@ syntax_title p
 
 
 let value_binder_doc
+    ~(raise : (Checking.Errors.typer_error, Main_warnings.all) Trace.raise)
     (comments : document option)
     (var : Value_var.t)
     (t : Ast_typed.type_expression)
@@ -138,7 +146,7 @@ let value_binder_doc
   =
   if Value_var.is_generated var
   then empty
-  else vdef_doc comments (Value_var.to_name_exn var) (Resolved t)
+  else vdef_doc ~raise comments (Value_var.to_name_exn var) (Resolved t)
 
 
 (* If type has parameters then we want to show it like [t<a, b>] *)
@@ -176,6 +184,7 @@ let rec reduce_generated_params : Ast_core.type_expression -> Ast_core.type_expr
 
 
 let type_expr_doc
+    ~(raise : (Checking.Errors.typer_error, Main_warnings.all) Trace.raise)
     (comments : document option)
     (name : Type_var.t)
     (ty_expr : Ast_typed.ty_expr option)
@@ -194,7 +203,10 @@ let type_expr_doc
       Option.map
         ~f:(fun typ ->
           reduce_generated_params
-          @@ Checking.untype_type_expression ~use_orig_var:true { typ with abbrev = None })
+          @@ Checking.untype_type_expression
+               ~raise
+               ~use_orig_var:true
+               { typ with abbrev = None })
         ty_expr
     in
     let bindee =
@@ -244,21 +256,27 @@ let type_expr_doc
     add_comments comments @@ syntax_title doc_for)
 
 
-let rec sig_item_doc ~config (item : Ast_typed.sig_item) : document =
+let rec sig_item_doc
+    ~(raise : (Checking.Errors.typer_error, Main_warnings.all) Trace.raise)
+    ~config
+    (item : Ast_typed.sig_item)
+    : document
+  =
   let source_syntax = config.source_syntax in
   match Location.unwrap item with
   | S_value (var, typ, { leading_comments; _ }) ->
     (* XXX creates "let" kwd, is it ok for interfaces?  *)
-    value_binder_doc (comments_to_doc ~source_syntax leading_comments) var typ
+    value_binder_doc ~raise (comments_to_doc ~source_syntax leading_comments) var typ
   | S_type (var, typ, { leading_comments; _ }) ->
-    type_expr_doc (comments_to_doc ~source_syntax leading_comments) var (Some typ)
+    type_expr_doc ~raise (comments_to_doc ~source_syntax leading_comments) var (Some typ)
   | S_type_var (var, { leading_comments; _ }) ->
-    type_expr_doc (comments_to_doc ~source_syntax leading_comments) var None
+    type_expr_doc ~raise (comments_to_doc ~source_syntax leading_comments) var None
   | S_module _ | S_module_type _ ->
     empty (* FIXME I was unable to create this in a LIGO file*)
 
 
 and module_doc
+    ~(raise : (Checking.Errors.typer_error, Main_warnings.all) Trace.raise)
     ~config
     (comments : document option)
     (name : Module_var.t)
@@ -304,23 +322,26 @@ and module_doc
     | Some mod_path ->
       link
         ~text:(string @@ mod_path_to_string mod_path)
-        ~target:(string @@ md_file_for_module mod_path)
+        ~target:(string @@ String.lowercase (md_file_for_module mod_path))
   in
   match m with
   | M_struct m ->
-    let name = Module_var.to_name_exn name in
+    let name = String.lowercase (Module_var.to_name_exn name) in
     let full_path = mod_path_to_string @@ config.current_mod_path @ [ name ] in
     let file_name = add_extension_md full_path in
     let link =
       (* That's what we print to current file. FIXME: should be syntax dependant,
        but <SyntaxTitle> can't hold links for now *)
-      link ~text:(string @@ "module " ^ name) ~target:(string file_name) ^^ hardline
+      link
+        ~text:(string @@ "module " ^ name)
+        ~target:(string (String.lowercase file_name))
+      ^^ hardline
     and contents =
       (* Contents of file we create *)
       let heading = string @@ "# " ^ full_path in
       unlines
       @@ (add_comments comments heading
-         :: (List.map ~f:(decl_doc ~config:(with_mod_name name config))
+         :: (List.map ~f:(decl_doc ~raise ~config:(with_mod_name name config))
             @@ List.stable_sort ~compare:Docs_utils.compare_declarations m))
     in
     add_additional_file config { file_name; contents };
@@ -348,7 +369,7 @@ and module_doc
       @@ unmangle_if_needed
       @@ String.concat ~sep:"."
       @@ List.map ~f:Module_var.to_name_exn
-      @@ Utils.nseq_to_list v
+      @@ Nonempty_list.to_list v
     in
     (* FIXME: should be syntax dependant,
        but <SyntaxTitle> can't hold links for now *)
@@ -356,6 +377,7 @@ and module_doc
 
 
 and module_type_doc
+    ~(raise : (Checking.Errors.typer_error, Main_warnings.all) Trace.raise)
     ~(config : config)
     (comments : document option) (* TODO add comments to file with contents?? *)
     (name : Module_var.t)
@@ -368,24 +390,35 @@ and module_type_doc
   let link =
     (* That's what we print to current file. FIXME: should be syntax dependant,
        but <SyntaxTitle> can't hold links for now *)
-    link ~text:(string @@ "module type " ^ name) ~target:(string file_name) ^^ hardline
+    link
+      ~text:(string @@ "module type " ^ name)
+      ~target:(string (String.lowercase file_name))
+    ^^ hardline
   and contents =
     (* Contents of file we create *)
     let heading = string @@ "# " ^ full_path in
     unlines
     @@ (heading
-       :: List.map ~f:(sig_item_doc ~config:(with_mod_name name config)) m.sig_items)
+       :: List.map
+            ~f:(sig_item_doc ~raise ~config:(with_mod_name name config))
+            m.sig_items)
   in
   add_additional_file config { file_name; contents };
   add_comments comments link
 
 
-and decl_doc ~config (decl : Ast_typed.decl) : document =
+and decl_doc
+    ~(raise : (Checking.Errors.typer_error, Main_warnings.all) Trace.raise)
+    ~config
+    (decl : Ast_typed.decl)
+    : document
+  =
   let source_syntax = config.source_syntax in
   match decl.wrap_content with
   | D_value { binder; attr = { public; hidden; leading_comments; deprecated; _ }; _ }
     when public && not hidden ->
     value_binder_doc
+      ~raise
       (comments_to_doc ~source_syntax ?deprecated leading_comments)
       binder.var
       binder.ascr
@@ -395,7 +428,8 @@ and decl_doc ~config (decl : Ast_typed.decl) : document =
     (* Let's extract all binders and create a declaration for each of them. *)
     let binders = Linear_pattern.binders pattern in
     let doc = comments_to_doc ~source_syntax ?deprecated leading_comments in
-    unlines @@ List.map binders ~f:(fun { var; ascr } -> value_binder_doc doc var ascr)
+    unlines
+    @@ List.map binders ~f:(fun { var; ascr } -> value_binder_doc ~raise doc var ascr)
   | D_type
       { type_binder
       ; type_expr
@@ -403,6 +437,7 @@ and decl_doc ~config (decl : Ast_typed.decl) : document =
       }
     when public && not hidden ->
     type_expr_doc
+      ~raise
       (comments_to_doc ~source_syntax ?deprecated leading_comments)
       type_binder
       (Some type_expr)
@@ -414,6 +449,7 @@ and decl_doc ~config (decl : Ast_typed.decl) : document =
       }
     when public && (not hidden) && not (Module_var.is_generated module_binder) ->
     module_doc
+      ~raise
       ~config
       (comments_to_doc ~source_syntax ?deprecated leading_comments)
       module_binder
@@ -422,16 +458,21 @@ and decl_doc ~config (decl : Ast_typed.decl) : document =
       { signature_binder; signature; signature_attr = { leading_comments; public; _ } }
     when public ->
     module_type_doc
+      ~raise
       ~config
       (comments_to_doc ~source_syntax leading_comments)
       signature_binder
       signature
   | D_module_include _ -> (* TODO *) empty
-  | D_module _ | D_value _ | D_type _ | D_irrefutable_match _ | D_signature _ ->
-    empty (* decl is hidden *)
+  | D_module _ | D_value _ | D_type _ | D_irrefutable_match _ | D_signature _ | D_import _
+    -> empty (* decl is hidden *)
 
 
-let to_mdx ~(config : config) ?file_name (prg : Ast_typed.program)
+let to_mdx
+    ~(raise : (Checking.Errors.typer_error, Main_warnings.all) Trace.raise)
+    ~(config : config)
+    ?file_name
+    (prg : Ast_typed.program)
     : PPrint.document returned_files'
   =
   let heading = string @@ "# " ^ Option.value ~default:"unnamed" file_name in
@@ -440,14 +481,22 @@ let to_mdx ~(config : config) ?file_name (prg : Ast_typed.program)
     @@ (heading
        :: List.map
             (List.stable_sort ~compare:Docs_utils.compare_declarations prg.pr_module)
-            ~f:(decl_doc ~config))
+            ~f:(decl_doc ~raise ~config))
   in
   { file_name = "toplevel.md"; contents = toplevel } :: !(config.additional_files)
 
 
-let to_mdx ~source_syntax ~source_file ?file_name prg : returned_files =
+let to_mdx
+    ~(raise : (Checking.Errors.typer_error, Main_warnings.all) Trace.raise)
+    ~source_syntax
+    ~source_file
+    ?file_name
+    prg
+    : returned_files
+  =
   let doc =
     to_mdx
+      ~raise
       ?file_name
       ~config:
         { source_syntax; source_file; additional_files = ref []; current_mod_path = [] }

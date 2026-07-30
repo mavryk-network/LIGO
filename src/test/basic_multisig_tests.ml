@@ -42,7 +42,7 @@ let op_list ~raise =
   in
   let destination =
     Trace.trace_tzresult ~raise (fun _ -> Main_errors.test_internal __LOC__)
-    @@ Signature.Public_key_hash.of_b58check "tz1PpDGHRXFQq3sYDuH8EpLWzPm5PFpe1sLE"
+    @@ Signature.Public_key_hash.of_b58check "mv1UwjPM9u74pWbnefsvi8kz7cUkhNdwF5YP"
   in
   let operation
       : _ Memory_proto_alpha.Protocol.Script_typed_ir.internal_operation_contents
@@ -72,7 +72,7 @@ let empty_payload = Ast_unified.e_unit ~loc
 let chain_id_zero =
   Ast_unified.e_bytes_raw
     ~loc
-    (Tezos_crypto.Hashed.Chain_id.to_bytes Tezos_base__TzPervasives.Chain_id.zero)
+    (Mavryk_crypto.Hashed.Chain_id.to_bytes Mavryk_base__TzPervasives.Chain_id.zero)
 
 
 (* sign the message 'msg' with 'keys', if 'is_valid'=false the providid signature will be incorrect *)
@@ -87,12 +87,11 @@ let params ~raise counter payload keys is_validl f =
     let pkh, _, _ = str_keys key in
     let msg =
       e_tuple ~loc
-      @@ List.Ne.of_list
-           [ payload
-           ; e_nat ~loc counter
-           ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
-           ; chain_id_zero
-           ]
+      @@ [ payload
+         ; e_nat ~loc counter
+         ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
+         ; chain_id_zero
+         ]
     in
     let%map signature = sign_message ~raise prog msg sk in
     e_pair ~loc (e_key_hash ~loc pkh) (e_signature ~loc signature) :: acc

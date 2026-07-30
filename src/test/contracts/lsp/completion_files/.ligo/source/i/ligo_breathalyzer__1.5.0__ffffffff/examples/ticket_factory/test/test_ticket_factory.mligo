@@ -36,7 +36,7 @@ let case_happy_path =
       let () = Breath.Logger.log level "Initialize Mint" in
 
       let mint = Breath.Context.act_as operator
-        (Util.originate_mint level 0x01 1tez)
+        (Util.originate_mint level 0x01 1mav)
       in
 
       let () = Breath.Logger.log level "Initialize Oven" in
@@ -56,15 +56,15 @@ let case_happy_path =
       let () = Breath.Logger.log level "Perform some mint" in
 
       let alice_action_1 = Breath.Context.act_as alice
-        (Util.request_mint alice_oven 1tez)
+        (Util.request_mint alice_oven 1mav)
       in
 
       let bob_action_1 = Breath.Context.act_as bob
-        (Util.request_mint bob_oven 2tez)
+        (Util.request_mint bob_oven 2mav)
       in
 
       let carol_action_1 =  Breath.Context.act_as carol
-        (Util.request_mint carol_oven 3tez)
+        (Util.request_mint carol_oven 3mav)
       in
 
       (* We store the result of the current state in order to be able to test
@@ -74,7 +74,7 @@ let case_happy_path =
           alice_action_1
         ; bob_action_1
         ; carol_action_1
-        ; Util.expected_mint_state mint 0x01 1tez 6tez
+        ; Util.expected_mint_state mint 0x01 1mav 6mav
         ; Util.expected_oven_state alice_oven alice mint 1000000n
         ; Util.expected_oven_state bob_oven bob mint 2000000n
         ; Util.expected_oven_state carol_oven carol mint 3000000n ]
@@ -93,7 +93,7 @@ let case_happy_path =
       let redeem_step = Breath.Result.reduce [
           alice_action_2
         ; carol_action_2
-        ; Util.expected_mint_state mint 0x01 1tez 2tez
+        ; Util.expected_mint_state mint 0x01 1mav 2mav
         ; Util.expected_oven_state alice_oven alice mint 0n
         ; Util.expected_oven_state bob_oven bob mint 2000000n
         ; Util.expected_oven_state carol_oven carol mint 0n ]
@@ -112,7 +112,7 @@ let case_bob_try_to_steal_alice_ticket_bouuuh =
       let () = Breath.Logger.log level "Initialize Mint" in
 
       let mint = Breath.Context.act_as operator
-        (Util.originate_mint level 0x01 1tez)
+        (Util.originate_mint level 0x01 1mav)
       in
 
       let () = Breath.Logger.log level "Initialize Oven" in
@@ -124,7 +124,7 @@ let case_bob_try_to_steal_alice_ticket_bouuuh =
       let () = Breath.Logger.log level "Perform some mint" in
 
       let alice_action_1 = Breath.Context.act_as alice
-        (Util.request_mint alice_oven 1tez)
+        (Util.request_mint alice_oven 1mav)
       in
 
       (* We store the result of the current state in order to be able to test
@@ -132,7 +132,7 @@ let case_bob_try_to_steal_alice_ticket_bouuuh =
 
       let mint_step = Breath.Result.reduce [
           alice_action_1
-        ; Util.expected_mint_state mint 0x01 1tez 1tez
+        ; Util.expected_mint_state mint 0x01 1mav 1mav
         ; Util.expected_oven_state alice_oven alice mint 1000000n ]
       in
 
@@ -150,7 +150,7 @@ let case_bob_try_to_steal_alice_ticket_bouuuh =
         (* But that was without counting ... the security of our contract! *)
       ; Breath.Expect.fail_with_message "oven_sc: not owner" bob_betrayal
         (* Nothing is changed! *)
-      ; Util.expected_mint_state mint 0x01 1tez 1tez
+      ; Util.expected_mint_state mint 0x01 1mav 1mav
       ; Util.expected_oven_state alice_oven alice mint 1000000n ]
     )
 

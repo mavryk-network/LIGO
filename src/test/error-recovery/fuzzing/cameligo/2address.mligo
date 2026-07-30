@@ -1,6 +1,6 @@
  let main ( p : begin ) =
- let c : unit contract = Tezos . implicit_account p
- in Tezos . address c
+ let c : unit contract = Mavryk . implicit_account p
+ in Mavryk . address c
 
 (*
 Mutation chance is 2

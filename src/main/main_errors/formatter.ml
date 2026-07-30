@@ -1,10 +1,12 @@
-open Simple_utils.Display
+module Ligo_Error = Simple_utils.Error
+module Runned_result = Simple_utils.Runned_result
+module Display = Simple_utils.Display
 module Snippet = Simple_utils.Snippet
 module Location = Simple_utils.Location
 module PP_helpers = Simple_utils.PP_helpers
 
 let rec error_ppformat
-    :  display_format:string display_format -> no_colour:bool -> Format.formatter
+    :  display_format:string Display.display_format -> no_colour:bool -> Format.formatter
     -> Types.all -> unit
   =
  fun ~display_format ~no_colour f a ->
@@ -78,9 +80,9 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Expected:@ %a@ got:@ %a@]"
-        (Simple_utils.PP_helpers.list_sep_d Simple_utils.PP_helpers.string)
+        PP_helpers.(list_sep_d string)
         expected
-        (Simple_utils.PP_helpers.list_sep_d Simple_utils.PP_helpers.string)
+        PP_helpers.(list_sep_d string)
         actual
     | `Main_invalid_generator_name generator ->
       Format.fprintf
@@ -102,7 +104,7 @@ let rec error_ppformat
         f
         "@[<hv>Invalid protocol version '%s'. Available versions: %a"
         actual
-        (Simple_utils.PP_helpers.list_sep_d Format.pp_print_string)
+        (PP_helpers.list_sep_d Format.pp_print_string)
         possible
     | `Main_invalid_extension extension ->
       Format.fprintf
@@ -144,7 +146,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -155,13 +157,12 @@ let rec error_ppformat
            ~show_source:true
            ?parsed:None)
         errs
-    | `Main_typecheck_contract_tracer (protocol, _c, err_l)
-      when Environment.Protocols.(equal protocol in_use) ->
+    | `Main_typecheck_contract_tracer (_c, err_l) ->
       let errs =
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           err_l
       in
       Format.fprintf
@@ -172,28 +173,12 @@ let rec error_ppformat
            ~show_source:true
            ?parsed:None)
         errs
-    | `Main_typecheck_contract_tracer (_protocol, _c, err_l) ->
-      let errs =
-        List.map
-          ~f:(fun e ->
-            match e with
-            | `Tezos_alpha_error a -> a)
-          err_l
-      in
-      Format.fprintf
-        f
-        "@[<hv>Error(s) occurred while type checking the contract:@.%a@]"
-        (Memory_proto_pre_alpha.Client.Michelson_v1_error_reporter.report_errors
-           ~details:true
-           ~show_source:true
-           ?parsed:None)
-        errs
     | `Main_could_not_serialize errs ->
       let errs =
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -204,14 +189,14 @@ let rec error_ppformat
            ~show_source:true
            ?parsed:None)
         errs
-    | `Check_typed_arguments_tracer (Simple_utils.Runned_result.Check_parameter, err) ->
+    | `Check_typed_arguments_tracer (Runned_result.Check_parameter, err) ->
       Format.fprintf
         f
         "@[<hv>Invalid command line argument. @.The provided parameter does not have the \
          correct type for the given entrypoint.@ %a@]"
         self
         err
-    | `Check_typed_arguments_tracer (Simple_utils.Runned_result.Check_storage, err) ->
+    | `Check_typed_arguments_tracer (Runned_result.Check_storage, err) ->
       Format.fprintf
         f
         "@[<hv>Invalid command line argument. @.The provided storage does not have the \
@@ -223,7 +208,7 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>An error occurred while evaluating an expression: %a@]"
-        Tezos_utils.Michelson.pp
+        Mavryk_utils.Michelson.pp
         v
     | `Main_entrypoint_not_a_function ->
       Format.fprintf
@@ -262,16 +247,16 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Invalid command line option \"--source\". @.The provided source address \
-         \"%s\" is invalid. A valid Tezos address is a string prefixed by either tz1, \
-         tz2, tz3 or KT1 and followed by a Base58 encoded hash and terminated by a \
+         \"%s\" is invalid. A valid Mavryk address is a string prefixed by either mv1, \
+         mv2, mv3 or KT1 and followed by a Base58 encoded hash and terminated by a \
          4-byte checksum.@]"
         a
     | `Main_invalid_sender a ->
       Format.fprintf
         f
         "@[<hv>Invalid command line option \"--sender\". @.The provided sender address \
-         \"%s\" is invalid. A valid Tezos address is a string prefixed by either tz1, \
-         tz2, tz3 or KT1 and followed by a Base58 encoded hash and terminated by a \
+         \"%s\" is invalid. A valid Mavryk address is a string prefixed by either mv1, \
+         mv2, mv3 or KT1 and followed by a Base58 encoded hash and terminated by a \
          4-byte checksum.@]"
         a
     | `Main_invalid_timestamp t ->
@@ -313,7 +298,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -333,7 +318,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -349,7 +334,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -365,7 +350,7 @@ let rec error_ppformat
         List.map
           ~f:(fun e ->
             match e with
-            | `Tezos_alpha_error a -> a)
+            | `Mavryk_alpha_error a -> a)
           errs
       in
       Format.fprintf
@@ -389,6 +374,8 @@ let rec error_ppformat
       Aggregation.Errors.error_ppformat ~display_format ~no_colour f e
     | `Self_ast_aggregated_tracer e ->
       Self_ast_aggregated.Errors.error_ppformat ~display_format ~no_colour f e
+    | `Expansion_tracer e ->
+      Expansion.Errors.error_ppformat ~display_format ~no_colour f e
     | `Self_mini_c_tracer e ->
       Self_mini_c.Errors.error_ppformat ~display_format ~no_colour f e
     | `Spilling_tracer e -> Spilling.Errors.error_ppformat ~display_format ~no_colour f e
@@ -397,7 +384,7 @@ let rec error_ppformat
     | `Main_interpret_not_enough_initial_accounts (loc, max) ->
       Format.fprintf
         f
-        "@[<hv>%a@. baker account initial balance must at least reach %a tez @]"
+        "@[<hv>%a@. baker account initial balance must at least reach %a mav @]"
         snippet_pp
         loc
         Memory_proto_alpha.Protocol.Alpha_context.Tez.pp
@@ -451,7 +438,7 @@ let rec error_ppformat
         "@[<v 4>%a@.An uncaught error occured:@.Failwith: %a@]"
         snippet_pp
         loc
-        Tezos_utils.Michelson.pp
+        Mavryk_utils.Michelson.pp
         v
     | `Main_interpret_target_lang_failwith (loc, calltrace, v) ->
       if (not (is_dummy_location loc)) || List.is_empty calltrace
@@ -461,7 +448,7 @@ let rec error_ppformat
           "@[<v 4>%a@.An uncaught error occured:@.Failwith: %a@.Trace:@.%a@]"
           snippet_pp
           loc
-          Tezos_utils.Michelson.pp
+          Mavryk_utils.Michelson.pp
           v
           (PP_helpers.list_sep_d Location.pp)
           calltrace
@@ -471,7 +458,7 @@ let rec error_ppformat
           "@[<v 4>%a@.An uncaught error occured:@.Failwith: %a@.Trace:@.%a@.%a@]"
           snippet_pp
           loc
-          Tezos_utils.Michelson.pp
+          Mavryk_utils.Michelson.pp
           v
           snippet_pp
           (List.hd_exn calltrace)
@@ -561,9 +548,9 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.View rule violated:\n\
-        \      - Tezos.create_contract ; Tezos.set_delegate and Tezos.transaction cannot \
+        \      - Mavryk.create_contract ; Mavryk.set_delegate and Mavryk.transaction cannot \
          be used because they are stateful (expect in lambdas)\n\
-        \      - Tezos.self can't be used because the entry-point does not make sense in \
+        \      - Mavryk.self can't be used because the entry-point does not make sense in \
          a view@.@]"
         snippet_pp
         loc
@@ -602,12 +589,27 @@ let rec error_ppformat
         (PP_helpers.list_sep_d pp_elt)
         locs_and_types
     | `Resolve_config_config_type_mismatch (got, pp_typ) ->
-      Format.fprintf f "Expected config type to be a record.\nGot: %a" pp_typ got)
+      Format.fprintf f "Expected config type to be a record.\nGot: %a" pp_typ got
+    | `Scopes_recovered_error e ->
+      Format.fprintf
+        f
+        "@[<hv>%a@.%s@]"
+        (PP_helpers.if_present @@ Snippet.pp ~no_colour)
+        e.content.location
+        e.content.message)
 
 
-let rec error_json : Types.all -> Simple_utils.Error.t list =
+let errors_ppformat
+    :  display_format:string Display.display_format -> no_colour:bool -> Format.formatter
+    -> Types.all list -> unit
+  =
+ fun ~display_format ~no_colour f errs ->
+  List.iter errs ~f:(fun err -> error_ppformat ~display_format ~no_colour f err)
+
+
+let rec error_json : Types.all -> Ligo_Error.t list =
  fun a ->
-  let open Simple_utils.Error in
+  let open Ligo_Error in
   match a with
   | `Test_err_tracer (name, err) ->
     let children = error_json err in
@@ -667,13 +669,13 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Main_unparse_tracer _ ->
     let content = make_content ~message:"could not unparse michelson type" () in
     [ make ~stage:"michelson contract build" ~content ]
-  | `Main_typecheck_contract_tracer (_p, _c, _) ->
+  | `Main_typecheck_contract_tracer (_c, _) ->
     let content = make_content ~message:"Could not typecheck michelson code" () in
     [ make ~stage:"michelson contract build" ~content ]
   | `Main_could_not_serialize _errs ->
     let content = make_content ~message:"Could not serialize michelson code" () in
     [ make ~stage:"michelson serialization" ~content ]
-  | `Check_typed_arguments_tracer (Simple_utils.Runned_result.Check_parameter, err) ->
+  | `Check_typed_arguments_tracer (Runned_result.Check_parameter, err) ->
     let children = error_json err in
     let message = "Passed parameter does not match the contract type" in
     let errors =
@@ -682,7 +684,7 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
           make ~stage:"contract argument typechecking" ~content)
     in
     errors
-  | `Check_typed_arguments_tracer (Simple_utils.Runned_result.Check_storage, err) ->
+  | `Check_typed_arguments_tracer (Runned_result.Check_storage, err) ->
     let children = error_json err in
     let message = "Passed storage does not match the contract type" in
     let errors =
@@ -772,6 +774,7 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Self_ast_typed_tracer e -> [ Self_ast_typed.Errors.error_json e ]
   | `Aggregation_tracer e -> [ Aggregation.Errors.error_json e ]
   | `Self_ast_aggregated_tracer e -> [ Self_ast_aggregated.Errors.error_json e ]
+  | `Expansion_tracer e -> [ Expansion.Errors.error_json e ]
   | `Spilling_tracer e -> [ Spilling.Errors.error_json e ]
   | `Self_mini_c_tracer e -> [ Self_mini_c.Errors.error_json e ]
   | `Scoping_tracer e -> [ Scoping.Errors.error_json e ]
@@ -820,14 +823,21 @@ let rec error_json : Types.all -> Simple_utils.Error.t list =
   | `Resolve_config_corner_case err ->
     let content = make_content ~message:(Format.asprintf "Corner case: %s" err) () in
     [ make ~stage:"resolve_config" ~content ]
+  | `Scopes_recovered_error e -> [ e ]
 
 
-let error_jsonformat : Types.all -> Yojson.Safe.t =
+let errors_jsonformat : Types.all list -> Yojson.Safe.t =
  fun e ->
-  let errors = error_json e in
-  let errors = List.map errors ~f:Simple_utils.Error.to_yojson in
+  let errors = List.bind ~f:error_json e in
+  let errors = List.map errors ~f:Ligo_Error.to_yojson in
   `List errors
 
 
-let error_format : _ Simple_utils.Display.format =
+let error_jsonformat : Types.all -> Yojson.Safe.t = fun e -> errors_jsonformat [ e ]
+
+let error_format : Types.all Display.format =
   { pp = error_ppformat; to_json = error_jsonformat }
+
+
+let errors_format : Types.all list Display.format =
+  { pp = errors_ppformat; to_json = errors_jsonformat }

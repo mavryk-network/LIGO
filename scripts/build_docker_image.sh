@@ -7,4 +7,4 @@ if test $# -ne 1 || test "x$1" = "-h" -o "x$1" = "x--help"; then
   exit 1
 fi
 
-docker build -t "${LIGO_REGISTRY_IMAGE_BUILD:-ligolang/ligo}:$1" -f ./docker/distribution/debian/distribute.Dockerfile .
+docker build -t "${LIGO_REGISTRY_IMAGE_BUILD:-mavrykdynamics/ligo}:$1" -f ./docker/distribution/debian/distribute.Dockerfile .

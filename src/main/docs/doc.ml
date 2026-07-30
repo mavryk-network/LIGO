@@ -1,16 +1,17 @@
-open Simple_utils
+module Display = Simple_utils.Display
+module Trace = Simple_utils.Trace
 open Compiler_options
-open Ligo_compile
 module Constants = Commands.Constants
 
 let html_using_type_doc (raw_options : Raw_options.t) directory doc_args ()
-    : (unit * Main_warnings.all list, Main_errors.all * Main_warnings.all list) result
+    : ( unit * unit * Main_warnings.all list, Main_errors.all * Main_warnings.all list )
+    result
   =
   let doc_args = String.split ~on:' ' doc_args in
   let directory =
     if Filename.is_absolute directory
     then directory
-    else FilePath.make_absolute (Caml.Sys.getcwd ()) directory
+    else FilePath.make_absolute (Sys_unix.getcwd ()) directory
   in
   let tmp_dir = Filename.temp_dir_name ^/ "ligo-doc" in
   let cleanup () = FileUtil.rm ~recurse:true [ tmp_dir ] in
@@ -26,12 +27,7 @@ let html_using_type_doc (raw_options : Raw_options.t) directory doc_args ()
     | Ok false | Error _ ->
       raise.error @@ `Main_external_doc_tool_doesnt_exist (Constants.typedoc, `Npm));
     let syntax = Syntax_types.JsLIGO in
-    let options =
-      let protocol_version =
-        Helpers.protocol_to_variant ~raise raw_options.protocol_version
-      in
-      Compiler_options.make ~protocol_version ~raw_options ~syntax ()
-    in
+    let options = Compiler_options.make ~raw_options ~syntax () in
     let files = Ligo_api.Api_helpers.list_directory ~syntax directory in
     FileUtil.cp ~recurse:true [ directory ] tmp_dir;
     let ts_files =
@@ -56,7 +52,7 @@ let html_using_type_doc (raw_options : Raw_options.t) directory doc_args ()
           Format.pp_print_flush fmt ();
           path_to_ts)
     in
-    let output_dir = Caml.Sys.getcwd () ^/ "docs" in
+    let output_dir = Sys_unix.getcwd () ^/ "docs" in
     let doc_result =
       Commands.run_command
         ~cwd:tmp_dir
@@ -76,14 +72,15 @@ let markdown_doc
     ?output_directory
     doc_args
     ()
-    : (unit * Main_warnings.all list, Main_errors.all * Main_warnings.all list) result
+    : ( unit * unit * Main_warnings.all list, Main_errors.all * Main_warnings.all list )
+    result
   =
   ignore doc_args;
   let to_normalised_abs_path path =
     let path =
       if Filename.is_absolute path
       then path
-      else FilePath.make_absolute (Caml.Sys.getcwd ()) path
+      else FilePath.make_absolute (Sys_unix.getcwd ()) path
     in
     FileUtil.mkdir ~parent:true path;
     (* [Filename_unix.realpath] works only with existing paths *)
@@ -98,12 +95,7 @@ let markdown_doc
   in
   Docs_utils.with_raise
   @@ fun ~raise ->
-  let options =
-    let protocol_version =
-      Helpers.protocol_to_variant ~raise raw_options.protocol_version
-    in
-    Compiler_options.make ~protocol_version ~raw_options ()
-  in
+  let options = Compiler_options.make ~raw_options () in
   let files = Ligo_api.Api_helpers.list_directory directory in
   if List.is_empty files then failwith "ligo doc: no ligo files found in input directory";
   let _md_files =
@@ -129,10 +121,11 @@ let markdown_doc
             let folder = FilePath.make_absolute output_directory rel_path in
             FileUtil.mkdir ~parent:true folder;
             let files =
-              Mdx.to_mdx ~source_syntax ~source_file ?file_name:(Some rel_path) typed
+              Trace.trace ~raise Main_errors.checking_tracer
+              @@ Mdx.to_mdx ~source_syntax ~source_file ?file_name:(Some rel_path) typed
             in
             List.map files ~f:(fun { file_name; contents } ->
-                let abs_path = FilePath.concat folder file_name in
+                let abs_path = FilePath.concat folder (String.lowercase file_name) in
                 Out_channel.write_all abs_path ~data:contents;
                 abs_path)))
   in

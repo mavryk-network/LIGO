@@ -1,14 +1,15 @@
+open Core
 open Ligo_prim
-open Simple_utils
-module AST = Ast_core
-module LSet = Types.LSet
-module LMap = Types.LMap
 open Env
+open Env_map
+module AST = Ast_core
+module Env = Env_map
+module Location = Simple_utils.Location
 
-type t = (Types.Uid.t list * Types.Uid.t) LMap.t
+type t = (Types.Uid.t list * Types.Uid.t) Location.Map.t
 
 (** [resolve_mpath] takes a module path [mvs] and tries to resolve in the [env]
-    the final output is of type [(Module_var.t * string list) option]
+    the final output is of type [(Types.Uid.t list * Types.Uid.t) option]
     it is optional because we are not sure if the module alias can be resolved
     in the [env], in case we are able to resolve the alias the first part
     [Module_var.t] is the finally resolved module & the [string list] is the list
@@ -20,14 +21,14 @@ type t = (Types.Uid.t list * Types.Uid.t) LMap.t
     and then look for the rest of the module path [B.C.D] in [env] of the resolved
     module *)
 let resolve_mpath
-    : Module_var.t List.Ne.t -> env -> (Module_var.t * Types.Uid.t list) option
+    : Module_var.t Nonempty_list.t -> env -> (Module_var.t * Types.Uid.t list) option
   =
  fun mvs env ->
   let init = [] in
   let f : Types.Uid.t list -> _ -> Types.Uid.t list =
    fun acc (_input, real, _resolved, _defs_of_that_module) -> Types.mvar_to_id real :: acc
   in
-  let defs = env.avail_defs @ env.parent in
+  let defs = Env.union_defs env.avail_defs env.parent in
   let mmap = env.module_map in
   let acc, m_opt = Env.fold_resolve_mpath mvs defs mmap ~init ~f in
   match m_opt with
@@ -69,7 +70,7 @@ let resolve_mpath
 
     In the definition for [module M], [A] needs to be resolved to [S#2:13-14]. *)
 let resolve_module_alias
-    :  Module_var.t option -> Module_var.t List.Ne.t -> env -> t
+    :  Module_var.t option -> Module_var.t Nonempty_list.t -> env -> t
     -> t * defs_or_alias option
   =
  fun lhs_mv_opt mvs env m_alias ->
@@ -79,7 +80,10 @@ let resolve_module_alias
     let resolved_name = Types.mvar_to_id ma in
     let m_alias =
       Option.value_map lhs_mv_opt ~default:m_alias ~f:(fun lhs_mv ->
-          LMap.add (Module_var.get_location lhs_mv) (resolved_ids, resolved_name) m_alias)
+          Core.Map.set
+            m_alias
+            ~key:(Module_var.get_location lhs_mv)
+            ~data:(resolved_ids, resolved_name))
     in
     m_alias, Some (Alias ma)
   | None -> m_alias, None
@@ -115,13 +119,23 @@ let rec expression : AST.expression -> t -> env -> t =
     expression let_result m_alias env
   | E_raw_code { language = _; code } -> expression code m_alias env
   | E_constructor { constructor = _; element } -> expression element m_alias env
-  | E_matching { matchee; disc_label = _; cases } ->
+  | E_matching { matchee; cases } ->
     let m_alias = expression matchee m_alias env in
     List.fold cases ~init:m_alias ~f:(fun m_alias { pattern = _; body } ->
         expression body m_alias env)
   | E_record e_label_map ->
     let es = Record.values e_label_map in
     List.fold es ~init:m_alias ~f:(fun m_alias e -> expression e m_alias env)
+  | E_tuple es ->
+    Nonempty_list.fold es ~init:m_alias ~f:(fun m_alias e -> expression e m_alias env)
+  | E_array entries | E_array_as_list entries ->
+    List.fold_left entries ~init:m_alias ~f:(fun m_alias entry ->
+        let entry =
+          match entry with
+          | Expr_entry entry -> entry
+          | Rest_entry entry -> entry
+        in
+        expression entry m_alias env)
   | E_accessor { struct_; path = _ } -> expression struct_ m_alias env
   | E_update { struct_; path = _; update } ->
     let m_alias = expression struct_ m_alias env in
@@ -155,7 +169,11 @@ and module_expression
   =
  fun parent_mod me m_alias env ->
   let env =
-    { env with avail_defs = []; parent = env.avail_defs @ env.parent; parent_mod }
+    { env with
+      avail_defs = Env.empty_defs
+    ; parent = Env.union_defs env.avail_defs env.parent
+    ; parent_mod
+    }
   in
   let m_alias, defs_or_alias_opt, env =
     match me.wrap_content with
@@ -163,7 +181,7 @@ and module_expression
       let m_alias, env = declarations decls m_alias env in
       m_alias, Some (Defs env.avail_defs), env
     | M_variable mv ->
-      let m_alias, alias_opt = resolve_module_alias parent_mod (mv, []) env m_alias in
+      let m_alias, alias_opt = resolve_module_alias parent_mod [ mv ] env m_alias in
       m_alias, alias_opt, env
     | M_module_path mvs ->
       let m_alias, alias_opt = resolve_module_alias parent_mod mvs env m_alias in
@@ -196,7 +214,11 @@ and signature_expression_from_D_signature
   =
  fun parent_mod se m_alias env ->
   let env =
-    { env with avail_defs = []; parent = env.avail_defs @ env.parent; parent_mod }
+    { env with
+      avail_defs = Env.empty_defs
+    ; parent = Env.union_defs env.avail_defs env.parent
+    ; parent_mod
+    }
   in
   let m_alias, defs_or_alias_opt, env =
     match se.wrap_content with
@@ -226,7 +248,10 @@ and signature_expression_from_D_signature
 and signature_expression_from_annotation : AST.signature_expr -> t -> env -> t * env =
  fun se m_alias old_env ->
   let env =
-    { old_env with avail_defs = []; parent = old_env.avail_defs @ old_env.parent }
+    { old_env with
+      avail_defs = Env.empty_defs
+    ; parent = Env.union_defs old_env.avail_defs old_env.parent
+    }
   in
   let m_alias, env =
     match se.wrap_content with
@@ -306,6 +331,17 @@ and declaration : AST.declaration -> t -> env -> t * env =
     in
     let env = Env.include_mvar defs_or_alias_opt module_map env in
     m_alias, env
+  (* TODO Handle all import cases for #2190 issue resolution *)
+  | D_import (Import_rename { alias; imported_module; import_attr = _ }) ->
+    let module_ =
+      Location.wrap ~loc:Location.generated (Module_expr.M_variable imported_module)
+    in
+    let m_alias, defs_or_alias_opt, module_map =
+      module_expression (Some alias) module_ m_alias env
+    in
+    let env = Env.add_mvar alias defs_or_alias_opt module_map env in
+    m_alias, env
+  | D_import _ -> m_alias, env
 
 
 (** [declarations] builds the [env] and tries to resolves module aliases *)
@@ -318,13 +354,11 @@ and declarations : AST.declaration list -> t -> env -> t * env =
 (** [declarations] sets up the initial env and calls [declarations] *)
 let declarations : AST.declaration list -> t * env =
  fun decls ->
-  let m_alias = LMap.empty in
+  let m_alias = Location.Map.empty in
   let env = Env.empty in
   declarations decls m_alias env
 
 
-(** [patch] fixes the module aliases in the [defs]. It looks for module aliases
-    definitions & then looks up the range of the module definition in [t] *)
 let rec patch : t -> Types.def list -> Types.def list =
  fun m_alias ->
   let open Types in
@@ -335,13 +369,13 @@ let rec patch : t -> Types.def list -> Types.def list =
     let name = Uid.to_name uid in
     let loc = Uid.to_location uid in
     let same_name_lte =
-      LMap.filter
-        (fun _loc (_resolved_module_path, resolved_module) ->
+      Core.Map.filteri
+        m_alias
+        ~f:(fun ~key:_loc ~data:(_resolved_module_path, resolved_module) ->
           Location.compare (Uid.to_location resolved_module) loc <= 0
           && String.equal (Uid.to_name resolved_module) name)
-        m_alias
     in
-    Option.map ~f:snd @@ LMap.max_binding_opt same_name_lte
+    Option.map ~f:snd @@ Core.Map.max_elt same_name_lte
   in
   let patch_resolve_mod_name path =
     let module_path = get_module_path path in
@@ -364,7 +398,7 @@ let rec patch : t -> Types.def list -> Types.def list =
         let patch_mod_case = function
           | Def defs -> Def (patch m_alias defs)
           | Alias { resolve_mod_name } as alias ->
-            (match LMap.find_opt m.range m_alias with
+            (match Core.Map.find m_alias m.range with
             | None -> alias
             | Some (resolved_module_path, resolved_module) ->
               Alias

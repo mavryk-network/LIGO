@@ -1,5 +1,5 @@
 open Main_errors
-open Simple_utils.Trace
+module Trace = Simple_utils.Trace
 open Ligo_prim
 module Location = Simple_utils.Location
 
@@ -12,14 +12,16 @@ let typecheck_with_signature
     : Ast_typed.program
   =
   let prg =
-    trace ~raise checking_tracer
+    Trace.trace ~raise checking_tracer
     @@ Checking.type_program ~options:options.middle_end ?env:context p
   in
   if self_pass
   then
-    trace ~raise self_ast_typed_tracer
+    Trace.trace ~raise self_ast_typed_tracer
     @@ fun ~raise -> Self_ast_typed.all_program ~raise prg
-  else prg
+  else
+    Trace.trace ~raise self_ast_typed_tracer
+    @@ fun ~raise -> Self_ast_typed.all_program_just_remove_unions ~raise prg
 
 
 let typecheck
@@ -30,10 +32,10 @@ let typecheck
     : Ast_typed.program
   =
   let typed =
-    trace ~raise checking_tracer
+    Trace.trace ~raise checking_tracer
     @@ Checking.type_program ~options:options.middle_end ?env:context p
   in
-  trace ~raise self_ast_typed_tracer (Self_ast_typed.all_program typed)
+  Trace.trace ~raise self_ast_typed_tracer (Self_ast_typed.all_program typed)
 
 
 let compile_expression
@@ -44,10 +46,10 @@ let compile_expression
     : Ast_typed.expression
   =
   let typed =
-    trace ~raise checking_tracer
+    Trace.trace ~raise checking_tracer
     @@ Checking.type_expression ~options:options.middle_end ~env:context expr ~path:[]
   in
-  typed
+  Trace.trace ~raise self_ast_typed_tracer (Self_ast_typed.all_expression typed)
 
 
 let compile_type_expression
@@ -57,7 +59,7 @@ let compile_type_expression
     (ty : Ast_core.type_expression)
     : Ast_typed.type_expression
   =
-  trace ~raise checking_tracer
+  Trace.trace ~raise checking_tracer
   @@ Checking.type_type_expression ~options:options.middle_end ~env:context ty ~path:[]
 
 
@@ -107,8 +109,12 @@ let list_declarations (m : Ast_core.program) : Value_var.t list =
       let open Location in
       match (el.wrap_content : Ast_core.declaration_content) with
       | D_value { binder; _ } -> Binder.get_var binder :: prev
-      | D_irrefutable_match _ | D_type _ | D_module _ | D_signature _ | D_module_include _
-        -> prev)
+      | D_irrefutable_match _
+      | D_type _
+      | D_module _
+      | D_signature _
+      | D_module_include _
+      | D_import _ -> prev)
     ~init:[]
     m
 
@@ -121,7 +127,12 @@ let list_lhs_pattern_declarations (m : Ast_core.program) : Value_var.t list =
         let binders = Ast_core.Pattern.binders pattern in
         let vars = List.map binders ~f:Binder.get_var in
         vars @ prev
-      | D_value _ | D_type _ | D_module _ | D_signature _ | D_module_include _ -> prev)
+      | D_value _
+      | D_type _
+      | D_module _
+      | D_signature _
+      | D_module_include _
+      | D_import _ -> prev)
     ~init:[]
     m
 
@@ -137,7 +148,8 @@ let list_type_declarations (m : Ast_core.program) : Type_var.t list =
       | D_module _
       | D_type _
       | D_signature _
-      | D_module_include _ -> prev)
+      | D_module_include _
+      | D_import _ -> prev)
     ~init:[]
     m
 
@@ -148,7 +160,15 @@ let list_mod_declarations (m : Ast_core.program) : Module_var.t list =
       let open Location in
       match (el.wrap_content : Ast_core.declaration_content) with
       | D_module { module_binder; _ } -> module_binder :: prev
-      | D_value _ | D_irrefutable_match _ | D_type _ | D_signature _ | D_module_include _
-        -> prev)
+      (* TODO Handle all import cases for #1991 and/or #1995 issues resolution *)
+      | D_import (Import_rename { alias; _ }) ->
+        (* CR: Is this correct? Don't we want to hide import bindings? *)
+        alias :: prev
+      | D_import _
+      | D_value _
+      | D_irrefutable_match _
+      | D_type _
+      | D_signature _
+      | D_module_include _ -> prev)
     ~init:[]
     m

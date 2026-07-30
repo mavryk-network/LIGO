@@ -1,8 +1,9 @@
 open Ast_aggregated
 open Ligo_prim.Constant
-open Trace
+module Trace = Simple_utils.Trace
+module Ligo_string = Simple_utils.Ligo_string
 
-let expression ~raise : expression -> expression =
+let expression ~(raise : _ Trace.raise) : expression -> expression =
  fun expr ->
   match expr.expression_content with
   | E_coerce { anno_expr = value; _ }
@@ -22,10 +23,10 @@ let expression ~raise : expression -> expression =
     in
     e_constant ~loc:expr.location constant expr.type_expression
   | E_coerce { anno_expr = value; _ }
-    when is_t_bool expr.type_expression && is_t_tez value.type_expression ->
+    when is_t_bool expr.type_expression && is_t_mav value.type_expression ->
     let constant =
       { cons_name = C_LT
-      ; arguments = [ e_a_mutez ~loc:value.location Z.(of_int 0); value ]
+      ; arguments = [ e_a_mumav ~loc:value.location Z.(of_int 0); value ]
       }
     in
     e_constant ~loc:expr.location constant expr.type_expression
@@ -33,8 +34,7 @@ let expression ~raise : expression -> expression =
     when is_t_bool expr.type_expression && is_t_string value.type_expression ->
     let constant =
       { cons_name = C_LT
-      ; arguments =
-          [ e_a_string ~loc:value.location Simple_utils.Ligo_string.(standard ""); value ]
+      ; arguments = [ e_a_string ~loc:value.location Ligo_string.(standard ""); value ]
       }
     in
     e_constant ~loc:expr.location constant expr.type_expression
@@ -68,7 +68,7 @@ let expression ~raise : expression -> expression =
     in
     let cases : _ Match_expr.match_case list = [ tcase; fcase ] in
     let matching : (expression, type_expression) Match_expr.t =
-      { matchee = value; disc_label = None; cases }
+      { matchee = value; cases }
     in
     e_matching ~loc:expr.location matching expr.type_expression
   | E_coerce { anno_expr = value; _ }

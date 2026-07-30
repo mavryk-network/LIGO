@@ -20,25 +20,25 @@ let pp_ct : Format.formatter -> constant_val -> unit =
   | C_string s -> Format.fprintf ppf "\"%s\"" s
   | C_bytes b -> Format.fprintf ppf "0x%a" Hex.pp (Hex.of_bytes b)
   | C_address c ->
-    Format.fprintf ppf "%a" Tezos_protocol.Protocol.Alpha_context.Contract.pp c
+    Format.fprintf ppf "%a" Mavryk_protocol.Protocol.Alpha_context.Contract.pp c
   | C_contract c ->
     Format.fprintf
       ppf
       "%a(%a)"
-      Tezos_protocol.Protocol.Alpha_context.Contract.pp
+      Contract.pp
       c.address
-      (PP_helpers.option PP_helpers.string)
+      (PP_helpers.option Entrypoint_repr.pp)
       c.entrypoint
-  | C_mutez n -> Format.fprintf ppf "%smutez" (Z.to_string n)
-  | C_key_hash c -> Format.fprintf ppf "%a" Tezos_crypto.Signature.Public_key_hash.pp c
-  | C_key c -> Format.fprintf ppf "%a" Tezos_crypto.Signature.Public_key.pp c
-  | C_signature s -> Format.fprintf ppf "%a" Tezos_crypto.Signature.pp s
+  | C_mumav n -> Format.fprintf ppf "%smumav" (Z.to_string n)
+  | C_key_hash c -> Format.fprintf ppf "%a" Mavryk_crypto.Signature.Public_key_hash.pp c
+  | C_key c -> Format.fprintf ppf "%a" Mavryk_crypto.Signature.Public_key.pp c
+  | C_signature s -> Format.fprintf ppf "%a" Mavryk_crypto.Signature.pp s
   | C_bls12_381_g1 b ->
-    Format.fprintf ppf "%s" (Bytes.to_string (Bls12_381.G1.to_bytes b))
+    Format.fprintf ppf "%s" (Bytes.to_string (Mavryk_bls12_381.G1.to_bytes b))
   | C_bls12_381_g2 b ->
-    Format.fprintf ppf "%s" (Bytes.to_string (Bls12_381.G2.to_bytes b))
+    Format.fprintf ppf "%s" (Bytes.to_string (Mavryk_bls12_381.G2.to_bytes b))
   | C_bls12_381_fr b ->
-    Format.fprintf ppf "%s" (Bytes.to_string (Bls12_381.Fr.to_bytes b))
+    Format.fprintf ppf "%s" (Bytes.to_string (Mavryk_bls12_381.Fr.to_bytes b))
   | C_chain_id c -> Format.fprintf ppf "%s" (Bytes.to_string (Chain_id.to_bytes c))
   | C_chest b -> Format.fprintf ppf "%s" (Bytes.to_string b)
   | C_chest_key b -> Format.fprintf ppf "%s" (Bytes.to_string b)
@@ -72,8 +72,8 @@ let rec pp_value ~no_colour : Format.formatter -> value -> unit =
         in
         Format.fprintf ppf "{%a}" (list_sep aux (tag " ; ")) (Record.to_list recmap))
     | V_Michelson (Ty_code { micheline_repr = { code; _ }; _ } | Untyped_code code) ->
-      Format.fprintf ppf "%a" Tezos_utils.Michelson.pp code
-    | V_Michelson_contract code -> Format.fprintf ppf "%a" Tezos_utils.Michelson.pp code
+      Format.fprintf ppf "%a" Mavryk_utils.Michelson.pp code
+    | V_Michelson_contract code -> Format.fprintf ppf "%a" Mavryk_utils.Michelson.pp code
     | V_Ast_contract { main; views = _ } ->
       Format.fprintf ppf "%a" Ast_aggregated.PP.expression main
     | V_Mutation (l, _, s) ->
@@ -81,5 +81,5 @@ let rec pp_value ~no_colour : Format.formatter -> value -> unit =
     | V_Gen _ -> Format.fprintf ppf "Generator"
     | V_Location _ -> Format.fprintf ppf "Heap location"
     | V_Typed_address c ->
-      Format.fprintf ppf "%a" Tezos_protocol.Protocol.Alpha_context.Contract.pp c
+      Format.fprintf ppf "%a" Mavryk_protocol.Protocol.Alpha_context.Contract.pp c
     | V_Views _ -> Format.fprintf ppf "views"

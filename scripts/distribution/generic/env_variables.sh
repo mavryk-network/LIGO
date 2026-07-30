@@ -3,7 +3,7 @@
 # You can load the following variables using:
 # source ./scripts/distribution/generic/env_variables.sh
 
-export LIGO_REGISTRY_IMAGE_BASE_NAME="ligolang/ligo"
+export LIGO_REGISTRY_IMAGE_BASE_NAME="mavryk-network/ligo"
 # packages build locally are tagget by the 'short' commit hash,
 # instead of the build/job/pipeline ID as in the CI to avoid possible confusion
 # ligo_incrementing-id_commit-hash

@@ -24,25 +24,24 @@
 #import "contract.mligo" "Contract"
 #import "result.mligo" "Result"
 
-(* Defined in Tezos protocol with default parameters. *)
+(* Defined in Mavryk protocol with default parameters. *)
 let blocktime = 15n
 let blocks_per_cycle = 12n
 
 type actor = {
   name : string
-; initial_amount: tez
-; address: address
+; initial_amount: mav; address: address
 }
 
 (** [init actors] initializes bootstrap accounts. *)
-let init_with (actors: (string * tez) list) : actor list =
+let init_with (actors: (string * mav) list) : actor list =
   let number_of_accounts = List.size actors in
   let default_amounts =
-    List.map (fun (_, value: string * tez) -> value) actors
+    List.map (fun (_, value: string * mav) -> value) actors
   in
   let () = Test.reset_state number_of_accounts default_amounts in
   let (_counter, actors) =
-    List.fold_left (fun ((i, actors), (name, value) : (nat * actor list) * (string * tez)) ->
+    List.fold_left (fun ((i, actors), (name, value) : (nat * actor list) * (string * mav)) ->
       let address = Test.nth_bootstrap_account (int i) in
       let actor = {
         name = name
@@ -59,10 +58,10 @@ let init_with (actors: (string * tez) list) : actor list =
     being the baker and the others regular accounts. *)
 let init_default () : actor * (actor * actor * actor) =
   let actors = init_with [
-    ("Baker", 10000000000tez)
-  ; ("Alice", 4000000tez)
-  ; ("Bob", 2000000tez)
-  ; ("Carol", 8000000tez)
+    ("Baker", 10000000000mav)
+  ; ("Alice", 4000000mav)
+  ; ("Bob", 2000000mav)
+  ; ("Carol", 8000000mav)
   ]
   in
   match actors with
@@ -73,7 +72,7 @@ let init_default () : actor * (actor * actor * actor) =
 
 (** [act_as actor f] performs the operation [f] as [actor]. *)
 let act_as (type a) (actor: actor) (handler : unit -> a) : a =
-  let old_source = Tezos.get_source () in
+  let old_source = Mavryk.get_source () in
   let address = actor.address in
   let () = Test.set_source address in
   let result = handler () in
@@ -91,16 +90,16 @@ let call_as
 
 (** [wait_for_blocks n_blocks] bakes n blocks with a single transaction from
     the current source to itself.
-    This function currently does not check if the current source has any tez.
+    This function currently does not check if the current source has any mav.
     For a large number of blocks, prefer the [wait_for] function. *)
 let rec wait_for_blocks (n_blocks: nat) : unit =
   if n_blocks = 0n then ()
   else
-    let source = Tezos.get_source () in
+    let source = Mavryk.get_source () in
     let source : (unit, unit) typed_address = Test.cast_address source in
     (* We transfer a valid amount from the source to itself to bake a block
     and change the time *)
-    let _ = Test.transfer source () 1mutez in
+    let _ = Test.transfer source () 1mumav in
     wait_for_blocks (abs (n_blocks - 1))
 
 (** [wait_for_with_blocks_per_cycle seconds blocks_per_cycle] bakes enough
@@ -114,7 +113,7 @@ let wait_for_with_blocks_per_cycle
   let cycles_to_skip = seconds / (blocks_per_cycle * blocktime) in
   let _ =
     if cycles_to_skip > 0n then
-      (* Adding 1n here because of Tezos bake_until_n_cycle_end implementation. *)
+      (* Adding 1n here because of Mavryk bake_until_n_cycle_end implementation. *)
       Test.bake_until_n_cycle_end (cycles_to_skip + 1n)
     else
       let blocks_to_skip = seconds / blocktime in

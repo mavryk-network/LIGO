@@ -1,4 +1,3 @@
-open Core
 open Cst_shared.Fold
 open CST
 open Region
@@ -8,9 +7,7 @@ type 'a fold_control = 'a Cst_shared.Fold.fold_control
 type _ sing =
     S_all_cases : all_cases sing
   | S_all_match_clauses : all_match_clauses sing
-  | S_app : 'a sing -> 'a app sing
   | S_arrow_fun_params : arrow_fun_params sing
-  | S_sharp : sharp sing
   | S_arguments : arguments sing
   | S_array : 'a sing -> 'a _array sing
   | S_array_2 : 'a sing * 'b sing -> ('a * 'b) sing
@@ -39,8 +36,6 @@ type _ sing =
   | S_bool_xor : bool_xor sing
   | S_braces : 'a sing -> 'a braces sing
   | S_braces' : 'a sing -> 'a braces' sing
-  | S_bracketed_variant : 'a sing -> 'a bracketed_variant sing
-  | S_bracketed_variant_args : 'a sing -> 'a bracketed_variant_args sing
   | S_brackets : 'a sing -> 'a brackets sing
   | S_brackets' : 'a sing -> 'a brackets' sing
   | S_bytes_literal : bytes_literal sing
@@ -93,6 +88,7 @@ type _ sing =
   | S_increment : increment sing
   | S_int_literal : int_literal sing
   | S_int64 : int64 sing
+  | S_q : Q.t sing
   | S_interface : interface sing
   | S_interface_decl : interface_decl sing
   | S_intf_body : intf_body sing
@@ -148,7 +144,8 @@ type _ sing =
   | S_match_expr : match_expr sing
   | S_minus : minus sing
   | S_minus_eq : minus_eq sing
-  | S_mutez_literal : mutez_literal sing
+  | S_mumav_literal : mumav_literal sing
+  | S_mav_literal : mav_literal sing
   | S_namespace_decl : namespace_decl sing
   | S_namespace_name : namespace_name sing
   | S_namespace_path : 'a sing -> 'a namespace_path sing
@@ -159,7 +156,7 @@ type _ sing =
   | S_nsep_or_pref : 'a sing * 'b sing -> ('a, 'b) Utils.nsep_or_pref sing
   | S_nsep_or_term : 'a sing * 'b sing -> ('a, 'b) Utils.nsep_or_term sing
   | S_nsepseq : 'a sing * 'b sing -> ('a, 'b) Utils.nsepseq sing
-  | S_nseq : 'a sing -> 'a Utils.nseq sing
+  | S_ne_list : 'a sing -> 'a Nonempty_list.t sing
   | S_object : 'a sing -> 'a _object sing
   | S_option : 'a sing -> 'a option sing
   | S_par : 'a sing -> 'a par sing
@@ -216,7 +213,7 @@ type _ sing =
   | S_variable : variable sing
   | S_variant : 'a sing -> 'a variant sing
   | S_variant_kind : 'a sing -> 'a variant_kind sing
-  | S_variant_type : variant_type sing
+  | S_sum_type : sum_type sing
   | S_vbar : vbar sing
   | S_verbatim_literal : verbatim_literal sing
   | S_while_stmt : while_stmt sing
@@ -244,14 +241,16 @@ let fold'
   and process_list : some_node list -> unit =
     fun l -> List.iter l ~f:process
 
+  and process_ne_list : some_node Nonempty_list.t -> unit =
+    fun l -> Nonempty_list.iter l ~f:process
+
   and fold : some_node -> unit =
   function (Some_node (node, sing)) -> match sing with
     S_all_cases -> process @@ node -| S_array_2
-    (S_nseq (S_reg S_switch_case), S_option (S_reg S_switch_default))
+    (S_ne_list (S_reg S_switch_case), S_option (S_reg S_switch_default))
     | S_all_match_clauses ->
-      process @@ node -| S_array_2 (S_nseq (S_reg S_match_clause),
+      process @@ node -| S_array_2 (S_ne_list (S_reg S_match_clause),
                                     S_option (S_reg S_match_default))
-  | S_sharp -> process @@ node -| S_wrap S_lexeme
   | S_arguments -> process
     (node -| (S_par (S_sepseq (S_expr, S_comma))))
   | S_arrow -> process @@ node -| S_wrap S_lexeme
@@ -287,17 +286,6 @@ let fold'
     [ lbrace -| S_lbrace
     ; inside -| sing
     ; rbrace -| S_rbrace ]
-  | S_bracketed_variant sing ->
-    let { attributes; sharp; tuple } = node in
-    process_list
-    [ attributes -| S_list S_attribute
-    ; sharp -| S_sharp
-    ; tuple -| S_brackets (S_bracketed_variant_args sing)]
-  | S_bracketed_variant_args sing ->
-    let ({ ctor; args } : _ bracketed_variant_args) = node in
-    process_list
-    [ ctor -| sing
-    ; args -| S_option (S_array_2 (S_comma, S_sep_or_term (sing, S_comma)))]
   | S_brackets sing -> process @@ node -| S_reg (S_brackets' sing)
   | S_brackets' sing -> let { lbracket; inside; rbracket } = node in
     process_list
@@ -336,15 +324,9 @@ let fold'
     ; namespace_path -| S_par S_namespace_selection ]
   | S_cst -> let { statements; eof } = node in
     process_list
-    [ statements -| S_nseq (S_array_2 (S_statement, S_option S_semi))
+    [ statements -| S_ne_list (S_array_2 (S_statement, S_option S_semi))
     ; eof -| S_eof ]
   | S_ctor -> process @@ node -| S_wrap S_lexeme
-  | S_ctor_app sing ->
-    let sharp, app = node in
-    process_list
-    [ sharp -| S_option S_sharp
-    ; app -| S_app sing
-    ]
   | S_ctor_app_kind ->
     ( match node with
         CtorStr  node -> process @@ node -| S_string_literal
@@ -355,7 +337,7 @@ let fold'
      [ kwd_do -| S_kwd_do
      ; statements -| S_braces S_statements
      ]
-  | S_app sing ->
+  | S_ctor_app sing ->
     ( match node with
         ZeroArg node -> process @@ node -| S_ctor_app_kind
       | MultArg (ctor, node) ->
@@ -420,7 +402,8 @@ let fold'
     | E_Match node -> node -| S_reg S_match_expr
     | E_Mult node -> node -| S_reg (S_bin_op S_times)
     | E_MultEq node -> node -| S_reg (S_bin_op S_times_eq)
-    | E_Mutez node -> node -| S_mutez_literal
+    | E_Mumav node -> node -| S_mumav_literal
+    | E_Mav node -> node -| S_mav_literal
     | E_NamePath node -> node -| S_reg (S_namespace_path S_expr)
     | E_Nat node -> node -| S_nat_literal
     | E_Neg node -> node -| S_reg (S_un_op S_minus)
@@ -532,6 +515,7 @@ let fold'
   | S_increment -> process @@ node -| S_wrap S_lexeme
   | S_int_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_z))
   | S_int64 -> () (* Leaf *)
+  | S_q -> () (* Leaf *)
   | S_interface -> process @@ node -| S_reg (S_array_2 (S_kwd_implements, S_nsepseq (S_intf_expr, S_comma)))
   | S_interface_decl -> let { kwd_interface; intf_name; intf_extends; intf_body } = node in
     process_list
@@ -636,7 +620,8 @@ let fold'
     ; default_expr -| S_expr]
   | S_minus -> process @@ node -| S_wrap S_lexeme
   | S_minus_eq -> process @@ node -| S_wrap S_lexeme
-  | S_mutez_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_int64))
+  | S_mumav_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_int64))
+  | S_mav_literal -> process @@ node -| S_wrap (S_array_2 (S_lexeme, S_q))
   | S_namespace_decl -> let { kwd_namespace; namespace_name; namespace_type; namespace_body } = node in
     process_list
     [ kwd_namespace -| S_kwd_namespace
@@ -661,14 +646,15 @@ let fold'
   | S_nsep_or_pref (a_sing, b_sing) -> process
     ( match node with
       `Sep node -> node -| S_nsepseq (a_sing, b_sing)
-    | `Pref node -> node -| S_nseq (S_array_2 (b_sing, a_sing)))
+    | `Pref node -> node -| S_ne_list (S_array_2 (b_sing, a_sing)))
   | S_nsep_or_term (a_sing, b_sing) -> process
     ( match node with
       `Sep node -> node -| S_nsepseq (a_sing, b_sing)
-    | `Term node -> node -| S_nseq (S_array_2 (a_sing, b_sing)))
+    | `Term node -> node -| S_ne_list (S_array_2 (a_sing, b_sing)))
   | S_nsepseq (sing_1, sing_2) ->
     process @@ node -| S_array_2 (sing_1, S_list (S_array_2 (sing_2, sing_1)))
-  | S_nseq sing -> process @@ node -| S_array_2 (sing, S_list sing)
+  | S_ne_list sing ->
+    process_ne_list @@ Nonempty_list.map ~f:(fun x -> x -| sing) node
   | S_option sing ->
     ( match node with
       None -> () (* Leaf *)
@@ -705,7 +691,8 @@ let fold'
     | P_CtorApp node -> node -| S_variant_kind S_pattern
     | P_False node -> node -| S_kwd_false
     | P_Int node -> node -| S_int_literal
-    | P_Mutez node -> node -| S_mutez_literal
+    | P_Mumav node -> node -| S_mumav_literal
+    | P_Mav node -> node -| S_mav_literal
     | P_NamePath node -> node -| S_reg (S_namespace_path S_pattern)
     | P_Nat node -> node -| S_nat_literal
     | P_Object node -> node -| S_object S_pattern
@@ -720,7 +707,7 @@ let fold'
   | S_projection -> let { object_or_array; property_path } = node in
     process_list
     [ object_or_array -| S_expr
-    ; property_path -| S_nseq S_selection ]
+    ; property_path -| S_ne_list S_selection ]
   | S_qmark -> process @@ node -| S_wrap S_lexeme
   | S_range_for -> let { initialiser; semi1; condition; semi2; afterthought } = node in
     process_list
@@ -775,7 +762,7 @@ let fold'
     | S_Switch node -> node -| S_reg S_switch_stmt
     | S_While node -> node -| S_reg S_while_stmt
     )
-  | S_statements -> process @@ node -| S_nseq (S_array_2 (S_statement, S_option S_semi))
+  | S_statements -> process @@ node -| S_ne_list (S_array_2 (S_statement, S_option S_semi))
   | S_string_literal -> process @@ node -| S_wrap S_lexeme
   | S_switch_case -> let { kwd_case; expr; colon; case_body } = node in
     process_list
@@ -847,7 +834,7 @@ let fold'
     | T_String node -> node -| S_string_literal
     | T_Union node -> node -| S_union_type
     | T_Var node -> node -| S_type_name
-    | T_Variant node -> node -| S_variant_type )
+    | T_Sum node -> node -| S_sum_type )
   | S_type_name -> process @@ node -| S_variable
   | S_type_var -> process @@ node -| S_variable
   | S_typed_expr -> process @@ node -| S_array_3 (S_expr, S_kwd_as, S_type_expr)
@@ -856,7 +843,7 @@ let fold'
     process_list
     [ op -| sing
     ; arg -| S_expr ]
-  | S_union_type -> process @@ node -| S_reg (S_nsep_or_pref (S_object S_type_expr, S_vbar))
+  | S_union_type -> process @@ node -| S_reg (S_nsep_or_pref (S_type_expr, S_vbar))
   | S_update_expr -> let { ellipsis; _object; sep; updates } = node in
     process_list
     [ ellipsis -| S_ellipsis
@@ -888,10 +875,9 @@ let fold'
     ; tuple -| S_ctor_app sing]
   | S_variant_kind sing -> process
     ( match node with
-        Variant   node -> node -| S_reg (S_variant sing)
-      | Bracketed node -> node -| S_reg (S_bracketed_variant sing)
-      | Legacy    node -> node -| S_reg (S_legacy_variant sing))
-  | S_variant_type -> process @@ node -| S_reg (S_nsep_or_pref (S_variant_kind S_type_expr, S_vbar))
+        Variant node -> node -| S_reg (S_variant sing)
+      | Legacy  node -> node -| S_reg (S_legacy_variant sing))
+  | S_sum_type -> process @@ node -| S_reg (S_nsep_or_pref (S_variant_kind S_type_expr, S_vbar))
   | S_vbar -> process @@ node -| S_wrap S_lexeme
   | S_verbatim_literal -> process @@ node -| S_wrap S_lexeme
   | S_while_stmt -> let { kwd_while; invariant; while_body } = node in

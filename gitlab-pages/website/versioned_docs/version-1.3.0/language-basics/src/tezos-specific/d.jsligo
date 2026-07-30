@@ -1,1 +1,0 @@
-const current_addr = Tezos.get_self_address();

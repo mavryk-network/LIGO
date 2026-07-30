@@ -1,9 +1,10 @@
-module List = Core.List
+open Core
+open Mavryk_micheline.Micheline
+open Ligo_prim
 module Location = Simple_utils.Location
-open Tezos_micheline.Micheline
+module Ligo_string = Simple_utils.Ligo_string
 module Compiler = Ligo_coq_ocaml.Compiler
 module Datatypes = Ligo_coq_ocaml.Datatypes
-open Ligo_prim
 
 type meta = Mini_c.meta
 
@@ -29,7 +30,6 @@ let smaller m1 m2 =
     optimize
       ~experimental_disable_optimizations_for_debugging:false
       ~has_comment:(fun _ -> false)
-      Environment.Protocols.current
   in
   let%bind loc1 = measure (optimize (Seq (null, m1))) in
   let%bind loc2 = measure (optimize (Seq (null, m2))) in
@@ -83,7 +83,7 @@ let literal_type_prim (l : Literal_value.t) : string =
   | Literal_int _ -> "int"
   | Literal_nat _ -> "nat"
   | Literal_timestamp _ -> "timestamp"
-  | Literal_mutez _ -> "mutez"
+  | Literal_mumav _ -> "mumav"
   | Literal_string _ -> "string"
   | Literal_bytes _ -> "bytes"
   | Literal_address _ -> "address"
@@ -109,8 +109,8 @@ let literal_value (l : Literal_value.t) : (meta, string) node =
   | Literal_int x -> Int (null, x)
   | Literal_nat x -> Int (null, x)
   | Literal_timestamp x -> Int (null, x)
-  | Literal_mutez x -> Int (null, x)
-  | Literal_string x -> String (null, Simple_utils.Ligo_string.extract x)
+  | Literal_mumav x -> Int (null, x)
+  | Literal_string x -> String (null, Ligo_string.extract x)
   | Literal_bytes x -> Bytes (null, x)
   | Literal_address x -> String (null, x)
   | Literal_signature x -> String (null, x)
@@ -166,7 +166,7 @@ let rec translate_type (t : ('l, ('l, 'p) node) Compiler.ty) : ('l, 'p) node =
   | T_bool l -> Prim (l, "bool", [], [])
   | T_int l -> Prim (l, "int", [], [])
   | T_nat l -> Prim (l, "nat", [], [])
-  | T_mutez l -> Prim (l, "mutez", [], [])
+  | T_mumav l -> Prim (l, "mumav", [], [])
   | T_string l -> Prim (l, "string", [], [])
   | T_bytes l -> Prim (l, "bytes", [], [])
   | T_operation l -> Prim (l, "operation", [], [])

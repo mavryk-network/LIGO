@@ -30,7 +30,7 @@ When anybody notices that a new version of `ligo` is released, he is free to cre
 This commit can be created in a new MR or in any existing MR just by the way, as upper version bump should happen often and we want to have this process simple.
 Running tests is a sufficient proof of that the new version can be treated as supported.
 
-Also, we should periodically check when a new verion of `ligo` is released, e.g. at [this page](https://gitlab.com/ligolang/ligo/-/releases).
+Also, we should periodically check when a new verion of `ligo` is released, e.g. at [this page](https://gitlab.com/mavryk-network/ligo/-/releases).
 
 ### Lower bound
 

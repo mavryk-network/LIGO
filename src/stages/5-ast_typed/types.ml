@@ -1,5 +1,6 @@
 open Ligo_prim
 module Location = Simple_utils.Location
+module Ne_list = Simple_utils.Ne_list
 module Row = Row.With_layout
 
 type type_variable = Type_var.t [@@deriving compare, hash]
@@ -8,11 +9,10 @@ type module_variable = Module_var.t [@@deriving compare, hash]
 
 type type_content =
   | T_variable of Type_var.t
+  | T_exists of Type_var.t
   | T_constant of type_injection
-  | T_sum of
-      type_expression Row.t
-      * (Label.t option[@equal.ignore] [@hash.ignore] [@compare.ignore])
-  (* This [Label.t] represent an original name of field in disc union type *)
+  | T_sum of type_expression Row.t
+  | T_union of type_expression Union.t
   | T_record of type_expression Row.t
   | T_arrow of ty_expr Arrow.t
   | T_singleton of Literal_value.t
@@ -41,6 +41,8 @@ and type_expression =
   { type_content : type_content
   ; abbrev : abbrev option [@equal.ignore] [@hash.ignore] [@compare.ignore]
   ; location : Location.t [@equal.ignore] [@hash.ignore] [@compare.ignore]
+  ; source_type : type_expression option [@equal.ignore] [@compare.ignore] [@hash.ignore]
+        (* Used in Ast_aggregated *)
   }
 
 and ty_expr = type_expression [@@deriving equal, compare, yojson, hash]
@@ -59,11 +61,12 @@ module Pattern = Linear_pattern
 module Match_expr = Match_expr.Make (Pattern)
 module Let_in = Let_in.Make (Pattern) (ValueAttr)
 module Pattern_decl = Pattern_decl (Pattern) (ValueAttr)
+module Import_decl = Import_decl (Type_or_module_attr)
 
 type expression_content =
   (* Base *)
   | E_variable of Value_var.t
-  | E_contract of Module_var.t Simple_utils.List.Ne.t
+  | E_contract of Module_var.t Ne_list.t
   | E_literal of Literal_value.t
   | E_constant of
       expr Constant.t (* For language constants, like (Cons hd tl) or (plus i j) *)
@@ -79,6 +82,10 @@ type expression_content =
   (* Variant *)
   | E_constructor of expr Constructor.t (* For user defined constructors *)
   | E_matching of (expr, ty_expr) Match_expr.t
+  (* Unions *)
+  | E_union_injected of (expr, ty_expr) Union.Injected.t
+  | E_union_match of (expr, ty_expr) Union.Match.t
+  | E_union_use of expr Union.Use.t
   (* Record *)
   | E_record of expr Record.t
   | E_accessor of expr Accessor.t
@@ -91,6 +98,8 @@ type expression_content =
   | E_for of expr For_loop.t
   | E_for_each of expr For_each_loop.t
   | E_while of expr While_loop.t
+  (* Error recovery *)
+  | E_error of Ast_core.expression
 
 and type_inst =
   { forall : expression
@@ -112,6 +121,7 @@ and declaration_content =
   | D_module of (module_expr, unit) Module_decl.t
   | D_module_include of module_expr
   | D_signature of signature Signature_decl.t
+  | D_import of Import_decl.t
 
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving equal, compare, yojson, hash]

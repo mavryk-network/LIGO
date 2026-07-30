@@ -1,14 +1,12 @@
+open Core
 open Types
-module SMap = Caml.Map.Make (String)
-module UidMap = Caml.Map.Make (Uid)
+module UidMap = Map.Make (Uid)
+module Ligo_map = Simple_utils.Ligo_map
 
-(** Mapping from mangled uid to its resolved file name. *)
 type t = string UidMap.t
 
-let empty : t = UidMap.empty
-
 (** Mapping from file name to mangled module's definitions *)
-type mangled_mdefs = mdef SMap.t
+type mangled_mdefs = mdef String.Map.t
 
 (** Mapping from mangled UIDs to resolved UIDs. *)
 type mangled_to_resolved = Uid.t UidMap.t
@@ -19,7 +17,7 @@ let rec extracted_mangled_uids : def list -> mangled_to_resolved =
     | Module mdef ->
       (match mdef.mod_case with
       | Def defs ->
-        UidMap.union (fun _uid _fst snd -> Some snd) acc (extracted_mangled_uids defs)
+        Ligo_map.union (fun _uid _fst snd -> Some snd) acc (extracted_mangled_uids defs)
       | Alias { resolve_mod_name = Unresolved_path _ } -> acc
       | Alias { resolve_mod_name = Resolved_path resolved } ->
         if Location.equal (Uid.to_location resolved.resolved_module) Location.env
@@ -27,34 +25,29 @@ let rec extracted_mangled_uids : def list -> mangled_to_resolved =
                 (Uid.to_name resolved.resolved_module)
                 ~prefix:"Mangled_module_"
         then
-          (* n.b.: If the same module is imported twice (or some constructor is exported
-             twice from different imports), then by my observations, we'll pick the one
-             that was imported first. *)
-          UidMap.add resolved.resolved_module mdef.uid acc
+          (* n.b.: If the same module is imported twice (or some
+             constructor is exported twice from different imports),
+             then by my observations, we'll pick the one that was
+             imported first. *)
+          Map.set acc ~key:resolved.resolved_module ~data:mdef.uid
         else acc))
 
 
-let (unmangle_module_names_in_core_type, unmangle_module_names_in_typed_type) :
-      (mangled_to_resolved -> Ast_core.type_expression -> Ast_core.type_expression)
-      * (mangled_to_resolved -> Ast_typed.type_expression -> Ast_typed.type_expression)
+let unmangle_module_names_in_typed_type
+    :  (Ast_typed.module_variable, Ast_typed.module_variable) Hashtbl.t
+    -> mangled_to_resolved -> Ast_typed.type_expression -> Ast_typed.type_expression
   =
-  let find_if_not_generated mangled_to_resolved mvar =
+ fun mvar_cache mangled_to_resolved ->
+  let find_if_not_generated mvar =
     if Ligo_prim.Module_var.is_generated mvar
     then mvar
     else
-      Option.value_map ~default:mvar ~f:id_to_mvar
-      @@ UidMap.find_opt (mvar_to_id mvar) mangled_to_resolved
+      Hashtbl.find_or_add mvar_cache mvar ~default:(fun () ->
+          Option.value_map ~default:mvar ~f:id_to_mvar
+          @@ Map.find mangled_to_resolved (mvar_to_id mvar))
   in
-  let unmangle_module_list mangled_to_resolved =
-    List.map ~f:(find_if_not_generated mangled_to_resolved)
-  in
-  ( (fun mangled_to_resolved ->
-      Misc.map_core_type_expression_module_path
-        (unmangle_module_list mangled_to_resolved)
-        (List.Ne.map (find_if_not_generated mangled_to_resolved)))
-  , fun mangled_to_resolved ->
-      Misc.map_typed_type_expression_module_path
-        (unmangle_module_list mangled_to_resolved) )
+  let unmangle_module_list = List.map ~f:find_if_not_generated in
+  Misc.map_typed_type_expression_module_path unmangle_module_list
 
 
 let extract_mangled_mdefs : t -> def list -> mangled_mdefs =
@@ -63,7 +56,7 @@ let extract_mangled_mdefs : t -> def list -> mangled_mdefs =
     | Variable _ | Type _ | Label _ -> []
     | Module mdef ->
       let first_mapping =
-        match UidMap.find_opt mdef.uid mangled_uids with
+        match Map.find mangled_uids mdef.uid with
         | None -> []
         | Some file_name -> [ file_name, mdef ]
       in
@@ -73,7 +66,8 @@ let extract_mangled_mdefs : t -> def list -> mangled_mdefs =
   in
   defs
   |> List.concat_map ~f:collect
-  |> List.fold_left ~init:SMap.empty ~f:(fun acc (key, data) -> SMap.add key data acc)
+  |> List.fold_left ~init:String.Map.empty ~f:(fun acc (key, data) ->
+         Map.set acc ~key ~data)
 
 
 let strip_mangled_defs : mangled_mdefs -> t -> def list -> def list =
@@ -81,7 +75,7 @@ let strip_mangled_defs : mangled_mdefs -> t -> def list -> def list =
   let rec mangled_alias_filter : def -> def option = function
     | (Variable _ | Type _ | Label _) as def -> Some def
     | Module mdef as def ->
-      if UidMap.mem mdef.uid mangled_uids
+      if Map.mem mangled_uids mdef.uid
       then None
       else (
         match mdef.mod_case with
@@ -94,33 +88,25 @@ let strip_mangled_defs : mangled_mdefs -> t -> def list -> def list =
   List.filter_map ~f:mangled_alias_filter
 
 
-let inline_mangled : mangled_mdefs -> t -> mangled_to_resolved -> def list -> def list =
- fun mangled_file_name_to_mdef mangled_uids mangled_to_resolved ->
+let inline_mangled
+    :  (Ast_typed.module_variable, Ast_typed.module_variable) Hashtbl.t -> mangled_mdefs
+    -> t -> mangled_to_resolved -> def list -> def list
+  =
+ fun mvar_cache mangled_file_name_to_mdef mangled_uids mangled_to_resolved ->
   let rec inline : def -> def = function
     | Variable vdef ->
       Variable
         { vdef with
           t =
             (match vdef.t with
-            | Core core ->
-              Core (unmangle_module_names_in_core_type mangled_to_resolved core)
+            | Core core -> Core core
             | Resolved typed ->
-              Resolved (unmangle_module_names_in_typed_type mangled_to_resolved typed)
+              Resolved
+                (unmangle_module_names_in_typed_type mvar_cache mangled_to_resolved typed)
             | Unresolved -> Unresolved)
         }
-    | Type tdef ->
-      Type
-        { tdef with
-          content =
-            Option.map
-              ~f:(unmangle_module_names_in_core_type mangled_to_resolved)
-              tdef.content
-        }
-    | Label ldef ->
-      Label
-        { ldef with
-          content = unmangle_module_names_in_core_type mangled_to_resolved ldef.content
-        }
+    | Type tdef -> Type tdef
+    | Label ldef -> Label ldef
     | Module mdef ->
       let inlined_mdef =
         match mdef.mod_case with
@@ -129,8 +115,8 @@ let inline_mangled : mangled_mdefs -> t -> mangled_to_resolved -> def list -> de
             ~default:mdef
             (let open Option.Let_syntax in
             let mangled_uid = resolved.resolved_module in
-            let%bind file_name = UidMap.find_opt mangled_uid mangled_uids in
-            let%bind mdef_orig = SMap.find_opt file_name mangled_file_name_to_mdef in
+            let%bind file_name = Map.find mangled_uids mangled_uid in
+            let%bind mdef_orig = Map.find mangled_file_name_to_mdef file_name in
             return
             @@ { mdef with mod_case = mdef_orig.mod_case; inlined_name = Some file_name })
         | Alias { resolve_mod_name = Unresolved_path _ } | Def _ -> mdef
@@ -142,25 +128,11 @@ let inline_mangled : mangled_mdefs -> t -> mangled_to_resolved -> def list -> de
   List.map ~f:inline
 
 
-(** Preprocessing produces mangled modules.
-    The next thing
-    {[
-     #import "file.mligo" "A"
-    ]}
-    translates into
-    {[
-     module A = Mangled_bla_bla
-    ]}
-    Thus we get a [Mangled_bla_bla] definition and [A] module alias.
-
-    The idea here is to strip mangled definitions and inline them into each mangled alias.
-    Motivation is simple: we don't care about mangled modules. We should think about
-    them each time we're working with definitions (e.g. they may appear in completions).
-    It would be better to inline and forget about them. *)
 let patch : t -> def list -> def list =
  fun mangled_uids defs ->
   let mangled_file_name_to_mdef = extract_mangled_mdefs mangled_uids defs in
   let mangled_to_resolved = extracted_mangled_uids defs in
+  let mvar_cache = Hashtbl.create (module Ligo_prim.Module_var) in
   defs
   |> strip_mangled_defs mangled_file_name_to_mdef mangled_uids
-  |> inline_mangled mangled_file_name_to_mdef mangled_uids mangled_to_resolved
+  |> inline_mangled mvar_cache mangled_file_name_to_mdef mangled_uids mangled_to_resolved

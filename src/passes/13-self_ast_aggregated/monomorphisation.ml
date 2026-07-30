@@ -1,7 +1,9 @@
+open Ligo_prim
+module Trace = Simple_utils.Trace
 module PP_helpers = Simple_utils.PP_helpers
 module AST = Ast_aggregated
-open Ligo_prim
 module Row = AST.Row
+open Errors
 
 let fold_map_expression = AST.Helpers.fold_map_expression
 let map_expression = AST.Helpers.map_expression
@@ -28,7 +30,7 @@ module Instance = struct
 end
 
 module Data = struct
-  module LIMap = Simple_utils.Map.Make (Value_var)
+  module LIMap = Map.Make (Value_var)
 
   type t = Instance.t list LIMap.t
 
@@ -44,18 +46,16 @@ module Data = struct
         (PP_helpers.list_sep_d Instance.pp)
         instances_of_lid
     in
-    List.iter (LIMap.to_kv_list instances) ~f
+    List.iter (Map.to_alist instances) ~f
 
 
   let instances_lookup (ev : Value_var.t) (data : t) =
-    Option.value ~default:[] @@ LIMap.find_opt ev data
+    Option.value ~default:[] @@ Map.find data ev
 
 
   let instance_add (lid : Value_var.t) (instance : Instance.t) (data : t) =
-    let lid_instances =
-      instance :: (Option.value ~default:[] @@ LIMap.find_opt lid data)
-    in
-    LIMap.add lid lid_instances data
+    let lid_instances = instance :: (Option.value ~default:[] @@ Map.find data lid) in
+    Map.set data ~key:lid ~data:lid_instances
 end
 
 (* This is not a proper substitution, it might capture variables: it should be used only with v' a fresh variable *)
@@ -80,12 +80,12 @@ let apply_table_expr table (expr : AST.expression) =
           let fun_type = apply_table_type fun_type in
           let lambda = Lambda.map Fn.id apply_table_type lambda in
           return @@ E_recursive { fun_name; fun_type; lambda; force_lambdarec }
-        | E_matching { matchee; disc_label; cases } ->
+        | E_matching { matchee; cases } ->
           let f : _ AST.Match_expr.match_case -> _ AST.Match_expr.match_case =
            fun { pattern; body } ->
             { pattern = AST.Pattern.map apply_table_type pattern; body }
           in
-          return @@ E_matching { matchee; disc_label; cases = List.map cases ~f }
+          return @@ E_matching { matchee; cases = List.map cases ~f }
         | E_assign { binder; expression } ->
           let binder = Binder.map apply_table_type binder in
           return @@ E_assign { binder; expression }
@@ -189,6 +189,9 @@ let rec subst_external_type et t (u : AST.type_expression) =
   | T_for_all { ty_binder; kind; type_ } ->
     let type_ = self et t type_ in
     { u with type_content = T_for_all { ty_binder; kind; type_ } }
+  | T_abstraction { ty_binder; kind; type_ } ->
+    let type_ = self et t type_ in
+    { u with type_content = T_abstraction { ty_binder; kind; type_ } }
   | T_constant { injection = External _; parameters = _; _ }
     when AST.equal_type_expression et u -> t
   | T_constant { language; injection; parameters } ->
@@ -218,12 +221,12 @@ let subst_external_term et t (e : AST.expression) =
         | E_recursive { fun_name; fun_type; lambda; force_lambdarec } ->
           let fun_type = subst_external_type et t fun_type in
           return @@ E_recursive { fun_name; fun_type; lambda; force_lambdarec }
-        | E_matching { matchee; disc_label; cases } ->
+        | E_matching { matchee; cases } ->
           let f : _ AST.Match_expr.match_case -> _ AST.Match_expr.match_case =
            fun { pattern; body } ->
             { pattern = AST.Pattern.map (subst_external_type et t) pattern; body }
           in
-          return @@ E_matching { matchee; disc_label; cases = List.map cases ~f }
+          return @@ E_matching { matchee; cases = List.map cases ~f }
         | E_assign { binder; expression } ->
           let binder = Binder.map (subst_external_type et t) binder in
           return @@ E_assign { binder; expression }
@@ -268,7 +271,7 @@ let evaluate_external_typer typed rhs =
   | _ -> rhs
 
 
-let rec mono_polymorphic_expression ~raise
+let rec mono_polymorphic_expression ~(raise : _ Trace.raise)
     : Data.t -> AST.expression -> Data.t * AST.expression
   =
  fun data expr ->
@@ -309,8 +312,7 @@ let rec mono_polymorphic_expression ~raise
     let data, result = self data result in
     data, return (E_lambda { binder; output_type; result })
   | E_type_abstraction { type_binder = _; result } ->
-    raise.Trace.error
-      (Errors.monomorphisation_unexpected_type_abs expr.type_expression result)
+    raise.error (Errors.monomorphisation_unexpected_type_abs expr.type_expression result)
   | E_recursive
       { fun_name; fun_type; lambda = { binder; output_type; result }; force_lambdarec } ->
     let data, result = self data result in
@@ -326,8 +328,7 @@ let rec mono_polymorphic_expression ~raise
     let () =
       match AST.Combinators.get_t_arrow rhs.type_expression with
       | Some { type1 = _; type2 } when AST.Combinators.is_t_for_all type2 ->
-        raise.Trace.error
-          (Errors.monomorphisation_unexpected_type_abs rhs.type_expression expr)
+        raise.error (Errors.monomorphisation_unexpected_type_abs rhs.type_expression expr)
       | _ -> ()
     in
     let rhs =
@@ -410,10 +411,10 @@ let rec mono_polymorphic_expression ~raise
   | E_constructor { constructor; element } ->
     let data, element = self data element in
     data, return (E_constructor { constructor; element })
-  | E_matching { matchee; disc_label; cases } ->
+  | E_matching { matchee; cases } ->
     let data, cases = mono_polymorphic_cases ~raise data cases in
     let data, matchee = self data matchee in
-    data, return (E_matching { matchee; disc_label; cases })
+    data, return (E_matching { matchee; cases })
   | E_record lmap ->
     let data, lmap = Record.fold_map ~f:self ~init:data lmap in
     data, return (E_record lmap)
@@ -435,7 +436,7 @@ let rec mono_polymorphic_expression ~raise
       match e.expression_content with
       | E_type_inst { forall; type_ } -> aux (type_ :: type_insts) forall
       | E_variable variable -> List.rev type_insts, variable
-      | _ -> raise.Trace.error (Errors.monomorphisation_non_var expr)
+      | _ -> raise.error (Errors.monomorphisation_non_var expr)
     in
     let type_instances, lid = aux [] expr in
     let type_ = expr.type_expression in
@@ -475,8 +476,8 @@ and mono_polymorphic_cases ~raise
       data, ({ pattern; body } : _ AST.Match_expr.match_case))
 
 
-let check_if_polymorphism_present ~raise e =
-  let show_error loc = raise.Trace.error @@ Errors.polymorphism_unresolved loc in
+let check_if_polymorphism_present ~(raise : _ Trace.raise) e =
+  let show_error loc = raise.error @@ Errors.polymorphism_unresolved loc in
   let rec check_type_expression ~loc (te : AST.type_expression) =
     match te.type_content with
     | T_variable _ -> show_error loc
@@ -486,7 +487,9 @@ let check_if_polymorphism_present ~raise e =
     | T_record row | T_sum row -> Row.iter (check_type_expression ~loc) row
     | T_arrow _ -> ()
     | T_singleton _ -> ()
-    | T_for_all _ -> show_error loc
+    | T_exists _ -> raise.error @@ unexpected_texists te te.location
+    | T_for_all _ | T_abstraction _ -> show_error loc
+    | T_union _ -> Ast_aggregated.impossible_because_no_union_in_ast_aggregated ()
   in
   let (), e =
     fold_map_expression
@@ -554,7 +557,7 @@ let commute e =
 
 
 let mono_polymorphic_expr ~raise e =
-  let e = Deduplicate_binders.program e in
+  let e = Deduplicate_binders.program ~raise e in
   let e = commute e in
   let _, m = mono_polymorphic_expression ~raise Data.empty e in
   let m = check_if_polymorphism_present ~raise m in

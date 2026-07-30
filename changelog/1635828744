@@ -1,5 +1,5 @@
 ---
-  title: "Update sed to fix Fmt not found (tezos-stdlib)"
+  title: "Update sed to fix Fmt not found (mavryk-stdlib)"
   merge_request: "1397"
   author: "melwyn95"
   type: "internal"

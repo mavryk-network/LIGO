@@ -20,8 +20,8 @@
   left: -25%;
   background: linear-gradient(
     83.21deg,
-    var(--ligo-base-color_blue) 0%,
-    var(--ligo-base-color_purple) 100%
+    var(--ligo-base-color_indigo) 0%,
+    var(--ligo-base-color_cyan) 100%
   );
   mask-image: radial-gradient(rgba(0, 0, 0, 0.3), transparent 70%);
 }
@@ -51,8 +51,8 @@
   .hero > h1 {
     background: linear-gradient(
       90deg,
-      var(--ligo-base-color_blue-lighter) 0%,
-      var(--ligo-base-color_purple) 100%
+      var(--ligo-base-color_indigo) 0%,
+      var(--ligo-base-color_cyan) 100%
     );
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -63,8 +63,8 @@
   .hero > h1 span {
     background: linear-gradient(
       90deg,
-      var(--ligo-base-color_blue) 0%,
-      var(--ligo-base-color_purple) 100%
+      var(--ligo-base-color_indigo) 0%,
+      var(--ligo-base-color_cyan) 100%
     );
     background-clip: text;
     -webkit-text-fill-color: transparent;

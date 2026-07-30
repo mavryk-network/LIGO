@@ -1,4 +1,5 @@
 module Location = Simple_utils.Location
+module Ne_list = Simple_utils.Ne_list
 open QCheck
 
 module type Monad = sig
@@ -25,12 +26,15 @@ module Rnd : Monad = struct
   let get_one ?n (x : 'a t) =
     let rand =
       match n with
-      | None -> Caml.Random.State.make_self_init ()
+      | None -> Stdlib.Random.State.make_self_init ()
       | Some seed ->
-        let curr = Caml.Random.get_state () in
+        (* FIXME: Replace [Stdlib.Random] with [Core]'s [Random].
+           Issue: <TODO>
+         *)
+        let curr = Stdlib.Random.get_state () in
         Random.init seed;
-        let rand = Caml.Random.get_state () in
-        Caml.Random.set_state curr;
+        let rand = Stdlib.Random.get_state () in
+        Stdlib.Random.set_state curr;
         rand
     in
     Gen.generate1 ~rand x
@@ -82,14 +86,14 @@ module Monad_context (M : Monad) = struct
       return (Some x)
 
 
-  let bind_ne_list (hd, tl) =
+  let bind_ne_list Nonempty_list.(hd :: tl) =
     let* hd in
     let* tl = bind_list tl in
-    return @@ (hd, tl)
+    return Ne_list.(hd :: tl)
 
 
-  let bind_map_ne_list : _ -> 'a Simple_utils.List.Ne.t -> 'b Simple_utils.List.Ne.t t =
-   fun f lst -> bind_ne_list (Simple_utils.List.Ne.map f lst)
+  let bind_map_ne_list : _ -> 'a Nonempty_list.t -> 'b Nonempty_list.t t =
+   fun f lst -> bind_ne_list (Nonempty_list.map ~f lst)
 
 
   let map f x =

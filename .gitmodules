@@ -1,8 +1,8 @@
-[submodule "vendors/tezos-ligo"]
-	path = vendors/tezos-ligo
-	url = https://gitlab.com/ligolang/tezos-ligo.git
-	branch = v19.0-ligo
-[submodule "tools/lsp/squirrel/bench/submodules/baseDAO"]
-	path = tools/lsp/squirrel/bench/submodules/baseDAO
-	url = https://github.com/Sorokin-Anton/baseDAO
-	branch = Sorokin-Anton/branch-for-ligo-lsp-benchmarks
+[submodule "vendors/mavryk-ligo"]
+	path = vendors/mavryk-ligo
+	url = https://gitlab.com/mavryk-network/mavryk-protocol.git
+	branch = boreas-ligo
+[submodule "tools/lsp-bench/projects/submodules/checker"]
+	path = tools/lsp-bench/projects/submodules/checker
+	url = https://github.com/marigold-dev/checker-ligo.git
+	branch = main

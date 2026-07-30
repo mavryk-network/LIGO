@@ -8,13 +8,13 @@ const singleTheme = require("prism-react-renderer/themes/duotoneLight");
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Ligo",
-  url: "https://ligolang.org",
+  url: "https://ligo.mavryk.org",
   baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.svg",
   projectName: "ligo",
-  organizationName: "Marigold",
+  organizationName: "mavryk-network",
   customFields: {
     REACT_APP_GOOGLE_ANALYTICS_ID: "G-V5S4SDLK4Z",
   },
@@ -40,11 +40,13 @@ const config = {
         },
         blog: {
           showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          // editUrl:
-          //   'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+          readingTime: ({ content, frontMatter, defaultReadingTime }) =>
+            defaultReadingTime({ content, options: { wordsPerMinute: 300 } }),
+          blogTitle: "Ligo Blog",
+          blogDescription: "On the Ligo Blog, you will find news, release guides and explainers.",
+          blogSidebarCount: 0,
         },
+
         theme: {
           customCss: [
             require.resolve("./src/css/colors.css"),
@@ -65,14 +67,14 @@ const config = {
         disableSwitch: false,
         respectPrefersColorScheme: false,
       },
-      announcementBar: {
-        id: "support_us",
-        content:
-          "<b>Ligo v1 is now available ! Check the migration guide : https://ligolang.org/docs/next/faq/v1-migration-guide ! </b>",
-        backgroundColor: "#003ee0",
-        textColor: "#efefef",
-        isCloseable: false,
-      },
+      // announcementBar: {
+      //   id: "support_us",
+      //   content:
+      //     "<b></b>",
+      //   backgroundColor: "#003ee0",
+      //   textColor: "#efefef",
+      //   isCloseable: false,
+      // },
       navbar: {
         logo: {
           width: "104",
@@ -86,8 +88,9 @@ const config = {
           { to: "docs/intro/introduction", label: "Docs", position: "left", target: "_self" },
           { to: "docs/reference/toplevel-reference", label: "API", position: "left" },
           { to: "docs/faq/intro", label: "FAQ", position: "left" },
-          { to: "https://packages.ligolang.org/packages", label: "Registry", position: "right" },
-          { to: "https://ide.ligolang.org/", label: "Web IDE", position: "right" },
+          // { to: "blog", label: "Blog", position: "left" },
+          // { to: "https://packages.ligo.mavryk.org/packages", label: "Registry", position: "right" },
+          { to: "https://ide.mavryk.org/", label: "Web IDE", position: "right" },
         ],
       },
       footer: {
@@ -109,7 +112,7 @@ const config = {
               },
               {
                 label: "Registry",
-                href: "https://packages.ligolang.org/packages",
+                href: "https://packages.ligo.mavryk.org/packages",
               },
               {
                 label: "Ligo CLI",
@@ -130,27 +133,27 @@ const config = {
             items: [
               {
                 label: "Discord",
-                href: "https://discord.gg/tezos",
+                href: "https://discord.gg/mavrykdynamics",
                 rel: "noopener noreferrer nofollow",
               },
               {
                 label: "YouTube",
-                href: "https://www.youtube.com/playlist?list=PLmDOlM4rqLvInuervAU4YuU39ThuHw3fM",
+                href: "https://www.youtube.com/@MavrykNetwork",
                 rel: "noopener noreferrer nofollow",
               },
               {
                 label: "X",
-                href: "https://x.com/LigoLang",
+                href: "https://x.com/mavrykdynamics",
                 rel: "noopener noreferrer nofollow",
               },
               {
                 label: "Telegram",
-                href: "https://t.me/LigoLang",
+                href: "https://t.me/mavryknetwork",
                 rel: "noopener noreferrer nofollow",
               },
               {
                 label: "LinkedIn",
-                href: "https://www.linkedin.com/company/marigold-ligolang/",
+                href: "https://www.linkedin.com/company/mavryk-dynamics/",
                 rel: "noopener noreferrer nofollow",
               },
             ],
@@ -160,19 +163,19 @@ const config = {
             items: [
               {
                 label: "Sources",
-                href: "https://gitlab.com/ligolang/ligo",
+                href: "https://gitlab.com/mavryk-network/ligo",
                 rel: "noopener noreferrer nofollow",
               },
               {
                 label: "Issues",
-                href: "https://gitlab.com/ligolang/ligo/-/issues",
+                href: "https://gitlab.com/mavryk-network/ligo/-/issues",
                 rel: "noopener noreferrer nofollow",
               },
-              {
-                label: "Bounties",
-                href: "https://bounties.ligolang.org",
-                rel: "noopener noreferrer nofollow",
-              },
+              // {
+              //   label: "Bounties",
+              //   href: "https://bounties.ligo.mavryk.org",
+              //   rel: "noopener noreferrer nofollow",
+              // },
             ],
           },
         ],
@@ -186,10 +189,10 @@ const config = {
       },
       algolia: {
         // The application ID provided by Algolia
-        appId: "ZJTW93II01",
+        appId: "M23OB8S3C8",
 
         // Public API key: it is safe to commit it
-        apiKey: "666cd6151b57b31964fece17ad094ba9",
+        apiKey: "bca633f86972382356a13c68b81de25f",
 
         indexName: "ligolang",
 

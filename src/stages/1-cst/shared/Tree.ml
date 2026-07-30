@@ -3,10 +3,14 @@
 
 (* Vendor dependencies *)
 
-module Region = Simple_utils.Region
-module Utils  = Simple_utils.Utils
+module Region   = Simple_utils.Region
+module Utils    = Simple_utils.Utils
+module Ne       = Nonempty_list
+module Ligo_fun = Simple_utils.Ligo_fun
 
-let (<@) = Utils.(<@)
+(* Utilities *)
+
+let (<@) = Ligo_fun.(<@)
 
 (* Local dependencies *)
 
@@ -21,11 +25,11 @@ let sprintf = Printf.sprintf
 (* The printing of the CST makes use of a threaded data structure: the
    _state_. The printing is done to the string buffer bound to the
    field [buffer], which is imperatively updated (see module
-   [Stdlib.Buffer].) The method [pad] updates the current padding,
-   which is comprised of two components: the padding to reach the new
-   node (space before reaching a subtree, then a vertical bar for it)
-   and the padding for the new node itself. (Is it the last child of
-   its parent?) *)
+   [Buffer].) The method [pad] updates the current padding, which is
+   comprised of two components: the padding to reach the new node
+   (space before reaching a subtree, then a vertical bar for it) and
+   the padding for the new node itself. (Is it the last child of its
+   parent?) *)
 
 type state = <
   regions  : bool;
@@ -128,8 +132,8 @@ let mk_children_nsepseq_opt print ?root = function
 let mk_children_sepseq print ?root =
   mk_children_list print ?root <@ Utils.sepseq_to_list
 
-let mk_children_nseq print ?root =
-  mk_children_list print ?root <@ Utils.nseq_to_list
+let mk_children_ne_list print ?root =
+  mk_children_list print ?root <@ Ne.to_list
 
 let mk_children_sep_or_term print ?root =
   mk_children_list print ?root <@ Utils.sep_or_term_to_list
@@ -157,12 +161,12 @@ let of_nsepseq ?region state root print =
 let of_sepseq ?region state root print =
   of_list ?region state root print <@ Utils.sepseq_to_list
 
-let of_nseq ?region state root print =
-  of_list ?region state root print <@ Utils.nseq_to_list
+let of_ne_list ?region state root print =
+  of_list ?region state root print <@ Ne.to_list
 
 let of_nsep_or_term ?region state root print = function
   `Sep s -> of_nsepseq ?region state root print s
-| `Term (hd, tl) ->
+| `Term Ne.(hd :: tl) ->
      of_list ?region state root print @@ List.map ~f:fst (hd::tl)
 
 let of_sep_or_term ?region state root print = function
@@ -171,7 +175,7 @@ let of_sep_or_term ?region state root print = function
 
 let of_nsep_or_pref ?region state root print = function
   `Sep s -> of_nsepseq ?region state root print s
-| `Pref (hd, tl) ->
+| `Pref Ne.(hd :: tl) ->
      of_list ?region state root print @@ List.map ~f:snd (hd::tl)
 
 (* PRINTING LEAVES *)
@@ -210,4 +214,5 @@ let make_num to_string root state (wrap : 'a Wrap.t) =
 let make_int   = make_num Z.to_string
 let make_nat   = make_int
 let make_bytes = make_num Hex.show
-let make_mutez = make_num Int64.to_string
+let make_mumav = make_num Int64.to_string
+let make_mav   = make_num Q.to_string

@@ -1,0 +1,17 @@
+#include "./gitlab-pages/docs/testing/src/testing/remove-balance.mligo"
+
+let test_remove_balance =
+  let () = Test.Next.State.reset 5n ([]: mav list) in
+let balances: balances =
+  let a1, a2, a3 = Test.Next.Account.address 1n, Test.Next.Account.address 2n, Test.Next.Account.address 3n
+    in Map.literal [(a1, 10mv); (a2, 100mv); (a3, 1000mv)] in
+  List.iter
+    (fun ((threshold , expected_size): mav * nat) ->
+      let tester (balances, threshold: balances * mav) = Map.size (remove_balances_under balances threshold) in
+      let size = Test.Next.Michelson.run tester (balances, threshold) in
+      let expected_size = Test.Next.Michelson.eval expected_size in
+      let () = Test.Next.IO.log ("expected", expected_size) in
+      let () = Test.Next.IO.log ("actual", size) in
+      Assert.assert (Test.Next.Compare.eq size expected_size)
+    )
+    [(15mav,2n); (130mav,1n); (1200mav,0n)]

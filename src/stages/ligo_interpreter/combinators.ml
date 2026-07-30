@@ -25,29 +25,29 @@ let v_some : value -> value = fun v -> V_Construct ("Some", v)
 let v_nat : Z.t -> value = fun v -> V_Ct (C_nat v)
 let v_int : Z.t -> value = fun v -> V_Ct (C_int v)
 let v_int64 : int64 -> value = fun v -> V_Ct (C_int64 v)
-let v_mutez : Z.t -> value = fun v -> V_Ct (C_mutez v)
+let v_mumav : Z.t -> value = fun v -> V_Ct (C_mumav v)
 let v_timestamp : Z.t -> value = fun v -> V_Ct (C_timestamp v)
-let v_bls12_381_g1 : Bls12_381.G1.t -> value = fun v -> V_Ct (C_bls12_381_g1 v)
-let v_bls12_381_g2 : Bls12_381.G2.t -> value = fun v -> V_Ct (C_bls12_381_g2 v)
-let v_bls12_381_fr : Bls12_381.Fr.t -> value = fun v -> V_Ct (C_bls12_381_fr v)
+let v_bls12_381_g1 : Mavryk_bls12_381.G1.t -> value = fun v -> V_Ct (C_bls12_381_g1 v)
+let v_bls12_381_g2 : Mavryk_bls12_381.G2.t -> value = fun v -> V_Ct (C_bls12_381_g2 v)
+let v_bls12_381_fr : Mavryk_bls12_381.Fr.t -> value = fun v -> V_Ct (C_bls12_381_fr v)
 let v_chain_id : Chain_id.t -> value = fun c -> V_Ct (C_chain_id c)
 let v_chest : bytes -> value = fun b -> V_Ct (C_chest b)
 let v_chest_key : bytes -> value = fun b -> V_Ct (C_chest_key b)
 
-let v_key_hash : Tezos_crypto.Signature.public_key_hash -> value =
+let v_key_hash : Mavryk_crypto.Signature.public_key_hash -> value =
  fun v -> V_Ct (C_key_hash v)
 
 
-let v_key : Tezos_crypto.Signature.public_key -> value = fun v -> V_Ct (C_key v)
-let v_signature : Tezos_crypto.Signature.t -> value = fun v -> V_Ct (C_signature v)
+let v_key : Mavryk_crypto.Signature.public_key -> value = fun v -> V_Ct (C_key v)
+let v_signature : Mavryk_crypto.Signature.t -> value = fun v -> V_Ct (C_signature v)
 let v_none : unit -> value = fun () -> V_Construct ("None", v_unit ())
 let v_ctor : string -> value -> value = fun ctor value -> V_Construct (ctor, value)
 
-let v_address : Tezos_protocol.Protocol.Alpha_context.Contract.t -> value =
+let v_address : Mavryk_protocol.Protocol.Alpha_context.Contract.t -> value =
  fun a -> V_Ct (C_address a)
 
 
-let v_typed_address : Tezos_protocol.Protocol.Alpha_context.Contract.t -> value =
+let v_typed_address : Mavryk_protocol.Protocol.Alpha_context.Contract.t -> value =
  fun a -> V_Typed_address a
 
 
@@ -63,19 +63,19 @@ let is_true : value -> bool =
   | _ -> false
 
 
-let get_address : value -> Tezos_protocol.Protocol.Alpha_context.Contract.t option
+let get_address : value -> Mavryk_protocol.Protocol.Alpha_context.Contract.t option
   = function
   | V_Ct (C_address x) -> Some x
   | _ -> None
 
 
-let get_typed_address : value -> Tezos_protocol.Protocol.Alpha_context.Contract.t option
+let get_typed_address : value -> Mavryk_protocol.Protocol.Alpha_context.Contract.t option
   = function
   | V_Typed_address x -> Some x
   | _ -> None
 
 
-let get_michelson_contract : value -> unit Tezos_utils.Michelson.michelson option
+let get_michelson_contract : value -> unit Mavryk_utils.Michelson.michelson option
   = function
   | V_Michelson_contract x -> Some x
   | _ -> None
@@ -99,8 +99,8 @@ let get_nat : value -> Z.t option = function
   | _ -> None
 
 
-let get_mutez : value -> Z.t option = function
-  | V_Ct (C_mutez x) -> Some x
+let get_mumav : value -> Z.t option = function
+  | V_Ct (C_mumav x) -> Some x
   | _ -> None
 
 
@@ -226,7 +226,7 @@ let tag_constant_val : constant_val -> int = function
   | C_timestamp _ -> 4
   | C_string _ -> 5
   | C_bytes _ -> 6
-  | C_mutez _ -> 7
+  | C_mumav _ -> 7
   | C_address _ -> 8
   | C_contract _ -> 9
   | C_key_hash _ -> 10
@@ -250,23 +250,23 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
   | C_timestamp t, C_timestamp t' -> Z.compare t t'
   | C_string s, C_string s' -> String.compare s s'
   | C_bytes b, C_bytes b' -> Bytes.compare b b'
-  | C_mutez m, C_mutez m' -> Z.compare m m'
+  | C_mumav m, C_mumav m' -> Z.compare m m'
   | C_address a, C_address a' ->
-    Tezos_protocol.Protocol.Alpha_context.Contract.compare a a'
+    Mavryk_protocol.Protocol.Alpha_context.Contract.compare a a'
   | ( C_contract { address = a; entrypoint = e }
     , C_contract { address = a'; entrypoint = e' } ) ->
-    (match Tezos_protocol.Protocol.Alpha_context.Contract.compare a a' with
-    | 0 -> Option.compare String.compare e e'
+    (match Contract.compare a a' with
+    | 0 -> Option.compare Entrypoint_repr.compare e e'
     | c -> c)
-  | C_key_hash kh, C_key_hash kh' -> Tezos_crypto.Signature.Public_key_hash.compare kh kh'
-  | C_key k, C_key k' -> Tezos_crypto.Signature.Public_key.compare k k'
-  | C_signature s, C_signature s' -> Tezos_crypto.Signature.compare s s'
+  | C_key_hash kh, C_key_hash kh' -> Mavryk_crypto.Signature.Public_key_hash.compare kh kh'
+  | C_key k, C_key k' -> Mavryk_crypto.Signature.Public_key.compare k k'
+  | C_signature s, C_signature s' -> Mavryk_crypto.Signature.compare s s'
   | C_bls12_381_g1 b, C_bls12_381_g1 b' ->
-    Bytes.compare (Bls12_381.G1.to_bytes b) (Bls12_381.G1.to_bytes b')
+    Bytes.compare (Mavryk_bls12_381.G1.to_bytes b) (Mavryk_bls12_381.G1.to_bytes b')
   | C_bls12_381_g2 b, C_bls12_381_g2 b' ->
-    Bytes.compare (Bls12_381.G2.to_bytes b) (Bls12_381.G2.to_bytes b')
+    Bytes.compare (Mavryk_bls12_381.G2.to_bytes b) (Mavryk_bls12_381.G2.to_bytes b')
   | C_bls12_381_fr b, C_bls12_381_fr b' ->
-    Bytes.compare (Bls12_381.Fr.to_bytes b) (Bls12_381.Fr.to_bytes b')
+    Bytes.compare (Mavryk_bls12_381.Fr.to_bytes b) (Mavryk_bls12_381.Fr.to_bytes b')
   | C_int64 i, C_int64 i' -> Int64.compare i i'
   | C_chain_id i, C_chain_id i' -> Chain_id.compare i i'
   | C_chest c, C_chest c' -> Bytes.compare c c'
@@ -278,7 +278,7 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
       | C_timestamp _
       | C_string _
       | C_bytes _
-      | C_mutez _
+      | C_mumav _
       | C_address _
       | C_contract _
       | C_key_hash _
@@ -298,7 +298,7 @@ let compare_constant_val (c : constant_val) (c' : constant_val) : int =
       | C_timestamp _
       | C_string _
       | C_bytes _
-      | C_mutez _
+      | C_mumav _
       | C_address _
       | C_contract _
       | C_key_hash _
@@ -364,24 +364,24 @@ let rec compare_value (v : value) (v' : value) : int =
     | c -> c)
   | V_Michelson m, V_Michelson m' ->
     (match m, m' with
-    | Ty_code t, Ty_code t' -> Caml.compare t t'
+    | Ty_code t, Ty_code t' -> Stdlib.compare t t'
     | Untyped_code _, Ty_code _ -> -1
-    | Untyped_code c, Untyped_code c' -> Caml.compare c c'
+    | Untyped_code c, Untyped_code c' -> Stdlib.compare c c'
     | Ty_code _, Untyped_code _ -> 1)
   | V_Mutation (l, e, _), V_Mutation (l', e', _) ->
     (match Location.compare l l' with
-    | 0 -> Caml.compare e e'
+    | 0 -> Stdlib.compare e e'
     | c -> c)
-  | V_Michelson_contract c, V_Michelson_contract c' -> Caml.compare c c'
+  | V_Michelson_contract c, V_Michelson_contract c' -> Stdlib.compare c c'
   | V_Ast_contract { main; views = _ }, V_Ast_contract { main = main'; views = _ } ->
-    Caml.compare main main'
-  | V_Func_val f, V_Func_val f' -> Caml.compare f f'
-  | V_Gen v, V_Gen v' -> Caml.compare v v'
+    Stdlib.compare main main'
+  | V_Func_val f, V_Func_val f' -> Stdlib.compare f f'
+  | V_Gen v, V_Gen v' -> Stdlib.compare v v'
   | V_Location loc, V_Location loc' -> Int.compare loc loc'
   | V_Typed_address a, V_Typed_address a' ->
-    Tezos_protocol.Protocol.Alpha_context.Contract.compare a a'
+    Mavryk_protocol.Protocol.Alpha_context.Contract.compare a a'
   | V_Views vs, V_Views vs' ->
-    List.compare (Tuple2.compare ~cmp1:String.compare ~cmp2:Caml.compare) vs vs'
+    List.compare (Tuple2.compare ~cmp1:String.compare ~cmp2:Stdlib.compare) vs vs'
   | ( ( V_Ct _
       | V_List _
       | V_Record _
@@ -421,19 +421,19 @@ let constant_val_to_debugger_yojson : constant_val -> Yojson.Safe.t = function
     let hex_str = Format.asprintf "0x%a" Hex.pp (Hex.of_bytes bts) in
     `List [ `String "bytes"; `String hex_str ]
   | C_bls12_381_g1 bls ->
-    let open Bls12_381.G1 in
+    let open Mavryk_bls12_381.G1 in
     let hex_str = Format.asprintf "0x%a" Hex.pp (Hex.of_bytes @@ to_bytes bls) in
     `List [ `String "bls12_381_g1"; `String hex_str ]
   | C_bls12_381_g2 bls ->
-    let open Bls12_381.G2 in
+    let open Mavryk_bls12_381.G2 in
     let hex_str = Format.asprintf "0x%a" Hex.pp (Hex.of_bytes @@ to_bytes bls) in
     `List [ `String "bls12_381_g2"; `String hex_str ]
   | C_bls12_381_fr bls ->
-    let open Bls12_381.Fr in
+    let open Mavryk_bls12_381.Fr in
     let hex_str = Format.asprintf "0x%a" Hex.pp (Hex.of_bytes @@ to_bytes bls) in
     `List [ `String "bls12_381_fr"; `String hex_str ]
   | C_chain_id chain_id ->
-    let open Tezos_crypto.Hashed in
+    let open Mavryk_crypto.Hashed in
     `List [ `String "chain_id"; `String (Chain_id.to_b58check chain_id) ]
   | other -> constant_val_to_yojson other
 

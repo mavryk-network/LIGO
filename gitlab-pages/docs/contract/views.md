@@ -1,7 +1,7 @@
 ---
 id: views
 title: LIGO views
-description: Views for Tezos written in LIGO
+description: Views for Mavryk written in LIGO
 hide_table_of_contents: true
 ---
 
@@ -10,7 +10,7 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 ## Defining On-Chain Views
 
-On-chain views can be defined using the `@view` attribute. For more information [see here](../protocol/hangzhou.md).
+On-chain views can be defined using the `@view` attribute.
 
 <Syntax syntax="cameligo">
 
@@ -44,7 +44,7 @@ type storage = string
 type ret = [list<operation>, storage];
 
 const main = (word : string, store : storage) : ret
-  => [list([]) , store + " " + word]
+  => [[] , store + " " + word]
 
 /* view 'view1', simply returns the storage */
 @view
@@ -74,8 +74,8 @@ val call_view : string -> 'arg -> address -> 'ret option
 let call_view : string => 'arg => address => option &lt;'ret&gt;
 </SyntaxTitle>
 
-The primitive `Tezos.call_view` will allow you to call another contract view and get its result by providing the view name; the contract address and the parameter of the view. If the address is nonexistent; the name does not match of of the contract
-view or the parameter type do not match, `Tezos.call_view` will return `None`.
+The primitive `Mavryk.call_view` will allow you to call another contract view and get its result by providing the view name; the contract address and the parameter of the view. If the address is nonexistent; the name does not match of of the contract
+view or the parameter type do not match, `Mavryk.call_view` will return `None`.
 
 ## Defining Off-Chain Views
 
@@ -108,10 +108,10 @@ namespace C {
   type storage = string
 
   @entry
-  const append = (a: string, s: storage) : [list<operation> , storage] => [list([]), s + a];
+  const append = (a: string, s: storage) : [list<operation> , storage] => [[], s + a];
 
   @entry
-  const clear = (_p: unit, _s: storage) : [list<operation>, storage] => [list([]), ""];
+  const clear = (_p: unit, _s: storage) : [list<operation>, storage] => [[], ""];
 
   export const v = (expected_length: nat, s: storage) : bool => (String.length (s) == expected_length);
 }

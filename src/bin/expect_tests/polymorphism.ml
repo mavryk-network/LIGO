@@ -1,8 +1,8 @@
 open Cli_expect
 
 let test basename = "./" ^ basename
-let pwd = Caml.Sys.getcwd ()
-let () = Caml.Sys.chdir "../../test/contracts/polymorphism/"
+let pwd = Sys_unix.getcwd ()
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -27,6 +27,9 @@ let%expect_test _ =
     ];
   [%expect {| 0x09 |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"
@@ -38,9 +41,15 @@ let%expect_test _ =
     ];
   [%expect {| { 1 ; 2 } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; test "monomorphisation_let.mligo" ];
   [%expect {| { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -53,6 +62,9 @@ let%expect_test _ =
     ];
   [%expect {| { Pair 1 4 ; Pair 2 5 ; Pair 3 6 } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"
@@ -63,6 +75,9 @@ let%expect_test _ =
     ; test "comb.mligo"
     ];
   [%expect {| { Pair (Pair 1 4) "a" ; Pair (Pair 2 5) "b" ; Pair (Pair 3 6) "c" } |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -75,15 +90,24 @@ let%expect_test _ =
     ];
   [%expect {| 8 |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"; "expression"; "cameligo"; "v"; "--init-file"; test "comb.mligo" ];
   [%expect {| { Pair "a" "a" ; Pair "b" "b" } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"; "expression"; "cameligo"; "w"; "--init-file"; test "comb.mligo" ];
   [%expect {| { Pair 1 4 ; Pair 2 5 ; Pair 3 6 } |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -96,6 +120,9 @@ let%expect_test _ =
     ];
   [%expect {| { Pair 1 4 ; Pair 2 5 ; Pair 3 6 } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; test "identity.jsligo" ];
   [%expect
@@ -103,6 +130,9 @@ let%expect_test _ =
     { parameter unit ;
       storage int ;
       code { DROP ; PUSH int 1 ; PUSH int 1 ; ADD ; NIL operation ; PAIR } } |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -116,9 +146,15 @@ let%expect_test _ =
     ];
   [%expect {| { Pair (Pair 1 4) "a" ; Pair (Pair 2 5) "b" ; Pair (Pair 3 6) "c" } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; test "ctrct.mligo" ];
   [%expect {| { parameter unit ; storage int ; code { CDR ; NIL operation ; PAIR } } |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "test.mligo" ];
@@ -126,24 +162,32 @@ let%expect_test _ =
     {|
     File "./test.mligo", line 9, characters 13-27:
       8 | let test =
-      9 |   let orig = Test.originate (contract_of C) 0 0tez in
+      9 |   let orig = Test.originate (contract_of C) 0 0mav in
                        ^^^^^^^^^^^^^^
-     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0tez in
+     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0mav in
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
     File "./test.mligo", line 10, characters 10-27:
-      9 |   let orig = Test.originate (contract_of C) 0 0tez in
-     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0tez in
+      9 |   let orig = Test.originate (contract_of C) 0 0mav in
+     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0mav in
                     ^^^^^^^^^^^^^^^^^
      11 |   assert (Test.get_storage orig.addr = 42)
     :
     Warning: deprecated value.
     In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
+    File "./test.mligo", line 11, characters 2-8:
+     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0mav in
+     11 |   assert (Test.get_storage orig.addr = 42)
+            ^^^^^^
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
     File "./test.mligo", line 11, characters 10-26:
-     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0tez in
+     10 |   let _ = Test.transfer_exn orig.addr (Main 42) 0mav in
      11 |   assert (Test.get_storage orig.addr = 42)
                     ^^^^^^^^^^^^^^^^
     :
@@ -153,11 +197,17 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test exited with value (). |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"; "expression"; "cameligo"; "bar"; "--init-file"; test "modules.mligo" ];
   [%expect {|
     (Pair (Some 1) (Some "hello")) |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -165,11 +215,17 @@ let%expect_test _ =
   [%expect {|
     { 2 ; 4 ; 6 } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"; "expression"; "cameligo"; "bar"; "--init-file"; test "use_nelist.mligo" ];
   [%expect {|
     12 |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -183,6 +239,9 @@ let%expect_test _ =
   [%expect {|
     "hello" |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"
@@ -195,6 +254,9 @@ let%expect_test _ =
   [%expect {|
     "hello" |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"
@@ -205,6 +267,9 @@ let%expect_test _ =
     ; test "use_monad.mligo"
     ];
   [%expect {| { Pair 3 4 5 ; Pair 4 3 5 } |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -217,6 +282,9 @@ let%expect_test _ =
     ];
   [%expect {| { Pair 3 4 5 ; Pair 4 3 5 } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"
@@ -228,6 +296,9 @@ let%expect_test _ =
     ];
   [%expect {|
     { Pair 3 4 5 ; Pair 6 8 10 } |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -242,6 +313,9 @@ let%expect_test _ =
   [%expect {|
     { 4 ; 4 } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"
@@ -252,6 +326,9 @@ let%expect_test _ =
     ; test "use_error.mligo"
     ];
   [%expect {| 1 |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -264,12 +341,26 @@ let%expect_test _ =
   [%expect {|
     CONS(2 , CONS(3 , LIST_EMPTY())) |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "module_k.mligo" ];
   [%expect
     {|
+    File "./module_k.mligo", line 9, characters 2-8:
+      8 |   let v = H.k 1 2 in
+      9 |   assert (v = 1)
+            ^^^^^^
+    :
+    Warning: deprecated value.
+    In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
+
     Everything at the top-level was executed.
     - test_helpers exited with value (). |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good [ "run"; "test"; test "use_rec.jsligo" ];
@@ -277,7 +368,7 @@ let%expect_test _ =
     {|
     File "./use_rec.jsligo", line 4, characters 14-28:
       3 | const _test = (_t : unit) : int => {
-      4 |    let orig = Test.originate(contract_of (Contract), 0, 0 as tez);
+      4 |    let orig = Test.originate(contract_of (Contract), 0, 0 as mav);
                         ^^^^^^^^^^^^^^
       5 |    return orig.size;
     :
@@ -287,11 +378,17 @@ let%expect_test _ =
     Everything at the top-level was executed.
     - test exited with value 51. |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"; "expression"; "cameligo"; "foo"; "--init-file"; test "lambda.mligo" ];
   [%expect {|
     1 |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good [ "compile"; "contract"; test "record_sapling.mligo" ];
@@ -301,28 +398,32 @@ let%expect_test _ =
       storage (pair (pair %state int (sapling_state 8)) (string %name)) ;
       code { UNPAIR ; SWAP ; CAR ; PAIR ; NIL operation ; PAIR } } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
+
 let%expect_test _ =
   run_ligo_good
     [ "compile"
     ; "expression"
     ; "cameligo"
-    ; "try_transfer (\"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx\" : address) 0 (Build_state \
+    ; "try_transfer (\"mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe\" : address) 0 (Build_state \
        (Map.empty :(address, tokenValue) map))"
     ; "--init-file"
     ; test "map_or_big_map.mligo"
     ];
   [%expect {|
-    (Some { Elt "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" 0 }) |}]
+    (Some { Elt "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" 0 }) |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
     [ "compile"; "expression"; "cameligo"; "x"; "--init-file"; test "same_vars.mligo" ];
   [%expect {| 4 |}]
 
-let () =
-  Caml.Sys.chdir pwd;
-  Caml.Sys.chdir "../../test/contracts/negative/polymorphism/"
-
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism/"
 
 let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; test "annotate2.mligo" ];
@@ -333,6 +434,9 @@ let%expect_test _ =
                      ^^
 
     Type "_a" not found. |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism/"
 
 let%expect_test _ =
   run_ligo_bad
@@ -353,6 +457,9 @@ let%expect_test _ =
     The inferred type was "[_]unit -> ∀ a . [_]option (nat) -> option (a)".
     Hint: Try adding additional annotations. |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism/"
+
 let%expect_test _ =
   run_ligo_bad [ "print"; "ast-typed"; test "constants.mligo" ];
   [%expect
@@ -366,6 +473,9 @@ let%expect_test _ =
     "map (^a ,
     ^a)".
     Type "string" is not compatible with type "int". |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism/"
 
 let%expect_test _ =
   run_ligo_good
@@ -405,6 +515,9 @@ let%expect_test _ =
       SWAP ;
       DROP } |}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism/"
+
 let%expect_test _ =
   run_ligo_bad
     [ "compile"
@@ -419,6 +532,9 @@ let%expect_test _ =
 
 (* Unresolved polymorphism *)
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism"
+
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "unresolved/contract.mligo" ];
   [%expect
@@ -431,6 +547,9 @@ let%expect_test _ =
     Underspecified type "^a".
     Please add additional annotations.
     Hint: "^a" represent placeholder type(s). |xxx}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism"
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "unresolved/contract2.mligo" ];
@@ -445,6 +564,9 @@ let%expect_test _ =
     Please add additional annotations.
     Hint: "^a" represent placeholder type(s). |xxx}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism"
+
 let%expect_test _ =
   run_ligo_bad [ "compile"; "storage"; test "unresolved/storage.mligo"; "s" ];
   [%expect
@@ -458,6 +580,9 @@ let%expect_test _ =
     Please add additional annotations.
     Hint: "^a" represent placeholder type(s). |xxx}]
 
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism/"
+
 let%expect_test _ =
   run_ligo_bad [ "compile"; "parameter"; test "unresolved/parameter.mligo"; "p" ];
   [%expect
@@ -467,17 +592,23 @@ let%expect_test _ =
                   ^^
       2 |
 
-    Underspecified type "list (^a)".
+    Underspecified type "^a".
     Please add additional annotations.
     Hint: "^a" represent placeholder type(s). |xxx}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism/"
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "expression"; "cameligo"; "[]" ];
   [%expect
     {|
-    Underspecified type "list (^a)".
+    Underspecified type "^a".
     Please add additional annotations.
     Hint: "^a" represent placeholder type(s). |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism/"
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "monomorphisation_fail.mligo" ];
@@ -489,8 +620,11 @@ let%expect_test _ =
       2 |
 
     Cannot monomorphise the expression.
-    The inferred type was "[_]unit -> ∀ a . ∀ b . [s]a -> ( list (b) * a )".
+    The inferred type was "[_]unit -> ∀ b . ∀ c . [s]b -> ( list (c) * b )".
     Hint: Try adding additional annotations. |}]
+
+let () = Sys_unix.chdir pwd
+let () = Sys_unix.chdir "../../test/contracts/negative/polymorphism/"
 
 let%expect_test _ =
   run_ligo_bad [ "compile"; "contract"; test "monomorphisation_fail2.mligo" ];
@@ -514,4 +648,4 @@ let%expect_test _ =
 
     Cannot monomorphise the expression. |}]
 
-let () = Caml.Sys.chdir pwd
+let () = Sys_unix.chdir pwd

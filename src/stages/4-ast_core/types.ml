@@ -1,15 +1,14 @@
 open Ligo_prim
 module Location = Simple_utils.Location
-module List = Simple_utils.List
-module Ligo_string = Simple_utils.Ligo_string
 module Row = Row.With_optional_layout
+module Ne_list = Simple_utils.Ne_list
 
 type type_content =
   | T_variable of Type_var.t
   | T_constant of Literal_types.t * int
-  | T_contract_parameter of Module_var.t List.Ne.t
-  | T_sum of row * (Label.t option[@eq.ignore] [@hash.ignore] [@compare.ignore])
-    (* This [Label.t] represent an original name of field in disc union type *)
+  | T_contract_parameter of Module_var.t Ne_list.t
+  | T_sum of row
+  | T_union of ty_expr Union.t
   | T_record of row
   | T_arrow of ty_expr Arrow.t
   | T_app of (Type_var.t Module_access.t, ty_expr) Type_app.t
@@ -42,11 +41,13 @@ module Pattern = Linear_pattern
 module Match_expr = Match_expr.Make (Pattern)
 module Pattern_decl = Pattern_decl (Pattern) (Value_attr)
 module Let_in = Let_in.Make (Pattern) (Value_attr)
+module Import_decl = Import_decl (Type_or_module_attr)
+module Import_decl_ext = Import_decl_ext (Type_or_module_attr)
 
 type expression_content =
   (* Base *)
   | E_variable of Value_var.t
-  | E_contract of Module_var.t Simple_utils.List.Ne.t
+  | E_contract of Module_var.t Ne_list.t
   | E_literal of Literal_value.t
   | E_constant of
       expr Constant.t (* For language constants, like (Cons hd tl) or (plus i j) *)
@@ -63,6 +64,9 @@ type expression_content =
   | E_matching of (expr, ty_expr option) Match_expr.t
   (* Record *)
   | E_record of expr Record.t
+  | E_tuple of expr Tuple.t
+  | E_array of expr Array_repr.t
+  | E_array_as_list of expr Array_repr.t
   | E_accessor of expr Accessor.t
   | E_update of expr Update.t
   (* Advanced *)
@@ -84,7 +88,7 @@ and expr = expression [@@deriving eq, compare, yojson, hash]
 
 and module_annotation =
   { signature : signature_expr
-  ; filter : bool
+  ; filter : bool (** [false] for JsLIGO, [true] for CameLIGO *)
   }
 [@@deriving yojson, eq, compare, hash]
 
@@ -95,6 +99,7 @@ and declaration_content =
   | D_module of (module_expr, module_annotation option) Module_decl.t
   | D_module_include of module_expr
   | D_signature of signature_expr Signature_decl.t
+  | D_import of Import_decl_ext.t
 
 and declaration = declaration_content Location.wrap
 and decl = declaration [@@deriving eq, compare, yojson, hash]
@@ -114,7 +119,7 @@ and signature = { items : sig_item list }
 
 and signature_content =
   | S_sig of signature
-  | S_path of Module_var.t Simple_utils.List.Ne.t
+  | S_path of Module_var.t Ne_list.t
 
 and signature_expr = signature_content Location.wrap
 

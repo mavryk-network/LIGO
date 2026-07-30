@@ -1,9 +1,9 @@
 open Errors
 open Ast_aggregated
-open Simple_utils.Trace
 open Contract_passes
+module Trace = Simple_utils.Trace
 
-let rec check_no_nested_bigmap ~raise is_in_bigmap e =
+let rec check_no_nested_bigmap ~(raise : _ Trace.raise) is_in_bigmap e =
   match e.type_content with
   | T_constant { injection = Big_map; _ } when is_in_bigmap ->
     raise.error @@ nested_bigmap e.location
@@ -22,7 +22,9 @@ let rec check_no_nested_bigmap ~raise is_in_bigmap e =
     ()
   | T_variable _ -> ()
   | T_singleton _ -> ()
-  | T_for_all x -> check_no_nested_bigmap ~raise is_in_bigmap x.type_
+  | T_exists _ -> raise.error @@ unexpected_texists e e.location
+  | T_for_all x | T_abstraction x -> check_no_nested_bigmap ~raise is_in_bigmap x.type_
+  | T_union _ -> impossible_because_no_union_in_ast_aggregated ()
 
 
 let self_typing ~raise : contract_type -> expression -> bool * contract_type * expression =

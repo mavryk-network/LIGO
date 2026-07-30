@@ -1,7 +1,7 @@
 module Requests = Ligo_lsp.Server.Requests
+module Utils = Simple_utils.Utils
 open Lsp_test_helpers.Common
 open Cst_shared.Fold
-open Simple_utils.Utils
 
 type 'node node_witness =
   | CameLIGONode : Cst_cameligo.Fold.some_node node_witness
@@ -25,12 +25,14 @@ let get_cst_fold
   let file_path = resolve file_path in
   let contents = In_channel.read_all file_path in
   let cst =
+    let buffer = Buffer.create (String.length contents) in
+    Buffer.add_string buffer contents;
     Ligo_api.Dialect_cst.get_cst
       ~strict:false
       ~file:file_path
       ~preprocess_define:[]
       Syntax_types.CameLIGO
-      (Caml.Buffer.of_seq (Caml.String.to_seq contents))
+      buffer
   in
   match cst, witness with
   | Ok (CameLIGO cst), CameLIGONode ->
@@ -46,7 +48,7 @@ let get_cst_fold
 let length_of_lists_but_not_in_modules : Cst_cameligo.Fold.some_node -> int fold_control =
  fun (Some_node (x, b)) ->
   match b with
-  | S_list_ S_expr -> Continue (List.length @@ sepseq_to_list x.value.inside)
+  | S_list_ S_expr -> Continue (List.length @@ Utils.sepseq_to_list x.value.inside)
   | S_module_decl -> Stop
   | _ -> Skip
 

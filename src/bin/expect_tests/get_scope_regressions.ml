@@ -76,13 +76,13 @@ let%expect_test _ =
     {|
     Scopes:
     [ p#1:11-12  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 10-14
-    [ p#1:11-12  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 26-52
-    [ p#1:11-12 c#2:6-7  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 3, characters 2-17
+    [ p#1:11-12  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 26-53
+    [ p#1:11-12 c#2:6-7  ] File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 3, characters 2-18
 
     Variable definitions:
     (check#1:4-9 -> check)
     Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 1, characters 4-9
-    Decl Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 1, character 0 to line 3, character 17
+    Decl Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 1, character 0 to line 3, character 18
     Content: |core: key_hash -> address|
     references: []
     Mod Path =
@@ -92,7 +92,7 @@ let%expect_test _ =
     Decl Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 1, characters 11-23
     Content: |core: key_hash|
     references:
-      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 50-51
+      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, characters 51-52
     Mod Path =
     Def Type = Parameter
     (c#2:6-7 -> c)
@@ -100,7 +100,7 @@ let%expect_test _ =
     Decl Range: File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 2, character 2 to line 3, character 2
     Content: |core: contract (unit)|
     references:
-      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 3, characters 16-17
+      File "../../test/contracts/get_scope_tests/regressions/missing_stdlib.mligo", line 3, characters 17-18
     Mod Path =
     Def Type = Local
     Type definitions:
@@ -116,13 +116,15 @@ let%expect_test _ =
     ; "dev"
     ; "--with-types"
     ; "--no-stdlib"
+    ; "--typer-error-recovery"
     ];
   [%expect
     {|
     Scopes:
     [  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 1, character 12 to line 5, character 1
     [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 7, characters 14-18
-    [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 8, characters 13-21
+    [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 8, characters 13-14
+    [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 8, characters 18-21
     [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 9, characters 13-17
     [ user#1:5-9  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 10, characters 13-20
     [ user#1:5-9 alice#7:6-11  ] File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 13, characters 18-22
@@ -179,7 +181,9 @@ let%expect_test _ =
      13 | let alice_admin : bool = alice.i
                                    ^^^^^^^
 
-    Invalid record field "i" in record.
+    Invalid record field "i" in record of type "record[id -> nat ,
+                                                       is_admin -> bool ,
+                                                       name -> string]".
     Warnings:
     File "../../test/contracts/get_scope_tests/regressions/buggy_file_with_core_types.jsligo", line 13, characters 0-32:
      12 |

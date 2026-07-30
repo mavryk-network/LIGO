@@ -106,7 +106,7 @@ const DeployModal: React.FC<DeployModalProps> = ({
       balance,
       gasLimit: txOptions?.gasLimit,
       storageLimit: txOptions?.storageLimit,
-      suggestedFeeMutez: txOptions?.fee,
+      suggestedFeeMumav: txOptions?.fee,
     });
 
     setResult(contractAddress);
@@ -182,7 +182,7 @@ const DeployModal: React.FC<DeployModalProps> = ({
       setTxOptions({
         gasLimit: `${estimation.gasLimit}`,
         storageLimit: `${estimation.storageLimit}`,
-        fee: `${estimation.suggestedFeeMutez}`,
+        fee: `${estimation.suggestedFeeMumav}`,
       });
       /* eslint-enable */
     }
@@ -358,7 +358,11 @@ const DeployModal: React.FC<DeployModalProps> = ({
       {result && (
         <p>
           Contract <kbd>{result}</kbd> was deployed. If the network is supported, you can find it on{" "}
-          <a href={`//better-call.dev/search?text=${result}`} target="_blank" rel="noreferrer">
+          <a
+            href={`//better-call.mavryk.io/search?text=${result}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             Better Call Dev
           </a>
         </p>

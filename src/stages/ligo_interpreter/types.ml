@@ -1,62 +1,63 @@
+module Ligo_option = Simple_utils.Ligo_option
 include Ast_aggregated.Types
 open Ligo_prim
-module Z = Simple_utils.Z
-module Tezos_protocol = Memory_proto_alpha
-module Tezos_raw_protocol = Memory_proto_alpha.Raw_protocol
-module Tez = Memory_proto_alpha.Protocol.Alpha_context.Tez
+module Ligo_z = Simple_utils.Ligo_z
+module Mavryk_protocol = Memory_proto_alpha
+module Mavryk_raw_protocol = Memory_proto_alpha.Raw_protocol
+module Mav = Memory_proto_alpha.Protocol.Alpha_context.Tez
 module Timestamp = Memory_proto_alpha.Protocol.Alpha_context.Timestamp
 
 module Contract = struct
-  include Tezos_protocol.Protocol.Alpha_context.Contract
+  include Mavryk_protocol.Protocol.Alpha_context.Contract
 
   let to_yojson (c : t) = [%to_yojson: string] (to_b58check c)
   let of_yojson _ = failwith "contract_of_yojson: not implemented"
 end
 
 module Public_key_hash = struct
-  include Tezos_crypto.Signature.Public_key_hash
+  include Mavryk_crypto.Signature.Public_key_hash
 
   let to_yojson (pkh : t) = [%to_yojson: string] (to_b58check pkh)
   let of_yojson _ = failwith "public_key_hash_of_yojson: not implemented"
 end
 
 module Public_key = struct
-  include Tezos_crypto.Signature.Public_key
+  include Mavryk_crypto.Signature.Public_key
 
   let to_yojson (pk : t) = [%to_yojson: string] (to_b58check pk)
   let of_yojson _ = failwith "public_key_of_yojson: not implemented"
 end
 
 module Signature = struct
-  include Tezos_crypto.Signature
+  include Mavryk_crypto.Signature
 
   let to_yojson (s : t) = [%to_yojson: string] (to_b58check s)
   let of_yojson _ = failwith "signature_of_yojson: not implemented"
 end
 
-module Bls12_381_G1 = struct
-  include Bls12_381.G1
+module Mavryk_bls12_381_G1 = struct
+  include Mavryk_bls12_381.G1
 
   let to_yojson (g1 : t) = [%to_yojson: bytes] (to_bytes g1)
   let of_yojson _ = failwith "bls12_381_g1_of_yojson: not implemented"
 end
 
-module Bls12_381_G2 = struct
-  include Bls12_381.G2
+module Mavryk_bls12_381_G2 = struct
+  include Mavryk_bls12_381.G2
 
   let to_yojson (g2 : t) = [%to_yojson: bytes] (to_bytes g2)
   let of_yojson _ = failwith "bls12_381_g2_of_yojson: not implemented"
 end
 
-module Bls12_381_Fr = struct
-  include Bls12_381.Fr
+module Mavryk_bls12_381_Fr = struct
+  include Mavryk_bls12_381.Fr
 
   let to_yojson (fr : t) = [%to_yojson: bytes] (to_bytes fr)
   let of_yojson _ = failwith "bls12_381_fr_of_yojson: not implemented"
 end
 
 module Chain_id = struct
-  include Tezos_crypto.Hashed.Chain_id
+  include Mavryk_crypto.Hashed.Chain_id
 
   let to_yojson (c : t) = [%to_yojson: bytes] (to_bytes c)
   let of_yojson _ = failwith "chain_id_of_yojson: not implemented"
@@ -69,25 +70,46 @@ module Generator = struct
   let of_yojson _ = failwith "generator_of_yojson: not implemented"
 end
 
-type mcode = unit Tezos_utils.Michelson.michelson [@@deriving yojson]
+module Entrypoint_repr = struct
+  include Mavryk_raw_protocol.Entrypoint_repr
+
+  let to_yojson (c : t) = [%to_yojson: string] (to_string c)
+  let of_yojson _ = failwith "entrypoint_of_yojson: not implemented"
+
+  let of_string_exn s =
+    match
+      Memory_proto_alpha.Raw_protocol.Entrypoint_repr.of_annot_lax_opt
+        (Memory_proto_alpha.Raw_protocol.Non_empty_string.of_string_exn s)
+    with
+    | Some x -> x
+    | None -> failwith (Format.asprintf "Testing framework: Invalid entrypoint %s" s)
+
+
+  let of_string_opt s =
+    let open Ligo_option in
+    let* s = Memory_proto_alpha.Raw_protocol.Non_empty_string.of_string s in
+    Memory_proto_alpha.Raw_protocol.Entrypoint_repr.of_annot_lax_opt s
+end
+
+type mcode = unit Mavryk_utils.Michelson.michelson [@@deriving yojson]
 type mutation = Location.t * Ast_aggregated.expression * string [@@deriving yojson]
 
 type contract =
   { address : Contract.t
-  ; entrypoint : string option
+  ; entrypoint : Entrypoint_repr.t option
   }
 [@@deriving yojson]
 
 type constant_val =
   | C_unit [@name "unit"]
   | C_bool of bool [@name "bool"]
-  | C_int of Z.t [@name "int"]
+  | C_int of Ligo_z.t [@name "int"]
   | C_int64 of Int64.t [@name "int64"]
-  | C_nat of Z.t [@name "nat"]
-  | C_timestamp of Z.t [@name "timestamp"]
+  | C_nat of Ligo_z.t [@name "nat"]
+  | C_timestamp of Ligo_z.t [@name "timestamp"]
   | C_string of string [@name "string"]
   | C_bytes of bytes [@name "bytes"]
-  | C_mutez of Z.t [@name "mutez"]
+  | C_mumav of Ligo_z.t [@name "mumav"]
   | C_address of Contract.t
       (*should be represented as michelson data ? not convenient *)
       [@name "address"]
@@ -95,9 +117,9 @@ type constant_val =
   | C_key_hash of Public_key_hash.t [@name "key_hash"]
   | C_key of Public_key.t [@name "key"]
   | C_signature of Signature.t [@name "signature"]
-  | C_bls12_381_g1 of Bls12_381_G1.t [@name "bls12_381_g1"]
-  | C_bls12_381_g2 of Bls12_381_G2.t [@name "bls12_381_g2"]
-  | C_bls12_381_fr of Bls12_381_Fr.t [@name "bls12_381_fr"]
+  | C_bls12_381_g1 of Mavryk_bls12_381_G1.t [@name "bls12_381_g1"]
+  | C_bls12_381_g2 of Mavryk_bls12_381_G2.t [@name "bls12_381_g2"]
+  | C_bls12_381_fr of Mavryk_bls12_381_Fr.t [@name "bls12_381_fr"]
   | C_chain_id of Chain_id.t [@name "chain_id"]
   | C_chest of bytes [@name "chest"]
   | C_chest_key of bytes [@name "chest_key"]
@@ -184,8 +206,8 @@ and value =
 type bigmap_state = (value * value) list
 
 type bigmap_data =
-  { key_type : Tezos_raw_protocol.Script_repr.expr
-  ; value_type : Tezos_raw_protocol.Script_repr.expr
+  { key_type : Mavryk_raw_protocol.Script_repr.expr
+  ; value_type : Mavryk_raw_protocol.Script_repr.expr
   ; version : bigmap_state
   }
 

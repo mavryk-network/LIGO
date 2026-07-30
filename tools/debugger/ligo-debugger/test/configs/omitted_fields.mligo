@@ -1,9 +1,9 @@
 let contract_env =
   { now           = "2020-01-01T00:00:00Z"
-  ; balance       = 1tez
-  ; amount        = 2tez
+  ; balance       = 1mav
+  ; amount        = 2mav
   ; self          = "KT1XQcegsEtio9oGbLUHA8SKX4iZ2rpEXY9b"
-  ; source        = "tz1hTK4RYECTKcjp2dddQuRGUX5Lhse3kPNY"
+  ; source        = "mv1QdgAoi2FRPYuZXsbSKG8sfJ5QMZif5Fwq"
   }
 
 let config =

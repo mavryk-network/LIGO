@@ -1,12 +1,13 @@
-open Simple_utils.Trace
 open Ligo_interpreter.Types
-open Tezos_micheline.Micheline
+open Mavryk_micheline.Micheline
 open Ligo_prim
+module Trace = Simple_utils.Trace
+module Ligo_string = Simple_utils.Ligo_string
 
 let contract_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse address")
-  @@ Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check s
+  @@ Mavryk_protocol.Protocol.Alpha_context.Contract.of_b58check s
 
 
 let contract_of_bytes ~raise b =
@@ -21,65 +22,65 @@ let contract_of_bytes ~raise b =
 let key_hash_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse key_hash")
-  @@ Tezos_crypto.Signature.Public_key_hash.of_b58check s
+  @@ Mavryk_crypto.Signature.Public_key_hash.of_b58check s
 
 
 let key_hash_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse key_hash")
-  @@ Tezos_crypto.Signature.Public_key_hash.of_bytes s
+  @@ Mavryk_crypto.Signature.Public_key_hash.of_bytes s
 
 
 let key_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse key")
-  @@ Tezos_crypto.Signature.Public_key.of_b58check s
+  @@ Mavryk_crypto.Signature.Public_key.of_b58check s
 
 
 let key_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_option
     ~raise
     (Errors.generic_error Location.generated "Cannot parse key")
-  @@ Tezos_crypto.Signature.Public_key.of_bytes_without_validation s
+  @@ Mavryk_crypto.Signature.Public_key.of_bytes_without_validation s
 
 
 let bls12_381_g1_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_option
     ~raise
     (Errors.generic_error Location.generated "Cannot parse bls12_381_g1")
-  @@ Bls12_381_G1.of_bytes_opt s
+  @@ Mavryk_bls12_381_G1.of_bytes_opt s
 
 
 let bls12_381_g2_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_option
     ~raise
     (Errors.generic_error Location.generated "Cannot parse bls12_381_g2")
-  @@ Bls12_381_G2.of_bytes_opt s
+  @@ Mavryk_bls12_381_G2.of_bytes_opt s
 
 
 let bls12_381_fr_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_option
     ~raise
     (Errors.generic_error Location.generated "Cannot parse bls12_381_fr")
-  @@ Bls12_381_Fr.of_bytes_opt s
+  @@ Mavryk_bls12_381_Fr.of_bytes_opt s
 
 
 let signature_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse signature")
-  @@ Tezos_crypto.Signature.of_b58check s
+  @@ Mavryk_crypto.Signature.of_b58check s
 
 
 let chain_id_of_bytes ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse chain_id")
-  @@ Tezos_crypto.Hashed.Chain_id.of_bytes s
+  @@ Mavryk_crypto.Hashed.Chain_id.of_bytes s
 
 
 let chain_id_of_string ~raise s =
   Proto_alpha_utils.Trace.trace_tzresult ~raise (fun _ ->
       Errors.generic_error Location.generated "Cannot parse chain_id")
-  @@ Tezos_crypto.Hashed.Chain_id.of_b58check s
+  @@ Mavryk_crypto.Hashed.Chain_id.of_b58check s
 
 
 let wrong_mini_c_value _t _v =
@@ -94,22 +95,22 @@ let corner_case ~loc s =
 let untranspilable t v =
   let v =
     v
-    |> Tezos_micheline.Micheline.map_node
-         (fun _ -> { Tezos_micheline.Micheline_printer.comment = None })
+    |> Mavryk_micheline.Micheline.map_node
+         (fun _ -> { Mavryk_micheline.Micheline_printer.comment = None })
          (fun x -> x)
   in
   let t =
     t
-    |> Tezos_micheline.Micheline.map_node
-         (fun _ -> { Tezos_micheline.Micheline_printer.comment = None })
+    |> Mavryk_micheline.Micheline.map_node
+         (fun _ -> { Mavryk_micheline.Micheline_printer.comment = None })
          (fun x -> x)
   in
   let s =
     Format.asprintf
       " %a %a"
-      Tezos_micheline.Micheline_printer.print_expr
+      Mavryk_micheline.Micheline_printer.print_expr
       t
-      Tezos_micheline.Micheline_printer.print_expr
+      Mavryk_micheline.Micheline_printer.print_expr
       v
   in
   Errors.generic_error Location.generated ("untranspilable" ^ s)
@@ -139,7 +140,7 @@ let normalize_edo_comb_value = function
   | _ -> fun x -> x
 
 
-let rec decompile_to_untyped_value ~raise ~bigmaps
+let rec decompile_to_untyped_value ~(raise : _ Trace.raise) ~bigmaps
     : ('l, string) node -> ('l, string) node -> Ligo_interpreter.Types.value
   =
  fun ty value ->
@@ -187,17 +188,17 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
   | Prim (_, "bls12_381_fr", [], _), Bytes (_, b) ->
     V_Ct (C_bls12_381_fr (bls12_381_fr_of_bytes ~raise b))
   | Prim (_, "bls12_381_fr", [], _), Int (_, n) ->
-    V_Ct (C_bls12_381_fr (Bls12_381_Fr.of_z n))
+    V_Ct (C_bls12_381_fr (Mavryk_bls12_381_Fr.of_z n))
   | Prim (_, "signature", [], _), String (_, n) ->
     V_Ct (C_signature (signature_of_string ~raise n))
   | Prim (_, "chest", [], _), Bytes (_, b) -> V_Ct (C_chest b)
   | Prim (_, "chest_key", [], _), Bytes (_, b) -> V_Ct (C_chest_key b)
   | Prim (_, "timestamp", [], _), Int (_, n) -> V_Ct (C_timestamp n)
   | Prim (_, "timestamp", [], _), String (_, n) ->
-    let open Tezos_base.TzPervasives.Time.Protocol in
+    let open Mavryk_base.TzPervasives.Time.Protocol in
     let n = Z.of_int64 (to_seconds (of_notation_exn n)) in
     V_Ct (C_timestamp n)
-  | Prim (_, "mutez", [], _), Int (_, n) -> V_Ct (C_mutez n)
+  | Prim (_, "mumav", [], _), Int (_, n) -> V_Ct (C_mumav n)
   | Prim (_, "bool", [], _), Prim (_, "True", [], _) -> V_Ct (C_bool true)
   | Prim (_, "bool", [], _), Prim (_, "False", [], _) -> V_Ct (C_bool false)
   | Prim (_, "string", [], _), String (_, s) -> V_Ct (C_string s)
@@ -209,7 +210,7 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
   | Prim (_, "contract", [ _ ], _), String (_, s) ->
     let address, entrypoint =
       match String.split s ~on:'%' with
-      | [ a; b ] -> contract_of_string ~raise a, Some b
+      | [ a; b ] -> contract_of_string ~raise a, Some (Entrypoint_repr.of_string_exn b)
       | [ a ] -> contract_of_string ~raise a, None
       | _ -> raise.error (untranspilable ty value)
     in
@@ -280,18 +281,18 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
     (* These are temporal types, need to be patched later: *)
     let t_input = t_unit ~loc () in
     let t_output = t_unit ~loc () in
-    let c = Tezos_micheline.Micheline.strip_locations c in
+    let c = Mavryk_micheline.Micheline.strip_locations c in
     let c =
       Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
           Errors.generic_error Location.generated "Cannot get instructions")
-      @@ Tezos_protocol.Protocol.Michelson_v1_primitives.prims_of_strings c
+      @@ Mavryk_protocol.Protocol.Michelson_v1_primitives.prims_of_strings c
     in
     let u =
       Format.asprintf
         "%a"
-        Tezos_micheline.Micheline_printer.print_expr
-        (Tezos_micheline.Micheline_printer.printable
-           Tezos_protocol.Protocol.Michelson_v1_primitives.string_of_prim
+        Mavryk_micheline.Micheline_printer.print_expr
+        (Mavryk_micheline.Micheline_printer.printable
+           Mavryk_protocol.Protocol.Michelson_v1_primitives.string_of_prim
            c)
     in
     let code_block = make_e ~loc (e_string (Ligo_string.verbatim u)) (t_string ~loc ()) in
@@ -322,7 +323,7 @@ let rec decompile_to_untyped_value ~raise ~bigmaps
       }
   | ( Prim (loct, "ticket", [ ty_ticked ], _)
     , Prim (_, "Pair", [ addr; Prim (_, "Pair", [ vt; amt ], _) ], _) ) ->
-    (* note: the above Pair structure (pair addr (pair vt amt)) comes from tezos protocol *)
+    (* note: the above Pair structure (pair addr (pair vt amt)) comes from mavryk protocol *)
     let addr =
       Ligo_interpreter.Combinators.v_address
       @@
@@ -364,14 +365,14 @@ let rec decompile_value
   | _ when Option.is_some (get_t_bool t) -> v
   | T_constant { language; injection; parameters } ->
     let () =
-      Assert.assert_true
+      Trace.Assert.assert_true
         ~raise
         (corner_case ~loc:__LOC__ ("unsupported language " ^ language))
         (String.equal language Backend.Michelson.name)
     in
     (match injection, parameters with
     | Map, [ k_ty; v_ty ] ->
-      let map = trace_option ~raise (wrong_mini_c_value t v) @@ get_map v in
+      let map = Trace.trace_option ~raise (wrong_mini_c_value t v) @@ get_map v in
       let map' =
         let aux (k, v) =
           let key = self k k_ty in
@@ -385,7 +386,7 @@ let rec decompile_value
       (match get_nat v with
       | Some _ -> raise.error @@ corner_case ~loc:"unspiller" "Big map id not supported"
       | None ->
-        let big_map = trace_option ~raise (wrong_mini_c_value t v) @@ get_map v in
+        let big_map = Trace.trace_option ~raise (wrong_mini_c_value t v) @@ get_map v in
         let big_map' =
           let aux (k, v) =
             let key = self k k_ty in
@@ -396,14 +397,14 @@ let rec decompile_value
         in
         V_Map big_map')
     | List, [ ty ] ->
-      let lst = trace_option ~raise (wrong_mini_c_value t v) @@ get_list v in
+      let lst = Trace.trace_option ~raise (wrong_mini_c_value t v) @@ get_list v in
       let lst' =
         let aux e = self e ty in
         List.map ~f:aux lst
       in
       V_List lst'
     | Set, [ ty ] ->
-      let lst = trace_option ~raise (wrong_mini_c_value t v) @@ get_set v in
+      let lst = Trace.trace_option ~raise (wrong_mini_c_value t v) @@ get_set v in
       let lst' =
         let aux e = self e ty in
         List.map ~f:aux lst
@@ -419,7 +420,7 @@ let rec decompile_value
         | Int
         | Operation
         | Nat
-        | Tez
+        | Mav
         | Unit
         | Address
         | Signature
@@ -436,9 +437,9 @@ let rec decompile_value
         | Sapling_state
         | Sapling_transaction
         | Baker_operation
-        | Bls12_381_g1
-        | Bls12_381_g2
-        | Bls12_381_fr
+        | Mavryk_bls12_381_g1
+        | Mavryk_bls12_381_g2
+        | Mavryk_bls12_381_fr
         | Never
         | Ticket
         | Michelson_contract
@@ -454,7 +455,7 @@ let rec decompile_value
       , _ ) -> v)
   | T_sum _ when Option.is_some (Ast_aggregated.get_t_bool t) -> v
   | T_sum _ when Option.is_some (Ast_aggregated.get_t_option t) ->
-    let opt = trace_option ~raise (wrong_mini_c_value t v) @@ get_option v in
+    let opt = Trace.trace_option ~raise (wrong_mini_c_value t v) @@ get_option v in
     (match opt with
     | None -> v_none ()
     | Some s ->
@@ -480,7 +481,7 @@ let rec decompile_value
     (* We now patch the types *)
     (* Mut flag is ignored bcs not required in the case when we patch raw code to a function *)
     let { arg_binder; arg_mut_flag = _; body; rec_name = _; orig_lambda = _; env = _ } =
-      trace_option ~raise (wrong_mini_c_value t v) @@ get_func v
+      Trace.trace_option ~raise (wrong_mini_c_value t v) @@ get_func v
     in
     (match body.expression_content with
     | E_application { lamb; args = _ } ->
@@ -515,17 +516,17 @@ let rec decompile_value
 let conv
     ~raise
     ~bigmaps
-    (t : Tezos_raw_protocol.Script_repr.expr)
-    (v : Tezos_raw_protocol.Script_repr.expr)
+    (t : Mavryk_raw_protocol.Script_repr.expr)
+    (v : Mavryk_raw_protocol.Script_repr.expr)
   =
   let v =
     v
-    |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
-    |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
+    |> Mavryk_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
+    |> Mavryk_micheline.Micheline.inject_locations (fun _ -> ())
   in
   let t =
     t
-    |> Tezos_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
-    |> Tezos_micheline.Micheline.inject_locations (fun _ -> ())
+    |> Mavryk_protocol.Protocol.Michelson_v1_primitives.strings_of_prims
+    |> Mavryk_micheline.Micheline.inject_locations (fun _ -> ())
   in
   decompile_to_untyped_value ~raise ~bigmaps t v

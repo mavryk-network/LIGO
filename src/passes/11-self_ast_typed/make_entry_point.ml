@@ -1,6 +1,8 @@
 open Errors
 open Ligo_prim
-open Simple_utils.Trace
+module Trace = Simple_utils.Trace
+module Ligo_option = Simple_utils.Ligo_option
+module Ligo_string = Simple_utils.Ligo_string
 
 (* Approach:
     For a module with a contract sort:
@@ -63,7 +65,7 @@ let let_storage_and_parameter_types ~parameter_type ~storage_type ~in_ =
   >:: (def_type Magic_vars.storage storage_type >:: in_)
 
 
-let e_views ~storage_type ~raise view_types =
+let e_views ~storage_type ~(raise : _ Simple_utils.Trace.raise) view_types =
   let open Ast_typed in
   List.fold_right
     view_types
@@ -279,19 +281,19 @@ let generate_entry_logic : raise:_ -> Ast_typed.program -> Ast_typed.program =
 let expand_e_contract =
   let open Ast_typed in
   Helpers.map_program (fun exp ->
-      Simple_utils.Option.(
-        value
-          ~default:exp
-          (let* mods = get_e_contract exp in
-           return
-           @@ e_module_accessor
-                ~loc:exp.location
-                { module_path = List.Ne.to_list mods; element = Magic_vars.contract }
-                exp.type_expression)))
+      Option.value
+        ~default:exp
+        Ligo_option.(
+          let* mods = get_e_contract exp in
+          Option.return
+          @@ e_module_accessor
+               ~loc:exp.location
+               { module_path = Nonempty_list.to_list mods; element = Magic_vars.contract }
+               exp.type_expression))
 
 
 let program
-    :  raise:(Errors.self_ast_typed_error, _) raise -> Ast_typed.program
+    :  raise:(Errors.self_ast_typed_error, _) Trace.raise -> Ast_typed.program
     -> Ast_typed.program
   =
  fun ~raise prg -> prg |> generate_entry_logic ~raise |> expand_e_contract

@@ -1,10 +1,10 @@
 let rec foo (n : int) : address =
   if (n <= 1)
-  then Tezos.address (Tezos.self "%default" : int contract)
+  then Mavryk.address (Mavryk.self "%default" : int contract)
   else
     let addr = foo (n - 1) in
-    Tezos.address
-      (Option.unopt (Tezos.get_contract_opt addr : int contract option))
+    Mavryk.address
+      (Option.unopt (Mavryk.get_contract_opt addr : int contract option))
 
 [@entry]
 let main (p : int) (_ : address) : (operation list * address) =

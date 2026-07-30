@@ -7,8 +7,7 @@ export default function useDiscordMembers() {
 
   useEffect(() => {
     const abortController = new AbortController();
-
-    fetch("https://discord.com/api/v9/invites/tezos?with_counts=true", {
+    fetch("https://discord.com/api/v9/invites/FXYQyVf6fE?with_counts=true", {
       signal: abortController.signal,
     })
       .then((response) => response.json())

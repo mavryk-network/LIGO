@@ -42,15 +42,15 @@ type action =
 
 let transfer (p,s : transfer * storage) : operation list * storage =
    let new_allowances =
-    if Tezos.get_sender () = p.address_from then s.allowances
+    if Mavryk.get_sender () = p.address_from then s.allowances
     else
-      let authorized_value = match Big_map.find_opt (Tezos.get_sender (),p.address_from) s.allowances with
+      let authorized_value = match Big_map.find_opt (Mavryk.get_sender (),p.address_from) s.allowances with
         Some value -> value
       |  None       -> 0n
       in
       if (authorized_value < p.value)
       then (failwith "Not Enough Allowance" : allowances)
-      else Big_map.update (Tezos.get_sender (),p.address_from) (Some (abs(authorized_value - p.value))) s.allowances
+      else Big_map.update (Mavryk.get_sender (),p.address_from) (Some (abs(authorized_value - p.value))) s.allowances
    in
   let sender_balance = match Big_map.find_opt p.address_from s.tokens with
     Some value -> value
@@ -68,14 +68,14 @@ let transfer (p,s : transfer * storage) : operation list * storage =
     ([]:operation list), {s with tokens = new_tokens; allowances = new_allowances}
 
 let approve (p,s : approve * storage) : operation list * storage =
-  let previous_value = match Big_map.find_opt (p.spender, Tezos.get_sender ()) s.allowances with
+  let previous_value = match Big_map.find_opt (p.spender, Mavryk.get_sender ()) s.allowances with
     Some value -> value
   |  None -> 0n
   in
   if previous_value > 0n && p.value > 0n
   then (failwith "Unsafe Allowance Change" : operation list * storage)
   else
-    let new_allowances = Big_map.update (p.spender, Tezos.get_sender ()) (Some (p.value)) s.allowances in
+    let new_allowances = Big_map.update (p.spender, Mavryk.get_sender ()) (Some (p.value)) s.allowances in
     ([] : operation list), {s with allowances = new_allowances}
 
 let getAllowance (p,s : getAllowance * storage) : operation list * storage =
@@ -83,7 +83,7 @@ let getAllowance (p,s : getAllowance * storage) : operation list * storage =
     Some value -> value
   |  None -> 0n
   in
-  let op = Tezos.transaction value 0mutez p.callback in
+  let op = Mavryk.transaction value 0mumav p.callback in
   ([op],s)
 
 let getBalance (p,s : getBalance * storage) : operation list * storage =
@@ -91,12 +91,12 @@ let getBalance (p,s : getBalance * storage) : operation list * storage =
     Some value -> value
   |  None -> 0n
   in
-  let op = Tezos.transaction value 0mutez p.callback in
+  let op = Mavryk.transaction value 0mumav p.callback in
   ([op],s)
 
 let getTotalSupply (p,s : getTotalSupply * storage) : operation list * storage =
   let total = s.total_amount in
-  let op    = Tezos.transaction total 0mutez p.callback in
+  let op    = Mavryk.transaction total 0mumav p.callback in
   ([op],s)
 
 
@@ -108,19 +108,19 @@ let main (a,s:action * storage) =
   |  GetBalance p -> getBalance (p,s)
   |  GetTotalSupply p -> getTotalSupply (p,s)
 let main (p : key_hash) =
-  let c : unit contract = Tezos.implicit_account p
-  in Tezos.address c
-let check_ (p : unit) : int = if Tezos.get_amount () = 100tez then 42 else 0
+  let c : unit contract = Mavryk.implicit_account p
+  in Mavryk.address c
+let check_ (p : unit) : int = if Mavryk.get_amount () = 100mav then 42 else 0
 (* should return a constant function *)
-let f1 (x : unit) : unit -> tez =
-  let amt : tez = Current.amount in
+let f1 (x : unit) : unit -> mav =
+  let amt : mav = Current.amount in
   fun (x : unit) -> amt
 
 (* should return an impure function *)
-let f2 (x : unit) : unit -> tez =
+let f2 (x : unit) : unit -> mav =
   fun (x : unit) -> Current.amount
 
-let main (b,s : bool * (unit -> tez)) : operation list * (unit -> tez) =
+let main (b,s : bool * (unit -> mav)) : operation list * (unit -> mav) =
   (([] : operation list), (if b then f1 () else f2 ()))
 type comb_two = [@layout comb] {
   [@annot anbfoo]
@@ -315,7 +315,7 @@ let bar (b : int): int =
 This test makes sure that the balance is accessible in CameLIGO.
 
 It is there to detect a regression of:
-https://gitlab.com/ligolang/ligo/issues/61
+https://gitlab.com/mavryk-network/ligo/issues/61
 
 which results in this error when you attempt to compile this contract:
 
@@ -324,11 +324,11 @@ generated. unrecognized constant: {"constant":"BALANCE","location":"generated"}
 *)
 
 type parameter = unit
-type storage = tez
+type storage = mav
 type return = operation list * storage
 
 let main (p, s : parameter * storage) : return =
-  ([] : operation list), Tezos.get_balance ()
+  ([] : operation list), Mavryk.get_balance ()
 type toto = int
 
 let foo : toto = 42 + 127
@@ -389,18 +389,18 @@ let check_signature (pk, signed, msg : key * signature * bytes) : bool =
   Crypto.check pk signed msg
 
 (*
-$ tezos-client gen keys testsign
+$ mavryk-client gen keys testsign
 
-$ tezos-client show address testsign -S
-Hash: tz1RffmtWjy435AXZuWwLWG6UaJ66ERmgviA
+$ mavryk-client show address testsign -S
+Hash: mv1E395Uq7GQcLwkiE5naKx7dbA4ectCARet
 Public Key: edpktz4xg6csJnJ5vcmMb2H37sWXyBDcoAp3XrBvjRaTSQ1zmZTeRQ
 Secret Key: unencrypted:edsk34mH9qhMdVWtbammJfYkUoQfwW6Rw5K6rbGW1ajppy3LPNbiJA
 
-$ tezos-client hash data '"hello"' of type string
+$ mavryk-client hash data '"hello"' of type string
 Raw packed data: 0x05010000000568656c6c6f
 ...
 
-$ tezos-client sign bytes 0x05010000000568656c6c6f for testsign
+$ mavryk-client sign bytes 0x05010000000568656c6c6f for testsign
 Signature: edsigtnzKd51CDomKVMFBoU8SzFZgNqRkYUaQH4DLUg8Lsimz98DFB82uiHAkdvx29DDqHxPf1noQ8noWpKMZoxTCsfprrbs4Xo
 *)
 
@@ -421,7 +421,7 @@ let test (k : int) : int =
 let int_ (a: int) = a < a
 let nat_ (a: nat) = a < a
 let bool_ (a: bool) = a < a
-let mutez_ (a: tez) = a < a
+let mumav_ (a: mav) = a < a
 let string_ (a: string) = a < a
 let bytes_ (a: bytes) = a < a
 let address_ (a: address) = a < a
@@ -464,10 +464,10 @@ let main (p, s : int * storage) = ([] : operation list), p + s
 type return = operation list * string
 
 let main (action, store : string * string) : return =
-  let toto : operation * address = Tezos.create_contract
+  let toto : operation * address = Mavryk.create_contract
     (fun (p, s : nat * string) -> (([] : operation list), "one"))
     (None: key_hash option)
-    300tz
+    300mv
     "un"
   in
   ([toto.0], store)let hasherman512 (s : bytes) : bytes = Crypto.sha512 s
@@ -554,12 +554,12 @@ type return = operation list * storage
 let attempt (p, store : param * storage) : return =
   (* if p.attempt <> store.challenge then failwith "Failed challenge" else *)
   let contract : unit contract =
-    match (Tezos.get_contract_opt Tezos.get_sender () : unit contract option) with
+    match (Mavryk.get_contract_opt Mavryk.get_sender () : unit contract option) with
       Some contract -> contract
     | None ->  (failwith "No contract" : unit contract)
   in
   let transfer : operation =
-    Tezos.transaction (unit, contract, 10.00tez) in
+    Mavryk.transaction (unit, contract, 10.00mav) in
   let store : storage = {challenge = p.new_challenge}
   in ([] : operation list), store
 type commit = {
@@ -590,9 +590,9 @@ type return = operation list * storage
 
 let commit (p, s : bytes * storage) : return =
   let commit : commit =
-    {date = Tezos.get_now () + 86_400; salted_hash = p} in
+    {date = Mavryk.get_now () + 86_400; salted_hash = p} in
   let updated_map: commit_set =
-    Big_map.update Tezos.get_sender () (Some commit) s.commits in
+    Big_map.update Mavryk.get_sender () (Some commit) s.commits in
   let s = {s with commits = updated_map}
   in ([] : operation list), s
 
@@ -608,7 +608,7 @@ let reveal (p, s : reveal * storage) : return =
        (failwith "You have not made a commitment to hash against yet."
         : commit)
     in
-    if Tezos.get_now () < commit.date
+    if Mavryk.get_now () < commit.date
     then
       (failwith "It has not been 24 hours since your commit yet.": return)
     else
@@ -703,8 +703,8 @@ type action =
 type storage = {
   identities: (id, id_details) big_map;
   next_id: int;
-  name_price: tez;
-  skip_price: tez;
+  name_price: mav;
+  skip_price: mav;
 }
 
 type return = operation list * storage
@@ -750,7 +750,7 @@ let buy (parameter, storage: buy * storage) =
                         }
 
 let update_owner (parameter, storage: update_owner * storage) =
-  if (amount <> 0mutez)
+  if (amount <> 0mumav)
   then (failwith "Updating owner doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -776,7 +776,7 @@ let update_owner (parameter, storage: update_owner * storage) =
   ([]: operation list), {storage with identities = updated_identities}
 
 let update_details (parameter, storage: update_details * storage) =
-  if (amount <> 0mutez)
+  if (amount <> 0mumav)
   then (failwith "Updating details doesn't cost anything.": (operation list) * storage)
   else
   let id = parameter.id in
@@ -830,11 +830,11 @@ let main (action, storage : action * storage) : return =
   | Update_details ud -> update_details (ud, storage)
   | Skip -> skip ((), storage)
 let main2 (p : key_hash) (s : unit) =
-  let c : unit contract = Tezos.implicit_account p
+  let c : unit contract = Mavryk.implicit_account p
   in ([] : operation list), unit
 
 let main (p,s : key_hash * unit) = main2 p s
-let main (kh : key_hash) : unit contract = Tezos.implicit_account kh
+let main (kh : key_hash) : unit contract = Mavryk.implicit_account kh
 // Demonstrate CameLIGO inclusion statements, see includer.mligo
 
 let foo : int = 144
@@ -1028,12 +1028,12 @@ let divs_int =
 
 let divs_nat =
   let a = 1n/2n in
-  let b = 1tz/2tz in
+  let b = 1mv/2mv in
   (a = 0n) && (a = b)
 
-let divs_tez =
-  let a = 1tz/2n in
-  (a = 0.5tz)
+let divs_mav =
+  let a = 1mv/2n in
+  (a = 0.5mv)
 
 let var_neg =
   let a = 2 in
@@ -1130,13 +1130,13 @@ let main_paren (p : unit) : int = x + y
 let foobar : (int * int) = (23 , 42)
 let (foo : int) , (bar : int) = foobar
 
-(* Here to prevent a regression of https://gitlab.com/ligolang/ligo/issues/63#note_254106580 *)
+(* Here to prevent a regression of https://gitlab.com/mavryk-network/ligo/issues/63#note_254106580 *)
 
 let correct_values_bound (p : unit) : int * int = foo, bar
 
 let non_tuple_rhs (p : unit) : int = bar - foo
 
-(* Here to prevent a regression of https://gitlab.com/ligolang/ligo/issues/63#note_254106580 *)
+(* Here to prevent a regression of https://gitlab.com/mavryk-network/ligo/issues/63#note_254106580 *)
 
 let big_tuple : int * int * int * int * int = 10, 20, 30, 40, 50
 
@@ -1145,7 +1145,7 @@ let (a: int), (b: int), (c: int), (d: int), (e: int) = big_tuple
 let correct_values_big_tuple (p : unit) : int * int * int * int * int =
   a, b, c, d, e
 
-(* Here to prevent a regression of https://gitlab.com/ligolang/ligo/issues/63#note_254106580 *)
+(* Here to prevent a regression of https://gitlab.com/mavryk-network/ligo/issues/63#note_254106580 *)
 
 let different_types : int * string = 10, "hello"
 
@@ -1271,8 +1271,6 @@ let set_ (t : int * foobar) : foobar = set_2 t.0 t.1
 let add (n,m : int * foobar) : foobar = Map.add 23 n m
 
 let rm (m : foobar) : foobar = Map.remove 42 m
-
-(* Dummy test so that we can add the same test for PascaLIGO *)
 
 let patch_ (m : foobar) : foobar = Map.literal [(0,5); (1,6); (2,7)]
 
@@ -1545,7 +1543,6 @@ type double_record = {inner : abc}
 
 let modify_inner (r : double_record) : double_record =
   {r with inner.b = 2048}
-// Test while loops in PascaLIGO
 
 let rec sum ((n,acc):int * int) : int =
     if (n < 1) then acc else sum (n-1, acc+n)
@@ -1562,11 +1559,11 @@ type return = operation list * storage
 let main (tr, store : parameter * storage) : return =
  ([] : operation list),
  (
-    let es : ss = Tezos.sapling_empty_state in
-    match Tezos.sapling_verify_update tr es with
+    let es : ss = Mavryk.sapling_empty_state in
+    match Mavryk.sapling_verify_update tr es with
    | Some x -> x
    | None -> (failwith "failed" : storage)
- )let main (p : unit) : address = Tezos.get_self_address ()
+ )let main (p : unit) : address = Mavryk.get_self_address ()
 let y (_ : unit) : nat =
   let x : nat = 1n in
   begin
@@ -1606,7 +1603,7 @@ let mem_op (s : string set) : bool = Set.mem "foobar" s
 
 let size_op (s: string set) : nat = Set.cardinal s
 let main (p : key_hash) : operation list =
-  let useless : operation = Tezos.set_delegate (Some p)
+  let useless : operation = Mavryk.set_delegate (Some p)
   in ([] : operation list)
 (* Test that the string concatenation syntax in CameLIGO works *)
 
@@ -1634,16 +1631,16 @@ let main (action, store : parameter * storage) : return =
     | Increment n -> store + n
     | Decrement n -> store - n
   in ([] : operation list), store
-let add_tez : tez = 21mutez + 0.000_021tez
-let sub_tez : tez = 0.000021tez - 0.000_020tez
-let not_enough_tez : tez = 461_168_601_842_738_7903mutez
+let add_mav : mav = 21mumav + 0.000_021mav
+let sub_mav : mav = 0.000021mav - 0.000_020mav
+let not_enough_mav : mav = 461_168_601_842_738_7903mumav
 
-let add_more_tez : tez =
-  100tez + 10tez + 1tez + 0.1tez + 0.01tez + 0.001tez
+let add_more_mav : mav =
+  100mav + 10mav + 1mav + 0.1mav + 0.01mav + 0.001mav
 (*
 Modelled after:
 
-  https://gitlab.com/tezos/tezos/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_builder_fungible.tz
+  https://gitlab.com/mavryk-network/mavryk-protocol/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_builder_fungible.mv
 
 Goes with ticket_wallet.mligo.
 *)
@@ -1663,27 +1660,32 @@ type storage =
 
 let main (arg : parameter * storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mutez);
+    assert (Mavryk.get_amount () = 0mumav);
     let (p,s) = arg in
     match p with
     | Burn ticket ->
       begin
-        let ((ticketer, _), ticket) = (Tezos.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
-        assert (ticketer = Tezos.get_self_address ());
+        let ((ticketer, _), ticket) = (Mavryk.read_ticket ticket : (address * (unit * nat)) * unit ticket) in
+        assert (ticketer = Mavryk.get_self_address ());
         (([] : operation list), s)
       end
     | Mint mint ->
       begin
-        assert (Tezos.get_sender () = s.admin);
-        let ticket = Tezos.create_ticket () mint.amount in
-        let op = Tezos.transaction ticket 0mutez mint.destination in
+        assert (Mavryk.get_sender () = s.admin);
+        let ticket = Mavryk.create_ticket () mint.amount in
+        let op = 
+          Mavryk.transaction
+            ticket
+            0mumav
+            mint.destination 
+            in
         ([op], s)
       end
   end
 (*
 Modelled after:
 
-  https://gitlab.com/tezos/tezos/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_wallet_fungible.tz
+  https://gitlab.com/mavryk-network/mavryk-protocol/-/blob/95a072715b/tests_python/contracts_alpha/mini_scenarios/ticket_wallet_fungible.mv
 
 Goes with ticket_builder.mligo.
 *)
@@ -1705,18 +1707,18 @@ type storage =
 
 let main (arg : parameter * storage) : operation list * storage =
   begin
-    assert (Tezos.get_amount () = 0mutez);
+    assert (Mavryk.get_amount () = 0mumav);
     let (p,storage) = arg in
     let {manager = manager ; tickets = tickets } = storage in
     ( match p with
       | Receive ticket ->
-        let ((ticketer,_), ticket) = Tezos.read_ticket ticket in
+        let ((ticketer,_), ticket) = Mavryk.read_ticket ticket in
         let (old_ticket, tickets) = Big_map.get_and_update ticketer (None : unit ticket option) tickets in
         let ticket =
           match old_ticket with
           | None -> ticket
           | Some old_ticket -> (
-            match Tezos.join_tickets (ticket, old_ticket) with
+            match Mavryk.join_tickets (ticket, old_ticket) with
             | None -> (failwith "impossible?" : unit ticket)
             | Some joined -> joined
           )
@@ -1724,24 +1726,24 @@ let main (arg : parameter * storage) : operation list * storage =
         let (_, tickets) = Big_map.get_and_update ticketer (Some ticket) tickets in
         (([] : operation list), {manager = manager; tickets = tickets})
       | Send send -> begin
-        assert (Tezos.get_sender () = manager) ;
+        assert (Mavryk.get_sender () = manager) ;
         let (ticket, tickets) = Big_map.get_and_update send.ticketer (None : unit ticket option) tickets in
         ( match ticket with
           | None -> (failwith "no tickets" : operation list * storage)
           | Some ticket ->
-            let ((_,(_,total_amt)), ticket) = Tezos.read_ticket ticket in
+            let ((_,(_,total_amt)), ticket) = Mavryk.read_ticket ticket in
             let send_amt = send.amount in
             let keep_amt : nat =
               match is_nat (total_amt - send_amt) with
               | None -> (failwith "not enough tickets" : nat)
               | Some keep_amt -> keep_amt
             in
-            ( match Tezos.split_ticket ticket (send_amt, keep_amt) with
+            ( match Mavryk.split_ticket ticket (send_amt, keep_amt) with
               | None -> (failwith "impossible?" : operation list * storage)
               | Some split_tickets ->
                 let (send_ticket,keep_ticket) = split_tickets in
                 let (_, tickets) = Big_map.get_and_update send.ticketer (Some keep_ticket) tickets in
-                let op = Tezos.transaction send_ticket 0mutez send.destination in
+                let op = Mavryk.transaction send_ticket 0mumav send.destination in
                 ([op], {manager = manager; tickets = tickets})
             )
         )
@@ -1759,8 +1761,8 @@ type storage = {
 type return = operation list * storage
 
 let main (action, store : parameter * storage) : return =
-  (* Multiple evaluations of Tezos.get_now () give different values *)
-  let my_now : timestamp = Tezos.get_now () in
+  (* Multiple evaluations of Mavryk.get_now () give different values *)
+  let my_now : timestamp = Mavryk.get_now () in
   if my_now > store.next_use
   then
     let store : storage =
@@ -1850,10 +1852,10 @@ let reset (reset, _ : reset * storage) : return =
    finish_time = reset.finish_time}
 
 let vote (vote, store : vote * storage) : return =
-  let my_now = Tezos.get_now () in
+  let my_now = Mavryk.get_now () in
   (* let _ =
      assert (my_now >= store.start_time && store.finish_time > my_now) in *)
-  let addr = Tezos.get_sender () in
+  let addr = Mavryk.get_sender () in
   (* let _ = assert (not Set.mem addr store.voters) in *)
   let store =
     match vote with

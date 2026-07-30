@@ -37,9 +37,9 @@ let empty_message =
 
 let chain_id_zero =
   e_chain_id ~loc
-  @@ Tezos_crypto.Base58.simple_encode
-       Tezos_base__TzPervasives.Chain_id.b58check_encoding
-       Tezos_base__TzPervasives.Chain_id.zero
+  @@ Mavryk_crypto.Base58.simple_encode
+       Mavryk_base__TzPervasives.Chain_id.b58check_encoding
+       Mavryk_base__TzPervasives.Chain_id.zero
 
 
 (* sign the message 'msg' with 'keys', if 'is_valid'=false the providid signature will be incorrect *)
@@ -54,12 +54,11 @@ let params ~raise counter msg keys is_validl f =
     let payload =
       e_tuple
         ~loc
-        (List.Ne.of_list
-           [ msg
-           ; e_nat ~loc counter
-           ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
-           ; chain_id_zero
-           ])
+        [ msg
+        ; e_nat ~loc counter
+        ; e_string ~loc (if is_valid then "MULTISIG" else "XX")
+        ; chain_id_zero
+        ]
     in
     let%map signature = sign_message ~raise program payload sk in
     e_pair ~loc (e_key_hash ~loc pkh) (e_signature ~loc signature) :: acc

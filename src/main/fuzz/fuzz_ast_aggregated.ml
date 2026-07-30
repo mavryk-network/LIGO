@@ -1,7 +1,8 @@
-module Trace = Simple_utils.Trace
-module Ligo_string = Simple_utils.Ligo_string
+open Core
 open Ligo_prim
 open Ast_aggregated
+module Trace = Simple_utils.Trace
+module Ligo_string = Simple_utils.Ligo_string
 include Fuzz_shared.Monad
 
 type mutation = Location.t * expression * string
@@ -9,9 +10,9 @@ type mutation = Location.t * expression * string
 let get_mutation_id (loc, expr, _) =
   let s = Format.asprintf "%a%a" Location.pp loc Ast_aggregated.PP.expression expr in
   let hash =
-    Tezos_crypto.Base58.raw_encode
+    Mavryk_crypto.Base58.raw_encode
     @@ Bytes.to_string
-    @@ Tezos_crypto.Hacl.Hash.Keccak_256.digest (Bytes.of_string s)
+    @@ Mavryk_crypto.Hacl.Hash.Keccak_256.digest (Bytes.of_string s)
   in
   String.sub hash ~pos:0 ~len:8
 
@@ -60,14 +61,12 @@ let add_all_lines_to_buffer : In_channel.t -> Buffer.t -> unit =
   loop_lines ()
 
 
-let expression_to_string ~syntax aggregated =
+let expression_to_string ~raise ~syntax aggregated =
   let aggregated = Reduplicate_binders.reduplicate ~raise aggregated in
   let typed = Aggregation.decompile aggregated in
-  let core = Decompile.Of_typed.decompile_expression typed in
+  let core = Decompile.Of_typed.decompile_expression ~raise typed in
   let unified =
-    let raise =
-      Simple_utils.Trace.raise_failwith "Could not decompile in mutation fuzz"
-    in
+    let raise = Trace.raise_failwith "Could not decompile in mutation fuzz" in
     Decompile.Of_core.decompile_expression ~raise ~syntax core
   in
   let buffer = Decompile.Of_unified.decompile_expression unified syntax in
@@ -141,7 +140,7 @@ let map_constant cons_name arguments final_type_expression =
       then [ C_ADD; C_MUL; C_DIV; C_SUB ]
       else if is_t_bool t1 && is_t_bool t2 && is_t_bool t3
       then [ C_OR; C_AND; C_XOR ]
-      else if is_t_mutez t1 && is_t_mutez t2 && is_t_mutez t3
+      else if is_t_mumav t1 && is_t_mumav t2 && is_t_mumav t3
       then [ C_ADD; C_SUB ]
       else if is_t_int t1 && is_t_nat t2 && is_t_int t3
       then [ C_ADD; C_MUL; C_SUB ]
@@ -226,11 +225,11 @@ module Mutator = struct
       let* t = transform_nat in
       let m = t n in
       return (Literal_nat (Z.of_int m), n <> m)
-    | Literal_mutez z ->
+    | Literal_mumav z ->
       let n = Z.to_int z in
       let* t = transform_nat in
       let m = t n in
-      return (Literal_mutez (Z.of_int m), n <> m)
+      return (Literal_mumav (Z.of_int m), n <> m)
     | Literal_string (Standard s) ->
       let* t = transform_string in
       let m = t s in
@@ -238,11 +237,14 @@ module Mutator = struct
     | l -> return (l, false)
 
 
+  let rec remove_element x = function
+    | [] -> []
+    | hd :: tl when Constant.compare_constant' x hd = 0 -> tl
+    | hd :: tl -> hd :: remove_element x tl
+
+
   let mutate_constant (Constant.{ cons_name; arguments } as const) final_type =
-    let ops =
-      List.remove_element ~compare:Constant.compare_constant' cons_name
-      @@ map_constant cons_name arguments final_type
-    in
+    let ops = remove_element cons_name @@ map_constant cons_name arguments final_type in
     let mapper x = { const with cons_name = x }, true in
     let swapper cons_name arguments =
       match cons_name with
@@ -260,11 +262,11 @@ module Mutator = struct
     let return expression_content = { e' with expression_content } in
     let self = mutate_expression in
     match e'.expression_content with
-    | E_matching { matchee; disc_label; cases } ->
+    | E_matching { matchee; cases } ->
       let+ matchee, cases, mutation =
         combine matchee (self matchee) cases (mutate_cases cases)
       in
-      return @@ E_matching { matchee; disc_label; cases }, mutation
+      return @@ E_matching { matchee; cases }, mutation
     | E_accessor { struct_; path } ->
       let+ struct_, mutation = self struct_ in
       return @@ E_accessor { struct_; path }, mutation

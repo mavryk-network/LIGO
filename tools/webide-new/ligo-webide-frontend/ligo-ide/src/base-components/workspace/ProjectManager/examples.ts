@@ -47,7 +47,7 @@ let test_initial_storage =
     Test.originate
       (contract_of Contract.Counter)
       initial_storage
-      0mutez in
+      0mumav in
   assert (Test.get_storage addr = initial_storage)
 
 let test_increment =
@@ -55,9 +55,9 @@ let test_increment =
     Test.originate
       (contract_of Contract.Counter)
       initial_storage
-      0mutez in
+      0mumav in
   let contr = Test.to_contract addr in
-  let _ = Test.transfer_to_contract_exn contr (Increment 1) 1mutez in
+  let _ = Test.transfer_to_contract_exn contr (Increment 1) 1mumav in
   assert (Test.get_storage addr = initial_storage + 1)
 `;
 
@@ -68,7 +68,7 @@ const test_initial_storage =
     () => {
       let initial_storage = 42;
       let {addr, code:_c, size:_s} =
-        Test.originate(contract_of (Contract.Counter), initial_storage, 0 as tez);
+        Test.originate(contract_of (Contract.Counter), initial_storage, 0 as mav);
       return assert(Test.get_storage(addr) == initial_storage)
     }
   )();
@@ -78,9 +78,9 @@ const test_increment =
     () => {
       let initial_storage = 42;
       let {addr, code:_c, size:_s} =
-        Test.originate(contract_of (Contract.Counter), initial_storage, 0 as tez);
+        Test.originate(contract_of (Contract.Counter), initial_storage, 0 as mav);
       let contr = Test.to_contract(addr);
-      let _ = Test.transfer_to_contract_exn(contr, (Increment(1)), 1 as mutez);
+      let _ = Test.transfer_to_contract_exn(contr, (Increment(1)), 1 as mumav);
       return assert(Test.get_storage(addr) == initial_storage + 1)
     }
   )();
@@ -92,7 +92,7 @@ const incrementJStorage = "0";
 
 const config = (name: string, projectName: string, syntax: string) => `{
   "main": "./contracts/${name}.${syntax}",
-  "deploy": "./build/contracts/${name}.tz",
+  "deploy": "./build/contracts/${name}.mv",
   "storage": "./storages/InitialStorage",
   "module": "Counter",
   "projectName": "${projectName}"

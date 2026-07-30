@@ -25,7 +25,7 @@ This repository is meant to provide extra features related to the native type `B
 This library introduces a `bytes_to_nat` function that allows to convert bytes to nat. 
 
 This library introduces a `is_implicit_account` function that allows to discriminate 
-KT1 addersses and tz1 addresses. This function is available on the native type 
+KT1 addersses and mv1 addresses. This function is available on the native type 
 `address` and also on native type `bytes` 
 (usefull when an `address` value is packed into bytes, with the `Byte.pack` function).
 

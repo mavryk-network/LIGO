@@ -2,9 +2,9 @@
 
 (* Vendor dependencies *)
 
-module Region = Simple_utils.Region
-module Std    = Simple_utils.Std
-module Unit   = LexerLib.Unit
+module Region  = Simple_utils.Region
+module Std     = Simple_utils.Std
+module LexUnit = LexerLib.LexUnit
 
 (* LIGO dependencies *)
 
@@ -18,11 +18,11 @@ module Make (Token : TOKEN) :
      Odd_lengthed_bytes
    | Missing_break
 
-   type units = Token.t Unit.t list
+   type units = Token.t LexUnit.t list
 
    type message = string Region.reg
 
-   type result = (units, units * message) Stdlib.result
+   type nonrec result = (units, units * message) result
 
    val filter :
      ?print_passes:Std.t ->

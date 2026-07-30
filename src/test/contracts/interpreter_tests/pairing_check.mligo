@@ -1,3 +1,5 @@
+let assert = Assert.assert
+
 let input_x = (0xe406000000000000000000000000000000000000000000000000000000000000 : bls12_381_fr)
 let input_y = (0x0100000000000000000000000000000000000000000000000000000000000000 : bls12_381_fr)
 let proof_a = (0x1257c93c134569fd00c974eb4c0b89ad03dcb847da743622adfc76c06ba466bf6bd7a5f03d5efe51b4bae216c27ec8500a2a0e34b9945a1bf73f4b8482fe3d27c8fb4c9f55b9a6e2e5d072406b58b6658984cc8dc543cb15723f6cce4b0b5403 : bls12_381_g1)
@@ -12,5 +14,5 @@ let gamma_abc = ((0x0af10ee82fcec5230ab73b92e85c24e58f4fe86a92e4436ebbbc8e5d462b
 
 let test =
   let t = gamma_abc.1 * input_x + gamma_abc.2 * input_y + gamma_abc.0 in
-  let () = assert (Tezos.pairing_check [(proof_a, proof_b); (-t, gamma); (-proof_c, delta); (-alpha, beta)]) in
-  assert (not (Tezos.pairing_check [(proof_a, proof_b); (-t, gamma); (-proof_a, delta); (-alpha, beta)]))
+  let () = assert (Mavryk.pairing_check [(proof_a, proof_b); (-t, gamma); (-proof_c, delta); (-alpha, beta)]) in
+  assert (not (Mavryk.pairing_check [(proof_a, proof_b); (-t, gamma); (-proof_a, delta); (-alpha, beta)]))

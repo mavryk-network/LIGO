@@ -32,7 +32,8 @@ let unzip fname =
   | Ok _ ->
     let bytes = Buffer.contents_bytes r in
     let nbytes = Bytes.length bytes in
-    let fname = Format.sprintf "%s.tar" (Caml.Filename.remove_extension fname) in
+    let prefix = Filename.chop_extension fname in
+    let fname = Format.sprintf "%s.tar" prefix in
     let out_fd = Ligo_unix.openfile fname [ Ligo_unix.O_CREAT; Ligo_unix.O_RDWR ] 0o666 in
     let mbytes = Ligo_unix.write out_fd bytes 0 nbytes in
     let () = Ligo_unix.close in_fd in
@@ -89,24 +90,6 @@ end = struct
     if String.equal got expected then Ok () else Error IntegrityMismatch
 end
 
-let find_project_root () =
-  let pwd = Caml.Sys.getcwd in
-  let rec aux p =
-    let dirs = Ligo_unix.ls_dir p in
-    if List.exists ~f:(String.equal "ligo.json") dirs
-    then Some p
-    else (
-      let p' = Filename.dirname p in
-      (* Check if we reached the root directory, since the parent of
-         the root directory is the root directory itself *)
-      if Filename.equal p p' then None else aux p')
-  in
-  try
-    aux (pwd ()) (* In case of permission issues when reading file, catch the exception *)
-  with
-  | _ -> None
-
-
 let return_good ?output_file v =
   let fmt : Format.formatter =
     match output_file with
@@ -157,14 +140,14 @@ let return_with_custom_formatter ~cli_analytics ~skip_analytics
   in
   Analytics.edit_metrics_values cli_analytics;
   match !return with
-  | Done -> Analytics.push_collected_metrics ~skip_analytics
+  | Done -> Lwt_main.run @@ Analytics.push_collected_metrics ~skip_analytics
   | Compileur_Error -> ()
   | Exception e ->
     let _e = Format.asprintf "exception %a" Exn.pp e in
     ()
 
 
-let return_result_lwt ~cli_analytics ~skip_analytics
+let return_result_lwt ?(fast_fail = true) ~cli_analytics ~skip_analytics
     :  return:return ref -> ?show_warnings:bool -> ?output_file:string
     -> ?minify_json:bool -> display_format:_ -> no_colour:bool -> warning_as_error:bool
     -> 'value Display.format
@@ -181,26 +164,35 @@ let return_result_lwt ~cli_analytics ~skip_analytics
      ~warning_as_error
      (value_format, f) ->
   Analytics.propose_term_acceptation ~skip_analytics;
-  let () =
-    try
-      let result = Lwt_main.run @@ Trace.to_stdlib_result_lwt f in
+  let get_formatted_result () =
+    let edit_metrics_and_format_toplevel result format =
       let value, analytics =
         match result with
-        | Ok ((v, analytics), _w) -> Ok v, analytics
+        | Ok ((v, analytics), _e, _w) -> Ok v, analytics
         | Error (e, _w) -> Error e, []
       in
-      let format = Display.bind_format value_format Main_errors.Formatter.error_format in
-      let formatted_result () =
-        Ligo_api.Api_helpers.toplevel
-          ~warning_as_error
-          ~minify_json
-          ~display_format
-          ~no_colour
-          (Displayable { value; format })
-          result
-      in
       Analytics.edit_metrics_values (List.append cli_analytics analytics);
-      match formatted_result () with
+      Ligo_api.Api_helpers.toplevel
+        ~warning_as_error
+        ~minify_json
+        ~display_format
+        ~no_colour
+        (Displayable { value; format })
+        result
+    in
+    if fast_fail
+    then (
+      let result = Lwt_main.run @@ Trace.to_stdlib_result_lwt ~fast_fail:Fast_fail f in
+      let format = Display.bind_format value_format Main_errors.Formatter.error_format in
+      edit_metrics_and_format_toplevel result format)
+    else (
+      let result = Lwt_main.run @@ Trace.to_stdlib_result_lwt ~fast_fail:No_fast_fail f in
+      let format = Display.bind_format value_format Main_errors.Formatter.errors_format in
+      edit_metrics_and_format_toplevel result format)
+  in
+  let () =
+    try
+      match get_formatted_result () with
       | Ok (v, w) ->
         return := Done;
         return_with_warn ~show_warnings w (fun () -> return_good ?output_file v)
@@ -212,12 +204,12 @@ let return_result_lwt ~cli_analytics ~skip_analytics
   in
   (* Push analytics *)
   match !return with
-  | Done -> Analytics.push_collected_metrics ~skip_analytics
+  | Done -> Lwt_main.run @@ Analytics.push_collected_metrics ~skip_analytics
   | Compileur_Error -> ()
   | Exception _ -> ()
 
 
-let return_result ~cli_analytics ~skip_analytics
+let return_result ?fast_fail ~cli_analytics ~skip_analytics
     :  return:return ref -> ?show_warnings:bool -> ?output_file:string
     -> ?minify_json:bool -> display_format:_ -> no_colour:bool -> warning_as_error:bool
     -> 'value Display.format
@@ -234,6 +226,7 @@ let return_result ~cli_analytics ~skip_analytics
      ~warning_as_error
      (value_format, f) ->
   return_result_lwt
+    ?fast_fail
     ~cli_analytics
     ~skip_analytics
     ~return

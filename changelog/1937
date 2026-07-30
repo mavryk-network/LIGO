@@ -1,5 +1,5 @@
 author: Laucans
-description: \nRun `nix run gitlab:ligolang/ligo` to execute the last release of ligo
+description: \nRun `nix run gitlab:mavryk-network/ligo` to execute the last release of ligo
   binary through [nix](https://nixos.org) (arch x86_64-linux)
 merge_request: '1937'
 title: Execute ligo through NIX

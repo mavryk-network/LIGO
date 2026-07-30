@@ -106,7 +106,7 @@
         { "prefixItems": [{ "const": "Literal_timestamp" }, { "type": "number"}],
           "minItems": 2, "maxItems": 2
         },
-        { "prefixItems": [{ "const": "Literal_mutez" },     { "type": "number"}],
+        { "prefixItems": [{ "const": "Literal_mumav" },     { "type": "number"}],
           "minItems": 2, "maxItems": 2
         },
         { "prefixItems": [{ "const": "Literal_string" },    { "$ref": "#/$defs/ligo_string_literal"}],

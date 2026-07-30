@@ -7,8 +7,10 @@ open Requests.Handler
 let document_symbol_test ?(config : config option) file_name : unit =
   let actual_symbols, _diagnostics =
     test_run_session ?config
-    @@ let@ uri = open_file @@ normalize_path file_name in
-       Requests.on_req_document_symbol uri
+    @@
+    let open Handler.Let_syntax in
+    let%bind uri = open_file @@ normalize_path file_name in
+    Requests.on_req_document_symbol uri
   in
   match actual_symbols with
   | None -> failwith "Expected some symbol list, got None"
@@ -21,11 +23,11 @@ let%expect_test "Simple document symbols" =
   [%expect
     {|
     [{
-       "detail": "<param, storage>(_: entrypoint<param, storage>) => (\n  _: option<key_hash>\n) => (_: tez) => (_: storage) => [operation, address]",
+       "detail": "<param, storage>(_: entrypoint<param, storage>) => (\n  _: option<key_hash>\n) => (_: mav) => (_: storage) => [operation, address]",
        "kind": 13,
        "name": "z",
        "range": {
-         "end": { "character": 31, "line": 0 },
+         "end": { "character": 32, "line": 0 },
          "start": { "character": 6, "line": 0 }
        },
        "selectionRange": {

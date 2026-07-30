@@ -8,12 +8,15 @@ export default function usePackages() {
   useEffect(() => {
     const abortController = new AbortController();
 
-    fetch("https://packages.ligolang.org/-/ui/packages", {
+    fetch("https://packages.ligo.mavryk.org/-/ui/packages", {
       signal: abortController.signal,
     })
       .then((response) => response.json())
       .then((data) => {
         setPackages((data && data.length) || DEFAULT_PACKAGES);
+      })
+      .catch(() => {
+        // Silently fall back to default when fetch fails (e.g., offline/local dev)
       });
 
     return () => {

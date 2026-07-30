@@ -1,4 +1,4 @@
-import { TezosToolkit } from "@taquito/taquito";
+import { MavrykToolkit } from "@mavrykdynamics/webmavryk";
 import redux from "~/base-components/redux";
 
 export default class LigoClient {
@@ -8,7 +8,7 @@ export default class LigoClient {
     this.chainId = chainId;
 
     if (browserExtension) {
-      this.provider = new TezosToolkit(url);
+      this.provider = new MavrykToolkit(url);
       this.provider.setWalletProvider(browserExtension.tezos);
     } else {
       throw Error("No chain info");
@@ -30,7 +30,7 @@ export default class LigoClient {
 
   async getAccount(address) {
     const balance = await this.provider.rpc.getBalance(address);
-    const regtry = this.provider.format("mutez", "tz", balance).toString();
+    const regtry = this.provider.format("mumav", "mv", balance).toString();
     return {
       address,
       balance: regtry,

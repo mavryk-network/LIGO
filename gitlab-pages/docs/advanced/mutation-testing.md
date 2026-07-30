@@ -7,7 +7,7 @@ import Syntax from '@theme/Syntax';
 import Link from '@docusaurus/Link';
 
 We assume that the reader is familiar with LIGO's testing framework. A
-reference can be found [here](testing.md).
+reference can be found [here](../testing/testing.md).
 
 ## A simple testing example
 
@@ -332,8 +332,8 @@ export namespace C {
   export type storage = int;
 
   // Two entrypoints
-  @entry const add = (delta: int, store: storage): [list<operation>, storage] => [list([]),store + delta];
-  @entry const sub = (delta: int, store: storage): [list<operation>, storage] => [list([]),store - delta];
+  @entry const add = (delta: int, store: storage): [list<operation>, storage] => [[],store + delta];
+  @entry const sub = (delta: int, store: storage): [list<operation>, storage] => [[],store - delta];
 }
 ```
 
@@ -359,11 +359,11 @@ type param = MutationContract.C parameter_of
 let initial_storage = 7
 
 let tester (taddr : (param, storage) typed_address) (_: (param ,storage) michelson_contract) (_:int) : unit =
-  let _ = Test.transfer_exn taddr (Add 7) 1mutez in
+  let _ = Test.transfer_exn taddr (Add 7) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 7)
 
 let test_original =
-  let orig = Test.originate (contract_of MutationContract.C) initial_storage 0tez in
+  let orig = Test.originate (contract_of MutationContract.C) initial_storage 0mav in
   tester orig.addr
 ```
 
@@ -380,12 +380,12 @@ type param = parameter_of MutationContract.C;
 const initial_storage = 7;
 
 const tester = (taddr : typed_address<param, storage>, _c : michelson_contract<param, storage> , _ : int) : unit => {
-  let _xfer = Test.transfer_exn(taddr, Add(7), 1mutez);
+  let _xfer = Test.transfer_exn(taddr, Add(7), 1mumav);
   assert(Test.get_storage(taddr) == initial_storage + 7);
 }
 
 const test_original = (() => {
-  let orig = Test.originate(contract_of(MutationContract.C), initial_storage, 0tez);
+  let orig = Test.originate(contract_of(MutationContract.C), initial_storage, 0mav);
   return tester(orig.addr);
 })();
 ```
@@ -398,7 +398,7 @@ For performing mutation testing as before, we write the following test:
 
 ```cameligo test-ligo group=mutation-contract-test
 let test_mutation =
-  match Test.originate_module_and_mutate (contract_of MutationContract.C) initial_storage 0tez tester with
+  match Test.originate_module_and_mutate (contract_of MutationContract.C) initial_storage 0mav tester with
     None -> ()
   | Some (_, mutation) ->
     let () = Test.log(mutation) in
@@ -414,7 +414,7 @@ let test_mutation =
 
 ```jsligo test-ligo group=mutation-contract-test
 const test_mutation =
-  match(Test.originate_module_and_mutate(contract_of(MutationContract.C), initial_storage, 0tez, tester)) {
+  match(Test.originate_module_and_mutate(contract_of(MutationContract.C), initial_storage, 0mav, tester)) {
     when(None()): unit;
     when(Some(pmutation)): do {
       let _l = Test.log(pmutation[1]);
@@ -438,8 +438,8 @@ ligo run test --library . gitlab-pages/docs/advanced/src/mutation-testing/mutati
 # File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.mligo", line 25, characters 4-65:
 #  24 |     let () = Test.log(mutation) in
 #  25 |     failwith "A mutation of the contract still passes the tests!"
-#  26 | 
-# 
+#  26 |
+#
 # An uncaught error occured:
 # Failwith: "A mutation of the contract still passes the tests!"
 # Trace:
@@ -447,7 +447,7 @@ ligo run test --library . gitlab-pages/docs/advanced/src/mutation-testing/mutati
 # Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.mligo", line 8, characters 64-77:
 #   7 | [@entry] let add (delta : int) (store : storage) : result = [], store + delta
 #   8 | [@entry] let sub (delta : int) (store : storage) : result = [], store - delta
-# 
+#
 # Replacing by: store + delta.
 ```
 
@@ -462,15 +462,15 @@ ligo run test --library . gitlab-pages/docs/advanced/src/mutation-testing/mutati
 #  26 |       Test.log(pmutation[1]);
 #  27 |       failwith("A mutation of the contract still passes the tests!");
 #  28 |     }
-# 
+#
 # An uncaught error occured:
 # Failwith: "A mutation of the contract still passes the tests!"
 # Trace:
 # File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract-test.jsligo", line 27, characters 6-68
 # Mutation at: File "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.jsligo", line 8, characters 73-86:
-#   7 | @entry const add = (delta : int, store : storage) : result => [list([]), store + delta];
-#   8 | @entry const sub = (delta : int, store : storage) : result => [list([]), store - delta];
-# 
+#   7 | @entry const add = (delta : int, store : storage) : result => [[], store + delta];
+#   8 | @entry const sub = (delta : int, store : storage) : result => [[], store - delta];
+#
 # Replacing by: store + delta.
 ```
 
@@ -486,9 +486,9 @@ to the `Sub` entrypoint in the test above:
 
 ```cameligo test-ligo group=mutation-contract-test
 let tester_add_and_sub (taddr : (param, storage) typed_address) (_ : (param, storage) michelson_contract) (_ : int) : unit =
-  let _ = Test.transfer_exn taddr (Add 7) 1mutez in
+  let _ = Test.transfer_exn taddr (Add 7) 1mumav in
   let () = assert (Test.get_storage taddr = initial_storage + 7) in
-  let _ = Test.transfer_exn taddr (Sub 3) 1mutez in
+  let _ = Test.transfer_exn taddr (Sub 3) 1mumav in
   assert (Test.get_storage taddr = initial_storage + 4)
 ```
 
@@ -498,9 +498,9 @@ let tester_add_and_sub (taddr : (param, storage) typed_address) (_ : (param, sto
 
 ```jsligo test-ligo group=mutation-contract-test
 const tester_add_and_sub = (taddr : typed_address<param, storage>, _c : michelson_contract<param, storage>, _i : int) : unit => {
-  let _xfer1 = Test.transfer_exn(taddr, Add(7), 1mutez);
+  let _xfer1 = Test.transfer_exn(taddr, Add(7), 1mumav);
   assert(Test.get_storage(taddr) == initial_storage + 7);
-  let _xfer2 = Test.transfer_exn(taddr, Sub(3), 1mutez);
+  let _xfer2 = Test.transfer_exn(taddr, Sub(3), 1mumav);
   assert(Test.get_storage(taddr) == initial_storage + 4);
 }
 ```
@@ -521,7 +521,7 @@ returning an optional type, it returns a list:
 
 ```cameligo skip
 Test.mutation_test_all : 'a -> ('a -> 'b) -> ('b * mutation) list
-Test.originate_and_mutate_all : (('param, 'storage) module_contract) -> 'storage -> tez -> (('param, 'storage) typed_address -> ('param, 'storage) michelson_contract -> int -> b) -> ('b * mutation) list
+Test.originate_and_mutate_all : (('param, 'storage) module_contract) -> 'storage -> mav -> (('param, 'storage) typed_address -> ('param, 'storage) michelson_contract -> int -> b) -> ('b * mutation) list
 ```
 
 </Syntax>
@@ -530,7 +530,7 @@ Test.originate_and_mutate_all : (('param, 'storage) module_contract) -> 'storage
 
 ```jsligo skip
 Test.mutation_test_all : (value: 'a, tester: ('a -> 'b)) => list <['b, mutation]>;
-Test.originate_and_mutate_all : (contract: module_contract<'p, 's>, init: 's, balance: tez, (tester: (originated_address: typed_address<'p, 's>, code: michelson_contract<'p, 's>, size: int) => 'b)) => list<['b, mutation]>
+Test.originate_and_mutate_all : (contract: module_contract<'p, 's>, init: 's, balance: mav, (tester: (originated_address: typed_address<'p, 's>, code: michelson_contract<'p, 's>, size: int) => 'b)) => list<['b, mutation]>
 ```
 
 </Syntax>
@@ -542,7 +542,7 @@ then process the list:
 
 ```cameligo test-ligo group=mutation-contract-test
 let test_mutation_all =
-  match Test.originate_and_mutate_all (contract_of MutationContract.C) initial_storage 0tez tester_add_and_sub with
+  match Test.originate_and_mutate_all (contract_of MutationContract.C) initial_storage 0mav tester_add_and_sub with
     [] -> ()
   | ms -> let () = List.iter (fun ((_, mutation) : unit * mutation) ->
                               let path = Test.save_mutation "." mutation in
@@ -557,7 +557,7 @@ let test_mutation_all =
 
 ```jsligo test-ligo group=mutation-contract-test
 const test_mutation_all =
-  match(Test.originate_and_mutate_all(contract_of(MutationContract.C), initial_storage, 0tez, tester_add_and_sub)) {
+  match(Test.originate_and_mutate_all(contract_of(MutationContract.C), initial_storage, 0mav, tester_add_and_sub)) {
     when([]): unit;
     when([hd,...tl]): do {
       let ms = list([hd,...tl]);
@@ -643,18 +643,18 @@ type result = [list<operation>, storage];
 @entry
 const add = (delta : int, store : storage) : result => {
   @no_mutation let _a = assert (0 == 0);
-  return [list([]), store + delta];
+  return [[], store + delta];
 };
 
 @entry @no_mutation
 const sub = (delta : int, store : storage) : result => {
-  return [list([]), store - delta];
+  return [[], store - delta];
 };
 ```
 
 </Syntax>
 
-In the example, two mutations are prevented. The first one, 
+In the example, two mutations are prevented. The first one,
 The second one, it is on
 the function `sub`, which prevents the mutations presented in the
 example from the previous sections. is an assertion

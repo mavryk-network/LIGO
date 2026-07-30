@@ -1,22 +1,25 @@
-(* open Types *)
-
+open Core
 open Ligo_prim
-open Simple_utils
 open Env
-module LSet = Types.LSet
-module LMap = Types.LMap
-module Trace = Simple_utils.Trace
+open Env_list
+module Env = Env_list
 module AST = Ast_core
+module Location = Simple_utils.Location
 
-type t = def list LMap.t
+type t = def list Location.Map.t
+
+let shadow_defs : def list -> def list =
+  let ( <@ ) f g x = f (g x) in
+  List.filter_map ~f:List.hd <@ List.sort_and_group ~compare:Def.compare_def_by_name
+
 
 let add : t -> Location.t -> def list -> t =
  fun scopes rhs_range defs ->
   let f : def list option -> def list option = function
-    | None -> Some defs
-    | Some value -> Some (List.rev_append defs value)
+    | None -> Some (shadow_defs defs)
+    | Some value -> Some (shadow_defs @@ List.rev_append defs value)
   in
-  LMap.update rhs_range f scopes
+  Map.change scopes rhs_range ~f
 
 
 (* --------------------------- AST traversal -------------------------------- *)
@@ -125,7 +128,7 @@ module Of_Ast = struct
       scopes
     | E_raw_code { language = _; code = _ } -> add_current_expr scopes
     | E_constructor { constructor = _; element } -> self element scopes env
-    | E_matching { matchee; disc_label = _; cases } ->
+    | E_matching { matchee; cases } ->
       let scopes = self matchee scopes env (* c.f. match.mligo:6 *) in
       (* Env update logic from References *)
       List.fold cases ~init:scopes ~f:(fun scopes { pattern; body } ->
@@ -140,6 +143,16 @@ module Of_Ast = struct
     | E_record e_label_map ->
       let es = Record.values e_label_map in
       List.fold es ~init:scopes ~f:(fun scopes e -> self e scopes env)
+    | E_tuple es ->
+      Nonempty_list.fold es ~init:scopes ~f:(fun scopes e -> self e scopes env)
+    | E_array entries | E_array_as_list entries ->
+      List.fold_left entries ~init:scopes ~f:(fun scopes entry ->
+          let entry =
+            match entry with
+            | Expr_entry entry -> entry
+            | Rest_entry entry -> entry
+          in
+          self entry scopes env)
     | E_accessor { struct_; path = _ } -> self struct_ scopes env
     | E_update { struct_; path = _; update } ->
       let scopes = self struct_ scopes env in
@@ -184,7 +197,7 @@ module Of_Ast = struct
   and collect_labels : AST.type_expression -> env -> env =
    fun te env ->
     match te.type_content with
-    | T_sum (row, _) ->
+    | T_sum row ->
       let labels = Record.labels row.fields in
       let types = Record.values row.fields in
       let env =
@@ -194,6 +207,7 @@ module Of_Ast = struct
     | T_record row ->
       let types = Record.values row.fields in
       List.fold_left ~init:env ~f:(fun acc typ -> collect_labels typ acc) types
+    | T_union union -> Union.fold (Fn.flip collect_labels) env union
     | T_arrow { type1; type2; param_names = _ } ->
       collect_labels type1 @@ collect_labels type2 env
     | T_app { arguments; type_operator = _ } ->
@@ -248,8 +262,8 @@ module Of_Ast = struct
         scopes, defs_or_alias_opt, env
       | M_module_path mvs ->
         let scopes =
-          let hd_loc = Module_var.get_location (List.Ne.hd mvs) in
-          let last_loc = Module_var.get_location (List.Ne.last mvs) in
+          let hd_loc = Module_var.get_location (Nonempty_list.hd mvs) in
+          let last_loc = Module_var.get_location (Nonempty_list.last mvs) in
           add scopes (Location.cover hd_loc last_loc) current_defs
         in
         let defs_or_alias_opt =
@@ -364,6 +378,19 @@ module Of_Ast = struct
       let env = Env.include_mvar defs_or_alias_opt module_map env in
       let env = List.fold_right ~init:env ~f:Env.add_label ctors in
       scopes, env
+    (* TODO Handle all import cases for #2190 issue resolution *)
+    | D_import (Import_rename { alias; imported_module; import_attr = _ }) ->
+      let module_expr =
+        Location.wrap ~loc:Location.generated (Module_expr.M_variable imported_module)
+      in
+      let scopes, defs_or_alias_opt, module_map, ctors =
+        module_expression (Some alias) module_expr scopes env
+      in
+      let env = Env.add_mvar alias defs_or_alias_opt module_map env in
+      (* ctors should be empty there but let's add them just in case *)
+      let env = List.fold_right ~init:env ~f:Env.add_label ctors in
+      scopes, env
+    | D_import _ -> scopes, env
 
 
   and sig_item : AST.sig_item -> t -> env -> t * env =
@@ -413,27 +440,18 @@ module Of_Ast = struct
     scopes, env
 
 
-  let rec shadow_defs : def list -> def list = function
-    | [] -> []
-    | def :: defs ->
-      let shadow_def def' = not @@ Def.equal_def_by_name def def' in
-      def :: shadow_defs (List.filter defs ~f:shadow_def)
-
-
-  let fix_shadowing_in_scopes : t -> t = LMap.map shadow_defs
-
   let declarations ~(env_preload_decls : AST.declaration list) : AST.declaration list -> t
     =
    fun decls ->
-    let scopes = LMap.empty in
+    let scopes = Location.Map.empty in
     let env = Env.empty in
     let _, env =
       declarations env_preload_decls scopes env (* Preload env with stdlib if provided *)
     in
     let scopes, _ = declarations decls scopes env in
-    fix_shadowing_in_scopes scopes
+    scopes
 end
 
-let inline_scopes : Env.Def.def_map -> t -> Types.inlined_scopes =
+let inline_scopes : def_map -> t -> Types.inlined_scopes =
  fun prg_defs scopes ->
-  scopes |> LMap.map (Env.Def.defs_to_types_defs prg_defs) |> LMap.to_kv_list
+  Map.map scopes ~f:(Def.defs_to_types_defs prg_defs) |> Map.to_alist

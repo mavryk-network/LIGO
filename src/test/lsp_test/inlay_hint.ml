@@ -2,13 +2,14 @@ module Requests = Ligo_lsp.Server.Requests
 open Lsp_test_helpers.Handlers
 open Lsp_test_helpers.Common
 open Lsp_helpers
-open Requests.Handler
 
 let get_inlay_hint_test file_path : unit =
   let hints_opt, _diagnostics =
     test_run_session
-    @@ let@ uri = open_file @@ normalize_path file_path in
-       Requests.on_req_inlay_hint uri Range.whole_file
+    @@
+    let open Handler.Let_syntax in
+    let%bind uri = open_file @@ normalize_path file_path in
+    Requests.on_req_inlay_hint uri Range.whole_file
   in
   match hints_opt with
   | Some actual_hints -> Format.printf "%a" (Fmt.Dump.list InlayHint.pp) actual_hints
@@ -280,3 +281,115 @@ let%expect_test "Inlay hints in JsLIGO" =
        "position": { "character": 24, "line": 84 }
      };
      { "kind": 1, "label": ": a", "position": { "character": 24, "line": 89 } }] |}]
+
+let%expect_test "Inlay hints for type recovered type variables" =
+  get_inlay_hint_test "contracts/lsp/inlay_hints/typer_error_recovery.jsligo";
+  [%expect
+    {|
+    [{
+       "kind": 1,
+       "label": ": [^a, ^b]",
+       "position": { "character": 7, "line": 0 }
+     };
+     { "kind": 1, "label": ": ^c", "position": { "character": 7, "line": 1 } };
+     { "kind": 1, "label": ": ^d", "position": { "character": 7, "line": 2 } };
+     {
+       "kind": 1,
+       "label": ": [^c, ^d, [^a, ^b]]",
+       "position": { "character": 7, "line": 3 }
+     }] |}]
+
+let%expect_test "Inlay hints show ghost identifiers as unresolved" =
+  get_inlay_hint_test "contracts/lsp/inlay_hints/ghost_identifiers_unresolved.mligo";
+  [%expect{|
+    [{
+       "kind": 1,
+       "label": ": (* Unresolved *)",
+       "position": { "character": 22, "line": 3 }
+     };
+     {
+       "kind": 1,
+       "label": ": ^b -> ^a",
+       "position": { "character": 8, "line": 1 }
+     };
+     { "kind": 1, "label": ": ^c", "position": { "character": 10, "line": 4 } };
+     { "kind": 1, "label": ": ^a", "position": { "character": 8, "line": 7 } }] |}]
+
+let%expect_test "Inlay hints work correctly for all combinations of parameter type \
+                 annotations and return type"
+  =
+  get_inlay_hint_test "contracts/lsp/inlay_hints/inlay_hints_fun_defs.mligo";
+  [%expect
+    {|
+    [{ "label": "(", "position": { "character": 10, "line": 2 } };
+     { "kind": 1, "label": ": int", "position": { "character": 11, "line": 2 } };
+     { "label": ")", "position": { "character": 11, "line": 2 } };
+     { "label": "(", "position": { "character": 12, "line": 2 } };
+     { "kind": 1, "label": ": int", "position": { "character": 13, "line": 2 } };
+     { "label": ")", "position": { "character": 13, "line": 2 } };
+     { "label": "(", "position": { "character": 19, "line": 3 } };
+     { "kind": 1, "label": ": int", "position": { "character": 20, "line": 3 } };
+     { "label": ")", "position": { "character": 20, "line": 3 } };
+     { "label": "(", "position": { "character": 10, "line": 4 } };
+     { "kind": 1, "label": ": int", "position": { "character": 11, "line": 4 } };
+     { "label": ")", "position": { "character": 11, "line": 4 } };
+     { "label": "(", "position": { "character": 10, "line": 6 } };
+     { "kind": 1, "label": ": e", "position": { "character": 11, "line": 6 } };
+     { "label": ")", "position": { "character": 11, "line": 6 } };
+     { "label": "(", "position": { "character": 12, "line": 6 } };
+     { "kind": 1, "label": ": d", "position": { "character": 13, "line": 6 } };
+     { "label": ")", "position": { "character": 13, "line": 6 } };
+     { "label": "(", "position": { "character": 19, "line": 7 } };
+     { "kind": 1, "label": ": d", "position": { "character": 20, "line": 7 } };
+     { "label": ")", "position": { "character": 20, "line": 7 } };
+     { "label": "(", "position": { "character": 10, "line": 8 } };
+     { "kind": 1, "label": ": d", "position": { "character": 11, "line": 8 } };
+     { "label": ")", "position": { "character": 11, "line": 8 } };
+     { "label": "(", "position": { "character": 16, "line": 10 } };
+     { "kind": 1, "label": ": e", "position": { "character": 17, "line": 10 } };
+     { "label": ")", "position": { "character": 17, "line": 10 } };
+     { "label": "(", "position": { "character": 18, "line": 10 } };
+     { "kind": 1, "label": ": d", "position": { "character": 19, "line": 10 } };
+     { "label": ")", "position": { "character": 19, "line": 10 } };
+     { "label": "(", "position": { "character": 11, "line": 11 } };
+     { "kind": 1, "label": ": e", "position": { "character": 12, "line": 11 } };
+     { "label": ")", "position": { "character": 12, "line": 11 } };
+     { "label": "(", "position": { "character": 19, "line": 11 } };
+     { "kind": 1, "label": ": d", "position": { "character": 20, "line": 11 } };
+     { "label": ")", "position": { "character": 20, "line": 11 } };
+     {
+       "kind": 1,
+       "label": ": {x : e; y : d}",
+       "position": { "character": 13, "line": 6 }
+     };
+     {
+       "kind": 1,
+       "label": ": {x : int; y : d}",
+       "position": { "character": 20, "line": 7 }
+     };
+     {
+       "kind": 1,
+       "label": ": {x : d; y : int}",
+       "position": { "character": 20, "line": 8 }
+     };
+     { "kind": 1, "label": ": r", "position": { "character": 27, "line": 9 } };
+     {
+       "kind": 1,
+       "label": ": 'e.'e -> 'd.'d -> {x : 'e; y : 'd}",
+       "position": { "character": 9, "line": 10 }
+     };
+     {
+       "kind": 1,
+       "label": ": {x : e; y : d}",
+       "position": { "character": 19, "line": 10 }
+     };
+     {
+       "kind": 1,
+       "label": ": 'd.'d -> {x : e; y : 'd}",
+       "position": { "character": 12, "line": 11 }
+     };
+     {
+       "kind": 1,
+       "label": ": {x : e; y : d}",
+       "position": { "character": 20, "line": 11 }
+     }] |}]

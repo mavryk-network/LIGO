@@ -1,6 +1,6 @@
 # Ligo Web IDE
 
-The Web IDE is available at https://ide.ligolang.org.
+The Web IDE is available at https://ide.mavryk.network.
 
 For instructions on building the frontend and backend, see the READMEs in the
 `ligo-webide-frontend` and `ligo-webide-backend` folders respectively.

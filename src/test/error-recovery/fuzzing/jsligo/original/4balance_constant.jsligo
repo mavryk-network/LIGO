@@ -1,7 +1,7 @@
 /**
 
 This test makes sure that the balance is accessible in JsLIGO.
-It's there to detect a regression of: https://gitlab.com/ligolang/ligo/issues/61
+It's there to detect a regression of: https://gitlab.com/mavryk-network/ligo/issues/61
 
 Which results in this error when you attempt to compile this contract:
 
@@ -10,9 +10,9 @@ generated. unrecognized constant: {"constant":"BALANCE","location":"generated"}
 
 */
 
-type storage = tez;
+type storage = mav;
 
-const main3 = ([_unit, _storage] : [unit, storage]): [list<operation>, tez] =>
-  [(list([]) as list<operation>), Tezos.get_balance()];
+const main3 = ([_unit, _storage] : [unit, storage]): [list<operation>, mav] =>
+  [[], Mavryk.get_balance()];
 
-const main = (x : [unit, storage]): [list<operation>, tez] => main3 ([x[0], x[1]]);
+const main = (x : [unit, storage]): [list<operation>, mav] => main3 ([x[0], x[1]]);

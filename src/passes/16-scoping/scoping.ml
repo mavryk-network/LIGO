@@ -1,10 +1,10 @@
 module I = Mini_c
 module O = Ligo_coq_ocaml.Compiler
-module Micheline = Tezos_micheline.Micheline
+module Micheline = Mavryk_micheline.Micheline
+module Trace = Simple_utils.Trace
 module Location = Simple_utils.Location
-module List = Simple_utils.List
 module Ligo_string = Simple_utils.Ligo_string
-module Option = Simple_utils.Option
+module Ligo_option = Simple_utils.Ligo_option
 module Var = Ligo_prim.Value_var
 module Errors = Errors
 
@@ -56,7 +56,7 @@ let rec translate_type ?var : I.type_expression -> oty =
   | I.T_base I.TB_bytes -> T_base (nil, Prim (nil, "bytes", [], []))
   | I.T_base I.TB_nat -> T_base (nil, Prim (nil, "nat", [], []))
   | I.T_base I.TB_int -> T_base (nil, Prim (nil, "int", [], []))
-  | I.T_base I.TB_mutez -> T_base (nil, Prim (nil, "mutez", [], []))
+  | I.T_base I.TB_mumav -> T_base (nil, Prim (nil, "mumav", [], []))
   | I.T_base I.TB_operation -> T_base (nil, Prim (nil, "operation", [], []))
   | I.T_base I.TB_address -> T_base (nil, Prim (nil, "address", [], []))
   | I.T_base I.TB_key -> T_base (nil, Prim (nil, "key", [], []))
@@ -178,7 +178,7 @@ let extract_applications (expr : I.expression) (env : I.environment)
 (* Let |-I and |-O be the input and output typing judgments. If
    env |-I expr : a, and translate_expression expr env = (expr', us), then
    select us env |-O expr' : a. *)
-let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.environment)
+let rec translate_expression ~raise (expr : I.expression) (env : I.environment)
     : (meta, base_type, Ligo_prim.Literal_value.t, (meta, string) Micheline.node) O.expr
   =
   let meta : meta =
@@ -190,11 +190,11 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     }
   in
   let ty = expr.type_expression in
-  let translate_expression = translate_expression ~raise ~proto in
-  let translate_args = translate_args ~raise ~proto in
-  let translate_binder = translate_binder ~raise ~proto in
-  let translate_binder2 = translate_binder2 ~raise ~proto in
-  let translate_binderN = translate_binderN ~raise ~proto in
+  let translate_expression = translate_expression ~raise in
+  let translate_args = translate_args ~raise in
+  let translate_binder = translate_binder ~raise in
+  let translate_binder2 = translate_binder2 ~raise in
+  let translate_binderN = translate_binderN ~raise in
   match expr.content with
   | E_literal lit -> O.E_literal (meta, lit)
   | E_variable x -> E_var (meta, translate_var x env)
@@ -224,9 +224,7 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     let binder = translate_binder2 ((binder, rec_binder), body) env in
     O.E_rec (meta, binder, translate_type return_type)
   | E_constant constant ->
-    let mich, args =
-      translate_constant ~raise ~proto meta constant expr.type_expression env
-    in
+    let mich, args = translate_constant ~raise meta constant expr.type_expression env in
     O.E_inline_michelson (meta, mich, args)
   | E_application (f, x) ->
     let args = translate_args [ f; x ] env in
@@ -304,7 +302,7 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
       | Some (a, b) -> a, b
     in
     let wipe_locations l e =
-      Tezos_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e))
+      Mavryk_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e))
     in
     let code = List.map ~f:(wipe_locations nil) code in
     E_raw_michelson (meta, translate_type a, translate_type b, code)
@@ -317,12 +315,12 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
         args'
     in
     let wipe_locations l e =
-      Tezos_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e))
+      Mavryk_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e))
     in
     let code = List.map ~f:(wipe_locations nil) code in
     let used = ref [] in
     let replace m =
-      let open Tezos_micheline.Micheline in
+      let open Mavryk_micheline.Micheline in
       match m with
       | Prim (_, s, [], [ id ])
         when String.equal "typeopt" s && String.is_prefix ~prefix:"$" id ->
@@ -355,7 +353,7 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
         used := id :: !used;
         (match List.nth args id with
         | Some (E_literal (m, Literal_string s), _) ->
-          let open Tezos_micheline in
+          let open Mavryk_micheline in
           let code = Ligo_string.extract s in
           let code, errs = Micheline_parser.tokenize code in
           (match errs with
@@ -373,7 +371,7 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
               map_node (fun _ -> m) (fun x -> x) code))
         | _ -> internal_error __LOC__ (Format.sprintf "could not resolve (litstr %d)" id))
       | Prim (a, b, c, d) ->
-        let open Tezos_micheline.Micheline in
+        let open Mavryk_micheline.Micheline in
         let f arg (c, d) =
           match arg with
           | Prim (_, s, [], [ id ])
@@ -394,10 +392,11 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
         Prim (a, b, c, d)
       | m -> m
     in
-    let code = List.map ~f:(Tezos_utils.Michelson.map replace) code in
+    let code = List.map ~f:(Mavryk_utils.Michelson.map replace) code in
     let args' =
       List.filter_mapi
-        ~f:(fun i v -> if not (List.mem !used i ~equal:Caml.( = )) then Some v else None)
+        ~f:(fun i v ->
+          if not (List.mem !used i ~equal:Stdlib.( = )) then Some v else None)
         args'
     in
     let args' = translate_args args' env in
@@ -435,16 +434,16 @@ let rec translate_expression ~raise ~proto (expr : I.expression) (env : I.enviro
     E_while (meta, cond, body)
 
 
-and translate_binder ~raise ~proto (binder, body) env =
+and translate_binder ~raise (binder, body) env =
   let env' = I.Environment.add binder env in
-  let body = translate_expression ~raise ~proto body env' in
+  let body = translate_expression ~raise body env' in
   let binder, binder_type = binder in
   O.Binds (nil, [ translate_type ~var:binder binder_type ], body)
 
 
-and translate_binder2 ~raise ~proto ((binder1, binder2), body) env =
+and translate_binder2 ~raise ((binder1, binder2), body) env =
   let env' = I.Environment.add binder1 (I.Environment.add binder2 env) in
-  let body = translate_expression ~raise ~proto body env' in
+  let body = translate_expression ~raise body env' in
   let binder1, binder1_type = binder1 in
   let binder2, binder2_type = binder2 in
   O.Binds
@@ -455,18 +454,16 @@ and translate_binder2 ~raise ~proto ((binder1, binder2), body) env =
     , body )
 
 
-and translate_binderN ~raise ~proto (vars, body) env =
+and translate_binderN ~raise (vars, body) env =
   let env' = List.fold_right ~f:I.Environment.add vars ~init:env in
-  let body = translate_expression ~raise ~proto body env' in
+  let body = translate_expression ~raise body env' in
   O.Binds (nil, List.map ~f:(fun (var, ty) -> translate_type ~var ty) vars, body)
 
 
-and translate_args ~raise ~proto (arguments : I.expression list) env : _ O.args =
+and translate_args ~raise (arguments : I.expression list) env : _ O.args =
   let arguments = List.rev arguments in
   let arguments =
-    List.map
-      ~f:(fun argument -> translate_expression ~raise ~proto argument env)
-      arguments
+    List.map ~f:(fun argument -> translate_expression ~raise argument env) arguments
   in
   List.fold_right
     ~f:(fun arg args -> O.Args_cons (nil, arg, args))
@@ -475,8 +472,7 @@ and translate_args ~raise ~proto (arguments : I.expression list) env : _ O.args 
 
 
 and translate_constant
-    ~raise
-    ~proto
+    ~(raise : _ Trace.raise)
     (meta : meta)
     (expr : I.constant)
     (ty : I.type_expression)
@@ -500,7 +496,7 @@ and translate_constant
      First we translate any static args and return the rest of the
      non-static arguments, if any: *)
   let translate_type t = Stacking.To_micheline.translate_type (translate_type t) in
-  let translate_args = translate_args ~raise ~proto in
+  let translate_args = translate_args ~raise in
   (* This is for compatibility with the existing stuff in
      Predefined.Michelson and below. I believe this stuff should be
      simplified away but don't want to do it right now. *)
@@ -514,7 +510,7 @@ and translate_constant
 
 
     let wipe_locations l e =
-      Tezos_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e))
+      Mavryk_micheline.Micheline.(inject_locations (fun _ -> l) (strip_locations e))
   end
   in
   let open O in
@@ -554,10 +550,10 @@ and translate_constant
       let* a = Mini_c.get_t_set ty in
       return (Type_args (None, [ translate_type a ]), expr.arguments)
     | C_MAP_EMPTY | C_BIG_MAP_EMPTY ->
-      let* a, b = Option.(map_pair_or (Mini_c.get_t_map, Mini_c.get_t_big_map) ty) in
+      let* a, b = Ligo_option.(map_pair_or (Mini_c.get_t_map, Mini_c.get_t_big_map) ty) in
       return (Type_args (None, [ translate_type a; translate_type b ]), expr.arguments)
     | C_MAP_REMOVE ->
-      let* _, b = Option.(map_pair_or (Mini_c.get_t_map, Mini_c.get_t_big_map) ty) in
+      let* _, b = Ligo_option.(map_pair_or (Mini_c.get_t_map, Mini_c.get_t_big_map) ty) in
       return (Type_args (None, [ translate_type b ]), expr.arguments)
     (* TODO handle CREATE_CONTRACT sooner *)
     (* | C_CREATE_CONTRACT -> *)
@@ -583,7 +579,7 @@ and translate_constant
     | None -> expr.arguments
   in
   let arguments = translate_args arguments env in
-  match Predefined.Michelson.get_operators proto expr.cons_name with
+  match Predefined.Michelson.get_operators expr.cons_name with
   | Some x ->
     ( [ (* Handle predefined (and possibly special) operators, applying
          any type/annot/script args using apply_static_args. *)
@@ -593,24 +589,17 @@ and translate_constant
           x
       ]
     , arguments )
-  | None ->
-    let open Simple_utils.Trace in
-    raise.error (Errors.unsupported_primitive expr.cons_name proto)
+  | None -> raise.error (Errors.unsupported_primitive expr.cons_name)
 
 
 and translate_closed_function
     ~raise
-    ~proto
     ?(env = [])
     ({ binder; body } : I.anon_function)
     input_ty
     : _ O.binds
   =
   let body =
-    translate_expression
-      ~raise
-      ~proto
-      body
-      (Mini_c.Environment.add (binder, input_ty) env)
+    translate_expression ~raise body (Mini_c.Environment.add (binder, input_ty) env)
   in
   Binds (nil, [ translate_type input_ty ], body)

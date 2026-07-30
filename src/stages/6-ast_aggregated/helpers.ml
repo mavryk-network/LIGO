@@ -1,5 +1,8 @@
+open Core
 open Ligo_prim
 open Types
+module Ligo_option = Simple_utils.Ligo_option
+module Ligo_pair = Simple_utils.Ligo_pair
 
 (* This function parse te and replace all occurence of binder by value *)
 let rec subst_type (binder : Type_var.t) (value : type_expression) (te : type_expression) =
@@ -21,6 +24,11 @@ let rec subst_type (binder : Type_var.t) (value : type_expression) (te : type_ex
   | T_for_all { ty_binder; kind; type_ } ->
     let type_ = self type_ in
     return @@ T_for_all { ty_binder; kind; type_ }
+  | T_abstraction { ty_binder; kind; type_ } ->
+    let type_ = self type_ in
+    return @@ T_abstraction { ty_binder; kind; type_ }
+  | T_exists t -> return @@ T_exists t
+  | T_union _ -> impossible_because_no_union_in_ast_aggregated ()
 
 
 (* This function transforms a type `∀ v1 ... vn . t` into the pair `([ v1 ; .. ; vn ] , t)` *)
@@ -56,7 +64,7 @@ let destruct_arrows (t : type_expression) =
   destruct_arrows [] t
 
 
-let assert_eq a b = if Caml.( = ) a b then Some () else None
+let assert_eq a b = if Stdlib.( = ) a b then Some () else None
 let assert_same_size a b = if List.length a = List.length b then Some () else None
 
 (* ~unforged_tickets allows type containing tickets to be decompiled to 'unforged' tickets (e.g. `int * int ticket` |-> `int * {ticketer : address ; value : int ; amount : nat }
@@ -66,7 +74,7 @@ let rec assert_type_expression_eq
     ((a, b) : type_expression * type_expression)
     : unit option
   =
-  let open Simple_utils.Option in
+  let open Ligo_option in
   match a.type_content, b.type_content with
   | ( T_constant
         { language = _; injection = Ligo_prim.Literal_types.Ticket; parameters = [ _ty ] }
@@ -136,10 +144,14 @@ let rec assert_type_expression_eq
   | T_variable _, _ -> None
   | T_singleton a, T_singleton b -> assert_literal_eq (a, b)
   | T_singleton _, _ -> None
-  | T_for_all a, T_for_all b ->
+  | (T_for_all a | T_abstraction a), (T_for_all b | T_abstraction b) ->
+    let open Option in
     assert_type_expression_eq ~unforged_tickets (a.type_, b.type_)
     >>= fun _ -> Some (assert (Kind.equal a.kind b.kind))
   | T_for_all _, _ -> None
+  | T_abstraction _, _ -> None
+  | T_exists _, _ -> None
+  | T_union _, _ -> impossible_because_no_union_in_ast_aggregated ()
 
 
 and assert_literal_eq ((a, b) : Literal_value.t * Literal_value.t) : unit option =
@@ -158,10 +170,10 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
   else (
     let return expression_content = { e' with expression_content } in
     match e'.expression_content with
-    | E_matching { matchee; disc_label; cases } ->
+    | E_matching { matchee; cases } ->
       let res, matchee = self init matchee in
       let res, cases = fold_map_cases f res cases in
-      res, return @@ E_matching { matchee; disc_label; cases }
+      res, return @@ E_matching { matchee; cases }
     | E_record m ->
       let res, m' = Record.fold_map ~f:self ~init m in
       res, return @@ E_record m'
@@ -176,7 +188,7 @@ let rec fold_map_expression : 'a fold_mapper -> 'a -> expression -> 'a * express
       res, return @@ E_constructor { c with element = e' }
     | E_application { lamb; args } ->
       let ab = lamb, args in
-      let res, (a, b) = Simple_utils.Pair.fold_map ~f:self ~init ab in
+      let res, (a, b) = Ligo_pair.fold_map ~f:self ~init ab in
       res, return @@ E_application { lamb = a; args = b }
     | E_let_in { let_binder; rhs; let_result; attributes } ->
       let res, rhs = self init rhs in
@@ -244,19 +256,29 @@ module Free_variables : sig
   val expression_only_var : expression -> Value_var.t list
 end = struct
   open Ligo_prim
-  module VarSet = Caml.Set.Make (Value_var)
+  module VarSet = Set
+
+  let empty_set = VarSet.empty (module Value_var)
+
+  type var_set = (Value_var.t, Value_var.comparator_witness) VarSet.t
 
   type t =
-    { var : VarSet.t
-    ; mut_var : VarSet.t
+    { var : var_set
+    ; mut_var : var_set
     }
 
-  let empty = { var = VarSet.empty; mut_var = VarSet.empty }
-  let singleton_var v = { var = VarSet.singleton v; mut_var = VarSet.empty }
-  let singleton_mut_var v = { var = VarSet.empty; mut_var = VarSet.singleton v }
+  let empty = { var = empty_set; mut_var = empty_set }
+
+  let singleton_var v =
+    { var = VarSet.singleton (module Value_var) v; mut_var = empty_set }
+
+
+  let singleton_mut_var v =
+    { var = empty_set; mut_var = VarSet.singleton (module Value_var) v }
+
 
   let remove name t =
-    { var = VarSet.remove name t.var; mut_var = VarSet.remove name t.mut_var }
+    { var = VarSet.remove t.var name; mut_var = VarSet.remove t.mut_var name }
 
 
   let union { var = y1; mut_var = z1 } { var = y2; mut_var = z2 } =
@@ -283,8 +305,7 @@ end = struct
       let fv = self result in
       remove fun_name @@ remove (Param.get_var binder) fv
     | E_constructor { element; _ } -> self element
-    | E_matching { matchee; disc_label = _; cases } ->
-      union (self matchee) (get_fv_cases cases)
+    | E_matching { matchee; cases } -> union (self matchee) (get_fv_cases cases)
     | E_record m ->
       let res = Record.map ~f:self m in
       let res = Record.values res in
@@ -328,7 +349,7 @@ end = struct
            varSet)
 
 
-  let to_list x = VarSet.fold (fun v r -> v :: r) x []
+  let to_list x = VarSet.fold x ~f:(fun r v -> v :: r) ~init:[]
 
   let expression e =
     let varSet = get_fv_expr e in
@@ -349,10 +370,10 @@ let rec map_expression : 'err mapper -> expression -> expression =
   let e' = f e in
   let return expression_content = { e' with expression_content } in
   match e'.expression_content with
-  | E_matching { matchee = e; disc_label; cases } ->
+  | E_matching { matchee = e; cases } ->
     let e' = self e in
     let cases' = map_cases f cases in
-    return @@ E_matching { matchee = e'; disc_label; cases = cases' }
+    return @@ E_matching { matchee = e'; cases = cases' }
   | E_record m ->
     let m' = Record.map ~f:self m in
     return @@ E_record m'
@@ -367,7 +388,7 @@ let rec map_expression : 'err mapper -> expression -> expression =
     return @@ E_constructor c
   | E_application { lamb; args } ->
     let ab = lamb, args in
-    let a, b = Simple_utils.Pair.map ~f:self ab in
+    let a, b = Ligo_pair.map ~f:self ab in
     return @@ E_application { lamb = a; args = b }
   | E_let_in { let_binder; rhs; let_result; attributes } ->
     let rhs = self rhs in

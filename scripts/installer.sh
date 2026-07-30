@@ -4,7 +4,7 @@ set -e
 # code quality: medium 2021-05-04
 
 # You can run this installer like this:
-# curl https://gitlab.com/ligolang/ligo/-/raw/dev/scripts/installer.sh | bash
+# curl https://gitlab.com/mavryk-network/ligo/-/raw/dev/scripts/installer.sh | bash
 # Make sure the marigold/ligo image is published at docker hub first
 
 # Check that we have one argument, that it contains only one line, and that it matches the regexp (next|[0-9.]*)
@@ -23,7 +23,7 @@ else
     echo "/usr/local/bin/ligo already exists and is a directory, cancelling installation"
   else
     # Pull the docker image used by ligo.sh
-    docker pull "ligolang/ligo:$version"
+    docker pull "mavrykdynamics/ligo:$version"
 
     sudo install -m 0755 /dev/stdin /usr/local/bin/ligo <<EOF
 #!/bin/sh
@@ -32,7 +32,7 @@ if test "x\$PWD" = "x"; then
   echo "Cannot detect the current directory, the environment variable PWD is empty."
   exit 1
 else
-  docker run --rm -v "\$PWD":"\$PWD" -w "\$PWD" ligolang/ligo:$version "\$@"
+  docker run --rm -v "\$PWD":"\$PWD" -w "\$PWD" mavrykdynamics/ligo:$version "\$@"
 fi
 EOF
   fi

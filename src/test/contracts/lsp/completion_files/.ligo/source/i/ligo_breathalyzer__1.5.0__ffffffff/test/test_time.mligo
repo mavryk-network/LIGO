@@ -28,7 +28,7 @@ module Ping = struct
 
   [@entry]
   let ping () (last: storage) : operation list * storage =
-    let now = Tezos.get_now () in
+    let now = Mavryk.get_now () in
     if now > last + 60 then
       [], now
     else
@@ -40,7 +40,7 @@ module Exact = struct
 
   [@entry]
   let exact () (last: storage) : operation list * storage =
-    let now = Tezos.get_now () in
+    let now = Mavryk.get_now () in
     if last > (0: timestamp) && now <> last + 30 then
       failwith "wrong time"
     else
@@ -50,10 +50,10 @@ end
 let (_, (alice, _, _)) = B.Context.init_default ()
 
 let ping_contract level initial_time =
-  B.Contract.originate level "ping" (contract_of Ping) initial_time 0tez
+  B.Contract.originate level "ping" (contract_of Ping) initial_time 0mav
 
 let exact_contract level initial_time =
-  B.Contract.originate level "exact" (contract_of Exact) initial_time 0tez
+  B.Contract.originate level "exact" (contract_of Exact) initial_time 0mav
 
 let suite =
   B.Model.suite

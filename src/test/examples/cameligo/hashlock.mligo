@@ -11,7 +11,7 @@
       { hashed=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce; 
         unused=false; 
         commits=(Big_map.literal[(
-          ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address),  
+          ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address),  
           {date=("2020-05-29T11:22:33Z" : timestamp); 
            salted_hash=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce}
           );]
@@ -22,7 +22,7 @@
       { hashed=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce; 
         unused=false; 
         commits=(Big_map.literal[(
-          ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address),  
+          ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address),  
           {date=("2020-05-29T11:22:33Z" : timestamp); 
            salted_hash=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce}
           );]
@@ -36,7 +36,7 @@
         { hashed=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce; 
           unused=false; 
           commits=(Big_map.literal[(
-            ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address), {date=("2020-05-29T11:22:33Z" : timestamp); salted_hash=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce}
+            ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), {date=("2020-05-29T11:22:33Z" : timestamp); salted_hash=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce}
             );]
           )
         }
@@ -47,7 +47,7 @@
       { hashed=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce; 
         unused=false; 
         commits=(Big_map.literal[(
-          ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address),  
+          ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address),  
           {date=("2020-05-29T11:22:33Z" : timestamp); 
            salted_hash=0x0e2ab5866b0ec701a0204881645dc50e1d60668f1433a385e999f0af1b6cd8ce}
           );]
@@ -81,9 +81,9 @@ type return = operation list * storage
 
 let commit (p, s : bytes * storage) : return =
   let commit : commit =
-    {date = Tezos.get_now () + 86_400; salted_hash = p} in
+    {date = Mavryk.get_now () + 86_400; salted_hash = p} in
   let updated_map: commit_set =
-    Big_map.update (Tezos.get_sender ()) (Some commit) s.commits in
+    Big_map.update (Mavryk.get_sender ()) (Some commit) s.commits in
   let s = {s with commits = updated_map}
   in ([] : operation list), s
 
@@ -93,18 +93,18 @@ let reveal (p, s : reveal * storage) : return =
     (failwith "This contract has already been used." : return)
   else
     let commit : commit =
-      match Big_map.find_opt (Tezos.get_sender ()) s.commits with
+      match Big_map.find_opt (Mavryk.get_sender ()) s.commits with
     | Some c -> c
     | None ->
        (failwith "You have not made a commitment to hash against yet."
         : commit)
     in
-    if Tezos.get_now () < commit.date
+    if Mavryk.get_now () < commit.date
     then
       (failwith "It has not been 24 hours since your commit yet.": return)
     else
       let salted =
-        Crypto.sha256 (Bytes.concat p.hashable (Bytes.pack (Tezos.get_sender ()))) in
+        Crypto.sha256 (Bytes.concat p.hashable (Bytes.pack (Mavryk.get_sender ()))) in
       if salted <> commit.salted_hash
       then
         (failwith "This reveal does not match your commitment.": return)

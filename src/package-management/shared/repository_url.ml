@@ -177,9 +177,9 @@ let%test _ =
   | _ -> false
 
 let%test _ =
-  let short = "git@github.com:ligolang/ligo-mirror.git" in
+  let short = "git@github.com:mavryk-network/ligo-mirror.git" in
   match parse_url short with
-  | Some url when String.(url = "https://github.com/ligolang/ligo-mirror.git") -> true
+  | Some url when String.(url = "https://github.com/mavryk-network/ligo-mirror.git") -> true
   | _ -> false
 
 let%test _ =

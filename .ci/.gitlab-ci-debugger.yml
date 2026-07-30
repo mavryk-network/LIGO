@@ -5,17 +5,6 @@ include:
 
 variables:
   LIGO_DEBUGGER_IMAGE_TAG: "ligo-debugger:${CI_COMMIT_SHORT_SHA}-${CI_PIPELINE_ID}"
-# Reads ligo version from 'LIGO_VERSION_FILE' env variable,
-# gets ligo binary from the corresponding release, and does
-# 'git add ligo' to make binary available for flake.
-.get_release_ligo_binary: &get_release_ligo_binary
-  # strip all comments form the version file and grep for version
-  - ligo_version="$(cat "$LIGO_VERSION_FILE" | sed '/^#/d' | grep -E '([0-9]{1,}\.)+[0-9]{1,}')"
-  - ligo_link="$(curl --silent https://gitlab.com/api/v4/projects/ligolang%2Fligo/releases/"$ligo_version"/assets/links |
-      jq -r '.[] | select(.name == "Static Linux binary") | .direct_asset_url')"
-  - wget --quiet -O ligo "$ligo_link"
-  - chmod +x ligo
-  - ./ligo --version
 
 .run_ligo_debugger_tests: &run_ligo_debugger_tests
   - docker build tools/debugger -t "${LIGO_DEBUGGER_IMAGE_TAG}-test"
@@ -36,7 +25,7 @@ debugger-danger-instant-checks:
   allow_failure: true
   interruptible: true
   tags:
-    - docker
+    - ubuntu-amd64
   image: ruby:3.2.2
   before_script: &install_danger
     - gem install --quiet danger-gitlab
@@ -51,7 +40,7 @@ debugger-danger-hlint:
   needs: []
   interruptible: true
   tags:
-    - docker
+    - ubuntu-amd64
   image: ruby:3.2.2
   before_script:
     - gem install --quiet danger-gitlab
@@ -69,7 +58,7 @@ debugger-danger-premerge-checks:
   when: always
   interruptible: true
   tags:
-    - docker
+    - ubuntu-amd64
   image: ruby:3.2.2
   before_script: *install_danger
   script:
@@ -80,6 +69,12 @@ debugger-danger-premerge-checks:
 
 debugger-build:
   stage: tools-build
+  image: mavrykdynamics/ci-debian:0.0.1
+  services:
+  - name: docker:27.3.1-dind
+    command: ["--mtu=1400"]
+  tags:
+    - ubuntu-amd64
   rules: &debugger_mr_dev
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
@@ -98,37 +93,31 @@ debugger-build:
     paths:
       - Linux
 
-debugger-build-macos:
-  stage: tools-build
-  rules: *debugger_mr_dev
-  needs: []
-  tags:
-    - mac
-    - i7
-  script:
-    - mkdir -p Darwin/bin
-    - OUT_DIR="$PWD/Darwin/bin"
-    - cd tools/debugger/ligo-debugger
-    - stack build --ghc-options '-Werror' --copy-bins --local-bin-path="$OUT_DIR"
-    - ../../scripts/relink-mac-binary.sh "$OUT_DIR/ligo-debugger" ../lib
-  artifacts:
-    paths:
-      - Darwin
-
-debugger-test-ligo-recommended:
-  stage: tools-check
-  rules:
-    - !reference [.vscode_production]
-  needs: [debugger-build]
-  variables:
-    LIGO_VERSION_FILE: "./tools/debugger/ligo-debugger/src/resources/versions/recommended"
-    LIGO_TEST_FLAGS: "-r"
-  before_script: *get_release_ligo_binary
-  script: *run_ligo_debugger_tests
-  after_script: *cleanup_ligo_debugger_test
+# TODO: Find a intel macos
+# debugger-build-macos:
+#   stage: tools-build
+#   rules: *debugger_mr_dev
+#   needs: []
+#   tags:
+#     - i7-mac
+#   script:
+#     - mkdir -p Darwin/bin
+#     - OUT_DIR="$PWD/Darwin/bin"
+#     - cd tools/debugger/ligo-debugger
+#     - stack build --ghc-options '-Werror' --copy-bins --local-bin-path="$OUT_DIR"
+#     - ../../scripts/relink-mac-binary.sh "$OUT_DIR/ligo-debugger" ../lib
+#   artifacts:
+#     paths:
+#       - Darwin
 
 debugger-test-ligo-latest:
   stage: tools-check
+  tags:
+    - ubuntu-amd64
+  image: mavrykdynamics/ci-debian:0.0.1
+  services:
+  - name: docker:27.3.1-dind
+    command: ["--mtu=1400"]
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
@@ -140,28 +129,22 @@ debugger-test-ligo-latest:
 
 debugger-test-static-debugger-binary:
   stage: tools-check
+  tags:
+    - ubuntu-amd64
   rules: *debugger_mr_dev
   needs: [debugger-build]
   allow_failure: true
   script:
     - (ldd Linux/bin/ligo-debugger || true) 2>&1 | grep -q "not a dynamic executable"
 
-debugger-test-ligo-minimal-supported:
-  stage: push
-  rules:
-    - !reference [.vscode_production]
-  needs: [debugger-build]
-  when: manual
-  variables:
-    LIGO_VERSION_FILE: "./tools/debugger/ligo-debugger/src/resources/versions/minimal-supported"
-    LIGO_TEST_FLAGS: "-r -m"
-  before_script: *get_release_ligo_binary
-  script: *run_ligo_debugger_tests
-  after_script: *cleanup_ligo_debugger_test
-  allow_failure: true
-
 debugger-build-and-publish-build-base-image:
   stage: push
+  tags:
+    - ubuntu-amd64
+  image: mavrykdynamics/ci-debian:0.0.1
+  services:
+  - name: docker:27.3.1-dind
+    command: ["--mtu=1400"]
   variables:
     DEBUGGER_BASE_IMAGE: "${CI_REGISTRY}/${CI_PROJECT_PATH}/debugger-build-base:latest"
   rules:

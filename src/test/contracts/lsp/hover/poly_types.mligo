@@ -16,7 +16,7 @@ type 'a t = { x : 'a; y : string }
 
 let f (type a) (r : a t) = { r with y = "42" }
 
-let ticket = Tezos.create_ticket 42n 42n
+let ticket = Mavryk.create_ticket 42n 42n
 
 let lst = List.map (fun c -> c + 42) [1; 2]
 

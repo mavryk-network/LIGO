@@ -3,9 +3,6 @@ id: layout-comb-how
 title: How to deal with the change of the default datatype layout to @layout comb ?
 ---
 
-See [Why did the default datatype layout change to `@layout comb` ?](layout-comb-why.md)
-for background about this change.
-
 ## Easy way out
 
 To take the easy way out, set the `LIGO_LEGACY_LAYOUT_TREE`
@@ -29,7 +26,7 @@ problem.
 
 In theory, it is possible that after upgrading to LIGO 1.0, your
 contracts could compile successfully, your `ligo run test` could pass,
-and even "integration" tests (e.g. using a sandbox or test Tezos
+and even "integration" tests (e.g. using a sandbox or test Mavryk
 network) could pass, yet after deployment you might still find that
 your contracts are catastrophically broken.
 
@@ -73,9 +70,9 @@ module Bar = struct
   [@entry]
   let bar (addr : address) (s : unit) : operation list * unit =
     let arg : foo = {foo = 1n; bar = 2; baz = "three"} in
-    let amt : tez = 0tz in
-    let dst : foo contract = Tezos.get_entrypoint "%foo" addr in
-    let tx = Tezos.transaction arg amt dst in
+    let amt : mav = 0mv in
+    let dst : foo contract = Mavryk.get_entrypoint "%foo" addr in
+    let tx = Mavryk.transaction arg amt dst in
     ([tx], s)
 
   (* dummy entrypoint to avoid bug with single entrypoint :( *)
@@ -85,10 +82,10 @@ module Bar = struct
 end
 
 let test_interaction () =
-  let orig_foo = Test.originate (contract_of Foo) () 0tz in
+  let orig_foo = Test.originate (contract_of Foo) () 0mv in
   let foo_addr = Test.to_address orig_foo.addr in
-  let orig_bar = Test.originate (contract_of Bar) () 0tz in
-  Test.transfer_exn orig_bar.addr (Bar foo_addr) 0tz
+  let orig_bar = Test.originate (contract_of Bar) () 0mv in
+  Test.transfer_exn orig_bar.addr (Bar foo_addr) 0mv
 ```
 
 </Syntax>
@@ -115,9 +112,9 @@ namespace Bar {
   @entry
   const bar = (addr: address, s: unit) : [list<operation>, unit] => {
     const arg : foo = {foo: 1n, bar: 2, baz: "three"};
-    const amt : tez = 0tz;
-    const dst : contract<foo> = Tezos.get_entrypoint("%foo", addr);
-    const tx = Tezos.transaction(arg, amt, dst);
+    const amt : mav = 0mv;
+    const dst : contract<foo> = Mavryk.get_entrypoint("%foo", addr);
+    const tx = Mavryk.transaction(arg, amt, dst);
     return [list([tx]), s];
   }
 
@@ -127,10 +124,10 @@ namespace Bar {
 };
 
 const test_interaction = do{
-  const orig_foo = Test.originate(contract_of(Foo), unit, 0tz);
+  const orig_foo = Test.originate(contract_of(Foo), unit, 0mv);
   const foo_addr = Test.to_address (orig_foo.addr);
-  const orig_bar = Test.originate(contract_of(Bar), unit, 0tz);
-  Test.transfer_exn(orig_bar.addr, Bar(foo_addr), 0tz);
+  const orig_bar = Test.originate(contract_of(Bar), unit, 0mv);
+  Test.transfer_exn(orig_bar.addr, Bar(foo_addr), 0mv);
 };
 ```
 

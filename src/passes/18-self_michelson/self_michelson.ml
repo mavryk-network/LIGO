@@ -6,13 +6,11 @@
    often.
 *)
 
-open Tezos_micheline.Micheline
-open Tezos_utils.Michelson
+open Mavryk_micheline.Micheline
+open Mavryk_utils.Michelson
 include Helpers
 open Peephole
 open Peephole.Let_syntax
-
-type proto = Environment.Protocols.t
 
 (* `arity p` should be `Some n` only if p is (always) an instruction
    which removes n items from the stack and uses them to push 1 item,
@@ -43,10 +41,10 @@ let arity : _ node list -> string -> int option =
   | "CREATE_CONTRACT" -> None
   | "TRANSFER_TOKENS" -> None
   | "SET_DELEGATE" -> None
-  (* tez arithmetic (can fail) *)
+  (* mav arithmetic (can fail) *)
   | "ADD" -> None
   | "MUL" -> None
-  | "SUB" -> None (* can fail for tez *)
+  | "SUB" -> None (* can fail for mav *)
   (* etc *)
   | "CONCAT" -> None (* sometimes 1, sometimes 2 :( *)
   | "CAST" -> None
@@ -159,10 +157,10 @@ let is_injective : string -> bool = function
   | "CREATE_CONTRACT" -> false
   | "TRANSFER_TOKENS" -> false
   | "SET_DELEGATE" -> true
-  (* tez arithmetic (can fail) *)
+  (* mav arithmetic (can fail) *)
   | "ADD" -> false
   | "MUL" -> false
-  | "SUB" -> false (* can fail for tez *)
+  | "SUB" -> false (* can fail for mav *)
   (* etc *)
   | "CONCAT" -> false (* sometimes 1, sometimes 2 :( *)
   | "CAST" -> false
@@ -237,7 +235,7 @@ let eq_type ll lr =
         ~f:(fun v -> Bool.equal true v)
         (List.map ~f:(fun (a, b) -> aux_eq a b) lr)
   and aux_eq l r =
-    let open Tezos_micheline.Micheline in
+    let open Mavryk_micheline.Micheline in
     match l, r with
     | Prim (_, s, l, a), Prim (_, s', l', a')
       when String.equal s s' && List.equal String.equal a a' -> compare_list l l'
@@ -884,7 +882,7 @@ let%expect_test _ =
       ]
   in
   let code = opt_tail_fail code in
-  Format.printf "%a" Tezos_utils.Michelson.pp code;
+  Format.printf "%a" Mavryk_utils.Michelson.pp code;
   [%expect {| { IF_LEFT { FAILWITH } { FAILWITH } } |}]
 
 let rec opt_combine_drops (x : 'l michelson) : 'l michelson =
@@ -963,14 +961,12 @@ let rec opt_strip_annots (x : _ michelson) : _ michelson =
 
 let optimize
     : type meta.
-      Environment.Protocols.t
-      -> experimental_disable_optimizations_for_debugging:bool
+      experimental_disable_optimizations_for_debugging:bool
       -> has_comment:(meta -> bool)
       -> meta michelson
       -> meta michelson
   =
- fun proto ~experimental_disable_optimizations_for_debugging ~has_comment x ->
-  ignore proto;
+ fun ~experimental_disable_optimizations_for_debugging ~has_comment x ->
   let x = flatten_seqs ~has_comment x in
   let x = opt_tail_fail x in
   let optimizers =
@@ -1033,7 +1029,6 @@ let rec optimize_with_types
             node
             -> Proto_alpha_utils.Memory_proto_alpha.Protocol.Script_tc_errors.type_map
                Lwt.t)
-      -> Environment.Protocols.t
       -> experimental_disable_optimizations_for_debugging:bool
       -> has_comment:(l -> bool)
       -> l michelson
@@ -1041,7 +1036,6 @@ let rec optimize_with_types
   =
  fun ~raise
      ~typer_oracle
-     proto
      ~experimental_disable_optimizations_for_debugging
      ~has_comment
      contract ->
@@ -1052,9 +1046,9 @@ let rec optimize_with_types
       .strings_of_prims
         c
     in
-    Tezos_micheline.Micheline.inject_locations (fun x -> x) c
+    Mavryk_micheline.Micheline.inject_locations (fun x -> x) c
   in
-  let canonical, locs = Tezos_micheline.Micheline.extract_locations contract in
+  let canonical, locs = Mavryk_micheline.Micheline.extract_locations contract in
   let recover_loc l = List.Assoc.find_exn locs ~equal:Int.equal l in
   let canonical =
     Proto_alpha_utils.Trace.trace_alpha_tzresult ~raise (fun _ ->
@@ -1064,18 +1058,18 @@ let rec optimize_with_types
          canonical
   in
   let%bind map =
-    typer_oracle @@ Tezos_micheline.Micheline.inject_locations recover_loc canonical
+    typer_oracle @@ Mavryk_micheline.Micheline.inject_locations recover_loc canonical
   in
   let type_map =
     List.map
       ~f:(fun (i, (l, _)) -> i, List.map ~f:(fun c -> node_string_of_canonical c) l)
       map
   in
-  match Tezos_micheline.Micheline.inject_locations (fun x -> x) canonical with
+  match Mavryk_micheline.Micheline.inject_locations (fun x -> x) canonical with
   | Seq (l, parameter :: storage :: code :: rest) ->
     let pre_type l = List.Assoc.find_exn type_map ~equal:Int.equal l in
     let code =
-      Tezos_micheline.Micheline.map_node
+      Mavryk_micheline.Micheline.map_node
         (fun x -> x)
         (fun v ->
           Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives
@@ -1085,16 +1079,15 @@ let rec optimize_with_types
     in
     let changed, code = on_seqs (peephole (peep1 @@ opt_cond ~pre_type)) code in
     let code =
-      Tezos_micheline.Micheline.map_node (fun x -> recover_loc x) (fun x -> x) code
+      Mavryk_micheline.Micheline.map_node (fun x -> recover_loc x) (fun x -> x) code
     in
     let code =
       if changed
-      then
-        optimize proto ~experimental_disable_optimizations_for_debugging ~has_comment code
+      then optimize ~experimental_disable_optimizations_for_debugging ~has_comment code
       else code
     in
     let recover_locs node =
-      Tezos_micheline.Micheline.map_node
+      Mavryk_micheline.Micheline.map_node
         recover_loc
         (fun v ->
           Proto_alpha_utils.Memory_proto_alpha.Protocol.Michelson_v1_primitives
@@ -1113,7 +1106,6 @@ let rec optimize_with_types
       optimize_with_types
         ~raise
         ~typer_oracle
-        proto
         ~experimental_disable_optimizations_for_debugging
         ~has_comment
         contract

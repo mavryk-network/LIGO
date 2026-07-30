@@ -141,7 +141,7 @@
             "name": "entity.name.type.michelson support.type.michelson"
           },
           {
-            "match": "\\b(key_hash|key|signature|operation|address|mutez|timestamp|chain_id|never)\\b",
+            "match": "\\b(key_hash|key|signature|operation|address|mumav|timestamp|chain_id|never)\\b",
             "name": "entity.name.type.michelson support.type.michelson"
           },
           {

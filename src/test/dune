@@ -5,7 +5,6 @@
   test
   doc_test
   repl_test
-  vendors_test
   contract_test
   get_scope_tests
   pretty_printer_tests
@@ -13,9 +12,7 @@
   decompiler_tests)
  (libraries
   simple-utils
-  simple-utils-unix
-  simple-utils-unix.http_uri
-  tezos-memory-proto-alpha
+  ligo.mavryk-memory-proto-alpha
   ligo.main_interpreter
   ligo.api
   ligo_init
@@ -25,8 +22,8 @@
   repl
   interpreter
   alcotest
-  tezos-utils
-  octez-libs.crypto
+  ligo.mavryk-utils
+  mavkit-libs.crypto
   ligo_api
   cli
   prometheus
@@ -35,9 +32,13 @@
   lsp_test_requests
   package_management
   lwt
-  lwt.unix)
+  lwt.unix
+  core_unix
+  core_unix.sys_unix
+  core_unix.filename_unix
+  core_kernel.nonempty_list)
  (preprocess
-  (pps ppx_let)))
+  (pps ppx_jane)))
 
 (rule
  (alias doc-test)
@@ -73,13 +74,6 @@
   (glob_files contracts/negative/*)
   (glob_files preprocessor/*)
   (glob_files install_tests/workflow/*)))
-
-(rule
- (alias vendors_test)
- (action
-  (run ./vendors_test.exe))
- (deps
-  (source_tree projects)))
 
 (rule
  (alias contract_test)
@@ -128,7 +122,6 @@
 (alias
  (name runtest)
  (deps
-  (alias vendors_test)
   (alias ligo-test)
   (alias doc-test)
   ;;  (alias parser-negative-tests)

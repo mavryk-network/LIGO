@@ -13,6 +13,7 @@ open Simple_utils.Region
 
 module CST = Cst_cameligo.CST
 open! CST
+module Nodes = Cst_shared.Nodes
 module Wrap = Lexing_shared.Wrap
 
 (* UTILITIES
@@ -26,18 +27,18 @@ module Wrap = Lexing_shared.Wrap
 let mk_reg region value = Region.{region; value}
 
 let mk_mod_path :
-  (module_name * dot) Utils.nseq * 'a ->
+  (module_name * dot) Nonempty_list.t * 'a ->
   ('a -> Region.t) ->
   'a CST.module_path Region.reg =
-  fun (nseq, field) to_region ->
-    let (first, sep), tail = nseq in
+  fun (ne_list, field) to_region ->
+    let (first, sep) :: tail = ne_list in
     let rec trans (seq, prev_sep as acc) = function
       [] -> acc
     | (item, next_sep) :: others ->
         trans ((prev_sep, item) :: seq, next_sep) others in
     let list, last_dot = trans ([], sep) tail in
     let module_path = first, List.rev list in
-    let region = CST.nseq_to_region (fun (x,_) -> x#region) nseq in
+    let region = Nodes.ne_list_to_region (fun (x,_) -> x#region) ne_list in
     let region = Region.cover region (to_region field)
     and value = {module_path; selector=last_dot; field}
     in {value; region}
@@ -85,7 +86,7 @@ let hook_T_Attr = hook @@ fun a t -> T_Attr (a,t)
 %on_error_reduce core_type
 %on_error_reduce nsepseq(core_type,TIMES)
 %on_error_reduce fun_type_level
-%on_error_reduce variant_type(fun_type_level)
+%on_error_reduce sum_type(fun_type_level)
 %on_error_reduce cartesian_level
 %on_error_reduce short_variant(fun_type_level)
 %on_error_reduce nsepseq(core_irrefutable,COMMA)
@@ -151,13 +152,13 @@ braces(X):
 (* Non-empty sequence of items *)
 
 nseq(X):
-  X         { $1, [] }
-| X nseq(X) { let hd,tl = $2 in $1, hd::tl }
+  X         { Nonempty_list.singleton $1 }
+| X nseq(X) { Nonempty_list.cons $1 $2   }
 
 (* Non-empty separated sequence of items *)
 
 nsepseq(X,Sep):
-  X                    {                 $1,        [] }
+  X                    { $1, [] }
 | X Sep nsepseq(X,Sep) { let h,t = $3 in $1, ($2,h)::t }
 
 (* The rule [sep_or_term_list(item,sep)] ("separated or terminated
@@ -173,11 +174,11 @@ sep_or_term_list(item,sep):
     $1, None
   }
 | nseq(item sep {$1,$2}) {
-    let (first,sep), tail = $1 in
+    let Nonempty_list.((first,sep) :: tail) = $1 in
     let rec trans (seq, prev_sep as acc) = function
       [] -> acc
     | (item,next_sep)::others ->
-        trans ((prev_sep,item)::seq, next_sep) others in
+        trans ((prev_sep,item) :: seq, next_sep) others in
     let list, term = trans ([],sep) tail
     in (first, List.rev list), Some term }
 
@@ -235,7 +236,7 @@ bin_op(arg1,op,arg2):
 
 %inline
 attributes:
-  ioption(nseq("[@attr]") { Utils.nseq_to_list $1 }) {
+  ioption(nseq("[@attr]") { Nonempty_list.to_list $1 }) {
     match $1 with None -> [] | Some list -> list }
 
 (* ENTRY *)
@@ -290,7 +291,7 @@ quoted_type_var:
 interactive_type_expr: type_expr EOF { $1 }
 
 type_expr:
-  fun_type_level | variant_type(fun_type_level) { $1 }
+  fun_type_level | sum_type(fun_type_level) { $1 }
 
 (* The following subgrammar is _stratified_ in the usual manner to
    build in the grammar the different priorities between the syntactic
@@ -319,7 +320,7 @@ fun_type_level:
 cartesian_level:
   core_type "*" nsepseq(core_type,"*") {
     let start  = type_expr_to_region $1
-    and stop   = nsepseq_to_region type_expr_to_region $3 in
+    and stop   = Nodes.nsepseq_to_region type_expr_to_region $3 in
     let region = cover start stop in
     T_Cart {region; value = $1,$2,$3}
   }
@@ -346,7 +347,7 @@ no_attr_type:
 
 parameter_of_type:
   nsepseq(module_name,".") "parameter_of" {
-    let start  = nsepseq_to_region (fun x -> x#region) $1 in
+    let start  = Nodes.nsepseq_to_region (fun x -> x#region) $1 in
     let region = cover start $2#region
     in T_ParameterOf {region; value=$1} }
 
@@ -354,29 +355,29 @@ parameter_of_type:
 
    We parameterise the variants by the kind of type expression that
    may occur at the rightmost side of a sentence. This enables to use
-   [variant_type] in contexts that allow different types to avoid LR
+   [sum_type] in contexts that allow different types to avoid LR
    conflicts. For example, if the return type of a lambda is a
    functional type, parentheses are mandatory. *)
 
-variant_type(right_type_expr):
+sum_type(right_type_expr):
   short_variant(right_type_expr)
   ioption(long_variants(right_type_expr)) {
     let region, tail =
       match $2 with
         None -> $1.region, []
       | Some long ->
-          let stop = CST.nseq_to_region (fun (_,v) -> v.region) long
-          in cover $1.region stop, Utils.nseq_to_list long in
+          let stop = Nodes.ne_list_to_region (fun (_,v) -> v.region) long
+          in cover $1.region stop, Nonempty_list.to_list long in
     let value = {lead_vbar = None; variants = ($1, tail)}
-    in T_Variant {region; value}
+    in T_Sum {region; value}
    }
 | attributes long_variants(right_type_expr) {
     (* Attributes of the variant type *)
-    let region    = CST.nseq_to_region (fun (_,v) -> v.region) $2 in
-    let (lead_vbar, short_variant), list = $2 in
+    let region    = Nodes.ne_list_to_region (fun (_,v) -> v.region) $2 in
+    let (lead_vbar, short_variant) :: list = $2 in
     let variants  = short_variant, list in
     let value     = {lead_vbar = Some lead_vbar; variants} in
-    let type_expr = T_Variant {region; value}
+    let type_expr = T_Sum {region; value}
     in hook_T_Attr $1 type_expr }
 
 long_variants(right_type_expr):
@@ -470,10 +471,10 @@ type_in_module(type_expr):
 
 module_path(selected):
   module_name "." module_path(selected) {
-    let (head, tail), selected = $3 in
-    (($1,$2), head::tail), selected
+    let ne_list, selected = $3 in
+    Nonempty_list.cons ($1,$2) ne_list, selected
   }
-| module_name "." selected { (($1,$2), []), $3 }
+| module_name "." selected { Nonempty_list.singleton ($1,$2), $3 }
 
 (* Top-level value declarations *)
 
@@ -488,17 +489,17 @@ let_binding:
 
 fun_decl:
   var_pattern type_params parameters rhs_type "=" expr {
-    let binders = Utils.nseq_cons $1 $3 in
-    let start = pattern_to_region $1 in
-    let stop = expr_to_region $6 in
-    let region = cover start stop in
+    let binders = Nonempty_list.cons $1 $3 in
+    let start   = pattern_to_region $1 in
+    let stop    = expr_to_region $6 in
+    let region  = cover start stop in
     mk_reg region {binders; type_params=$2; rhs_type=$4; eq=$5; let_rhs=$6} }
 
 non_fun_decl:
   irrefutable type_params rhs_type "=" expr {
     let region = cover (pattern_to_region $1) (expr_to_region $5)
-    and value  = {binders=($1,[]); type_params=$2; rhs_type=$3;
-                  eq=$4; let_rhs=$5}
+    and value  = {binders = Nonempty_list.singleton $1; type_params=$2;
+                  rhs_type=$3; eq=$4; let_rhs=$5}
     in mk_reg region value}
 
 %inline
@@ -538,13 +539,9 @@ module_expr:
 | module_path(module_name) { M_Path (mk_mod_path $1 (fun x -> x#region)) }
 
 structure:
-  "struct" ioption(nseq(declaration)) "end" {
-    let region = cover $1#region $3#region
-    and declarations =
-      match $2 with
-        None -> []
-      | Some nseq -> Utils.nseq_to_list nseq in
-    let value  = {kwd_struct=$1; declarations; kwd_end=$3}
+  "struct" nseq(top_declaration) "end" {
+    let region = cover $1#region $3#region in
+    let value  = {kwd_struct=$1; declarations=$2; kwd_end=$3}
     in {region; value} }
 
 module_constraint:
@@ -567,7 +564,7 @@ signature_sig:
     let sig_items =
       match $2 with
         None -> []
-      | Some nseq -> Utils.nseq_to_list nseq in
+      | Some nseq -> Nonempty_list.to_list nseq in
     let region = cover $1#region $3#region in
     let value : signature_body = {kwd_sig=$1; kwd_end=$3; sig_items}
     in {region;value} }
@@ -593,7 +590,7 @@ sig_val:
 gen_type_expr:
   type_expr { $1 }
 | nseq(quoted_type_var) "." type_expr {
-    let region = nseq_to_region (fun x -> x.region) $1
+    let region = Nodes.ne_list_to_region (fun x -> x.region) $1
     in T_ForAll {region; value = $1,$2,$3} }
 
 sig_type:
@@ -618,7 +615,7 @@ sig_include:
 %inline
 irrefutable:
   tuple(core_irrefutable) {
-    let region = nsepseq_to_region pattern_to_region $1
+    let region = Nodes.nsepseq_to_region pattern_to_region $1
     in P_Tuple {region; value=$1}
   }
 | core_irrefutable { $1 }
@@ -662,7 +659,7 @@ non_const_ctor_irrefutable:
 
 pattern:
   tuple(cons_pattern_level) {
-    let region = nsepseq_to_region pattern_to_region $1
+    let region = Nodes.nsepseq_to_region pattern_to_region $1
     in P_Tuple {region; value=$1} }
 | cons_pattern_level { $1 }
 
@@ -693,7 +690,8 @@ literal_pattern:
 | "<bytes>"    { P_Bytes    $1 }
 | "<string>"   { P_String   $1 }
 | "<verbatim>" { P_Verbatim $1 }
-| "<mutez>"    { P_Mutez    $1 }
+| "<mumav>"    { P_Mumav    $1 }
+| "<mav>"      { P_Mav      $1 }
 | "true"       { P_True     $1 }
 | "false"      { P_False    $1 }
 
@@ -753,7 +751,7 @@ record_pattern(rhs_pattern):
 
 field_pattern(rhs_pattern):
   nseq("[@attr]") field_name {
-    let attributes = Utils.nseq_to_list $1 in
+    let attributes = Nonempty_list.to_list $1 in
     let region = variable_to_region $2 in
     Punned {region; value = {attributes; pun=$2}}
   }
@@ -817,7 +815,7 @@ ass_expr_level:
 
 tuple_expr_level:
   tuple(disj_expr_level) {
-    let region = nsepseq_to_region expr_to_region $1
+    let region = Nodes.nsepseq_to_region expr_to_region $1
     in E_Tuple {region; value=$1} }
 | disj_expr_level { $1 }
 
@@ -855,7 +853,7 @@ match_expr(right_expr):
   "match" expr "with" ioption("|") cases(right_expr) {
     let clauses : ( match_clause reg, vbar) Utils.nsepseq reg = {
       value  = Utils.nsepseq_rev $5;
-      region = nsepseq_to_region (fun x -> x.region) $5}
+      region = Nodes.nsepseq_to_region (fun x -> x.region) $5}
     and stop = (fst $5).region in
     let region = cover $1#region stop
     and value  = {kwd_match=$1; subject=$2; kwd_with=$3;
@@ -878,7 +876,7 @@ cases(right_expr):
     let region           = cover start stop in
     let fst_case         = {region; value=$3}
     and snd_case, others = $1
-    in fst_case, ($2,snd_case)::others }
+    in fst_case, ($2,snd_case) :: others }
 
 match_clause(right_expr):
   pattern "->" right_expr { {pattern=$1; arrow=$2; rhs=$3} }
@@ -967,7 +965,7 @@ ret_type:
   ioption(type_annotation(lambda_app_type)) { $1 }
 
 lambda_app_type:
-  cartesian_level | variant_type(cartesian_level) { $1 }
+  cartesian_level | sum_type(cartesian_level) { $1 }
 
 (* Resuming stratification of [base_expr] *)
 
@@ -1034,13 +1032,13 @@ app_expr:
   core_expr arguments {
     let start  = expr_to_region $1 in
     let stop   = match $2 with
-                   e, [] -> expr_to_region e
-                 | _, tl -> last expr_to_region tl in
+                     [e] -> expr_to_region e
+                 | _::tl -> last expr_to_region tl in
     let region = cover start stop
     in E_App {region; value=($1,$2)}
   }
 | "contract_of" nsepseq(module_name,".") {
-    let stop   = nsepseq_to_region (fun x -> x#region) $2 in
+    let stop   = Nodes.nsepseq_to_region (fun x -> x#region) $2 in
     let region = cover $1#region stop
     in E_ContractOf {region; value=$2} }
 
@@ -1071,7 +1069,8 @@ no_attr_expr:
 literal_expr:
   "<int>"      { E_Int      $1 }
 | "<nat>"      { E_Nat      $1 }
-| "<mutez>"    { E_Mutez    $1 }
+| "<mumav>"    { E_Mumav    $1 }
+| "<mav>"      { E_Mav      $1 }
 | "<string>"   { E_String   $1 }
 | "<verbatim>" { E_Verbatim $1 }
 | "<bytes>"    { E_Bytes    $1 }
@@ -1099,7 +1098,7 @@ typed_expr:
 
       * a single variable: "a" or "@0" or "@let" etc.
       * a single variable in a nested module: "A.B.a"
-      * nested fields and compoments from a variable: "a.0.1.b"
+      * nested fields and components from a variable: "a.0.1.b"
       * same within a nested module: "A.B.a.0.1.b"
       * nested fields and components from an expression: "(e).a.0.1.b" *)
 
@@ -1114,7 +1113,7 @@ selected:
 
 field_path:
   record_or_tuple "." nsepseq(selection,".") {
-    let stop   = nsepseq_to_region selection_to_region $3 in
+    let stop   = Nodes.nsepseq_to_region selection_to_region $3 in
     let region = cover (variable_to_region $1) stop
     and value  = {record_or_tuple=(E_Var $1); selector=$2; field_path=$3}
     in E_Proj {region; value}
@@ -1128,13 +1127,13 @@ selection:
 
 local_path:
   par(expr) "." nsepseq(selection,".") {
-    let stop   = nsepseq_to_region selection_to_region $3 in
+    let stop   = Nodes.nsepseq_to_region selection_to_region $3 in
     let region = cover $1.region stop
     and value  = {record_or_tuple=(E_Par $1); selector=$2; field_path=$3}
     in E_Proj {region; value}
   }
 | record_expr "." nsepseq(selection,".") {
-    let stop   = nsepseq_to_region selection_to_region $3 in
+    let stop   = Nodes.nsepseq_to_region selection_to_region $3 in
     let region = cover (expr_to_region $1) stop
     and value  = {record_or_tuple=$1; selector=$2; field_path=$3}
     in E_Proj {region; value}
@@ -1193,7 +1192,7 @@ path:
 
 projection:
   record_or_tuple "." nsepseq(selection,".") {
-    let stop   = nsepseq_to_region selection_to_region $3 in
+    let stop   = Nodes.nsepseq_to_region selection_to_region $3 in
     let region = cover (variable_to_region $1) stop in
     let value  = {record_or_tuple=(E_Var $1); selector=$2; field_path=$3}
     in {region; value} }
@@ -1223,7 +1222,7 @@ last_expr:
 
 let_in_sequence:
   attributes "let" ioption("rec") let_binding "in" series {
-    let stop   = nsepseq_to_region expr_to_region $6 in
+    let stop   = Nodes.nsepseq_to_region expr_to_region $6 in
     let region = cover $2#region stop in
     let value  = {compound=None; elements = Some $6} in
     let body   = E_Seq {region; value} in
@@ -1233,7 +1232,7 @@ let_in_sequence:
 
 let_mut_sequence:
   attributes "let" "mut" let_binding "in" series {
-    let stop    = nsepseq_to_region expr_to_region $6 in
+    let stop    = Nodes.nsepseq_to_region expr_to_region $6 in
     let region  = cover $2#region stop in
     let value   = {compound=None; elements = Some $6} in
     let body    = E_Seq {region; value} in

@@ -1,5 +1,8 @@
-open Simple_utils.Display
 open Ligo_prim
+module Display = Simple_utils.Display
+module Snippet = Simple_utils.Snippet
+module Location = Simple_utils.Location
+module Ligo_Error = Simple_utils.Error
 
 let stage = "self_ast_aggregated"
 
@@ -30,11 +33,12 @@ type self_ast_aggregated_error =
     Constant.constant' * Ast_aggregated.expression
   | `Self_ast_aggregated_nested_bigmap of Location.t
   | `Self_ast_aggregated_unsolved_coerce of Location.t
+  | `Self_ast_aggregated_unexpected_texists of Ast_typed.type_expression * Location.t
   ]
 [@@deriving poly_constructor { prefix = "self_ast_aggregated_" }]
 
 let error_ppformat
-    :  display_format:string display_format -> no_colour:bool -> Format.formatter
+    :  display_format:string Display.display_format -> no_colour:bool -> Format.formatter
     -> self_ast_aggregated_error -> unit
   =
  fun ~display_format ~no_colour f a ->
@@ -107,7 +111,7 @@ let error_ppformat
       Format.fprintf
         f
         "@[<hv>%a@.Free variable usage is not allowed in call to \
-         Tezos.create_contract:@.%a@]"
+         Mavryk.create_contract:@.%a@]"
         snippet_pp
         e.location
         snippet_pp
@@ -115,7 +119,7 @@ let error_ppformat
     | `Self_ast_aggregated_create_contract_lambda (_cst, e) ->
       Format.fprintf
         f
-        "@[<hv>%a@.Invalid usage of Tezos.create_contract.@.The first argument must be \
+        "@[<hv>%a@.Invalid usage of Mavryk.create_contract.@.The first argument must be \
          an inline function. @]"
         snippet_pp
         e.location
@@ -195,12 +199,20 @@ let error_ppformat
         f
         "@[<hv>%a@.Invalid coercion. It should have been resolved.@]"
         snippet_pp
+        loc
+    | `Self_ast_aggregated_unexpected_texists (type_, loc) ->
+      Format.fprintf
+        f
+        "@[<hv>Underspecified type \"%a\".@.Please add additional annotations.%a@]"
+        Ast_typed.PP.type_expression
+        type_
+        (Snippet.pp ~no_colour)
         loc)
 
 
-let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
+let error_json : self_ast_aggregated_error -> Ligo_Error.t =
  fun e ->
-  let open Simple_utils.Error in
+  let open Ligo_Error in
   match e with
   | `Self_ast_aggregated_expected_obj_ligo location ->
     let message = "Invalid usage of a Test primitive." in
@@ -230,7 +242,7 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
   | `Self_ast_aggregated_fvs_in_create_contract_lambda (_, v) ->
     let location = Value_var.get_location v in
     let message =
-      "Free variable usage is not allowed in call to Tezos.create_contract."
+      "Free variable usage is not allowed in call to Mavryk.create_contract."
     in
     let content = make_content ~message ~location () in
     make ~stage ~content
@@ -238,7 +250,7 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
     let location = e.location in
     let message =
       Format.sprintf
-        "Invalid usage of Tezos.create_contract.@.The first argument must be an inline \
+        "Invalid usage of Mavryk.create_contract.@.The first argument must be an inline \
          function."
     in
     let content = make_content ~message ~location () in
@@ -323,5 +335,14 @@ let error_json : self_ast_aggregated_error -> Simple_utils.Error.t =
     make ~stage ~content
   | `Self_ast_aggregated_unsolved_coerce location ->
     let message = Format.sprintf "Unsolved coercion." in
+    let content = make_content ~message ~location () in
+    make ~stage ~content
+  | `Self_ast_aggregated_unexpected_texists (type_, location) ->
+    let message =
+      Format.asprintf
+        "Underspecified type \"%a\".@.Please add additional annotations."
+        Ast_typed.PP.type_expression
+        type_
+    in
     let content = make_content ~message ~location () in
     make ~stage ~content

@@ -7,9 +7,9 @@ let main (action : string) (store : string) : return =
 
   end in
   let toto : operation * address =
-    Tezos.create_contract
+    Mavryk.create_contract
       (fun (p : nat) (s : string) -> (([] : operation list), Foo.store))
       (None : key_hash option)
-      300000000mutez
+      300000000mumav
       "un" in
   ([toto.0], store)

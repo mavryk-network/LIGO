@@ -16,10 +16,10 @@ namespace B implements T {
 }
 
 namespace C implements {
-  const foo : tez;
+  const foo : mav;
   const another : int;
 } {
-  export const foo = 1tez
+  export const foo = 1mav
   export const another = 100
 }
 

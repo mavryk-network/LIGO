@@ -1,5 +1,5 @@
 module Michelson = struct
-  open Tezos_utils.Michelson
+  open Mavryk_utils.Michelson
 
   type predicate =
     | Simple of unit michelson
@@ -21,7 +21,7 @@ module Michelson = struct
   let special c = Special c
 
   let unpredicate loc apply_args pred =
-    Tezos_micheline.Micheline.map_node
+    Mavryk_micheline.Micheline.map_node
       (fun _ -> loc)
       (fun p -> p)
       (match pred with

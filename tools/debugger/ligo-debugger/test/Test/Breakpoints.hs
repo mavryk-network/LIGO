@@ -374,7 +374,7 @@ test_test = minor <$>
             )
 
     -- Cover regression in
-    -- https://gitlab.com/morley-framework/morley-debugger/-/issues/91
+    -- https://gitlab.com/mavryk-network/morley-debugger/-/issues/91
   , testCaseSteps "Breakpoint ids in different files are unique" \step -> do
       let modulePath = contractsDir </> "module_contracts"
       let file = modulePath </> "importer.mligo"

@@ -19,9 +19,11 @@
   ligo.formatter
   cst
   msgpck
-  pprint)
+  pprint
+  core_unix
+  core_unix.sys_unix)
  (preprocess
-  (pps ppx_yojson_conv ppx_let)))
+  (pps ppx_yojson_conv ppx_jane)))
 
 (rule
  (targets changelog.ml)
@@ -33,4 +35,4 @@
    (run
     "sh"
     "-c"
-    "printf 'let changelog = {changelog|%s|changelog}' \"$(cat ${CHANGELOG_PATH:-../../../gitlab-pages/docs/intro/changelog.md})\""))))
+    "printf 'let changelog = {changelog|%s|changelog}' \"$(cat ${CHANGELOG_PATH:-../../../../gitlab-pages/docs/intro/changelog.md})\""))))

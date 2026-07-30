@@ -1,0 +1,2 @@
+const check = (kh: key_hash) : list<operation> =>
+  [Mavryk.set_delegate (Some(kh))];

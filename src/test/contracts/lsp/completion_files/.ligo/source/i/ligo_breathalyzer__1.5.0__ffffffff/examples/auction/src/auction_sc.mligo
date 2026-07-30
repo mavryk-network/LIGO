@@ -22,14 +22,14 @@
 
 type current_leader = {
   current_leader_address: address;
-  current_leader_amount: tez;
+  current_leader_amount: mav;
   start_time: timestamp
 }
 
 type storage = current_leader option
 
-let bid (storage: storage) (quantity: tez) (user_address: address) (time: timestamp) : storage =
-  if quantity = 0tez then failwith "Amount cannot be null"
+let bid (storage: storage) (quantity: mav) (user_address: address) (time: timestamp) : storage =
+  if quantity = 0mav then failwith "Amount cannot be null"
   else match storage with
   | None ->
     Some {
@@ -57,21 +57,21 @@ let claim (storage: storage) (user_address: address) (time: timestamp) : operati
   in
   (* We don't have any asset to send to the winning bidder, so we just emit an
   event instead. *)
-  let op = Tezos.emit "%claim" user_address in
+  let op = Mavryk.emit "%claim" user_address in
   let new_storage = None in
   (op, new_storage)
 
 [@entry]
 let bid () (storage: storage) : operation list * storage =
-  let quantity = Tezos.get_amount () in
-  let user_address = Tezos.get_sender () in
-  let current_time = Tezos.get_now () in
+  let quantity = Mavryk.get_amount () in
+  let user_address = Mavryk.get_sender () in
+  let current_time = Mavryk.get_now () in
   ([], bid storage quantity user_address current_time)
 
 [@entry]
 let claim () (storage: storage) : operation list * storage =
-  let user_address = Tezos.get_sender () in
-  let current_time = Tezos.get_now () in
+  let user_address = Mavryk.get_sender () in
+  let current_time = Mavryk.get_now () in
   let operation, storage = claim storage user_address current_time in
   ([operation], storage)
 
@@ -80,4 +80,4 @@ let is_claimable () (storage: storage) : bool =
   match storage with
     | None -> false
     | Some current_leader ->
-      current_leader.start_time + 86_400 < Tezos.get_now ()
+      current_leader.start_time + 86_400 < Mavryk.get_now ()

@@ -1,18 +1,18 @@
 class LIGO_CLASS_PLACEHOLDER < Formula
-  desc "Friendly Smart Contract Language for Tezos"
-  homepage "https://ligolang.org/"
+  desc "Friendly Smart Contract Language for Mavryk"
+  homepage "https://ligo.mavryk.org/"
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules
-  url "https://gitlab.com/ligolang/ligo.git", tag: "LIGO_VERSION_PLACEHOLDER", revision: "LIGO_HEAD_REF_HASH_PLACEHOLDER"
+  url "https://gitlab.com/mavryk-network/ligo.git", tag: "LIGO_VERSION_PLACEHOLDER", revision: "LIGO_HEAD_REF_HASH_PLACEHOLDER"
   version "LIGO_VERSION_PLACEHOLDER"
-  head "https://gitlab.com/ligolang/ligo.git", branch: "dev"
+  head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
 
   bottle do
     root_url "https://gitlab.com/api/v4/projects/12294987/packages/generic/ligo_bottle/current"
-  # bottle arm64_ventura
-  # bottle ventura
+  # bottle arm64_sonoma
+  # bottle sonoma
   end
 
   build_dependencies = %w[opam rust hidapi pkg-config gnu-sed cmake gcc]
@@ -42,7 +42,7 @@ class LIGO_CLASS_PLACEHOLDER < Formula
     system "scripts/setup_switch.sh"
     # TODO: remowe workarounds below and use the script provided by the ligo repo once
     # a new version is released
-    # Required for Tezos hangzhou protocol
+    # Required for Mavryk hangzhou protocol
     system "git", "submodule", "init"
     system "git", "submodule", "update", "--recursive"
     # Because sed has different options on MacOS >:(

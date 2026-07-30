@@ -3,7 +3,7 @@
 
 ;; Version: 0.2.0
 ;; Author: LigoLang SASU
-;; Url: https://gitlab.com/ligolang/ligo/-/tree/dev/tools/emacs
+;; Url: https://gitlab.com/mavryk-network/ligo/-/tree/dev/tools/emacs
 ;; Keywords: languages
 ;; Package-Requires: ((emacs "27.1"))
 
@@ -12,7 +12,7 @@
 ;;; Commentary:
 
 ;; This provides font lock and other support for the three dialects of
-;; the Ligo smart contract language for the Tezos blockchain.
+;; the Ligo smart contract language for the Mavryk blockchain.
 
 ;; For users of `lsp-mode', setup can be performed automatically by
 ;; calling the command `ligo-setup-lsp', or with the following snippet
@@ -224,7 +224,7 @@
 	'ligo-font-lock-todo-face)
 
 (defgroup ligo nil
-  "Support for LIGO code.";  :link '(url-link "https://www.ligolang.org/")
+  "Support for LIGO code.";  :link '(url-link "https://ligo.mavryk.org/")
   :group 'languages)
 
 (defcustom ligo-bin "ligo"
@@ -288,7 +288,7 @@
 		(,"\\b\\(switch\\|if\\|else\\|for\\|of\\|while\\|return\\|break\\|continue\\|match\\)\\b"
 			. ligo-font-lock-conditional-face
 		)
-		(,"\\b[-+]?\\([0-9]+\\)\\(n\\|\\tz\\|tez\\|mutez\\|\\)\\b"
+		(,"\\b[-+]?\\([0-9]+\\)\\(n\\|\\mv\\|mav\\|mumav\\|\\)\\b"
 			. ligo-font-lock-number-face
 		)
 		(,"\\b\\(-\\|+\\|%\\|&&\\||\\||==\\|!=\\|<=\\|>=\\|<\\|>\\|\\*\\|/\\|=\\|!\\|\\*=\\|/=\\|%=\\|+=\\|-=\\)\\b"
@@ -395,7 +395,7 @@
 		(,"\\b\\(struct\\|end\\|let\\|in\\|mut\\|rec\\contract_of|parameter_of\\|module\\|sig\\|val\\|include\\|false\\|true\\)\\b"
 			. font-lock-keyword-face
 		)
-		(,"\\b[-+]?\\([0-9]+\\)\\(n\\|\\tz\\|tez\\|mutez\\|\\)\\b"
+		(,"\\b[-+]?\\([0-9]+\\)\\(n\\|\\mv\\|mav\\|mumav\\|\\)\\b"
 			. ligo-font-lock-number-face
 		)
 		(,"::\\|-\\|+\\|/\\|\\b\\(mod\\|land\\|lor\\|lxor\\|lsl\\|lsr\\)\\b\\|&&\\|||\\|<\\|>\\|<>\\|<=\\|>=\\||>\\|->\\|:=\\|\\^\\|*\\|+=\\|-=\\|*=\\|/=\\||="

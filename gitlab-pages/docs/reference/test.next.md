@@ -1,6 +1,6 @@
 ---
 id: test.next-reference
-title: Next
+title: next
 hide_table_of_contents: true
 ---
 import Syntax from '@theme/Syntax';
@@ -8,61 +8,61 @@ import SyntaxTitle from '@theme/SyntaxTitle';
 
 
 
-[module Mutation](Test.Next.Mutation.md)
+[module mutation](test.next.mutation.md)
 
 
-module PBT = [Test.PBT](Test.PBT.md)
+module PBT = PBT
 
-[module State](Test.Next.State.md)
-
-
-[module Account](Test.Next.Account.md)
+[module state](test.next.state.md)
 
 
-[module Compare](Test.Next.Compare.md)
+[module account](test.next.account.md)
 
 
-[module Michelson](Test.Next.Michelson.md)
+[module compare](test.next.compare.md)
 
 
-[module IO](Test.Next.IO.md)
+[module michelson](test.next.michelson.md)
 
 
-[module Assert](Test.Next.Assert.md)
+[module io](test.next.io.md)
 
 
-[module String](Test.Next.String.md)
+[module assert](test.next.assert.md)
 
 
-[module Ticket](Test.Next.Ticket.md)
+[module string](test.next.string.md)
 
 
-[module Originate](Test.Next.Originate.md)
+[module ticket](test.next.ticket.md)
 
 
-[module Contract](Test.Next.Contract.md)
+[module originate](test.next.originate.md)
 
 
-[module Typed_address](Test.Next.Typed_address.md)
+[module contract](test.next.contract.md)
 
 
-[module Address](Test.Next.Address.md)
+[module typed_address](test.next.typed_address.md)
 
 
-[module Timelock](Test.Next.Timelock.md)
+[module address](test.next.address.md)
 
 
-[module Crypto](Test.Next.Crypto.md)
+[module timelock](test.next.timelock.md)
 
 
-[module Dynamic_entrypoints](Test.Next.Dynamic_entrypoints.md)
+[module crypto](test.next.crypto.md)
+
+
+[module dynamic_entrypoints](test.next.dynamic_entrypoints.md)
 
 
 <SyntaxTitle syntax="cameligo">
-val originate : &#39;p &#39;s.(&#39;p, &#39;s) module&#95;contract -&gt; &#39;s -&gt; tez -&gt; (&#39;p, &#39;s) origination&#95;result
+val originate : &#39;p &#39;s.(&#39;p, &#39;s) module&#95;contract -&gt; &#39;s -&gt; mav -&gt; (&#39;p, &#39;s) origination&#95;result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
-let originate: &lt;p, s&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: tez) =&gt; origination&#95;result&lt;p, s&gt;
+let originate: &lt;p, s&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; origination&#95;result&lt;p, s&gt;
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">

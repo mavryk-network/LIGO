@@ -5,10 +5,9 @@
 
 module Region    = Simple_utils.Region
 module Std       = Simple_utils.Std
-module Core      = LexerLib.Core
 module Markup    = LexerLib.Markup
 module Directive = Preprocessor.Directive
-module Unit      = LexerLib.Unit
+module LexUnit   = LexerLib.LexUnit
 
 (* Local dependencies *)
 
@@ -16,7 +15,7 @@ module Token = Lx_ml_self_tokens.Token
 
 (* Filter *)
 
-let filter (units : Token.t Unit.t list) : Token.t Unit.t list =
+let filter (units : Token.t LexUnit.t list) : Token.t LexUnit.t list =
   let open! Token in
   let rec aux acc = function
     `Markup (Markup.BlockCom {value; region}) :: remaining ->
@@ -30,13 +29,13 @@ let filter (units : Token.t Unit.t list) : Token.t Unit.t list =
 
 (* Exported *)
 
-type item = Token.t Unit.t
+type item = Token.t LexUnit.t
 
 type units = item list
 
 type message = string Region.reg
 
-type result = (units, units * message) Stdlib.result
+type nonrec result = (units, units * message) result
 
 let filter ?print_passes ~add_warning:_ units : result =
   let () =

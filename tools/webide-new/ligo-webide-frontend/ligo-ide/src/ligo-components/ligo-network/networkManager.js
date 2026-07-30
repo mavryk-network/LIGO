@@ -1,5 +1,5 @@
 import { getCachingKeys, dropByCacheKey } from "react-router-cache-route";
-import { BeaconWallet } from "@taquito/beacon-wallet";
+import { MavletWallet } from "@mavrykdynamics/webmavryk-mavlet-wallet";
 import headerActions from "~/ligo-components/ligo-header";
 import notification from "~/base-components/notification";
 import redux from "~/base-components/redux";
@@ -14,7 +14,7 @@ class NetworkManager {
     this.networks = [];
     this.Sdks = new Map();
     this.isWallet = false;
-    this.browserExtension = new BrowserExtension(new BeaconWallet({ name: "LIGO Web IDE" }));
+    this.browserExtension = new BrowserExtension(new MavletWallet({ name: "LIGO Web IDE" }));
   }
 
   addSdk(Sdk, networks) {

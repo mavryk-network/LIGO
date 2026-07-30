@@ -11,7 +11,7 @@ use a keyword as a variable, you can prefix it with `@`, like so:
 <Syntax syntax="cameligo">
 
 ```cameligo group=keywords
-let @from = ("tz1fakefakefakefakefakefakefakcphLA5" : address)
+let @from = ("mv2fakefakefakefakefakefakefak82z7t2" : address)
 ```
 
 </Syntax>
@@ -19,7 +19,7 @@ let @from = ("tz1fakefakefakefakefakefakefakcphLA5" : address)
 <Syntax syntax="jsligo">
 
 ```jsligo group=keywords
-const @from = ("tz1fakefakefakefakefakefakefakcphLA5" as address)
+const @from = ("mv2fakefakefakefakefakefakefak82z7t2" as address)
 ```
 
 

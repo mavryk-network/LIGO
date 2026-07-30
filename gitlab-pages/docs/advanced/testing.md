@@ -19,8 +19,7 @@ support are:
 * `ligo run dry-run`
 
 We will show how to use the first two, while an example on how to use
-the third one was already explained
-[here](first-contract.md#dry-running-a-contract).
+the third one was already explained.
 
 ### Testing with `ligo run test`
 
@@ -33,10 +32,10 @@ The command `ligo run test` can be used to test a contract using LIGO.
 When running the `ligo run test` command, LIGO code has access to an
 additional `Test` module. This module provides ways of originating
 contracts and executing transactions, as well as additional helper
-functions that allow to control different parameters of the Tezos
+functions that allow to control different parameters of the Mavryk
 testing library.
 
-> Note: The LIGO interpreter uses the [same library that Tezos internally uses for testing](https://gitlab.com/tezos/tezos/-/tree/master/src/proto_alpha/lib_protocol/test/helpers).
+> Note: The LIGO interpreter uses the [same library that Mavryk internally uses for testing](https://gitlab.com/mavryk-network/mavryk-protocol/-/tree/master/src/proto_alpha/lib_protocol/test/helpers).
 
 The function `Test.originate` allows to deploy a contract in the
 testing environment. It takes a contract, which is represented as a
@@ -98,7 +97,7 @@ type param = MyContract.C parameter_of
 
 let test1 =
   let initial_storage = 42 in
-  let {addr ; code = _ ; size = _} = Test.originate (contract_of MyContract.C) initial_storage 0tez in
+  let {addr ; code = _ ; size = _} = Test.originate (contract_of MyContract.C) initial_storage 0mav in
   assert (Test.get_storage addr = initial_storage)
 ```
 
@@ -114,7 +113,7 @@ type param = parameter_of MyContract.C
 
 const run_test1 = () : unit => {
   let initial_storage = 42 as int;
-  let {addr , code , size} = Test.originate(contract_of(MyContract.C), initial_storage, 0tez);
+  let {addr , code , size} = Test.originate(contract_of(MyContract.C), initial_storage, 0mav);
   assert (Test.get_storage(addr) == initial_storage);
 };
 
@@ -153,7 +152,7 @@ ligo run test --library . gitlab-pages/docs/advanced/src/testing/mycontract-test
 
 The function `Test.transfer` allows to bake a transaction.
 It takes a target account of type `('parameter, 'storage) typed_address`, the parameter
-of type `'parameter` and an amount of type `tez`. This function
+of type `'parameter` and an amount of type `mav`. This function
 performs the transaction, and returns a `test_exec_result` which
 can be matched on to know whether the transaction was successful or not.
 In case of success you will get access to the gas consumed by the execution
@@ -172,8 +171,8 @@ increments the storage after deployment, we also print the gas consumption:
 
 let test2 =
   let initial_storage = 42 in
-  let orig = Test.originate (contract_of MyContract.C) initial_storage 0tez in
-  let gas_cons = Test.transfer_exn orig.addr (Increment (1)) 1mutez in
+  let orig = Test.originate (contract_of MyContract.C) initial_storage 0mav in
+  let gas_cons = Test.transfer_exn orig.addr (Increment (1)) 1mumav in
   let () = Test.log ("gas consumption",gas_cons) in
   assert (Test.get_storage orig.addr = initial_storage + 1)
 ```
@@ -190,8 +189,8 @@ it is a block expression which can contain statements and local declarations.
 
 const test2 = do {
   let initial_storage = 42 as int;
-  let orig = Test.originate(contract_of (MyContract.C), initial_storage, 0tez);
-  let gas_cons = Test.transfer_exn(orig.addr, (Increment (1)), 1mutez);
+  let orig = Test.originate(contract_of (MyContract.C), initial_storage, 0mav);
+  let gas_cons = Test.transfer_exn(orig.addr, (Increment (1)), 1mumav);
   Test.log(["gas consumption", gas_cons]);
   return (Test.get_storage(orig.addr) == initial_storage + 1);
 }
@@ -211,14 +210,14 @@ and then show you how to handle it.
 
 There is two kind of operations in the protocol : external and internal.
 `internal operations` are those created by smart contracts and `external operations` are those created from outside the chain
-(e.g. using `Test.originate` or `tezos-client` for instance) [more information here](https://tezos.gitlab.io/active/michelson.html#semantics-of-smart-contracts-and-transactions)
+(e.g. using `Test.originate` or `mavryk-client` for instance) [more information here](https://protocol.mavryk.org/active/michelson.html#semantics-of-smart-contracts-and-transactions)
 
 In the protocol, both external and internal `transfer`/`origination` operations contains a piece of michelson code representing the `parameter`/`initial storage`.
 Now imagine you have a value of type `parameter_ty`/`storage_ty` containing a ticket, that you want to transfer or originate,
 in the operation data, tickets will be represented in Michelson as pairs:
 
 ```bash
-> ligo compile expression cameligo 'Tezos.create_ticket 0x0202 10n'
+> ligo compile expression cameligo 'Mavryk.create_ticket 0x0202 10n'
 (Pair "KT1DUMMYDUMMYDUMMYDUMMYDUMMYDUMu2oHG" 0x0202 10)
 ```
 
@@ -261,7 +260,7 @@ and returns a value of type `test_exec_result`
 
 > Note: Functions `mk_param` and `mk_storage` will be executed in the proxy contract itself
 
-Find more detailed information on the API of [`Proxy_ticket` here](../reference/Test.Proxy_ticket.md)
+Find more detailed information on the API of [`Proxy_ticket` here](../reference/test.proxy_ticket.md)
 
 #### Usages
 
@@ -289,11 +288,11 @@ module C = struct
   [@entry]
   let main (p : param) (_ : storage) : operation list * storage =
     let (_,ticket) = p in
-    let (_,(v,_)) , _ = Tezos.read_ticket ticket in
-    [] , (v, Tezos.get_sender ())
+    let (_,(v,_)) , _ = Mavryk.read_ticket ticket in
+    [] , (v, Mavryk.get_sender ())
 end
 let test_transfer_to_contract =
-  let {addr = main_taddr; code = _ ; size = _} = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mutez in
+  let {addr = main_taddr; code = _ ; size = _} = Test.originate (contract_of C) ("bye",Test.nth_bootstrap_account 1) 1mumav in
   let main_addr = Test.to_address main_taddr in
 
   (* Use this address everytime you want to send tickets from the same proxy-contract *)
@@ -332,13 +331,13 @@ namespace C {
   @entry
   function main (p: param, _s: [string , address]) : [list<operation> , [string , address]] {
     let [_v,ticket] = p ;
-    let [[_addr,[v,_t]] , _ticket] = Tezos.read_ticket (ticket) ;
-    return ([list([]) , [v, Tezos.get_sender ()]])
+    let [[_addr,[v,_t]] , _ticket] = Mavryk.read_ticket (ticket) ;
+    return ([list([]) , [v, Mavryk.get_sender ()]])
   };
 }
 
 const test_transfer_to_contract = do {
-  let {addr : main_taddr, code , size } = Test.originate (contract_of(C), ["bye",Test.nth_bootstrap_account (1)], 1mutez) ;
+  let {addr : main_taddr, code , size } = Test.originate (contract_of(C), ["bye",Test.nth_bootstrap_account (1)], 1mumav) ;
   let main_addr = Test.to_address (main_taddr) ;
 
   /* mk_param is executed __by the proxy contract__ */
@@ -402,7 +401,7 @@ let main (() : unit) (s : storage) : operation list * storage =
   [] , (
     match s with
     | Some ticket ->
-      let (_ , t) = Tezos.read_ticket ticket in
+      let (_ , t) = Mavryk.read_ticket ticket in
       Some t
     | None -> None
   )
@@ -436,7 +435,7 @@ const main = (_p: unit, s: storage) : [ list<operation> , storage] => {
   let x =
     match (s) {
       when(Some(ticket)): ((ticket: ticket<bytes>) => {
-        let [_v , t] = Tezos.read_ticket (ticket) ;
+        let [_v , t] = Mavryk.read_ticket (ticket) ;
         return Some (t)
       })(ticket);
       when(None()): None()
@@ -484,11 +483,11 @@ Consider a map binding addresses to amounts and a function removing all entries 
 ```cameligo group=remove-balance
 (* This is remove-balance.mligo *)
 
-type balances = (address, tez) map
+type balances = (address, mav) map
 
-let remove_balances_under (b:balances) (threshold:tez) : balances =
+let remove_balances_under (b:balances) (threshold:mav) : balances =
   Map.fold
-    (fun ((acc, (k, v)) : balances * (address * tez)) ->
+    (fun ((acc, (k, v)) : balances * (address * mav)) ->
        if v < threshold then Map.remove k acc else acc)
     b b
 ```
@@ -500,10 +499,10 @@ let remove_balances_under (b:balances) (threshold:tez) : balances =
 ```jsligo group=remove-balance
 // This is remove-balance.jsligo
 
-type balances = map <address, tez>
+type balances = map <address, mav>
 
-const remove_balances_under = (b : balances, threshold:tez) : balances => {
-  let f = ([acc, kv] : [balances, [address , tez]] ) : balances => {
+const remove_balances_under = (b : balances, threshold:mav) : balances => {
+  let f = ([acc, kv] : [balances, [address , mav]] ) : balances => {
     let [k,v] = kv ;
     if (v < threshold) { return Map.remove (k,acc) } else {return acc}
   };
@@ -523,7 +522,7 @@ the bootstrap addresses later)
 
 ```cameligo test-ligo group=unit-remove-balance-mixed
 #include "./gitlab-pages/docs/advanced/src/testing/remove-balance.mligo"
-let _u = Test.reset_state 5n ([] : tez list)
+let _u = Test.reset_state 5n ([] : mav list)
 ```
 
 </Syntax>
@@ -532,7 +531,7 @@ let _u = Test.reset_state 5n ([] : tez list)
 
 ```jsligo test-ligo group=unit-remove-balance-mixed
 #include "./gitlab-pages/docs/advanced/src/testing/remove-balance.jsligo"
-let _u = Test.reset_state (5n, list([]) as list <tez>);
+let _u = Test.reset_state (5n, list([]) as list <mav>);
 ```
 
 </Syntax>
@@ -544,7 +543,7 @@ Now build the `balances` map that will serve as the input of our test.
 ```cameligo test-ligo group=unit-remove-balance-mixed
 let balances : balances =
   let a1, a2, a3 = Test.nth_bootstrap_account 1, Test.nth_bootstrap_account 2, Test.nth_bootstrap_account 3
-  in Map.literal [(a1, 10tz); (a2, 100tz); (a3, 1000tz)]
+  in Map.literal [(a1, 10mv); (a2, 100mv); (a3, 1000mv)]
 ```
 
 </Syntax>
@@ -552,9 +551,9 @@ let balances : balances =
 
 ```jsligo test-ligo group=unit-remove-balance-mixed
 let balances : balances =
-  Map.literal(list([[Test.nth_bootstrap_account(1), 10tez],
-                    [Test.nth_bootstrap_account(2), 100tez],
-                    [Test.nth_bootstrap_account(3), 1000tez]]));
+  Map.literal(list([[Test.nth_bootstrap_account(1), 10mav],
+                    [Test.nth_bootstrap_account(2), 100mav],
+                    [Test.nth_bootstrap_account(3), 1000mav]]));
 ```
 
 </Syntax>
@@ -581,15 +580,15 @@ We also print the actual and expected sizes for good measure.
 ```cameligo test-ligo group=unit-remove-balance-mixed
 let test =
   List.iter
-    (fun ((threshold , expected_size) : tez * nat) ->
-      let tester (balances, threshold : balances * tez) = Map.size (remove_balances_under balances threshold) in
+    (fun ((threshold , expected_size) : mav * nat) ->
+      let tester (balances, threshold : balances * mav) = Map.size (remove_balances_under balances threshold) in
       let size = Test.run tester (balances, threshold) in
       let expected_size = Test.eval expected_size in
       let () = Test.log ("expected", expected_size) in
       let () = Test.log ("actual",size) in
       assert (Test.michelson_equal size expected_size)
     )
-    [(15tez,2n);(130tez,1n);(1200tez,0n)]
+    [(15mav,2n);(130mav,1n);(1200mav,0n)]
 ```
 
 </Syntax>
@@ -598,15 +597,15 @@ let test =
 ```jsligo test-ligo group=unit-remove-balance-mixed
 let test =
   List.iter
-    ( ([threshold , expected_size] : [tez , nat]) : unit => {
-      let tester = ([balances, threshold] : [balances, tez]) : nat => Map.size (remove_balances_under (balances, threshold));
+    ( ([threshold , expected_size] : [mav , nat]) : unit => {
+      let tester = ([balances, threshold] : [balances, mav]) : nat => Map.size (remove_balances_under (balances, threshold));
       let size = Test.run(tester, [balances, threshold]);
       let expected_size_ = Test.eval(expected_size) ;
       let unit_ = Test.log (["expected", expected_size]) ;
       let unit__ = Test.log (["actual",size]) ;
       return (assert (Test.michelson_equal (size,expected_size_)))
     },
-    list ([ [15tez, 2n] , [130tez, 1n] , [1200tez, 0n]]) );
+    list ([ [15mav, 2n] , [130mav, 1n] , [1200mav, 0n]]) );
 ```
 
 </Syntax>
@@ -754,12 +753,12 @@ Here is how you emit events and fetch them from your tests:
 ```cameligo test-ligo group=test_ex
 module C = struct
   [@entry] let main (p : int*int) () =
-    [Tezos.emit "%foo" p ; Tezos.emit "%foo" p.0],()
+    [Mavryk.emit "%foo" p ; Mavryk.emit "%foo" p.0],()
 end
 
 let test_foo =
-  let orig = Test.originate (contract_of C) () 0tez in
-  let _ = Test.transfer_exn orig.addr (Main (1,2)) 0tez in
+  let orig = Test.originate (contract_of C) () 0mav in
+  let _ = Test.transfer_exn orig.addr (Main (1,2)) 0mav in
   (Test.get_last_events_from orig.addr "foo" : (int*int) list),(Test.get_last_events_from orig.addr "foo" : int list)
 ```
 
@@ -770,14 +769,14 @@ let test_foo =
 namespace C {
   @entry
   let main = (p: [int, int], _: unit) => {
-    let op1 = Tezos.emit("%foo", p);
-    let op2 = Tezos.emit("%foo", p[0]);
+    let op1 = Mavryk.emit("%foo", p);
+    let op2 = Mavryk.emit("%foo", p[0]);
     return [list([op1, op2]), unit];
     };
 }
 let test = do {
-  let orig = Test.originate(contract_of(C), unit, 0tez);
-  Test.transfer_exn(orig.addr, Main ([1,2]), 0tez);
+  let orig = Test.originate(contract_of(C), unit, 0mav);
+  Test.transfer_exn(orig.addr, Main ([1,2]), 0mav);
   return [Test.get_last_events_from(orig.addr, "foo") as list<[int, int]>, Test.get_last_events_from(orig.addr, "foo") as list<int>];
 };
 ```
@@ -791,9 +790,9 @@ When declaring the entry points of a contract using `@entry`, LIGO generates two
 * an implicit `main` function, which can be obtained using the keyword `contract_of(C)` where `C` is the namespace or module containing the entry points, and
 * the input type for that `main` function, which can be obtained using the keyword `parameter_of C`.
 
-In the example below, `contract_of(C)` is returns the implicitly-declared `main` function that calls the `increment` or `decrement` entry points depending on the argument given, and `parameter_of C` is the [variant](https://ligolang.org/docs/language-basics/unit-option-pattern-matching#variant-types) `["Increment", int] | ["Decrement", int]`.
+In the example below, `contract_of(C)` is returns the implicitly-declared `main` function that calls the `increment` or `decrement` entry points depending on the argument given, and `parameter_of C` is the [variant](https://ligo.mavryk.org/docs/language-basics/unit-option-pattern-matching#variant-types) `["Increment", int] | ["Decrement", int]`.
 
-```jsligo group=tezos_specific
+```jsligo group=mavryk_specific
 namespace C {
   type storage = int;
 
@@ -806,9 +805,9 @@ namespace C {
 
 const testC = do {
     let initial_storage = 42;
-    let orig = Test.originate(contract_of(C), initial_storage, 0tez);
+    let orig = Test.originate(contract_of(C), initial_storage, 0mav);
     let p : parameter_of C = Increment(1);
-    Test.transfer_exn(orig.addr, p, 1mutez);
+    Test.transfer_exn(orig.addr, p, 1mumav);
     return assert(Test.get_storage(orig.addr) == initial_storage + 1);
 };
 ```

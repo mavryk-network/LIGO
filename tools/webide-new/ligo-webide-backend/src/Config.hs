@@ -11,7 +11,7 @@ import Options.Applicative
 
 data ServerConfig = ServerConfig
   { scLigoPath :: FilePath
-  , scOctezClientPath :: Maybe FilePath
+  , scMavkitClientPath :: Maybe FilePath
   , scPort :: Int
   , scVerbosity :: Int
   , scDockerizedLigoVersion :: Maybe String
@@ -49,10 +49,10 @@ mkParserInfo clientCounter =
             <> help "path to ligo binary"
           )
       <*> optional (strOption
-          ( long "octez-client-path"
+          ( long "mavkit-client-path"
             <> short 't'
             <> metavar "STRING"
-            <> help "path to octez-client binary"
+            <> help "path to mavkit-client binary"
           ))
       <*> option auto
           ( long "port"

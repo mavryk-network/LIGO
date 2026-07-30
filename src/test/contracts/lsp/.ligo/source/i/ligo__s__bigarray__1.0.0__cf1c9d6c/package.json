@@ -15,13 +15,13 @@
   },
   "keywords": [
     "ligo",
-    "tezos",
-    "tezos-ligo",
+    "mavos",
+    "mavryk-ligo",
     "cameligo"
   ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ligolang/bigarray-cameligo/issues"
   },
-  "homepage": "https://ligolang.org/"
+  "homepage": "https://ligo.mavryk.org/"
 }

@@ -1,17 +1,17 @@
 [@@@coverage exclude_file]
 
-open Simple_utils.PP_helpers
+module PP_helpers = Simple_utils.PP_helpers
 open Ligo_prim
 open Types
 open Format
 
-let list_sep_d x = list_sep x (tag " ,@ ")
+let list_sep_d x = PP_helpers.(list_sep x (tag " ,@ "))
 
 let rec type_variable ppf : type_expression -> _ =
  fun te ->
   match te.type_content with
   | T_or (a, b) -> fprintf ppf "@[(%a) |@ (%a)@]" annotated a annotated b
-  | T_tuple ts -> fprintf ppf "@[(%a)@]" (list_sep annotated (tag " *@ ")) ts
+  | T_tuple ts -> fprintf ppf "@[(%a)@]" PP_helpers.(list_sep annotated (tag " *@ ")) ts
   | T_base b -> type_constant ppf b
   | T_function (a, b) -> fprintf ppf "@[(%a) ->@ (%a)@]" type_variable a type_variable b
   | T_map (k, v) -> fprintf ppf "@[<4>map(%a -> %a)@]" type_variable k type_variable v
@@ -39,7 +39,7 @@ and type_constant ppf (tb : type_base) : unit =
     | TB_bytes -> "bytes"
     | TB_nat -> "nat"
     | TB_int -> "int"
-    | TB_mutez -> "mutez"
+    | TB_mumav -> "mumav"
     | TB_bool -> "bool"
     | TB_operation -> "operation"
     | TB_address -> "address"
@@ -71,7 +71,7 @@ let rec value ppf : value -> unit = function
   | D_int n -> fprintf ppf "%a" Z.pp_print n
   | D_nat n -> fprintf ppf "+%a" Z.pp_print n
   | D_timestamp n -> fprintf ppf "+%a" Z.pp_print n
-  | D_mutez n -> fprintf ppf "%amutez" Z.pp_print n
+  | D_mumav n -> fprintf ppf "%amumav" Z.pp_print n
   | D_unit -> fprintf ppf "unit"
   | D_string s -> fprintf ppf "\"%s\"" s
   | D_bytes x -> fprintf ppf "0x%a" Hex.pp @@ Hex.of_bytes x
@@ -96,7 +96,7 @@ and type_expression ppf : type_expression -> unit =
 
 
 and type_content ppf : type_content -> unit = function
-  | T_tuple ts -> fprintf ppf "@[(%a)@]" (list_sep annotated (tag " *@ ")) ts
+  | T_tuple ts -> fprintf ppf "@[(%a)@]" PP_helpers.(list_sep annotated (tag " *@ ")) ts
   | T_or (a, b) ->
     fprintf ppf "or %a %a" type_expression_annotated a type_expression_annotated b
   | T_function (a, b) -> fprintf ppf "lambda (%a) %a" type_expression a type_expression b
@@ -197,7 +197,11 @@ and expression_content ppf (e : expression_content) =
       expression
       body
   | E_tuple exprs ->
-    fprintf ppf "@[(%a)@]" Format.(pp_print_list ~pp_sep:(const ", ") expression) exprs
+    fprintf
+      ppf
+      "@[(%a)@]"
+      Format.(pp_print_list ~pp_sep:(PP_helpers.const ", ") expression)
+      exprs
   | E_let_tuple (expr, (fields, body)) ->
     fprintf
       ppf
@@ -248,13 +252,13 @@ and expression_content ppf (e : expression_content) =
       expression
       body
   | E_raw_michelson code ->
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let code = Micheline.Seq (Location.generated, code) in
     let code = Micheline.strip_locations code in
     let code = Micheline_printer.printable (fun prim -> prim) code in
     fprintf ppf "%a" Micheline_printer.print_expr code
   | E_inline_michelson (code, _) ->
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let code = Micheline.Seq (Location.generated, code) in
     let code = Micheline.strip_locations code in
     let code = Micheline_printer.printable (fun prim -> prim) code in

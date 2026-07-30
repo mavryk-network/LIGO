@@ -1,14 +1,18 @@
-open Simple_utils.Trace
-open Simple_utils
+open Core
 open Ligo_interpreter.Types
 open Ligo_interpreter.Combinators
 open Ligo_prim
+module Ligo_option = Simple_utils.Ligo_option
+module Ligo_string = Simple_utils.Ligo_string
+module PP_helpers = Simple_utils.PP_helpers
+module Snippet = Simple_utils.Snippet
+module Trace = Simple_utils.Trace
 module AST = Ast_aggregated
-include AST.Types
 module Env = Ligo_interpreter.Environment
 module Monad = Execution_monad
 module ModRes = Preprocessor.ModRes
-module TzBytes = Tezos_stdlib.TzBytes
+module TzBytes = Mavryk_stdlib.TzBytes
+include AST.Types
 
 type interpreter_error = Errors.interpreter_error
 
@@ -17,17 +21,17 @@ type interpreter_error = Errors.interpreter_error
    if that fails it tries to resolve it as a relative path w.r.t. directory of [source_file]
    if that fails it tries to resolve it as a package path using [mod_res] *)
 let resolve_contract_file ~mod_res ~source_file ~contract_file =
-  match Caml.Sys.file_exists contract_file with
-  | true -> contract_file
-  | false ->
+  match Sys_unix.file_exists contract_file with
+  | `Yes -> contract_file
+  | `No | `Unknown ->
     (match source_file with
+    | None -> ModRes.Helpers.resolve ~file:contract_file mod_res
     | Some source_file ->
       let d = Filename.dirname source_file in
       let s = Filename.concat d contract_file in
-      (match Caml.Sys.file_exists s with
-      | true -> s
-      | false -> ModRes.Helpers.resolve ~file:contract_file mod_res)
-    | None -> ModRes.Helpers.resolve ~file:contract_file mod_res)
+      (match Sys_unix.file_exists s with
+      | `Yes -> s
+      | `No | `Unknown -> ModRes.Helpers.resolve ~file:contract_file mod_res))
 
 
 (*
@@ -159,7 +163,7 @@ and pattern_env_extend ~no_colour ~attributes env pattern ty value =
 
 
 let get_file_from_location loc =
-  let open Option in
+  let open Ligo_option in
   let* reg = Location.get_file loc in
   let file = reg#file in
   if String.(file = "") then None else Some file
@@ -208,25 +212,25 @@ let wrap_compare_result comp cmpres loc calltrace =
     @@ v_string "Only valid comparisons are: EQ, NEQ, LT, LE, GT, GE"
 
 
-let compare_constants ~no_colour ~raise o1 o2 loc calltrace =
+let compare_constants ~no_colour ~(raise : _ Trace.raise) o1 o2 loc calltrace =
   match o1, o2 with
   | V_Ct (C_int64 a'), V_Ct (C_int64 b') -> Int64.compare a' b'
   | V_Ct (C_int a'), V_Ct (C_int b')
-  | V_Ct (C_mutez a'), V_Ct (C_mutez b')
+  | V_Ct (C_mumav a'), V_Ct (C_mumav b')
   | V_Ct (C_timestamp a'), V_Ct (C_timestamp b')
   | V_Ct (C_nat a'), V_Ct (C_nat b') -> Z.compare a' b'
   | V_Ct (C_bool a), V_Ct (C_bool b) -> Bool.compare a b
-  | V_Ct (C_address a), V_Ct (C_address b) -> Tezos_state.compare_account a b
+  | V_Ct (C_address a), V_Ct (C_address b) -> Mavryk_state.compare_account a b
   | V_Ct (C_key_hash a), V_Ct (C_key_hash b) ->
-    Tezos_crypto.Signature.Public_key_hash.compare a b
+    Mavryk_crypto.Signature.Public_key_hash.compare a b
   | V_Ct C_unit, V_Ct C_unit -> 0
   | V_Ct (C_string a'), V_Ct (C_string b') -> String.compare a' b'
   | V_Ct (C_bytes a'), V_Ct (C_bytes b') -> Bytes.compare a' b'
   | ( V_Ct (C_contract { address = addr1; entrypoint = entr1 })
     , V_Ct (C_contract { address = addr2; entrypoint = entr2 }) ) ->
     Tuple2.compare
-      ~cmp1:Tezos_state.compare_account
-      ~cmp2:(Option.compare String.compare)
+      ~cmp1:Mavryk_state.compare_account
+      ~cmp2:(Option.compare Entrypoint_repr.compare)
       (addr1, entr1)
       (addr2, entr2)
   | operand, operand' ->
@@ -240,7 +244,7 @@ let compare_constants ~no_colour ~raise o1 o2 loc calltrace =
     raise.error @@ Errors.meta_lang_eval loc calltrace @@ v_string msg
 
 
-let rec apply_comparison ~no_colour ~raise
+let rec apply_comparison ~no_colour ~(raise : _ Trace.raise)
     : Location.t -> calltrace -> Ast_aggregated.type_expression -> value -> value -> int
   =
  fun loc calltrace type_ operand operand' ->
@@ -252,13 +256,13 @@ let rec apply_comparison ~no_colour ~raise
     compare_constants ~no_colour ~raise v1 v2 loc calltrace
   | V_List xs, V_List ys ->
     let type_ =
-      trace_option ~raise (Errors.generic_error ~calltrace loc "Expected list type")
+      Trace.trace_option ~raise (Errors.generic_error ~calltrace loc "Expected list type")
       @@ AST.get_t_list type_
     in
     List.compare (apply_comparison ~no_colour ~raise loc calltrace type_) xs ys
   | V_Set s, V_Set s' ->
     let type_ =
-      trace_option ~raise (Errors.generic_error ~calltrace loc "Expected set type")
+      Trace.trace_option ~raise (Errors.generic_error ~calltrace loc "Expected set type")
       @@ AST.get_t_set type_
     in
     List.compare
@@ -271,7 +275,7 @@ let rec apply_comparison ~no_colour ~raise
          s')
   | V_Map m, V_Map m' ->
     let type_key, type_value =
-      trace_option
+      Trace.trace_option
         ~raise
         (Errors.generic_error ~calltrace loc "Expected map or big_map type")
       @@ AST.get_t_map_or_big_map type_
@@ -284,7 +288,7 @@ let rec apply_comparison ~no_colour ~raise
     List.compare compare_kv m m'
   | V_Record r, V_Record r' ->
     let (row : _ Ligo_prim.Row.With_layout.t) =
-      trace_option
+      Trace.trace_option
         ~raise
         (Errors.generic_error ~calltrace loc "Expected a record type")
         (AST.get_t_record type_)
@@ -312,7 +316,7 @@ let rec apply_comparison ~no_colour ~raise
     aux row_kv
   | V_Construct (ctor_a, args_a), V_Construct (ctor_b, args_b) ->
     let ({ fields; layout } : _ Ligo_prim.Row.With_layout.t) =
-      trace_option
+      Trace.trace_option
         ~raise
         (Errors.generic_error ~calltrace loc "Expected a sum type")
         (AST.get_t_sum type_)
@@ -463,7 +467,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   in
   let div_by_zero_str = v_string "Dividing by zero" in
   let nth_type n =
-    trace_option ~raise (Errors.generic_error loc "Could not recover types")
+    Trace.trace_option ~raise (Errors.generic_error loc "Could not recover types")
     @@ List.nth types n
   in
   let return_contract_exec_exn = function
@@ -497,14 +501,14 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_NOT, _ -> fail @@ error_type ()
   | C_NEG, [ V_Ct (C_int a') ] -> return @@ v_int (Z.neg a')
   | C_NEG, [ V_Ct (C_bls12_381_g1 a') ] ->
-    return @@ v_bls12_381_g1 (Bls12_381.G1.negate a')
+    return @@ v_bls12_381_g1 (Mavryk_bls12_381.G1.negate a')
   | C_NEG, [ V_Ct (C_bls12_381_g2 a') ] ->
-    return @@ v_bls12_381_g2 (Bls12_381.G2.negate a')
+    return @@ v_bls12_381_g2 (Mavryk_bls12_381.G2.negate a')
   | C_NEG, [ V_Ct (C_bls12_381_fr a') ] ->
-    return @@ v_bls12_381_fr (Bls12_381.Fr.negate a')
+    return @@ v_bls12_381_fr (Mavryk_bls12_381.Fr.negate a')
   | C_NEG, _ -> fail @@ error_type ()
   | C_INT, [ V_Ct (C_nat a') ] -> return @@ v_int a'
-  | C_INT, [ V_Ct (C_bls12_381_fr a') ] -> return @@ v_int (Bls12_381.Fr.to_z a')
+  | C_INT, [ V_Ct (C_bls12_381_fr a') ] -> return @@ v_int (Mavryk_bls12_381.Fr.to_z a')
   | C_INT, _ -> fail @@ error_type ()
   | C_ABS, [ V_Ct (C_int a') ] -> return @@ v_nat (Z.abs a')
   | C_ABS, _ -> fail @@ error_type ()
@@ -535,22 +539,22 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_SUB, [ V_Ct (C_int a' | C_nat a'); V_Ct (C_int b' | C_nat b') ] ->
     return @@ v_int (Z.sub a' b')
   | C_SUB, [ V_Ct (C_timestamp a'); V_Ct (C_timestamp b') ] ->
-    let res = Michelson_backend.Tezos_eq.timestamp_sub a' b' in
+    let res = Michelson_backend.Mavryk_eq.timestamp_sub a' b' in
     return @@ v_int res
   | C_SUB, [ V_Ct (C_int a' | C_timestamp a'); V_Ct (C_timestamp b' | C_int b') ] ->
-    let res = Michelson_backend.Tezos_eq.timestamp_sub a' b' in
+    let res = Michelson_backend.Mavryk_eq.timestamp_sub a' b' in
     return @@ v_timestamp res
-  | C_SUB, [ V_Ct (C_mutez a'); V_Ct (C_mutez b') ] ->
-    (match Michelson_backend.Tezos_eq.mutez_sub a' b' with
-    | Some res -> return @@ v_mutez res
+  | C_SUB, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
+    (match Michelson_backend.Mavryk_eq.mumav_sub a' b' with
+    | Some res -> return @@ v_mumav res
     | None ->
-      fail (Errors.meta_lang_eval loc calltrace (v_string "Mutez underflow/overflow")))
-  | C_SUB_MUTEZ, [ V_Ct (C_mutez a'); V_Ct (C_mutez b') ] ->
-    (match Michelson_backend.Tezos_eq.mutez_sub a' b' with
-    | Some res -> return @@ v_some @@ v_mutez res
+      fail (Errors.meta_lang_eval loc calltrace (v_string "Mumav underflow/overflow")))
+  | C_SUB_MUMAV, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
+    (match Michelson_backend.Mavryk_eq.mumav_sub a' b' with
+    | Some res -> return @@ v_some @@ v_mumav res
     | None -> return @@ v_none ())
   | C_SUB, _ -> fail @@ error_type ()
-  | C_SUB_MUTEZ, _ -> fail @@ error_type ()
+  | C_SUB_MUMAV, _ -> fail @@ error_type ()
   | C_CONS, [ v; V_List vl ] -> return @@ V_List (v :: vl)
   | C_CONS, _ -> fail @@ error_type ()
   | C_ADD, [ V_Ct (C_int64 a); V_Ct (C_int64 b) ] -> return @@ v_int64 Int64.(a + b)
@@ -563,21 +567,21 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let r = Z.add a b in
     return (v_nat r)
   | C_ADD, [ V_Ct (C_int a' | C_timestamp a'); V_Ct (C_timestamp b' | C_int b') ] ->
-    let res = Michelson_backend.Tezos_eq.timestamp_add a' b' in
+    let res = Michelson_backend.Mavryk_eq.timestamp_add a' b' in
     return @@ v_timestamp res
-  | C_ADD, [ V_Ct (C_mutez a'); V_Ct (C_mutez b') ] ->
-    (match Michelson_backend.Tezos_eq.mutez_add a' b' with
-    | Some res -> return @@ v_mutez res
+  | C_ADD, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
+    (match Michelson_backend.Mavryk_eq.mumav_add a' b' with
+    | Some res -> return @@ v_mumav res
     | None ->
-      fail (Errors.meta_lang_eval loc calltrace (v_string "Mutez underflow/overflow")))
+      fail (Errors.meta_lang_eval loc calltrace (v_string "Mumav underflow/overflow")))
   | C_ADD, [ V_Ct (C_bls12_381_g1 a); V_Ct (C_bls12_381_g1 b) ] ->
-    let r = Bls12_381.G1.(add a b) in
+    let r = Mavryk_bls12_381.G1.(add a b) in
     return (v_bls12_381_g1 r)
   | C_ADD, [ V_Ct (C_bls12_381_g2 a); V_Ct (C_bls12_381_g2 b) ] ->
-    let r = Bls12_381.G2.(add a b) in
+    let r = Mavryk_bls12_381.G2.(add a b) in
     return (v_bls12_381_g2 r)
   | C_ADD, [ V_Ct (C_bls12_381_fr a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.Fr.(a + b) in
+    let r = Mavryk_bls12_381.Fr.(a + b) in
     return (v_bls12_381_fr r)
   | C_ADD, _ -> fail @@ error_type ()
   | C_MUL, [ V_Ct (C_int64 a); V_Ct (C_int64 b) ] -> return @@ v_int64 Int64.(a * b)
@@ -589,67 +593,67 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_MUL, [ V_Ct (C_nat a); V_Ct (C_nat b) ] ->
     let r = Z.mul a b in
     return (v_nat r)
-  | C_MUL, [ V_Ct (C_nat a); V_Ct (C_mutez b) ] ->
+  | C_MUL, [ V_Ct (C_nat a); V_Ct (C_mumav b) ] ->
     let r = Z.mul a b in
-    return (v_mutez r)
-  | C_MUL, [ V_Ct (C_mutez a); V_Ct (C_nat b) ] ->
+    return (v_mumav r)
+  | C_MUL, [ V_Ct (C_mumav a); V_Ct (C_nat b) ] ->
     let r = Z.mul a b in
-    return (v_mutez r)
+    return (v_mumav r)
   | C_MUL, [ V_Ct (C_bls12_381_g1 a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.G1.(mul a b) in
+    let r = Mavryk_bls12_381.G1.(mul a b) in
     return (v_bls12_381_g1 r)
   | C_MUL, [ V_Ct (C_bls12_381_g2 a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.G2.(mul a b) in
+    let r = Mavryk_bls12_381.G2.(mul a b) in
     return (v_bls12_381_g2 r)
   | C_MUL, [ V_Ct (C_bls12_381_fr a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.Fr.(a * b) in
+    let r = Mavryk_bls12_381.Fr.(a * b) in
     return (v_bls12_381_fr r)
   | C_MUL, [ V_Ct (C_nat a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.Fr.(b ** a) in
+    let r = Mavryk_bls12_381.Fr.(b ** a) in
     return (v_bls12_381_fr r)
   | C_MUL, [ V_Ct (C_int a); V_Ct (C_bls12_381_fr b) ] ->
-    let r = Bls12_381.Fr.(b ** a) in
+    let r = Mavryk_bls12_381.Fr.(b ** a) in
     return (v_bls12_381_fr r)
   | C_MUL, [ V_Ct (C_bls12_381_fr a); V_Ct (C_nat b) ] ->
-    let r = Bls12_381.Fr.(a ** b) in
+    let r = Mavryk_bls12_381.Fr.(a ** b) in
     return (v_bls12_381_fr r)
   | C_MUL, [ V_Ct (C_bls12_381_fr a); V_Ct (C_int b) ] ->
-    let r = Bls12_381.Fr.(a ** b) in
+    let r = Mavryk_bls12_381.Fr.(a ** b) in
     return (v_bls12_381_fr r)
   | C_MUL, _ -> fail @@ error_type ()
   | C_DIV, [ V_Ct (C_int a'); V_Ct (C_int b') ]
   | C_DIV, [ V_Ct (C_int a'); V_Ct (C_nat b') ]
   | C_DIV, [ V_Ct (C_nat a'); V_Ct (C_int b') ] ->
-    let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
+    let a = Michelson_backend.Mavryk_eq.int_ediv a' b' in
     (match a with
     | Some (res, _) -> return @@ v_int res
     | None -> fail @@ Errors.meta_lang_eval loc calltrace div_by_zero_str)
   | C_DIV, [ V_Ct (C_nat a'); V_Ct (C_nat b') ] ->
-    let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
+    let a = Michelson_backend.Mavryk_eq.int_ediv a' b' in
     (match a with
     | Some (res, _) -> return @@ v_nat res
     | None -> fail @@ Errors.meta_lang_eval loc calltrace div_by_zero_str)
-  | C_DIV, [ V_Ct (C_mutez a'); V_Ct (C_mutez b') ] ->
-    let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
+  | C_DIV, [ V_Ct (C_mumav a'); V_Ct (C_mumav b') ] ->
+    let a = Michelson_backend.Mavryk_eq.int_ediv a' b' in
     (match a with
     | Some (res, _) -> return @@ v_nat res
     | None -> fail @@ Errors.meta_lang_eval loc calltrace div_by_zero_str)
-  | C_DIV, [ V_Ct (C_mutez a'); V_Ct (C_nat b') ] ->
-    let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
+  | C_DIV, [ V_Ct (C_mumav a'); V_Ct (C_nat b') ] ->
+    let a = Michelson_backend.Mavryk_eq.int_ediv a' b' in
     (match a with
-    | Some (res, _) -> return @@ v_mutez res
+    | Some (res, _) -> return @@ v_mumav res
     | None -> fail @@ Errors.meta_lang_eval loc calltrace div_by_zero_str)
   | C_DIV, _ -> fail @@ error_type ()
   | C_MOD, [ V_Ct (C_int64 a'); V_Ct (C_int64 b') ] -> return @@ v_int64 Int64.(rem a' b')
   | C_MOD, [ V_Ct (C_int a'); V_Ct (C_int b') ]
   | C_MOD, [ V_Ct (C_int a'); V_Ct (C_nat b') ]
   | C_MOD, [ V_Ct (C_nat a'); V_Ct (C_int b') ] ->
-    let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
+    let a = Michelson_backend.Mavryk_eq.int_ediv a' b' in
     (match a with
     | Some (_, r) -> return @@ v_nat r
     | None -> fail @@ Errors.meta_lang_eval loc calltrace div_by_zero_str)
   | C_MOD, [ V_Ct (C_nat a'); V_Ct (C_nat b') ] ->
-    let a = Michelson_backend.Tezos_eq.int_ediv a' b' in
+    let a = Michelson_backend.Mavryk_eq.int_ediv a' b' in
     (match a with
     | Some (_, r) -> return @@ v_nat r
     | None -> fail @@ Errors.meta_lang_eval loc calltrace div_by_zero_str)
@@ -710,7 +714,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let b' = Z.to_int b' in
     return @@ v_bytes (TzBytes.shift_left a' b')
   | C_LSL, [ V_Ct (C_nat a'); V_Ct (C_nat b') ] ->
-    let v = Michelson_backend.Tezos_eq.nat_shift_left a' b' in
+    let v = Michelson_backend.Mavryk_eq.nat_shift_left a' b' in
     (match v with
     | Some v -> return @@ v_nat v
     | None -> fail @@ Errors.meta_lang_eval loc calltrace (v_string "Overflow"))
@@ -722,7 +726,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let b' = Z.to_int b' in
     return @@ v_bytes (TzBytes.shift_right a' b')
   | C_LSR, [ V_Ct (C_nat a'); V_Ct (C_nat b') ] ->
-    let v = Michelson_backend.Tezos_eq.nat_shift_right a' b' in
+    let v = Michelson_backend.Mavryk_eq.nat_shift_right a' b' in
     (match v with
     | Some v -> return @@ v_nat v
     | None -> fail @@ Errors.meta_lang_eval loc calltrace (v_string "Overflow"))
@@ -1159,23 +1163,37 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     return @@ code
   | C_TEST_COMPILE_CONTRACT_FROM_FILE, _ -> fail @@ error_type ()
   | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
-    , [ V_Ct (C_contract { address; _ })
-      ; entrypoint
+    , [ V_Ct (C_contract { address; entrypoint })
+      ; replaced_entrypoint
       ; V_Michelson (Ty_code { micheline_repr = { code = param; _ }; _ })
-      ; V_Ct (C_mutez amt)
+      ; V_Ct (C_mumav amt)
       ] ) ->
-    let entrypoint = Option.join @@ LC.get_string_option entrypoint in
+    let entrypoint =
+      match entrypoint with
+      | Some entrypoint -> Some entrypoint
+      | None ->
+        Option.bind ~f:Entrypoint_repr.of_string_opt
+        @@ Option.join
+        @@ LC.get_string_option replaced_entrypoint
+    in
     let contract = { address; entrypoint } in
     let>> res = External_call (loc, calltrace, contract, param, amt) in
     return_contract_exec_exn res
   | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN, _ -> fail @@ error_type ()
   | ( C_TEST_EXTERNAL_CALL_TO_ADDRESS
-    , [ V_Ct (C_contract { address; _ })
-      ; entrypoint
+    , [ V_Ct (C_contract { address; entrypoint })
+      ; replaced_entrypoint
       ; V_Michelson (Ty_code { micheline_repr = { code = param; _ }; _ })
-      ; V_Ct (C_mutez amt)
+      ; V_Ct (C_mumav amt)
       ] ) ->
-    let entrypoint = Option.join @@ LC.get_string_option entrypoint in
+    let entrypoint =
+      match entrypoint with
+      | Some entrypoint -> Some entrypoint
+      | None ->
+        Option.bind ~f:Entrypoint_repr.of_string_opt
+        @@ Option.join
+        @@ LC.get_string_option replaced_entrypoint
+    in
     let contract = { address; entrypoint } in
     let>> res = External_call (loc, calltrace, contract, param, amt) in
     return_contract_exec res
@@ -1219,7 +1237,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_TO_STRING, _ -> fail @@ error_type ()
   | C_TEST_UNESCAPE_STRING, [ V_Ct (C_string s) ] -> return (v_string (Scanf.unescaped s))
   | C_TEST_UNESCAPE_STRING, _ -> fail @@ error_type ()
-  | C_TEST_BOOTSTRAP_CONTRACT, [ V_Ct (C_mutez z); contract; storage ] ->
+  | C_TEST_BOOTSTRAP_CONTRACT, [ V_Ct (C_mumav z); contract; storage ] ->
     let contract_ty = nth_type 1 in
     let storage_ty = nth_type 2 in
     let>> code = Compile_contract (loc, contract, v_list []) in
@@ -1234,9 +1252,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_NTH_BOOTSTRAP_CONTRACT, _ -> fail @@ error_type ()
   | C_TEST_STATE_RESET, [ ts_opt; n; amts ] ->
     let ts_opt =
-      let v_opt = trace_option ~raise (error_type ()) @@ LC.get_option ts_opt in
+      let v_opt = Trace.trace_option ~raise (error_type ()) @@ LC.get_option ts_opt in
       Option.map v_opt ~f:(fun x ->
-          trace_option ~raise (error_type ()) @@ LC.get_timestamp x)
+          Trace.trace_option ~raise (error_type ()) @@ LC.get_timestamp x)
     in
     let>> () = Reset_state (loc, ts_opt, calltrace, n, amts) in
     return @@ v_unit ()
@@ -1251,10 +1269,10 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_LAST_ORIGINATIONS, _ -> fail @@ error_type ()
   | C_TEST_LAST_EVENTS, [ V_Ct (C_string tag) ] ->
     let event_payload_type_opt =
-      let open Option in
+      let open Ligo_option in
       let* x = Ast_aggregated.get_t_list expr_ty in
       let* _addr, a = Ast_aggregated.get_t_pair x in
-      return a
+      Option.return a
     in
     (match event_payload_type_opt with
     | Some p_ty ->
@@ -1299,18 +1317,20 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let id = Mutation.get_mutation_id mutation in
     let file_path = reg#file in
     (try
-       let odir = Caml.Sys.getcwd () in
-       let () = Caml.Sys.chdir dir in
-       let file_path = Filename.basename file_path in
-       let file_path =
-         Caml.Filename.remove_extension file_path
-         ^ "."
-         ^ id
-         ^ Caml.Filename.extension file_path
+       let odir = Sys_unix.getcwd () in
+       let () = Sys_unix.chdir dir in
+       let file_path = Core.Filename.basename file_path in
+       let filename, extension = Core.Filename.split_extension file_path in
+       let extension =
+         match extension with
+         | Some ext -> ext
+         | None -> ""
        in
+       let file_path = filename ^ "." ^ id ^ extension in
        let out_chan = Out_channel.create file_path in
-       let () = Caml.Buffer.output_buffer out_chan file_contents in
-       let () = Caml.Sys.chdir odir in
+       let string_contents = Core.Buffer.contents file_contents in
+       let () = Out_channel.output_string out_chan string_contents in
+       let () = Sys_unix.chdir odir in
        return (v_some (v_string file_path))
      with
     | Sys_error _ -> return (v_none ()))
@@ -1340,7 +1360,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | ( C_TEST_DECOMPILE
     , [ V_Michelson (Ty_code { micheline_repr = { code_ty; code }; ast_ty }) ] ) ->
     let () =
-      trace_option
+      Trace.trace_option
         ~raise
         (Errors.generic_error loc
         @@ Format.asprintf
@@ -1356,7 +1376,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     return v
   | C_TEST_DECOMPILE, [ V_Michelson (Untyped_code code) ] ->
     let code_ty = Michelson_backend.compile_type ~raise expr_ty in
-    let code_ty = Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) code_ty in
+    let code_ty = Mavryk_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) code_ty in
     let>> v = Decompile (code, code_ty, expr_ty) in
     return v
   | C_TEST_DECOMPILE, _ -> fail @@ error_type ()
@@ -1372,7 +1392,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> size = Get_size contract in
     return @@ size
   | C_TEST_SIZE, _ -> fail @@ error_type ()
-  | C_TEST_ORIGINATE, [ contract; storage; V_Ct (C_mutez amt) ] ->
+  | C_TEST_ORIGINATE, [ contract; storage; V_Ct (C_mumav amt) ] ->
     let>> addr = Inject_script (loc, calltrace, contract, storage, amt) in
     return @@ addr
   | C_TEST_ORIGINATE, _ -> fail @@ error_type ()
@@ -1400,7 +1420,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
       monad_option (Errors.generic_error loc "Expected typed address")
       @@ AST.get_t_gen expr_ty
     in
-    let>> (ctxt : Tezos_state.context) = Get_state () in
+    let>> (ctxt : Mavryk_state.context) = Get_state () in
     let known_addresses =
       ctxt.internals.bootstrapped
       @ List.concat (List.map ~f:snd ctxt.transduced.last_originations)
@@ -1419,7 +1439,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_SET_BIG_MAP, _ -> fail @@ error_type ()
   | C_TEST_CAST_ADDRESS, [ V_Ct (C_address x) ] ->
     let _, ty =
-      trace_option
+      Trace.trace_option
         ~raise
         (Errors.generic_error expr_ty.location "Expected typed_address type")
       @@ Ast_aggregated.get_t_typed_address expr_ty
@@ -1443,7 +1463,7 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
     let>> v = Register_delegate (loc, calltrace, pkh) in
     return @@ v
   | C_TEST_REGISTER_DELEGATE, _ -> fail @@ error_type ()
-  | C_TEST_STAKE, [ V_Ct (C_key_hash pkh); V_Ct (C_mutez amt) ] ->
+  | C_TEST_STAKE, [ V_Ct (C_key_hash pkh); V_Ct (C_mumav amt) ] ->
     let>> v = Stake (loc, calltrace, pkh, amt) in
     return @@ v
   | C_TEST_STAKE, _ -> fail @@ error_type ()
@@ -1498,7 +1518,9 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
   | C_TEST_GET_ENTRYPOINT, [ V_Ct (C_contract { address = _; entrypoint }) ] ->
     (match entrypoint with
     | None -> return @@ v_none ()
-    | Some s -> return @@ v_some (v_string s))
+    | Some entrypoint ->
+      let s = Format.asprintf "%a" Entrypoint_repr.pp entrypoint in
+      return @@ v_some (v_string s))
   | C_TEST_GET_ENTRYPOINT, _ -> fail @@ error_type ()
   | C_TEST_INT64_OF_INT, [ V_Ct (C_int n) ] -> return @@ V_Ct (C_int64 (Z.to_int64 n))
   | C_TEST_INT64_OF_INT, _ -> fail @@ error_type ()
@@ -1566,52 +1588,55 @@ let rec apply_operator ~raise ~steps ~(options : Compiler_options.t)
 
 
 (*interpreter*)
-and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t = function
+and eval_literal : Ligo_prim.Literal_value.t -> value Monad.t =
+ fun l ->
+  match l with
   | Literal_unit -> Monad.return @@ v_unit ()
   | Literal_int i -> Monad.return @@ v_int i
   | Literal_nat n -> Monad.return @@ v_nat n
   | Literal_timestamp i -> Monad.return @@ v_timestamp i
   | Literal_string s -> Monad.return @@ v_string (Ligo_string.extract s)
   | Literal_bytes s -> Monad.return @@ v_bytes s
-  | Literal_mutez s -> Monad.return @@ v_mutez s
+  | Literal_mumav s -> Monad.return @@ v_mumav s
   | Literal_key_hash s ->
-    (match Tezos_crypto.Signature.Public_key_hash.of_b58check s with
+    (match Mavryk_crypto.Signature.Public_key_hash.of_b58check s with
     | Ok kh -> Monad.return @@ v_key_hash kh
     | Error _ -> Monad.fail @@ Errors.literal Location.generated (Literal_key_hash s))
   | Literal_key s ->
-    (match Tezos_crypto.Signature.Public_key.of_b58check s with
+    (match Mavryk_crypto.Signature.Public_key.of_b58check s with
     | Ok k -> Monad.return @@ v_key k
     | Error _ -> Monad.fail @@ Errors.literal Location.generated (Literal_key s))
   | Literal_signature s ->
-    (match Tezos_crypto.Signature.of_b58check s with
+    (match Mavryk_crypto.Signature.of_b58check s with
     | Ok s -> Monad.return @@ v_signature s
     | Error _ -> Monad.fail @@ Errors.literal Location.generated (Literal_signature s))
   | Literal_address s ->
-    (match Tezos_protocol.Protocol.Alpha_context.Contract.of_b58check s with
+    (match Mavryk_protocol.Protocol.Alpha_context.Contract.of_b58check s with
     | Ok t -> Monad.return @@ v_address t
     | Error _ -> Monad.fail @@ Errors.literal Location.generated (Literal_address s))
   | Literal_bls12_381_g1 b ->
-    (match Bls12_381.G1.of_bytes_opt b with
+    (match Mavryk_bls12_381.G1.of_bytes_opt b with
     | Some t -> Monad.return @@ v_bls12_381_g1 t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_bls12_381_g1 b))
   | Literal_bls12_381_g2 b ->
-    (match Bls12_381.G2.of_bytes_opt b with
+    (match Mavryk_bls12_381.G2.of_bytes_opt b with
     | Some t -> Monad.return @@ v_bls12_381_g2 t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_bls12_381_g2 b))
   | Literal_bls12_381_fr b ->
-    (match Bls12_381.Fr.of_bytes_opt b with
+    (match Mavryk_bls12_381.Fr.of_bytes_opt b with
     | Some t -> Monad.return @@ v_bls12_381_fr t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_bls12_381_fr b))
   | Literal_chain_id c ->
-    (match Tezos_crypto.Hashed.Chain_id.of_b58check_opt c with
+    (match Mavryk_crypto.Hashed.Chain_id.of_b58check_opt c with
     | Some t -> Monad.return @@ v_chain_id t
     | None -> Monad.fail @@ Errors.literal Location.generated (Literal_chain_id c))
   | Literal_chest b -> Monad.return @@ v_chest b
   | Literal_chest_key b -> Monad.return @@ v_chest_key b
-  | l -> Monad.fail @@ Errors.literal Location.generated l
+  | Literal_operation _ as l -> Monad.fail @@ Errors.literal Location.generated l
 
 
-and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> value Monad.t
+and eval_ligo ~(raise : _ Trace.raise) ~steps ~options
+    : AST.expression -> calltrace -> env -> value Monad.t
   =
  fun term calltrace env ->
   let eval_ligo ?(steps = steps - 1) v =
@@ -1762,7 +1787,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
   | E_constructor { constructor = Label (c, _); element } ->
     let* v' = eval_ligo element calltrace env in
     return @@ V_Construct (c, v')
-  | E_matching { matchee; disc_label = _; cases } ->
+  | E_matching { matchee; cases } ->
     let* matchee' = eval_ligo matchee calltrace env in
     let* body, env =
       (* find pattern matching the matchee value *)
@@ -1826,8 +1851,10 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
             ( v
             , Stacking.To_micheline.translate_type
                 (Scoping.translate_type
-                   (trace ~raise Main_errors.spilling_tracer
-                   @@ Spilling.compile_type e.type_expression)) ))
+                   (Trace.trace ~raise Main_errors.spilling_tracer
+                   @@ Spilling.compile_type
+                   @@ Trace.trace ~raise Main_errors.expansion_tracer
+                   @@ Expansion.compile_type_expression e.type_expression)) ))
         args
     in
     (match code.expression_content with
@@ -1840,7 +1867,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
         Michelson_backend.parse_raw_michelson_code ~raise exp_as_string ast_ty
       in
       let replace m =
-        let open Tezos_micheline.Micheline in
+        let open Mavryk_micheline.Micheline in
         match m with
         | Prim (_, s, [], [ id ])
           when String.equal "typeopt" s && String.is_prefix ~prefix:"$" id ->
@@ -1848,7 +1875,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
           let id = Int.of_string id in
           (match List.nth args id with
           | Some (_, Prim (_, "option", [ t ], _)) ->
-            Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t
+            Mavryk_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t
           | _ ->
             raise.error
               (Errors.generic_error
@@ -1864,13 +1891,13 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
               (Errors.generic_error
                  term.location
                  (Format.sprintf "could not resolve (type %d)" id))
-          | Some (_, t) -> Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t)
+          | Some (_, t) -> Mavryk_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t)
         | Prim (_, s, [], [ id ])
           when String.equal "litstr" s && String.is_prefix ~prefix:"$" id ->
           let id = String.chop_prefix_exn ~prefix:"$" id in
           let id = Int.of_string id in
           (match List.nth args id with
-          | Some (V_Ct (C_string s), _) -> Tezos_micheline.Micheline.String ((), s)
+          | Some (V_Ct (C_string s), _) -> Mavryk_micheline.Micheline.String ((), s)
           | _ ->
             raise.error
               (Errors.generic_error
@@ -1882,7 +1909,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
           let id = Int.of_string id in
           (match List.nth args id with
           | Some (V_Ct (C_string s), _) ->
-            let open Tezos_micheline in
+            let open Mavryk_micheline in
             let code = s in
             let code, errs = Micheline_parser.tokenize code in
             (match errs with
@@ -1912,7 +1939,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
                  term.location
                  (Format.sprintf "could not resolve (codestr %d)" id)))
         | Prim (a, b, c, d) ->
-          let open Tezos_micheline.Micheline in
+          let open Mavryk_micheline.Micheline in
           let f arg (c, d) =
             match arg with
             | Prim (_, s, [], [ id ])
@@ -1935,7 +1962,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
           Prim (a, b, c, d)
         | m -> m
       in
-      let code = Tezos_utils.Michelson.map replace code in
+      let code = Mavryk_utils.Michelson.map replace code in
       return @@ V_Michelson (Ty_code { micheline_repr = { code; code_ty }; ast_ty })
     | _ ->
       raise.error
@@ -1952,7 +1979,9 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     in
     let code = List.hd_exn vals in
     let code =
-      trace_option ~raise (Errors.generic_error term.location "could not get a string")
+      Trace.trace_option
+        ~raise
+        (Errors.generic_error term.location "could not get a string")
       @@ get_e_string code.expression_content
     in
     let args = List.tl_exn vals in
@@ -1967,7 +1996,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
     let code, _code_ty = Michelson_backend.parse_raw_michelson_code ~raise code ast_ty in
     let used = ref [] in
     let replace m =
-      let open Tezos_micheline.Micheline in
+      let open Mavryk_micheline.Micheline in
       match m with
       | Prim (_, s, [], [ id ])
         when String.equal "typeopt" s && String.is_prefix ~prefix:"$" id ->
@@ -1978,7 +2007,7 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
         | Some (_, t) when Option.is_some (get_t_option t) ->
           let t = Option.value_exn (get_t_option t) in
           let t = Michelson_backend.compile_type_to_mcode ~raise t in
-          Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t
+          Mavryk_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t
         | _ ->
           raise.error
             (Errors.generic_error
@@ -1997,21 +2026,21 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
                (Format.sprintf "could not resolve (type %d)" id))
         | Some (_, t) ->
           let t = Michelson_backend.compile_type_to_mcode ~raise t in
-          Tezos_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t)
+          Mavryk_micheline.Micheline.map_node (fun _ -> ()) (fun s -> s) t)
       | Prim (_, s, [], [ id ])
         when String.equal "litstr" s && String.is_prefix ~prefix:"$" id ->
         let id = String.chop_prefix_exn ~prefix:"$" id in
         let id = Int.of_string id in
         used := id :: !used;
         (match List.nth args id with
-        | Some (V_Ct (C_string s), _) -> Tezos_micheline.Micheline.String ((), s)
+        | Some (V_Ct (C_string s), _) -> Mavryk_micheline.Micheline.String ((), s)
         | _ ->
           raise.error
             (Errors.generic_error
                term.location
                (Format.sprintf "could not resolve (litstr %d)" id)))
       | Prim (a, b, c, d) ->
-        let open Tezos_micheline.Micheline in
+        let open Mavryk_micheline.Micheline in
         let f arg (c, d) =
           match arg with
           | Prim (_, s, [], [ id ])
@@ -2035,10 +2064,10 @@ and eval_ligo ~raise ~steps ~options : AST.expression -> calltrace -> env -> val
         Prim (a, b, c, d)
       | m -> m
     in
-    let code = Tezos_utils.Michelson.map replace code in
+    let code = Mavryk_utils.Michelson.map replace code in
     let args =
       List.filter_mapi
-        ~f:(fun i v -> if not (List.mem !used i ~equal:Caml.( = )) then Some v else None)
+        ~f:(fun i v -> if not (List.mem !used i ~equal:Int.equal) then Some v else None)
         args
     in
     let>> v =
@@ -2221,7 +2250,7 @@ let eval_expression ~raise ~steps ~options
   (* Compile new context *)
   let%bind initial_state = Execution_monad.make_state ~raise ~options in
   let prg =
-    trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.all_program prg
+    Trace.trace ~raise Main_errors.self_ast_typed_tracer @@ Self_ast_typed.all_program prg
   in
   let expr =
     Ligo_compile.Of_typed.compile_expression_in_context
@@ -2232,7 +2261,7 @@ let eval_expression ~raise ~steps ~options
       expr
   in
   let expr =
-    trace ~raise Main_errors.self_ast_aggregated_tracer
+    Trace.trace ~raise Main_errors.self_ast_aggregated_tracer
     @@ Self_ast_aggregated.all_expression ~options:options.middle_end expr
   in
   let%map value, st =

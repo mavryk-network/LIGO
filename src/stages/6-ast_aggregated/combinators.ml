@@ -1,9 +1,10 @@
-module Location = Simple_utils.Location
-module List = Simple_utils.List
-module Ligo_string = Simple_utils.Ligo_string
+open Core
 open Ligo_prim
 open Literal_types
 open Types
+module Location = Simple_utils.Location
+module Ligo_string = Simple_utils.Ligo_string
+module Ligo_option = Simple_utils.Ligo_option
 
 (* Helpers for accessing and constructing elements are derived using
    `ppx_woo` (`@@deriving ez`) *)
@@ -29,7 +30,7 @@ type type_content = [%import: Types.type_content]
     { prefixes =
         [ ( "make_t"
           , fun ~loc ?source_type type_content : type_expression ->
-              { type_content; location = loc; orig_var = None; source_type } )
+              { type_content; location = loc; abbrev = None; source_type } )
         ; ("get", fun x -> x.type_content)
         ]
     ; wrap_constructor =
@@ -58,7 +59,7 @@ let t__type_ ~loc () : type_expression = t_constant ~loc _type_ []
       , "address"
       , "operation"
       , "nat"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "unit"
       , "bls12_381_g1"
@@ -80,7 +81,7 @@ let t__type_ ~loc t t' : type_expression = t_constant ~loc _type_ [ t; t' ]
   [@@map _type_, ("map", "big_map", "typed_address")]
 
 
-let t_mutez = t_tez
+let t_mumav = t_mav
 let default_layout = Layout.default
 
 let fields_with_no_annot fields =
@@ -116,7 +117,15 @@ let t_unforged_ticket ~loc ty : type_expression =
     ]
 
 
-let t_sum_ez ~loc ?(layout = default_layout) (lst : (string * type_expression) list)
+let t_forged_ticket ~loc ty : type_expression =
+  t_pair ~loc (t_address ~loc ()) (t_pair ~loc ty (t_nat ~loc ()))
+
+
+let t_sum_ez
+    ~loc
+    ?(layout = default_layout)
+    ?orig_name
+    (lst : (string * type_expression) list)
     : type_expression
   =
   let lst = List.map ~f:(fun (name, t) -> Label.of_string name, t) lst in
@@ -193,7 +202,7 @@ let get_t__type_ (t : type_expression) : unit option = get_t_base_inj t _type_
     , ( "int"
       , "nat"
       , "unit"
-      , "tez"
+      , "mav"
       , "timestamp"
       , "address"
       , "bytes"
@@ -215,7 +224,7 @@ let get_t__type_ (t : type_expression) : type_expression option = get_t_unary_in
     , ("contract", "list", "set", "ticket", "sapling_state", "sapling_transaction", "gen")]
 
 
-let get_t_mutez (t : type_expression) : unit option = get_t_tez t
+let get_t_mumav (t : type_expression) : unit option = get_t_mav t
 
 let tuple_of_record (m : _ Record.t) =
   let aux i =
@@ -290,14 +299,15 @@ let is_t__type_ t = Option.is_some (get_t__type_ t)
       , "int"
       , "unit"
       , "address"
-      , "tez"
+      , "mav"
       , "contract"
       , "map"
       , "big_map"
-      , "typed_address" )]
+      , "typed_address"
+      , "ticket" )]
 
 
-let is_t_mutez t = is_t_tez t
+let is_t_mumav t = is_t_mav t
 
 let ez_e_record (lst : (Label.t * expression) list) : expression_content =
   E_record (Record.of_list lst)
@@ -321,7 +331,7 @@ let e__type_ p : expression_content = E_literal (Literal__type_ p)
     _type_
     , ( "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "string"
       , "bytes"
       , "timestamp"
@@ -360,7 +370,7 @@ let e_a__type_ ~loc p = make_e ~loc (e__type_ p) (t__type_ ~loc ())
     , ( "unit"
       , "int"
       , "nat"
-      , "mutez"
+      , "mumav"
       , "timestamp"
       , "key_hash"
       , "string"
@@ -402,10 +412,7 @@ let e_a_variable ~loc v ty = e_variable ~loc v ty
 let e_a_application ~loc lamb args t = e_application ~loc { lamb; args } t
 let e_a_lambda ~loc l in_ty out_ty = e_lambda ~loc l (t_arrow ~loc in_ty out_ty ())
 let e_a_recursive ~loc l = e_recursive ~loc l l.fun_type
-
-let e_a_matching ~loc ?disc_label matchee cases t =
-  e_matching ~loc { matchee; disc_label; cases } t
-
+let e_a_matching ~loc matchee cases t = e_matching ~loc { matchee; cases } t
 
 let e_a_let_in ~loc let_binder rhs let_result attributes =
   e_let_in ~loc { let_binder; rhs; let_result; attributes } (get_type let_result)
@@ -528,28 +535,29 @@ let build_type_abstractions init =
    given an expression e and a list of type variables [t1; ...; tn],
    it constructs an expression e@{t1}@...@{tn} *)
 let build_type_insts_opt ~loc init =
-  let open Simple_utils.Option in
   let f av forall =
+    let open Ligo_option in
     let* forall in
     let* Abstraction.{ ty_binder; type_ = t; kind = _ } =
       get_t_for_all forall.type_expression
     in
     let type_ = t_variable ~loc av () in
-    return
+    Option.return
       (make_e ~loc (E_type_inst { forall; type_ }) (Helpers.subst_type ty_binder type_ t))
   in
-  List.fold_right ~init:(return init) ~f
+  List.fold_right ~init:(Option.return init) ~f
 
 
 (* This function expands a function with a type T_for_all but not with
    the same amount of E_type_abstraction *)
 let forall_expand_opt ~loc (e : expression) =
-  let open Simple_utils.Option in
+  let open Option in
   let tvs, _ = Helpers.destruct_for_alls e.type_expression in
   let evs, e_without_type_abs = get_type_abstractions e in
   if List.equal Ligo_prim.Type_var.equal tvs evs
   then return e
   else
+    let open Ligo_option in
     let* e = build_type_insts_opt ~loc e_without_type_abs tvs in
     return @@ build_type_abstractions e tvs
 

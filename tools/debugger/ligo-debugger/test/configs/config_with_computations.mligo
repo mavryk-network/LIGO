@@ -10,6 +10,6 @@ let config =
   ; storage = ()
   ; entrypoint = Common.entrypoint
   ; contract_env =
-      { amount = Common.some_tez
+      { amount = Common.some_mav
       }
   }

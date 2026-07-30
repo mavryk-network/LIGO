@@ -1,10 +1,10 @@
-module Ligo_proto = Environment.Protocols
-module Option = Simple_utils.Option
-module List = Simple_utils.List
-open Errors
+open Core
+open Ligo_prim
+module Location = Simple_utils.Location
 module I = Ast_core
 module O = Ast_typed
-open Ligo_prim
+module C = Computation
+module E = Elaboration
 
 (*
   Each constant has its own type.
@@ -30,9 +30,6 @@ open Ligo_prim
   Various helpers are defined bellow.
 *)
 
-module C = Computation
-module E = Elaboration
-
 module Comparable = struct
   type ('err, 'wrn) t = Type.t -> Type.t -> (Type.t, 'err, 'wrn) C.t
 
@@ -43,35 +40,36 @@ module Comparable = struct
 
   let try_compare type1 type2 ~in_:t =
     let open C in
-    try_ t ~with_:(fun _ -> raise (uncomparable_types type1 type2))
+    try_ t ~with_:(fun _ -> raise (Errors.uncomparable_types type1 type2))
 
 
   (* [simple_comparator ~raise loc name] checks
      returns type [bool] if argument types are of the form [ t1; t2 ]
-     where [t1 = t2] and [t1, t2] in [ address ; bool ; bytes ; chain_id; int; key; key_hash; mutez; nat ; ... ].
+     where [t1 = t2] and [t1, t2] in [ address ; bool ; bytes ; chain_id; int; key; key_hash; mumav; nat ; ... ].
   *)
   let simple_comparator : (_, _) t =
     let open C in
     let open Let_syntax in
     let simple_types =
-      Type.
-        [ t_address
-        ; t_bool
-        ; t_bytes
-        ; t_chain_id
-        ; t_int
-        ; t_key
-        ; t_key_hash
-        ; t_mutez
-        ; t_nat
-        ; t_signature
-        ; t_string
-        ; t_timestamp
-        ; t_unit
-        ; t_never
-        ; t_michelson_code
-        ; t_int64
-        ]
+      Type.(
+        Nonempty_list.
+          [ t_address
+          ; t_bool
+          ; t_bytes
+          ; t_chain_id
+          ; t_int
+          ; t_key
+          ; t_key_hash
+          ; t_mumav
+          ; t_nat
+          ; t_signature
+          ; t_string
+          ; t_timestamp
+          ; t_unit
+          ; t_never
+          ; t_michelson_code
+          ; t_int64
+          ])
     in
     fun type1 type2 ->
       try_compare
@@ -80,12 +78,33 @@ module Comparable = struct
         ~in_:
           (let%bind () =
              try_all
-             @@ List.map simple_types ~f:(fun type_ ->
+             @@ Nonempty_list.map
+                  ~f:(fun type_ ->
                     let%bind type_ = create_type type_ in
                     let%bind () = unify type1 type_ in
                     unify type2 type_)
+                  simple_types
            in
            create_type @@ Type.t_bool)
+
+
+  let singleton_comparator : (_, _) t =
+    let open C in
+    let open C.Let_syntax in
+    let open Literal_value in
+    fun type1 type2 ->
+      match Type.get_t_singleton type1, Type.get_t_singleton type2 with
+      | Some lit1, Some lit2
+        when Literal_value.equal lit1 lit2
+             || Literal_types.equal (typeof lit1) (typeof lit2) ->
+        create_type @@ Type.t_bool
+      | Some lit, None ->
+        let%bind type1 = create_type @@ Type.t_construct (Literal_value.typeof lit) [] in
+        simple_comparator type1 type2
+      | None, Some lit ->
+        let%bind type2 = create_type @@ Type.t_construct (Literal_value.typeof lit) [] in
+        simple_comparator type1 type2
+      | _ -> raise (Errors.uncomparable_types type1 type2)
 
 
   (* [record_comparator] is a simple extension of [comparator] to record types. *)
@@ -95,10 +114,10 @@ module Comparable = struct
     fun type1 type2 ->
       let%bind () = try_compare type1 type2 ~in_:(unify type1 type2) in
       let%bind row1 =
-        raise_opt ~error:(comparator_composed type1) @@ Type.get_t_record type1
+        raise_opt ~error:(Errors.comparator_composed type1) @@ Type.get_t_record type1
       in
       let%bind row2 =
-        raise_opt ~error:(comparator_composed type2) @@ Type.get_t_record type2
+        raise_opt ~error:(Errors.comparator_composed type2) @@ Type.get_t_record type2
       in
       let%bind _ =
         List.map2_exn
@@ -115,11 +134,11 @@ module Comparable = struct
     let open Let_syntax in
     fun type1 type2 ->
       let%bind () = try_compare type1 type2 ~in_:(unify type1 type2) in
-      let%bind row1, _ =
-        raise_opt ~error:(comparator_composed type1) @@ Type.get_t_sum type1
+      let%bind row1 =
+        raise_opt ~error:(Errors.comparator_composed type1) @@ Type.get_t_sum type1
       in
-      let%bind row2, _ =
-        raise_opt ~error:(comparator_composed type2) @@ Type.get_t_sum type2
+      let%bind row2 =
+        raise_opt ~error:(Errors.comparator_composed type2) @@ Type.get_t_sum type2
       in
       let%bind _ =
         List.map2_exn
@@ -137,10 +156,10 @@ module Comparable = struct
     fun type1 type2 ->
       let%bind () = try_compare type1 type2 ~in_:(unify type1 type2) in
       let%bind elt_type1 =
-        raise_opt ~error:(comparator_composed type1) @@ Type.get_t_list type1
+        raise_opt ~error:(Errors.comparator_composed type1) @@ Type.get_t_list type1
       in
       let%bind elt_type2 =
-        raise_opt ~error:(comparator_composed type2) @@ Type.get_t_list type2
+        raise_opt ~error:(Errors.comparator_composed type2) @@ Type.get_t_list type2
       in
       comparator elt_type1 elt_type2
 
@@ -151,10 +170,10 @@ module Comparable = struct
     fun type1 type2 ->
       let%bind () = try_compare type1 type2 ~in_:(unify type1 type2) in
       let%bind elt_type1 =
-        raise_opt ~error:(comparator_composed type1) @@ Type.get_t_set type1
+        raise_opt ~error:(Errors.comparator_composed type1) @@ Type.get_t_set type1
       in
       let%bind elt_type2 =
-        raise_opt ~error:(comparator_composed type2) @@ Type.get_t_set type2
+        raise_opt ~error:(Errors.comparator_composed type2) @@ Type.get_t_set type2
       in
       comparator elt_type1 elt_type2
 
@@ -165,10 +184,10 @@ module Comparable = struct
     fun type1 type2 ->
       let%bind () = try_compare type1 type2 ~in_:(unify type1 type2) in
       let%bind key_type1, val_type1 =
-        raise_opt ~error:(comparator_composed type1) @@ Type.get_t_map type1
+        raise_opt ~error:(Errors.comparator_composed type1) @@ Type.get_t_map type1
       in
       let%bind key_type2, val_type2 =
-        raise_opt ~error:(comparator_composed type1) @@ Type.get_t_map type2
+        raise_opt ~error:(Errors.comparator_composed type1) @@ Type.get_t_map type2
       in
       let%bind _ = comparator key_type1 key_type2 in
       comparator val_type1 val_type2
@@ -180,10 +199,10 @@ module Comparable = struct
     fun type1 type2 ->
       let%bind () = try_compare type1 type2 ~in_:(unify type1 type2) in
       let%bind key_type1, val_type1 =
-        raise_opt ~error:(comparator_composed type1) @@ Type.get_t_big_map type1
+        raise_opt ~error:(Errors.comparator_composed type1) @@ Type.get_t_big_map type1
       in
       let%bind key_type2, val_type2 =
-        raise_opt ~error:(comparator_composed type1) @@ Type.get_t_big_map type2
+        raise_opt ~error:(Errors.comparator_composed type1) @@ Type.get_t_big_map type2
       in
       let%bind _ = comparator key_type1 key_type2 in
       comparator val_type1 val_type2
@@ -200,6 +219,7 @@ module Comparable = struct
           ; set_comparator type1 type2
           ; map_comparator type1 type2
           ; simple_comparator type1 type2
+          ; singleton_comparator type1 type2
           ; record_comparator type1 type2
           ; sum_comparator type1 type2
           ; big_map_comparator type1 type2
@@ -207,6 +227,7 @@ module Comparable = struct
       else
         try_all
           [ simple_comparator type1 type2
+          ; singleton_comparator type1 type2
           ; record_comparator type1 type2
           ; sum_comparator type1 type2
           ]
@@ -224,8 +245,12 @@ module Annot = struct
     }
 
   type t =
-    { mode_annot : mode list
-    ; types : type_ List.Ne.t
+    { (* WARN: mode_parametric is used to indicate which functions it is
+        safe to propagate through it without changing the behaviour.
+        This is a major concern due to implicit coercions in Ligo. *)
+      mode_parametric : bool
+    ; mode_annot : mode list
+    ; types : type_ Nonempty_list.t
     }
 
   module Syntax = struct
@@ -235,8 +260,8 @@ module Annot = struct
       let tvar = Type_var.of_input_var ~loc ("'" ^ tvar) in
       let result = in_ (Type.t_variable ~loc tvar ()) in
       let types =
-        List.Ne.map
-          (fun type_ -> { type_ with for_alls = (tvar, kind) :: type_.for_alls })
+        Nonempty_list.map
+          ~f:(fun type_ -> { type_ with for_alls = (tvar, kind) :: type_.for_alls })
           result.types
       in
       { result with types }
@@ -248,7 +273,14 @@ module Annot = struct
       { result with for_alls = (tvar, kind) :: result.for_alls }
 
 
-    let create ~mode_annot ~types = { mode_annot; types = List.Ne.of_list types }
+    let create_function ~mode_annot ~types = { mode_parametric = true; mode_annot; types }
+
+    let create_constructor ~mode_annot ~types =
+      { mode_parametric = true; mode_annot; types }
+
+
+    let create_unsafe ~mode_annot ~types = { mode_parametric = false; mode_annot; types }
+    let create_test ~mode_annot ~types = { mode_parametric = false; mode_annot; types }
     let return ret_type = { for_alls = []; arg_types = []; ret_type }
     let ( ^~> ) arg_type ret_type = { for_alls = []; arg_types = [ arg_type ]; ret_type }
     let ( ^-> ) arg_type type_ = { type_ with arg_types = arg_type :: type_.arg_types }
@@ -263,18 +295,20 @@ type ('err, 'wrn) t =
   infer:('err, 'wrn) infer
   -> check:('err, 'wrn) check
   -> I.expression list
-  -> (Type.t * O.expression list E.t, 'err, 'wrn) C.t
+  -> Type.t
+  -> (O.expression list E.t * (O.expression -> O.expression E.t), 'err, 'wrn) C.t
 
-let of_type ({ mode_annot; types } : Annot.t) : _ t =
+let of_type ({ mode_parametric; mode_annot; types } : Annot.t) : _ t =
   let open C in
   let open Let_syntax in
   (* The function [mode] is used to determine the mode of an argument at position [i] *)
   let mode =
     let table = Hashtbl.create (module Int) in
     List.iteri mode_annot ~f:(fun i mode -> Hashtbl.set table ~key:i ~data:mode);
-    fun i -> raise_opt ~error:(corner_case "bad mode annot") @@ Hashtbl.find table i
+    fun i ->
+      raise_opt ~error:(Errors.corner_case "bad mode annot") @@ Hashtbl.find table i
   in
-  fun ~infer ~check args ->
+  fun ~infer ~check args expected_ret_type ->
     (* Instantiate prenex quantifier *)
     let inst { Annot.for_alls; arg_types; ret_type } : (Type.t list * Type.t, _, _) C.t =
       let%bind subst =
@@ -292,67 +326,69 @@ let of_type ({ mode_annot; types } : Annot.t) : _ t =
       let ret_type = apply_subst ret_type in
       return (arg_types, ret_type)
     in
-    (* Determine arguments to be inferred *)
-    let%bind inferred =
-      (* Problem: Monadic DSL restricts available list functions (e.g. List.filter_mapi) *)
-      List.foldi args ~init:(return []) ~f:(fun i inferred arg ->
-          match%bind mode i with
-          | Annot.Inferred ->
-            let%bind inferred = inferred in
-            return ((i, arg) :: inferred)
-          | Checked -> inferred)
-      >>| List.rev
-    in
     (* [output_args] table is used to store elaborated arguments. Later used to sort arguments by position. *)
     let output_args = Hashtbl.create (module Int) in
-    (* Infer the inferred arguments *)
-    let%bind () =
-      inferred
-      |> List.map ~f:(fun (i, arg) ->
-             let%bind arg_type, arg = infer arg in
-             Hashtbl.set output_args ~key:i ~data:(arg_type, arg);
-             return ())
-      |> all_unit
-    in
     (* Select type using try-based unification on inferred types *)
-    let%bind checked, ret_type =
+    let%bind checked, ret_coerce =
       try_all
-      @@ List.map (List.Ne.to_list types) ~f:(fun type_ ->
+      @@ Nonempty_list.map
+           ~f:(fun type_ ->
              (* Instantiate *)
              let%bind arg_types, ret_type = inst type_ in
+             (* Propagate result type  *)
+             let%bind ret_coerce =
+               let%bind ret_type = Context.tapply ret_type in
+               let%bind expected_ret_type = Context.tapply expected_ret_type in
+               subtype ~received:ret_type ~expected:expected_ret_type
+             in
              (* Split types accordingly for [arg_types] *)
              let%bind args_types =
                match List.zip arg_types args with
                | Ok result -> return result
                | Unequal_lengths ->
                  raise
-                   (corner_case
+                   (Errors.corner_case
                       "Unequal lengths between mode annotation and argument types")
              in
-             let%bind unify_worklist, checked =
+             let%bind rev_inferred, rev_checked =
+               (* Problem: Monadic DSL restricts available list functions (e.g. List.filter_mapi) *)
                List.foldi
                  args_types
                  ~init:(return ([], []))
                  ~f:(fun i result (arg_type, arg) ->
-                   let%bind unify_worklist, checked = result in
+                   let%bind inferred, checked = result in
                    match%bind mode i with
-                   | Annot.Inferred ->
-                     return
-                       ( (i, arg_type, fst @@ Hashtbl.find_exn output_args i)
-                         :: unify_worklist
-                       , checked )
-                   | Checked -> return (unify_worklist, (i, arg_type, arg) :: checked))
+                   | Annot.Inferred -> return ((i, arg_type, arg) :: inferred, checked)
+                   | Checked -> return (inferred, (i, arg_type, arg) :: checked))
+             in
+             let inferred = List.rev rev_inferred in
+             let checked = List.rev rev_checked in
+             (* Infer the inferred arguments *)
+             let%bind rev_unify_worklist =
+               List.fold
+                 inferred
+                 ~init:(return [])
+                 ~f:(fun unify_worklist (i, arg_type, arg) ->
+                   match mode_parametric with
+                   | true ->
+                     let%bind arg = Context.tapply arg_type >>= check arg in
+                     Hashtbl.set output_args ~key:i ~data:(arg_type, arg);
+                     unify_worklist
+                   | false ->
+                     let%bind unify_worklist = unify_worklist in
+                     let%bind received_arg_type, arg = infer arg in
+                     Hashtbl.set output_args ~key:i ~data:(arg_type, arg);
+                     return ((i, arg_type, received_arg_type) :: unify_worklist))
              in
              (* Unify the inferred types, using subtypes *)
              let%bind update_worklist =
-               unify_worklist
                (* Reverse due to [foldi] above *)
-               |> List.rev_map ~f:(fun (i, arg_type1, arg_type2) ->
-                      let%bind arg_type1 = Context.tapply arg_type1 in
-                      let%bind arg_type2 = Context.tapply arg_type2 in
-                      let%bind f = subtype ~expected:arg_type1 ~received:arg_type2 in
-                      let _inferred, expr = Hashtbl.find_exn output_args i in
-                      return (i, arg_type1, f, expr))
+               List.rev_map rev_unify_worklist ~f:(fun (i, arg_type1, arg_type2) ->
+                   let%bind arg_type1 = Context.tapply arg_type1 in
+                   let%bind arg_type2 = Context.tapply arg_type2 in
+                   let%bind f = subtype ~expected:arg_type1 ~received:arg_type2 in
+                   let _inferred, expr = Hashtbl.find_exn output_args i in
+                   return (i, arg_type1, f, expr))
                |> all
              in
              (* Apply the coercion on subtypes *)
@@ -360,13 +396,14 @@ let of_type ({ mode_annot; types } : Annot.t) : _ t =
                update_worklist
                |> List.iter ~f:(fun (i, type_, f, expr) ->
                       let expr =
-                        E.(
-                          let%bind expr = expr in
-                          f expr)
+                        let open E.Let_syntax in
+                        let%bind expr = expr in
+                        f expr
                       in
                       Hashtbl.set output_args ~key:i ~data:(type_, expr))
              in
-             return (checked, ret_type))
+             return (checked, ret_coerce))
+           types
     in
     (* Check the checked arguments *)
     let%bind () =
@@ -383,13 +420,13 @@ let of_type ({ mode_annot; types } : Annot.t) : _ t =
       List.mapi args ~f:(fun i _ -> snd (Hashtbl.find_exn output_args i))
       |> Elaboration.all
     in
-    return (ret_type, args)
+    return (args, ret_coerce)
 
 
 let of_comparator comparator : _ t =
   let open C in
   let open Let_syntax in
-  fun ~infer ~check:_ args ->
+  fun ~infer ~check:_ args expected_ret_type ->
     match args with
     | [ arg1; arg2 ] ->
       let%bind arg1_type, arg1 = infer arg1 in
@@ -399,1278 +436,1245 @@ let of_comparator comparator : _ t =
         let%bind arg2_type = Context.tapply arg2_type in
         comparator arg1_type arg2_type
       in
-      return (ret_type, E.(all [ arg1; arg2 ]))
+      let%bind ret_coerce =
+        let%bind ret_type = Context.tapply ret_type in
+        let%bind expected_ret_type = Context.tapply expected_ret_type in
+        subtype ~received:ret_type ~expected:expected_ret_type
+      in
+      return (E.(all [ arg1; arg2 ]), ret_coerce)
     | _ ->
       raise
-        (corner_case
+        (Errors.corner_case
         @@ Format.asprintf
              "Unequal length between comparator arguments and applied arguments")
 
 
-module Const_map = Simple_utils.Map.Make (struct
-  type t = Constant.constant'
+module Comparable_const = Core.Comparable.Make (struct
+  type t = Constant.constant' [@@deriving sexp]
 
   let compare x y = Constant.compare_constant' x y
 end)
 
-let constant_typer_tbl : (Errors.typer_error, Main_warnings.all) t Const_map.t =
+let find_constant_typer (const : Constant.constant')
+    : (Errors.typer_error, Main_warnings.all) t
+  =
   let open Type in
   let open Annot.Syntax in
-  Const_map.of_list
-    [ (* Loops *)
-      ( C_LOOP_LEFT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:[ (a @-> t_sum_ez [ "left", a; "right", b ] ~loc ()) ^-> a ^~> b ]) )
-    ; ( C_LEFT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred ]
-            ~types:[ a ^~> t_sum_ez [ "left", a; "right", a ] ~loc () ]) )
-    ; ( C_LOOP_CONTINUE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred ]
-            ~types:[ a ^~> t_sum_ez [ "left", a; "right", a ] ~loc () ]) )
-    ; ( C_LOOP_STOP
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred ]
-            ~types:[ a ^~> t_sum_ez [ "left", a; "right", a ] ~loc () ]) )
-    ; ( C_ITER
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Inferred ]
-             ~types:
-               [ (t_for_all "a"
-                 @@ fun a ->
-                 (a @-> t_unit ~loc ()) ^-> t_list a ~loc () ^~> t_unit ~loc ())
-               ; (t_for_all "a"
-                 @@ fun a -> (a @-> t_unit ~loc ()) ^-> t_set a ~loc () ^~> t_unit ~loc ()
-                 )
-               ; (t_for_all "a"
-                 @@ fun a ->
-                 t_for_all "b"
-                 @@ fun b ->
-                 (t_pair a b ~loc () @-> t_unit ~loc ())
-                 ^-> t_map a b ~loc ()
-                 ^~> t_unit ~loc ())
-               ]) )
-    ; ( C_FOLD
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred; Inferred ]
-            ~types:
-              [ (t_pair a b ~loc () @-> a) ^-> t_list b ~loc () ^-> a ^~> a
-              ; (t_pair a b ~loc () @-> a) ^-> t_set b ~loc () ^-> a ^~> a
-              ]) )
-      (* Map *)
-    ; ( C_MAP_EMPTY
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b -> create ~mode_annot:[] ~types:[ return (t_map a b ~loc ()) ]) )
-    ; ( C_BIG_MAP_EMPTY
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b -> create ~mode_annot:[] ~types:[ return (t_big_map a b ~loc ()) ]) )
-    ; ( C_MAP_ADD
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Checked; Inferred ]
-            ~types:
-              [ a ^-> b ^-> t_map a b ~loc () ^~> t_map a b ~loc ()
-              ; a ^-> b ^-> t_big_map a b ~loc () ^~> t_big_map a b ~loc ()
-              ]) )
-    ; ( C_MAP_REMOVE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:
-              [ a ^-> t_map a b ~loc () ^~> t_map a b ~loc ()
-              ; a ^-> t_big_map a b ~loc () ^~> t_big_map a b ~loc ()
-              ]) )
-    ; ( C_MAP_UPDATE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Checked; Inferred ]
-            ~types:
-              [ a ^-> t_option b ~loc () ^-> t_map a b ~loc () ^~> t_map a b ~loc ()
-              ; a
-                ^-> t_option b ~loc ()
-                ^-> t_big_map a b ~loc ()
-                ^~> t_big_map a b ~loc ()
-              ]) )
-    ; ( C_MAP_GET_AND_UPDATE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Checked; Inferred ]
-            ~types:
-              [ a
-                ^-> t_option b ~loc ()
-                ^-> t_map a b ~loc ()
-                ^~> t_pair (t_option b ~loc ()) (t_map a b ~loc ()) ~loc ()
-              ]) )
-    ; ( C_BIG_MAP_GET_AND_UPDATE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Checked; Inferred ]
-            ~types:
-              [ a
-                ^-> t_option b ~loc ()
-                ^-> t_big_map a b ~loc ()
-                ^~> t_pair (t_option b ~loc ()) (t_big_map a b ~loc ()) ~loc ()
-              ]) )
-    ; ( C_MAP_FIND_OPT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:
-              [ a ^-> t_map a b ~loc () ^~> t_option b ~loc ()
-              ; a ^-> t_big_map a b ~loc () ^~> t_option b ~loc ()
-              ]) )
-    ; ( C_MAP_FIND
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:[ a ^-> t_map a b ~loc () ^~> b; a ^-> t_big_map a b ~loc () ^~> b ]) )
-    ; ( C_MAP_MAP
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          for_all "c"
-          @@ fun c ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:
-              [ (t_pair a b ~loc () @-> c) ^-> t_map a b ~loc () ^~> t_map a c ~loc () ])
+  match const with
+  (* Loops *)
+  | C_LOOP_LEFT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ (a @-> t_sum_ez [ "left", a; "right", b ] ~loc ()) ^-> a ^~> b ])
+  | C_LEFT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_constructor
+        ~mode_annot:[ Inferred ]
+        ~types:[ a ^~> t_sum_ez [ "left", a; "right", a ] ~loc () ])
+  | C_LOOP_CONTINUE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Inferred ]
+        ~types:[ a ^~> t_sum_ez [ "left", a; "right", a ] ~loc () ])
+  | C_LOOP_STOP ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Inferred ]
+        ~types:[ a ^~> t_sum_ez [ "left", a; "right", a ] ~loc () ])
+  | C_ITER ->
+    of_type
+      (create_function
+         ~mode_annot:[ Checked; Inferred ]
+         ~types:
+           [ (t_for_all "a"
+             @@ fun a -> (a @-> t_unit ~loc ()) ^-> t_list a ~loc () ^~> t_unit ~loc ())
+           ; (t_for_all "a"
+             @@ fun a -> (a @-> t_unit ~loc ()) ^-> t_set a ~loc () ^~> t_unit ~loc ())
+           ; (t_for_all "a"
+             @@ fun a ->
+             t_for_all "b"
+             @@ fun b ->
+             (t_pair a b ~loc () @-> t_unit ~loc ())
+             ^-> t_map a b ~loc ()
+             ^~> t_unit ~loc ())
+           ])
+  | C_FOLD ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred; Inferred ]
+        ~types:
+          [ (t_pair a b ~loc () @-> a) ^-> t_list b ~loc () ^-> a ^~> a
+          ; (t_pair a b ~loc () @-> a) ^-> t_set b ~loc () ^-> a ^~> a
+          ])
+  (* Map *)
+  | C_MAP_EMPTY ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b -> create_constructor ~mode_annot:[] ~types:[ return (t_map a b ~loc ()) ]
       )
-    ; ( C_MAP_ITER
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:
-              [ (t_pair a b ~loc () @-> t_unit ~loc ())
-                ^-> t_map a b ~loc ()
-                ^~> t_unit ~loc ()
-              ]) )
-    ; ( C_MAP_FOLD
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          for_all "c"
-          @@ fun c ->
-          create
-            ~mode_annot:[ Checked; Inferred; Inferred ]
-            ~types:
-              [ (t_pair c (t_pair a b ~loc ()) ~loc () @-> c)
-                ^-> t_map a b ~loc ()
-                ^-> c
-                ^~> c
-              ]) )
-      (* List *)
-    ; ( C_LIST_EMPTY
-      , of_type
-          (for_all "a"
-          @@ fun a -> create ~mode_annot:[] ~types:[ return @@ t_list a ~loc () ]) )
-    ; ( C_CONS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred; Checked ]
-            ~types:[ a ^-> t_list a ~loc () ^~> t_list a ~loc () ]) )
-    ; ( C_LIST_MAP
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:[ (a @-> b) ^-> t_list a ~loc () ^~> t_list b ~loc () ]) )
-    ; ( C_LIST_ITER
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:[ (a @-> t_unit ~loc ()) ^-> t_list a ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_LIST_FOLD
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred; Inferred ]
-            ~types:[ (t_pair b a ~loc () @-> b) ^-> t_list a ~loc () ^-> b ^~> b ]) )
-    ; ( C_LIST_FOLD_LEFT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred; Inferred ]
-            ~types:[ (t_pair b a ~loc () @-> b) ^-> b ^-> t_list a ~loc () ^~> b ]) )
-    ; ( C_LIST_FOLD_RIGHT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred; Inferred ]
-            ~types:[ (t_pair a b ~loc () @-> b) ^-> t_list a ~loc () ^-> b ^~> b ]) )
-      (* Set *)
-    ; ( C_SET_EMPTY
-      , of_type
-          (for_all "a"
-          @@ fun a -> create ~mode_annot:[] ~types:[ return @@ t_set a ~loc () ]) )
-    ; ( C_SET_LITERAL
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create ~mode_annot:[ Inferred ] ~types:[ t_list a ~loc () ^~> t_set a ~loc () ]
-          ) )
-    ; ( C_SET_MEM
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred; Checked ]
-            ~types:[ a ^-> t_set a ~loc () ^~> t_bool ~loc () ]) )
-    ; ( C_SET_ADD
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred; Checked ]
-            ~types:[ a ^-> t_set a ~loc () ^~> t_set a ~loc () ]) )
-    ; ( C_SET_REMOVE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred; Checked ]
-            ~types:[ a ^-> t_set a ~loc () ^~> t_set a ~loc () ]) )
-    ; ( C_SET_UPDATE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred; Checked; Checked ]
-            ~types:[ a ^-> t_bool ~loc () ^-> t_set a ~loc () ^~> t_set a ~loc () ]) )
-    ; ( C_SET_ITER
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:[ (a @-> t_unit ~loc ()) ^-> t_set a ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_SET_FOLD
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred; Inferred ]
-            ~types:[ (t_pair b a ~loc () @-> b) ^-> t_set a ~loc () ^-> b ^~> b ]) )
-    ; ( C_SET_FOLD_DESC
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred; Inferred ]
-            ~types:[ (t_pair a b ~loc () @-> b) ^-> t_set a ~loc () ^-> b ^~> b ]) )
-      (* Bytes *)
-    ; ( C_CONCAT
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_string ~loc () ^-> t_string ~loc () ^~> t_string ~loc ()
-               ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-               ]) )
-    ; ( C_CONCATS
-      , of_type
-          (create
-             ~mode_annot:[ Inferred ]
-             ~types:
-               [ t_list ~loc (t_string ~loc ()) () ^~> t_string ~loc ()
-               ; t_list ~loc (t_bytes ~loc ()) () ^~> t_bytes ~loc ()
-               ]) )
-      (* Option *)
-    ; ( C_NONE
-      , of_type
-          (for_all "a"
-          @@ fun a -> create ~mode_annot:[] ~types:[ return @@ t_option a ~loc () ]) )
-    ; ( C_SOME
-      , of_type
-          (for_all "a"
-          @@ fun a -> create ~mode_annot:[ Inferred ] ~types:[ a ^~> t_option a ~loc () ]
-          ) )
-    ; ( C_OPTION_MAP
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:[ (a @-> b) ^-> t_option a ~loc () ^~> t_option b ~loc () ]) )
-    ; ( C_CHECK_ENTRYPOINT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_string ~loc () ^~> t_unit ~loc () ])
+  | C_BIG_MAP_EMPTY ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_constructor ~mode_annot:[] ~types:[ return (t_big_map a b ~loc ()) ])
+  | C_MAP_ADD ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Checked; Inferred ]
+        ~types:
+          [ a ^-> b ^-> t_map a b ~loc () ^~> t_map a b ~loc ()
+          ; a ^-> b ^-> t_big_map a b ~loc () ^~> t_big_map a b ~loc ()
+          ])
+  | C_MAP_REMOVE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:
+          [ a ^-> t_map a b ~loc () ^~> t_map a b ~loc ()
+          ; a ^-> t_big_map a b ~loc () ^~> t_big_map a b ~loc ()
+          ])
+  | C_MAP_UPDATE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Checked; Inferred ]
+        ~types:
+          [ a ^-> t_option b ~loc () ^-> t_map a b ~loc () ^~> t_map a b ~loc ()
+          ; a ^-> t_option b ~loc () ^-> t_big_map a b ~loc () ^~> t_big_map a b ~loc ()
+          ])
+  | C_MAP_GET_AND_UPDATE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Checked; Inferred ]
+        ~types:
+          [ a
+            ^-> t_option b ~loc ()
+            ^-> t_map a b ~loc ()
+            ^~> t_pair (t_option b ~loc ()) (t_map a b ~loc ()) ~loc ()
+          ])
+  | C_BIG_MAP_GET_AND_UPDATE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Checked; Inferred ]
+        ~types:
+          [ a
+            ^-> t_option b ~loc ()
+            ^-> t_big_map a b ~loc ()
+            ^~> t_pair (t_option b ~loc ()) (t_big_map a b ~loc ()) ~loc ()
+          ])
+  | C_MAP_FIND_OPT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:
+          [ a ^-> t_map a b ~loc () ^~> t_option b ~loc ()
+          ; a ^-> t_big_map a b ~loc () ^~> t_option b ~loc ()
+          ])
+  | C_MAP_FIND ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ a ^-> t_map a b ~loc () ^~> b; a ^-> t_big_map a b ~loc () ^~> b ])
+  | C_MAP_MAP ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      for_all "c"
+      @@ fun c ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ (t_pair a b ~loc () @-> c) ^-> t_map a b ~loc () ^~> t_map a c ~loc () ]
       )
-    ; ( C_CHECK_CALL_VIEW_LITSTR
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_string ~loc () ^~> t_unit ~loc () ])
+  | C_MAP_ITER ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:
+          [ (t_pair a b ~loc () @-> t_unit ~loc ())
+            ^-> t_map a b ~loc ()
+            ^~> t_unit ~loc ()
+          ])
+  | C_MAP_FOLD ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      for_all "c"
+      @@ fun c ->
+      create_function
+        ~mode_annot:[ Checked; Inferred; Inferred ]
+        ~types:
+          [ (t_pair c (t_pair a b ~loc ()) ~loc () @-> c)
+            ^-> t_map a b ~loc ()
+            ^-> c
+            ^~> c
+          ])
+  (* List *)
+  | C_LIST_EMPTY ->
+    of_type
+      (for_all "a"
+      @@ fun a -> create_constructor ~mode_annot:[] ~types:[ return @@ t_list a ~loc () ]
       )
-    ; ( C_CHECK_SELF
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:[ t_string ~loc () ^~> t_option a ~loc () ]) )
-    ; ( C_CREATE_CONTRACT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Checked; Checked; Inferred ]
-            ~types:
-              [ (t_pair a b ~loc ()
-                @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
-                ^-> t_option (t_key_hash ~loc ()) ~loc ()
-                ^-> t_mutez ~loc ()
-                ^-> b
-                ^~> t_pair (t_operation ~loc ()) (t_address ~loc ()) ~loc ()
-              ]) )
-    ; ( C_CHECK_EMIT_EVENT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:[ t_string ~loc () ^-> a ^~> t_unit ~loc () ]) )
-      (* Primitives *)
-    ; C_UNIT, of_type (create ~mode_annot:[] ~types:[ return @@ t_unit ~loc () ])
-    ; C_TRUE, of_type (create ~mode_annot:[] ~types:[ return @@ t_bool ~loc () ])
-    ; C_FALSE, of_type (create ~mode_annot:[] ~types:[ return @@ t_bool ~loc () ])
-    ; ( C_POLYMORPHIC_ADD
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_string ~loc () ^-> t_string ~loc () ^~> t_string ~loc ()
-               ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
-               ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
-               ; t_int ~loc () ^-> t_timestamp ~loc () ^~> t_timestamp ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bls12_381_g1 ~loc ()
-                 ^-> t_bls12_381_g1 ~loc ()
-                 ^~> t_bls12_381_g1 ~loc ()
-               ; t_bls12_381_g2 ~loc ()
-                 ^-> t_bls12_381_g2 ~loc ()
-                 ^~> t_bls12_381_g2 ~loc ()
-               ; t_bls12_381_fr ~loc ()
-                 ^-> t_bls12_381_fr ~loc ()
-                 ^~> t_bls12_381_fr ~loc ()
-               ]) )
-    ; ( C_POLYMORPHIC_SUB
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
-               ; t_timestamp ~loc () ^-> t_timestamp ~loc () ^~> t_int ~loc ()
-               ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
-               ; t_mutez ~loc ()
-                 ^-> t_mutez ~loc ()
-                 ^~> t_option (t_mutez ~loc ()) ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bls12_381_g1 ~loc ()
-                 ^-> t_bls12_381_g1 ~loc ()
-                 ^~> t_bls12_381_g1 ~loc ()
-               ; t_bls12_381_g2 ~loc ()
-                 ^-> t_bls12_381_g2 ~loc ()
-                 ^~> t_bls12_381_g2 ~loc ()
-               ; t_bls12_381_fr ~loc ()
-                 ^-> t_bls12_381_fr ~loc ()
-                 ^~> t_bls12_381_fr ~loc ()
-               ]) )
-    ; ( C_ADD
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
-               ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
-               ; t_int ~loc () ^-> t_timestamp ~loc () ^~> t_timestamp ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bls12_381_g1 ~loc ()
-                 ^-> t_bls12_381_g1 ~loc ()
-                 ^~> t_bls12_381_g1 ~loc ()
-               ; t_bls12_381_g2 ~loc ()
-                 ^-> t_bls12_381_g2 ~loc ()
-                 ^~> t_bls12_381_g2 ~loc ()
-               ; t_bls12_381_fr ~loc ()
-                 ^-> t_bls12_381_fr ~loc ()
-                 ^~> t_bls12_381_fr ~loc ()
-               ]) )
-    ; ( C_MUL
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
-               ; t_int ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
-               ; t_bls12_381_fr ~loc () ^-> t_nat ~loc () ^~> t_bls12_381_fr ~loc ()
-               ; t_bls12_381_fr ~loc () ^-> t_int ~loc () ^~> t_bls12_381_fr ~loc ()
-               ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_nat ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
-               ; t_mutez ~loc () ^-> t_nat ~loc () ^~> t_mutez ~loc ()
-               ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bls12_381_g1 ~loc ()
-                 ^-> t_bls12_381_fr ~loc ()
-                 ^~> t_bls12_381_g1 ~loc ()
-               ; t_bls12_381_g2 ~loc ()
-                 ^-> t_bls12_381_fr ~loc ()
-                 ^~> t_bls12_381_g2 ~loc ()
-               ; t_bls12_381_fr ~loc ()
-                 ^-> t_bls12_381_fr ~loc ()
-                 ^~> t_bls12_381_fr ~loc ()
-               ]) )
-    ; ( C_SUB
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_bls12_381_g1 ~loc ()
-                 ^-> t_bls12_381_fr ~loc ()
-                 ^~> t_bls12_381_g1 ~loc ()
-               ; t_bls12_381_g2 ~loc ()
-                 ^-> t_bls12_381_fr ~loc ()
-                 ^~> t_bls12_381_g2 ~loc ()
-               ; t_bls12_381_fr ~loc ()
-                 ^-> t_bls12_381_fr ~loc ()
-                 ^~> t_bls12_381_fr ~loc ()
-               ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
-               ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_timestamp ~loc () ^-> t_timestamp ~loc () ^~> t_int ~loc ()
-               ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ]) )
-    ; ( C_SUB_MUTEZ
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked ]
-             ~types:
-               [ t_mutez ~loc ()
-                 ^-> t_mutez ~loc ()
-                 ^~> t_option (t_mutez ~loc ()) ~loc ()
-               ]) )
-    ; ( C_DIV
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
-               ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
-               ; t_mutez ~loc () ^-> t_nat ~loc () ^~> t_mutez ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_nat ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ]) )
-    ; ( C_MOD
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_int ~loc () ^-> t_int ~loc () ^~> t_nat ~loc ()
-               ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_nat ~loc () ^-> t_int ~loc () ^~> t_nat ~loc ()
-               ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_mutez ~loc () ^-> t_nat ~loc () ^~> t_mutez ~loc ()
-               ; t_mutez ~loc () ^-> t_mutez ~loc () ^~> t_mutez ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ]) )
-    ; ( C_NEG
-      , of_type
-          (create
-             ~mode_annot:[ Inferred ]
-             ~types:
-               [ t_int ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^~> t_int ~loc ()
-               ; t_bls12_381_g1 ~loc () ^~> t_bls12_381_g1 ~loc ()
-               ; t_bls12_381_g2 ~loc () ^~> t_bls12_381_g2 ~loc ()
-               ; t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
-               ]) )
-      (* Logical operators *)
-    ; ( C_NOT
-      , of_type
-          (create
-             ~mode_annot:[ Inferred ]
-             ~types:
-               [ t_int ~loc () ^~> t_int ~loc ()
-               ; t_nat ~loc () ^~> t_int ~loc ()
-               ; t_bytes ~loc () ^~> t_bytes ~loc ()
-               ; t_bool ~loc () ^~> t_bool ~loc ()
-               ]) )
-    ; ( C_AND
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:[ t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc () ]) )
-    ; ( C_OR
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:[ t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc () ]) )
-    ; ( C_XOR
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:[ t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc () ]) )
-    ; ( C_LAND
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-               ]) )
-    ; ( C_LOR
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-               ]) )
-    ; ( C_LXOR
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-               ]) )
-    ; ( C_LSL
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_int64 ~loc () ^-> t_nat ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
-               ]) )
-    ; ( C_LSR
-      , of_type
-          (create
-             ~mode_annot:[ Inferred; Inferred ]
-             ~types:
-               [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-               ; t_int64 ~loc () ^-> t_nat ~loc () ^~> t_int64 ~loc ()
-               ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
-               ]) )
-      (* Tests *)
-    ; ( C_TEST_ADDRESS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:[ t_contract a ~loc () ^~> t_typed_address a b ~loc () ]) )
-    ; ( C_TEST_COMPILE_CONTRACT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Inferred; Checked ]
-            ~types:
-              [ (t_pair a b ~loc ()
-                @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
-                ^-> t_views ~loc b ()
-                ^~> t_michelson_contract a b ~loc ()
-              ]) )
-    ; ( C_TEST_COMPILE_AST_CONTRACT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:
-              [ t_michelson_contract a b ~loc () ^~> t_michelson_contract a b ~loc () ]) )
-    ; ( C_TEST_SIZE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:[ t_michelson_contract a b ~loc () ^~> t_int ~loc () ]) )
-    ; ( C_TEST_ORIGINATE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Checked; Checked ]
-            ~types:
-              [ t_michelson_contract a b ~loc ()
-                ^-> t_michelson_code ~loc ()
-                ^-> t_mutez ~loc ()
-                ^~> t_typed_address a b ~loc ()
-              ]) )
-    ; ( C_TEST_BOOTSTRAP_CONTRACT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred; Checked ]
-            ~types:
-              [ (t_pair a b ~loc ()
-                @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
-                ^-> b
-                ^-> t_mutez ~loc ()
-                ^~> t_unit ~loc ()
-              ]) )
-    ; ( C_TEST_LAST_ORIGINATIONS
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:
-               [ t_unit ~loc ()
-                 ^~> t_map
-                       (t_address ~loc ())
-                       (t_list (t_address ~loc ()) ~loc ())
-                       ~loc
-                       ()
-               ]) )
-    ; ( C_TEST_LAST_EVENTS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:
-              [ t_string ~loc () ^~> t_list (t_pair (t_address ~loc ()) a ~loc ()) ~loc ()
-              ]) )
-    ; ( C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:[ t_nat ~loc () ^~> t_typed_address a b ~loc () ]) )
-    ; ( C_TEST_SET_SOURCE
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_address ~loc () ^~> t_unit ~loc () ])
+  | C_CONS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_constructor
+        ~mode_annot:[ Checked; Checked ]
+        ~types:[ a ^-> t_list a ~loc () ^~> t_list a ~loc () ])
+  | C_LIST_MAP ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ (a @-> b) ^-> t_list a ~loc () ^~> t_list b ~loc () ])
+  | C_LIST_ITER ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ (a @-> t_unit ~loc ()) ^-> t_list a ~loc () ^~> t_unit ~loc () ])
+  | C_LIST_FOLD ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred; Inferred ]
+        ~types:[ (t_pair b a ~loc () @-> b) ^-> t_list a ~loc () ^-> b ^~> b ])
+  | C_LIST_FOLD_LEFT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred; Inferred ]
+        ~types:[ (t_pair b a ~loc () @-> b) ^-> b ^-> t_list a ~loc () ^~> b ])
+  | C_LIST_FOLD_RIGHT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred; Inferred ]
+        ~types:[ (t_pair a b ~loc () @-> b) ^-> t_list a ~loc () ^-> b ^~> b ])
+  (* Set *)
+  | C_SET_EMPTY ->
+    of_type
+      (for_all "a"
+      @@ fun a -> create_constructor ~mode_annot:[] ~types:[ return @@ t_set a ~loc () ])
+  | C_SET_LITERAL ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_constructor
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_list a ~loc () ^~> t_set a ~loc () ])
+  | C_SET_MEM ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Inferred; Checked ]
+        ~types:[ a ^-> t_set a ~loc () ^~> t_bool ~loc () ])
+  | C_SET_ADD ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Inferred; Checked ]
+        ~types:[ a ^-> t_set a ~loc () ^~> t_set a ~loc () ])
+  | C_SET_REMOVE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Inferred; Checked ]
+        ~types:[ a ^-> t_set a ~loc () ^~> t_set a ~loc () ])
+  | C_SET_UPDATE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Inferred; Checked; Checked ]
+        ~types:[ a ^-> t_bool ~loc () ^-> t_set a ~loc () ^~> t_set a ~loc () ])
+  | C_SET_ITER ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ (a @-> t_unit ~loc ()) ^-> t_set a ~loc () ^~> t_unit ~loc () ])
+  | C_SET_FOLD ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred; Inferred ]
+        ~types:[ (t_pair b a ~loc () @-> b) ^-> t_set a ~loc () ^-> b ^~> b ])
+  | C_SET_FOLD_DESC ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred; Inferred ]
+        ~types:[ (t_pair a b ~loc () @-> b) ^-> t_set a ~loc () ^-> b ^~> b ])
+  (* Bytes *)
+  | C_CONCAT ->
+    (* This can be treated as a normal function as coerce before and
+        and after doesn *)
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_string ~loc () ^-> t_string ~loc () ^~> t_string ~loc ()
+           ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+           ])
+  | C_CONCATS ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred ]
+         ~types:
+           [ t_list ~loc (t_string ~loc ()) () ^~> t_string ~loc ()
+           ; t_list ~loc (t_bytes ~loc ()) () ^~> t_bytes ~loc ()
+           ])
+  (* Option *)
+  | C_NONE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_constructor ~mode_annot:[] ~types:[ return @@ t_option a ~loc () ])
+  | C_SOME ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_constructor ~mode_annot:[ Inferred ] ~types:[ a ^~> t_option a ~loc () ])
+  | C_OPTION_MAP ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ (a @-> b) ^-> t_option a ~loc () ^~> t_option b ~loc () ])
+  | C_CHECK_ENTRYPOINT ->
+    of_type
+      (create_function
+         ~mode_annot:[ Checked ]
+         ~types:[ t_string ~loc () ^~> t_unit ~loc () ])
+  | C_CHECK_CALL_VIEW_LITSTR ->
+    of_type
+      (create_function
+         ~mode_annot:[ Checked ]
+         ~types:[ t_string ~loc () ^~> t_unit ~loc () ])
+  | C_CHECK_SELF ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Checked ]
+        ~types:[ t_string ~loc () ^~> t_option a ~loc () ])
+  | C_CREATE_CONTRACT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Checked; Checked; Inferred ]
+        ~types:
+          [ (t_pair a b ~loc ()
+            @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
+            ^-> t_option (t_key_hash ~loc ()) ~loc ()
+            ^-> t_mumav ~loc ()
+            ^-> b
+            ^~> t_pair (t_operation ~loc ()) (t_address ~loc ()) ~loc ()
+          ])
+  | C_CHECK_EMIT_EVENT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ t_string ~loc () ^-> a ^~> t_unit ~loc () ])
+  (* Primitives *)
+  | C_UNIT ->
+    of_type (create_constructor ~mode_annot:[] ~types:[ return @@ t_unit ~loc () ])
+  | C_TRUE ->
+    of_type (create_constructor ~mode_annot:[] ~types:[ return @@ t_bool ~loc () ])
+  | C_FALSE ->
+    of_type (create_constructor ~mode_annot:[] ~types:[ return @@ t_bool ~loc () ])
+  | C_POLYMORPHIC_ADD ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_string ~loc () ^-> t_string ~loc () ^~> t_string ~loc ()
+           ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
+           ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
+           ; t_int ~loc () ^-> t_timestamp ~loc () ^~> t_timestamp ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ; t_bls12_381_g1 ~loc () ^-> t_bls12_381_g1 ~loc () ^~> t_bls12_381_g1 ~loc ()
+           ; t_bls12_381_g2 ~loc () ^-> t_bls12_381_g2 ~loc () ^~> t_bls12_381_g2 ~loc ()
+           ; t_bls12_381_fr ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
+           ])
+  | C_POLYMORPHIC_SUB ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
+           ; t_timestamp ~loc () ^-> t_timestamp ~loc () ^~> t_int ~loc ()
+           ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
+           ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_option (t_mumav ~loc ()) ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ; t_bls12_381_g1 ~loc () ^-> t_bls12_381_g1 ~loc () ^~> t_bls12_381_g1 ~loc ()
+           ; t_bls12_381_g2 ~loc () ^-> t_bls12_381_g2 ~loc () ^~> t_bls12_381_g2 ~loc ()
+           ; t_bls12_381_fr ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
+           ])
+  | C_ADD ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
+           ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
+           ; t_int ~loc () ^-> t_timestamp ~loc () ^~> t_timestamp ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ; t_bls12_381_g1 ~loc () ^-> t_bls12_381_g1 ~loc () ^~> t_bls12_381_g1 ~loc ()
+           ; t_bls12_381_g2 ~loc () ^-> t_bls12_381_g2 ~loc () ^~> t_bls12_381_g2 ~loc ()
+           ; t_bls12_381_fr ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
+           ])
+  | C_MUL ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
+           ; t_int ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
+           ; t_bls12_381_fr ~loc () ^-> t_nat ~loc () ^~> t_bls12_381_fr ~loc ()
+           ; t_bls12_381_fr ~loc () ^-> t_int ~loc () ^~> t_bls12_381_fr ~loc ()
+           ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_nat ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
+           ; t_mumav ~loc () ^-> t_nat ~loc () ^~> t_mumav ~loc ()
+           ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ; t_bls12_381_g1 ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_g1 ~loc ()
+           ; t_bls12_381_g2 ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_g2 ~loc ()
+           ; t_bls12_381_fr ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
+           ])
+  | C_SUB ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_bls12_381_g1 ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_g1 ~loc ()
+           ; t_bls12_381_g2 ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_g2 ~loc ()
+           ; t_bls12_381_fr ~loc () ^-> t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
+           ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
+           ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_timestamp ~loc () ^-> t_timestamp ~loc () ^~> t_int ~loc ()
+           ; t_timestamp ~loc () ^-> t_int ~loc () ^~> t_timestamp ~loc ()
+           ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ])
+  | C_SUB_MUMAV ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Checked; Checked ]
+         ~types:
+           [ t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_option (t_mumav ~loc ()) ~loc () ])
+  | C_DIV ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_int ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_nat ~loc () ^-> t_int ~loc () ^~> t_int ~loc ()
+           ; t_int ~loc () ^-> t_nat ~loc () ^~> t_int ~loc ()
+           ; t_mumav ~loc () ^-> t_nat ~loc () ^~> t_mumav ~loc ()
+           ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_nat ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ])
+  | C_MOD ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_int ~loc () ^-> t_int ~loc () ^~> t_nat ~loc ()
+           ; t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_nat ~loc () ^-> t_int ~loc () ^~> t_nat ~loc ()
+           ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_mumav ~loc () ^-> t_nat ~loc () ^~> t_mumav ~loc ()
+           ; t_mumav ~loc () ^-> t_mumav ~loc () ^~> t_mumav ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ])
+  | C_NEG ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred ]
+         ~types:
+           [ t_int ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^~> t_int ~loc ()
+           ; t_bls12_381_g1 ~loc () ^~> t_bls12_381_g1 ~loc ()
+           ; t_bls12_381_g2 ~loc () ^~> t_bls12_381_g2 ~loc ()
+           ; t_bls12_381_fr ~loc () ^~> t_bls12_381_fr ~loc ()
+           ])
+  (* Logical operators *)
+  | C_NOT ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred ]
+         ~types:
+           [ t_int ~loc () ^~> t_int ~loc ()
+           ; t_nat ~loc () ^~> t_int ~loc ()
+           ; t_bytes ~loc () ^~> t_bytes ~loc ()
+           ; t_bool ~loc () ^~> t_bool ~loc ()
+           ])
+  | C_AND ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:[ t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc () ])
+  | C_OR ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:[ t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc () ])
+  | C_XOR ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:[ t_bool ~loc () ^-> t_bool ~loc () ^~> t_bool ~loc () ])
+  | C_LAND ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+           ])
+  | C_LOR ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+           ])
+  | C_LXOR ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_int64 ~loc () ^-> t_int64 ~loc () ^~> t_int64 ~loc ()
+           ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+           ])
+  | C_LSL ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_int64 ~loc () ^-> t_nat ~loc () ^~> t_int64 ~loc ()
+           ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
+           ])
+  | C_LSR ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred; Inferred ]
+         ~types:
+           [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+           ; t_int64 ~loc () ^-> t_nat ~loc () ^~> t_int64 ~loc ()
+           ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
+           ])
+  (* Tests *)
+  | C_TEST_ADDRESS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked ]
+        ~types:[ t_contract a ~loc () ^~> t_typed_address a b ~loc () ])
+  | C_TEST_COMPILE_CONTRACT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Inferred; Checked ]
+        ~types:
+          [ (t_pair a b ~loc ()
+            @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
+            ^-> t_views ~loc b ()
+            ^~> t_michelson_contract a b ~loc ()
+          ])
+  | C_TEST_COMPILE_AST_CONTRACT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked ]
+        ~types:[ t_michelson_contract a b ~loc () ^~> t_michelson_contract a b ~loc () ])
+  | C_TEST_SIZE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked ]
+        ~types:[ t_michelson_contract a b ~loc () ^~> t_int ~loc () ])
+  | C_TEST_ORIGINATE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked; Checked; Checked ]
+        ~types:
+          [ t_michelson_contract a b ~loc ()
+            ^-> t_michelson_code ~loc ()
+            ^-> t_mumav ~loc ()
+            ^~> t_typed_address a b ~loc ()
+          ])
+  | C_TEST_BOOTSTRAP_CONTRACT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked; Inferred; Checked ]
+        ~types:
+          [ (t_pair a b ~loc ()
+            @-> t_pair (t_list (t_operation ~loc ()) ~loc ()) b ~loc ())
+            ^-> b
+            ^-> t_mumav ~loc ()
+            ^~> t_unit ~loc ()
+          ])
+  | C_TEST_LAST_ORIGINATIONS ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:
+           [ t_unit ~loc ()
+             ^~> t_map (t_address ~loc ()) (t_list (t_address ~loc ()) ~loc ()) ~loc ()
+           ])
+  | C_TEST_LAST_EVENTS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test
+        ~mode_annot:[ Checked ]
+        ~types:
+          [ t_string ~loc () ^~> t_list (t_pair (t_address ~loc ()) a ~loc ()) ~loc () ])
+  | C_TEST_NTH_BOOTSTRAP_TYPED_ADDRESS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked ]
+        ~types:[ t_nat ~loc () ^~> t_typed_address a b ~loc () ])
+  | C_TEST_SET_SOURCE ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_address ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_SET_BAKER ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_test_baker_policy ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_NTH_BOOTSTRAP_CONTRACT ->
+    of_type
+      (create_test ~mode_annot:[ Checked ] ~types:[ t_nat ~loc () ^~> t_address ~loc () ])
+  | C_TEST_GET_STORAGE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked ]
+        ~types:[ t_typed_address a b ~loc () ^~> t_michelson_code ~loc () ])
+  | C_TEST_GET_BALANCE ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_address ~loc () ^~> t_mumav ~loc () ])
+  | C_TEST_GET_NTH_BS ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:
+           [ t_int ~loc ()
+             ^~> t_triplet (t_address ~loc ()) (t_key ~loc ()) (t_string ~loc ()) ~loc ()
+           ])
+  | C_TEST_PRINT ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked ]
+         ~types:[ t_int ~loc () ^-> t_string ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_TO_STRING ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test
+        ~mode_annot:[ Inferred; Checked ]
+        ~types:[ a ^-> t_int ~loc () ^~> t_string ~loc () ])
+  | C_TEST_UNESCAPE_STRING ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_string ~loc () ^~> t_string ~loc () ])
+  | C_TEST_STATE_RESET ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked; Checked ]
+         ~types:
+           [ t_option (t_timestamp ~loc ()) ~loc ()
+             ^-> t_nat ~loc ()
+             ^-> t_list (t_mumav ~loc ()) ~loc ()
+             ^~> t_unit ~loc ()
+           ])
+  | C_TEST_GET_VOTING_POWER ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_key_hash ~loc () ^~> t_nat ~loc () ])
+  | C_TEST_GET_TOTAL_VOTING_POWER ->
+    of_type
+      (create_test ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_nat ~loc () ])
+  | C_TEST_CAST_ADDRESS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked ]
+        ~types:[ t_address ~loc () ^~> t_typed_address a b ~loc () ])
+  | C_TEST_RANDOM ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test ~mode_annot:[ Checked ] ~types:[ t_bool ~loc () ^~> t_gen a ~loc () ])
+  | C_TEST_GENERATOR_EVAL ->
+    of_type
+      (for_all "a"
+      @@ fun a -> create_test ~mode_annot:[ Checked ] ~types:[ t_gen a ~loc () ^~> a ])
+  | C_TEST_MUTATE_CONTRACT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked; Checked ]
+        ~types:
+          [ t_nat ~loc ()
+            ^-> t_michelson_contract a b ~loc ()
+            ^~> t_option
+                  (t_pair (t_michelson_contract a b ~loc ()) (t_mutation ~loc ()) ~loc ())
+                  ~loc
+                  ()
+          ])
+  | C_TEST_MUTATE_VALUE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:
+          [ t_nat ~loc ()
+            ^-> a
+            ^~> t_option (t_pair a (t_mutation ~loc ()) ~loc ()) ~loc ()
+          ])
+  | C_TEST_TRY_WITH ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test
+        ~mode_annot:[ Checked; Checked ]
+        ~types:[ (t_unit ~loc () @-> a) ^-> (t_unit ~loc () @-> a) ^~> a ])
+  | C_TEST_SAVE_MUTATION ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked ]
+         ~types:
+           [ t_string ~loc ()
+             ^-> t_mutation ~loc ()
+             ^~> t_option (t_string ~loc ()) ~loc ()
+           ])
+  | C_TEST_ADD_ACCOUNT ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked ]
+         ~types:[ t_string ~loc () ^-> t_key ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_NEW_ACCOUNT ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_unit ~loc () ^~> t_pair (t_string ~loc ()) (t_key ~loc ()) ~loc () ])
+  | C_TEST_RUN ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ (a @-> b) ^-> a ^~> t_michelson_code ~loc () ])
+  | C_TEST_DECOMPILE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test ~mode_annot:[ Checked ] ~types:[ t_michelson_code ~loc () ^~> a ])
+  | C_TEST_TO_TYPED_ADDRESS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_contract a ~loc () ^~> t_typed_address a b ~loc () ])
+  | C_TEST_TO_ADDRESS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_typed_address a b ~loc () ^~> t_address ~loc () ])
+  | C_TEST_EXTERNAL_CALL_TO_ADDRESS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test
+        ~mode_annot:[ Checked; Checked; Checked; Checked ]
+        ~types:
+          [ t_contract a ~loc ()
+            ^-> t_option (t_string ~loc ()) ~loc ()
+            ^-> t_michelson_code ~loc ()
+            ^-> t_mumav ~loc ()
+            ^~> t_test_exec_result ~loc ()
+          ])
+  | C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test
+        ~mode_annot:[ Checked; Checked; Checked; Checked ]
+        ~types:
+          [ t_contract a ~loc ()
+            ^-> t_option (t_string ~loc ()) ~loc ()
+            ^-> t_michelson_code ~loc ()
+            ^-> t_mumav ~loc ()
+            ^~> t_nat ~loc ()
+          ])
+  | C_TEST_SET_BIG_MAP ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:[ t_int ~loc () ^-> t_big_map a b ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_BAKER_ACCOUNT ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked ]
+         ~types:
+           [ t_pair (t_string ~loc ()) (t_key ~loc ()) ~loc ()
+             ^-> t_option (t_mumav ~loc ()) ~loc ()
+             ^~> t_unit ~loc ()
+           ])
+  | C_TEST_REGISTER_DELEGATE ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_key_hash ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_STAKE ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked ]
+         ~types:[ t_key_hash ~loc () ^-> t_mumav ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_BAKE_UNTIL_N_CYCLE_END ->
+    of_type
+      (create_test ~mode_annot:[ Checked ] ~types:[ t_nat ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_TO_CONTRACT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_typed_address a b ~loc () ^~> t_contract a ~loc () ])
+  | C_GLOBAL_CONSTANT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_constructor ~mode_annot:[ Checked ] ~types:[ t_string ~loc () ^~> a ])
+  | C_TEST_COMPILE_CONTRACT_FROM_FILE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked; Checked; Checked; Checked ]
+        ~types:
+          [ t_string ~loc ()
+            ^-> t_option (t_nat ~loc ()) ~loc ()
+            ^~> t_michelson_contract a b ~loc ()
+          ])
+  | C_TEST_REGISTER_CONSTANT ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_michelson_code ~loc () ^~> t_string ~loc () ])
+  | C_TEST_CONSTANT_TO_MICHELSON ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_string ~loc () ^~> t_michelson_code ~loc () ])
+  | C_TEST_REGISTER_FILE_CONSTANTS ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked ]
+         ~types:[ t_string ~loc () ^~> t_list (t_string ~loc ()) ~loc () ])
+  | C_TEST_TO_ENTRYPOINT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      for_all "c"
+      @@ fun c ->
+      create_test
+        ~mode_annot:[ Checked; Checked ]
+        ~types:
+          [ t_string ~loc () ^-> t_typed_address a b ~loc () ^~> t_contract c ~loc () ])
+  | C_TEST_FAILWITH ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b" @@ fun b -> create_test ~mode_annot:[ Inferred ] ~types:[ a ^~> b ])
+  | C_TEST_PUSH_CONTEXT ->
+    of_type
+      (create_test ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_POP_CONTEXT ->
+    of_type
+      (create_test ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_DROP_CONTEXT ->
+    of_type
+      (create_test ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_unit ~loc () ])
+  | C_TEST_SET_PRINT_VALUES ->
+    of_type
+      (create_test ~mode_annot:[ Checked ] ~types:[ t_bool ~loc () ^~> t_bool ~loc () ])
+  | C_TEST_READ_CONTRACT_FROM_FILE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_test
+        ~mode_annot:[ Checked ]
+        ~types:[ t_string ~loc () ^~> t_michelson_contract a b ~loc () ])
+  | C_TEST_SIGN ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked ]
+         ~types:[ t_string ~loc () ^-> t_bytes ~loc () ^~> t_signature ~loc () ])
+  | C_TEST_GET_ENTRYPOINT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test
+        ~mode_annot:[ Checked ]
+        ~types:[ t_contract a ~loc () ^~> t_option (t_string ~loc ()) ~loc () ])
+  | C_TEST_NIL_VIEWS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_views a ~loc () ]
       )
-    ; ( C_TEST_SET_BAKER
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:[ t_test_baker_policy ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_NTH_BOOTSTRAP_CONTRACT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_nat ~loc () ^~> t_address ~loc () ])
+  | C_TEST_CONS_VIEWS ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      for_all "c"
+      @@ fun c ->
+      create_test
+        ~mode_annot:[ Inferred; Inferred; Checked ]
+        ~types:
+          [ a ^-> (t_pair ~loc b a () @-> c) ^-> t_views a ~loc () ^~> t_views a ~loc () ]
       )
-    ; ( C_TEST_GET_STORAGE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:[ t_typed_address a b ~loc () ^~> t_michelson_code ~loc () ]) )
-    ; ( C_TEST_GET_BALANCE
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:[ t_address ~loc () ^~> t_mutez ~loc () ]) )
-    ; ( C_TEST_GET_NTH_BS
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:
-               [ t_int ~loc ()
-                 ^~> t_triplet
-                       (t_address ~loc ())
-                       (t_key ~loc ())
-                       (t_string ~loc ())
-                       ~loc
-                       ()
-               ]) )
-    ; ( C_TEST_PRINT
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked ]
-             ~types:[ t_int ~loc () ^-> t_string ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_TO_STRING
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred; Checked ]
-            ~types:[ a ^-> t_int ~loc () ^~> t_string ~loc () ]) )
-    ; ( C_TEST_UNESCAPE_STRING
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:[ t_string ~loc () ^~> t_string ~loc () ]) )
-    ; ( C_TEST_STATE_RESET
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked; Checked ]
-             ~types:
-               [ t_option (t_timestamp ~loc ()) ~loc ()
-                 ^-> t_nat ~loc ()
-                 ^-> t_list (t_mutez ~loc ()) ~loc ()
-                 ^~> t_unit ~loc ()
-               ]) )
-    ; ( C_TEST_GET_VOTING_POWER
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_key_hash ~loc () ^~> t_nat ~loc () ])
+  | C_TEST_COMPARE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_test ~mode_annot:[ Inferred; Inferred ] ~types:[ a ^-> a ^~> t_int ~loc () ]
       )
-    ; ( C_TEST_GET_TOTAL_VOTING_POWER
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_nat ~loc () ]) )
-    ; ( C_TEST_CAST_ADDRESS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:[ t_address ~loc () ^~> t_typed_address a b ~loc () ]) )
-    ; ( C_TEST_RANDOM
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create ~mode_annot:[ Checked ] ~types:[ t_bool ~loc () ^~> t_gen a ~loc () ]) )
-    ; ( C_TEST_GENERATOR_EVAL
-      , of_type
-          (for_all "a"
-          @@ fun a -> create ~mode_annot:[ Checked ] ~types:[ t_gen a ~loc () ^~> a ]) )
-    ; ( C_TEST_MUTATE_CONTRACT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Checked ]
-            ~types:
-              [ t_nat ~loc ()
-                ^-> t_michelson_contract a b ~loc ()
-                ^~> t_option
-                      (t_pair
-                         (t_michelson_contract a b ~loc ())
-                         (t_mutation ~loc ())
-                         ~loc
-                         ())
-                      ~loc
-                      ()
-              ]) )
-    ; ( C_TEST_MUTATE_VALUE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:
-              [ t_nat ~loc ()
-                ^-> a
-                ^~> t_option (t_pair a (t_mutation ~loc ()) ~loc ()) ~loc ()
-              ]) )
-    ; ( C_TEST_TRY_WITH
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked; Checked ]
-            ~types:[ (t_unit ~loc () @-> a) ^-> (t_unit ~loc () @-> a) ^~> a ]) )
-    ; ( C_TEST_SAVE_MUTATION
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked ]
-             ~types:
-               [ t_string ~loc ()
-                 ^-> t_mutation ~loc ()
-                 ^~> t_option (t_string ~loc ()) ~loc ()
-               ]) )
-    ; ( C_TEST_ADD_ACCOUNT
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked ]
-             ~types:[ t_string ~loc () ^-> t_key ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_NEW_ACCOUNT
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:
-               [ t_unit ~loc () ^~> t_pair (t_string ~loc ()) (t_key ~loc ()) ~loc () ]) )
-    ; ( C_TEST_RUN
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:[ (a @-> b) ^-> a ^~> t_michelson_code ~loc () ]) )
-    ; ( C_TEST_DECOMPILE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create ~mode_annot:[ Checked ] ~types:[ t_michelson_code ~loc () ^~> a ]) )
-    ; ( C_TEST_TO_TYPED_ADDRESS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Inferred ]
-            ~types:[ t_contract a ~loc () ^~> t_typed_address a b ~loc () ]) )
-    ; ( C_TEST_TO_ADDRESS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Inferred ]
-            ~types:[ t_typed_address a b ~loc () ^~> t_address ~loc () ]) )
-    ; ( C_TEST_EXTERNAL_CALL_TO_ADDRESS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked; Checked; Checked; Checked ]
-            ~types:
-              [ t_contract a ~loc ()
-                ^-> t_option (t_string ~loc ()) ~loc ()
-                ^-> t_michelson_code ~loc ()
-                ^-> t_mutez ~loc ()
-                ^~> t_test_exec_result ~loc ()
-              ]) )
-    ; ( C_TEST_EXTERNAL_CALL_TO_ADDRESS_EXN
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked; Checked; Checked; Checked ]
-            ~types:
-              [ t_contract a ~loc ()
-                ^-> t_option (t_string ~loc ()) ~loc ()
-                ^-> t_michelson_code ~loc ()
-                ^-> t_mutez ~loc ()
-                ^~> t_nat ~loc ()
-              ]) )
-    ; ( C_TEST_SET_BIG_MAP
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:[ t_int ~loc () ^-> t_big_map a b ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_BAKER_ACCOUNT
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked ]
-             ~types:
-               [ t_pair (t_string ~loc ()) (t_key ~loc ()) ~loc ()
-                 ^-> t_option (t_mutez ~loc ()) ~loc ()
-                 ^~> t_unit ~loc ()
-               ]) )
-    ; ( C_TEST_REGISTER_DELEGATE
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:[ t_key_hash ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_STAKE
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked ]
-             ~types:[ t_key_hash ~loc () ^-> t_mutez ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_BAKE_UNTIL_N_CYCLE_END
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_nat ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_TO_CONTRACT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Inferred ]
-            ~types:[ t_typed_address a b ~loc () ^~> t_contract a ~loc () ]) )
-    ; ( C_GLOBAL_CONSTANT
-      , of_type
-          (for_all "a"
-          @@ fun a -> create ~mode_annot:[ Checked ] ~types:[ t_string ~loc () ^~> a ]) )
-    ; ( C_TEST_COMPILE_CONTRACT_FROM_FILE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Checked; Checked; Checked ]
-            ~types:
-              [ t_string ~loc ()
-                ^-> t_option (t_nat ~loc ()) ~loc ()
-                ^~> t_michelson_contract a b ~loc ()
-              ]) )
-    ; ( C_TEST_REGISTER_CONSTANT
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:[ t_michelson_code ~loc () ^~> t_string ~loc () ]) )
-    ; ( C_TEST_CONSTANT_TO_MICHELSON
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:[ t_string ~loc () ^~> t_michelson_code ~loc () ]) )
-    ; ( C_TEST_REGISTER_FILE_CONSTANTS
-      , of_type
-          (create
-             ~mode_annot:[ Checked ]
-             ~types:[ t_string ~loc () ^~> t_list (t_string ~loc ()) ~loc () ]) )
-    ; ( C_TEST_TO_ENTRYPOINT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          for_all "c"
-          @@ fun c ->
-          create
-            ~mode_annot:[ Checked; Checked ]
-            ~types:
-              [ t_string ~loc () ^-> t_typed_address a b ~loc () ^~> t_contract c ~loc ()
-              ]) )
-    ; ( C_TEST_FAILWITH
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b" @@ fun b -> create ~mode_annot:[ Inferred ] ~types:[ a ^~> b ]) )
-    ; ( C_TEST_PUSH_CONTEXT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_POP_CONTEXT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_DROP_CONTEXT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_unit ~loc () ]) )
-    ; ( C_TEST_SET_PRINT_VALUES
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_bool ~loc () ^~> t_bool ~loc () ]) )
-    ; ( C_TEST_READ_CONTRACT_FROM_FILE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:[ t_string ~loc () ^~> t_michelson_contract a b ~loc () ]) )
-    ; ( C_TEST_SIGN
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked ]
-             ~types:[ t_string ~loc () ^-> t_bytes ~loc () ^~> t_signature ~loc () ]) )
-    ; ( C_TEST_GET_ENTRYPOINT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Checked ]
-            ~types:[ t_contract a ~loc () ^~> t_option (t_string ~loc ()) ~loc () ]) )
-    ; ( C_TEST_NIL_VIEWS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create ~mode_annot:[ Checked ] ~types:[ t_unit ~loc () ^~> t_views a ~loc () ])
-      )
-    ; ( C_TEST_CONS_VIEWS
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          for_all "c"
-          @@ fun c ->
-          create
-            ~mode_annot:[ Inferred; Inferred; Checked ]
-            ~types:
-              [ a
-                ^-> (t_pair ~loc b a () @-> c)
-                ^-> t_views a ~loc ()
-                ^~> t_views a ~loc ()
-              ]) )
-    ; ( C_TEST_COMPARE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create ~mode_annot:[ Inferred; Inferred ] ~types:[ a ^-> a ^~> t_int ~loc () ])
-      )
-    ; ( C_TEST_CREATE_CHEST
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked ]
-             ~types:
-               [ t_bytes ~loc ()
-                 ^-> t_nat ~loc ()
-                 ^~> t_pair (t_chest ~loc ()) (t_chest_key ~loc ()) ~loc ()
-               ]) )
-    ; ( C_TEST_CREATE_CHEST_KEY
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked ]
-             ~types:[ t_chest ~loc () ^-> t_nat ~loc () ^~> t_chest_key ~loc () ]) )
-    ; ( C_TEST_VERIFY_CHEST
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked; Checked ]
-             ~types:
-               [ t_chest ~loc ()
-                 ^-> t_chest_key ~loc ()
-                 ^-> t_nat ~loc ()
-                 ^~> t_bool ~loc ()
-               ]) )
-    ; C_EQ, of_comparator Comparable.comparator
-    ; C_NEQ, of_comparator Comparable.comparator
-    ; C_LT, of_comparator Comparable.comparator
-    ; C_GT, of_comparator Comparable.comparator
-    ; C_LE, of_comparator Comparable.comparator
-    ; C_GE, of_comparator Comparable.comparator
-    ; ( C_MAP_LITERAL
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Inferred ]
-            ~types:[ t_list (t_pair a b ~loc ()) ~loc () ^~> t_map a b ~loc () ]) )
-    ; ( C_BIG_MAP_LITERAL
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Inferred ]
-            ~types:[ t_list (t_pair a b ~loc ()) ~loc () ^~> t_big_map a b ~loc () ]) )
-    ; ( C_BIG_SET_LITERAL
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create
-            ~mode_annot:[ Inferred ]
-            ~types:[ t_list a ~loc () ^~> t_big_map a (t_unit ~loc ()) ~loc () ]) )
-    ; ( C_SET_LITERAL
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create ~mode_annot:[ Inferred ] ~types:[ t_list a ~loc () ^~> t_set a ~loc () ]
-          ) )
-    ; ( C_TEST_INT64_OF_INT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_int ~loc () ^~> t_int64 ~loc () ]) )
-    ; ( C_TEST_INT64_TO_INT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_int64 ~loc () ^~> t_int ~loc () ]) )
-    ; ( C_INT
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_nat ~loc () ^~> t_int ~loc () ]) )
-    ; ( C_ABS
-      , of_type
-          (create ~mode_annot:[ Checked ] ~types:[ t_int ~loc () ^~> t_nat ~loc () ]) )
-    ; ( C_LIST_SIZE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create ~mode_annot:[ Inferred ] ~types:[ t_list a ~loc () ^~> t_nat ~loc () ]) )
-    ; ( C_SET_SIZE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          create ~mode_annot:[ Inferred ] ~types:[ t_set a ~loc () ^~> t_nat ~loc () ]) )
-    ; ( C_MAP_SIZE
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create ~mode_annot:[ Inferred ] ~types:[ t_map a b ~loc () ^~> t_nat ~loc () ])
-      )
-    ; ( C_SIZE
-      , of_type
-          (create
-             ~mode_annot:[ Inferred ]
-             ~types:
-               [ t_string ~loc () ^~> t_nat ~loc (); t_bytes ~loc () ^~> t_nat ~loc () ])
-      )
-    ; ( C_SLICE
-      , of_type
-          (create
-             ~mode_annot:[ Checked; Checked; Inferred ]
-             ~types:
-               [ t_nat ~loc () ^-> t_nat ~loc () ^-> t_string ~loc () ^~> t_string ~loc ()
-               ; t_nat ~loc () ^-> t_nat ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-               ]) )
-    ; ( C_MAP_MEM
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Inferred ]
-            ~types:
-              [ a ^-> t_map a b ~loc () ^~> t_bool ~loc ()
-              ; a ^-> t_big_map a b ~loc () ^~> t_bool ~loc ()
-              ]) )
-    ; ( C_CAST_DYNAMIC_ENTRYPOINT
-      , of_type
-          (for_all "a"
-          @@ fun a ->
-          for_all "b"
-          @@ fun b ->
-          create
-            ~mode_annot:[ Checked; Checked ]
-            ~types:[ t_dynamic_entrypoint a b ~loc () ^~> t_nat ~loc () ]) )
-    ; ( C_OPT_OUT_ENTRY
-      , of_type (for_all "a" @@ fun a -> create ~mode_annot:[] ~types:[ return a ]) )
-    ]
+  | C_TEST_CREATE_CHEST ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked ]
+         ~types:
+           [ t_bytes ~loc ()
+             ^-> t_nat ~loc ()
+             ^~> t_pair (t_chest ~loc ()) (t_chest_key ~loc ()) ~loc ()
+           ])
+  | C_TEST_CREATE_CHEST_KEY ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked ]
+         ~types:[ t_chest ~loc () ^-> t_nat ~loc () ^~> t_chest_key ~loc () ])
+  | C_TEST_VERIFY_CHEST ->
+    of_type
+      (create_test
+         ~mode_annot:[ Checked; Checked; Checked ]
+         ~types:
+           [ t_chest ~loc () ^-> t_chest_key ~loc () ^-> t_nat ~loc () ^~> t_bool ~loc ()
+           ])
+  | C_EQ -> of_comparator Comparable.comparator
+  | C_NEQ -> of_comparator Comparable.comparator
+  | C_LT -> of_comparator Comparable.comparator
+  | C_GT -> of_comparator Comparable.comparator
+  | C_LE -> of_comparator Comparable.comparator
+  | C_GE -> of_comparator Comparable.comparator
+  | C_MAP_LITERAL ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_constructor
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_list (t_pair a b ~loc ()) ~loc () ^~> t_map a b ~loc () ])
+  | C_BIG_MAP_LITERAL ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_constructor
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_list (t_pair a b ~loc ()) ~loc () ^~> t_big_map a b ~loc () ])
+  | C_BIG_SET_LITERAL ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_constructor
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_list a ~loc () ^~> t_big_map a (t_unit ~loc ()) ~loc () ])
+  | C_TEST_INT64_OF_INT ->
+    of_type
+      (create_test ~mode_annot:[ Checked ] ~types:[ t_int ~loc () ^~> t_int64 ~loc () ])
+  | C_TEST_INT64_TO_INT ->
+    of_type
+      (create_test ~mode_annot:[ Checked ] ~types:[ t_int64 ~loc () ^~> t_int ~loc () ])
+  | C_INT ->
+    of_type
+      (create_constructor
+         ~mode_annot:[ Checked ]
+         ~types:[ t_nat ~loc () ^~> t_int ~loc () ])
+  | C_ABS ->
+    of_type
+      (create_unsafe ~mode_annot:[ Checked ] ~types:[ t_int ~loc () ^~> t_nat ~loc () ])
+  | C_LIST_SIZE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_list a ~loc () ^~> t_nat ~loc () ])
+  | C_SET_SIZE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      create_function
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_set a ~loc () ^~> t_nat ~loc () ])
+  | C_MAP_SIZE ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Inferred ]
+        ~types:[ t_map a b ~loc () ^~> t_nat ~loc () ])
+  | C_SIZE ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Inferred ]
+         ~types:[ t_string ~loc () ^~> t_nat ~loc (); t_bytes ~loc () ^~> t_nat ~loc () ])
+  | C_SLICE ->
+    of_type
+      (create_unsafe
+         ~mode_annot:[ Checked; Checked; Inferred ]
+         ~types:
+           [ t_nat ~loc () ^-> t_nat ~loc () ^-> t_string ~loc () ^~> t_string ~loc ()
+           ; t_nat ~loc () ^-> t_nat ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+           ])
+  | C_MAP_MEM ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Inferred ]
+        ~types:
+          [ a ^-> t_map a b ~loc () ^~> t_bool ~loc ()
+          ; a ^-> t_big_map a b ~loc () ^~> t_bool ~loc ()
+          ])
+  | C_CAST_DYNAMIC_ENTRYPOINT ->
+    of_type
+      (for_all "a"
+      @@ fun a ->
+      for_all "b"
+      @@ fun b ->
+      create_function
+        ~mode_annot:[ Checked; Checked ]
+        ~types:[ t_dynamic_entrypoint a b ~loc () ^~> t_nat ~loc () ])
+  | C_OPT_OUT_ENTRY ->
+    of_type (for_all "a" @@ fun a -> create_function ~mode_annot:[] ~types:[ return a ])
+  | C_NIL
+  | C_UPDATE
+  | C_FOLD_LEFT
+  | C_FOLD_RIGHT
+  | C_PAIR
+  | C_CAR
+  | C_CDR
+  | C_RIGHT
+  | C_LIST_LITERAL
+  | C_MAP
+  | C_MAP_GET
+  | C_MAP_GET_FORCE
+  | C_BIG_MAP ->
+    fun ~infer:_ ~check:_ args _expected_ret_type ->
+      let open C in
+      raise
+        (Errors.corner_case
+        @@ Format.asprintf
+             "Typer not implemented for constant %a"
+             Constant.pp_constant'
+             const)
 
 
-let infer_constant ~infer ~check const args =
-  let open C in
-  match Const_map.find_opt const constant_typer_tbl with
-  | Some typer -> typer ~infer ~check args
-  | None ->
-    raise
-      (corner_case
-      @@ Format.asprintf
-           "Typer not implemented for constant %a"
-           Constant.pp_constant'
-           const)
+let check_constant ~infer ~check const args expected_ret_type =
+  let typer = find_constant_typer const in
+  typer ~infer ~check args expected_ret_type
 
 
 module External_types = struct
   module Annot = struct
-    type t = (Type.t list * Type.t) List.Ne.t
+    type t = (Type.t list * Type.t) Nonempty_list.t
 
     module Syntax = struct
       let loc = Location.env
-      let create xs = List.Ne.of_list xs
       let ( ^~> ) arg_type ret_type = [ arg_type ], ret_type
       let ( ^-> ) arg_type (arg_types, ret_type) = arg_type :: arg_types, ret_type
     end
@@ -1683,13 +1687,14 @@ module External_types = struct
     let open Let_syntax in
     fun received_arg_types ->
       try_all
-      @@ List.map (List.Ne.to_list types) ~f:(fun (expected_arg_types, ret_type) ->
+      @@ Nonempty_list.map
+           ~f:(fun (expected_arg_types, ret_type) ->
              let%bind arg_types =
                match List.zip received_arg_types expected_arg_types with
                | Ok result -> return result
                | Unequal_lengths ->
                  raise
-                   (corner_case
+                   (Errors.corner_case
                       "Unequal lengths between mode annotation and argument types")
              in
              (* Unify args types *)
@@ -1702,6 +1707,7 @@ module External_types = struct
                |> all_unit
              in
              return ret_type)
+           types
 
 
   let map_find_opt_types : _ t =
@@ -1711,7 +1717,9 @@ module External_types = struct
     fun (received_arg_types : Type.t list) ->
       if List.length received_arg_types <> 2
       then
-        raise (corner_case "Unequal lengths between mode annotation and argument types")
+        raise
+          (Errors.corner_case
+             "Unequal lengths between mode annotation and argument types")
       else (
         let k = List.nth_exn received_arg_types 0 in
         let%bind k = Context.tapply k in
@@ -1725,7 +1733,7 @@ module External_types = struct
             | Some (k', v) -> return (k', v)
             | None ->
               raise
-                (corner_case
+                (Errors.corner_case
                    "external_find_opt: second parameter is neither big_map nor map"))
         in
         let%bind k' = Context.tapply k' in
@@ -1742,7 +1750,9 @@ module External_types = struct
     fun (received_arg_types : Type.t list) ->
       if List.length received_arg_types <> 3
       then
-        raise (corner_case "Unequal lengths between mode annotation and argument types")
+        raise
+          (Errors.corner_case
+             "Unequal lengths between mode annotation and argument types")
       else (
         let k = List.nth_exn received_arg_types 0 in
         let%bind k = Context.tapply k in
@@ -1758,7 +1768,7 @@ module External_types = struct
             | Some (k', v') -> return (k', v')
             | None ->
               raise
-                (corner_case
+                (Errors.corner_case
                    "external_find_opt: second parameter is neither big_map nor map"))
         in
         let%bind k' = Context.tapply k' in
@@ -1775,7 +1785,9 @@ module External_types = struct
     fun (received_arg_types : Type.t list) ->
       if List.length received_arg_types <> 2
       then
-        raise (corner_case "Unequal lengths between mode annotation and argument types")
+        raise
+          (Errors.corner_case
+             "Unequal lengths between mode annotation and argument types")
       else (
         let k = List.nth_exn received_arg_types 0 in
         let%bind k = Context.tapply k in
@@ -1789,7 +1801,7 @@ module External_types = struct
             | Some (k', v) -> return (k', v)
             | None ->
               raise
-                (corner_case
+                (Errors.corner_case
                    "external_find_opt: second parameter is neither big_map nor map"))
         in
         let%bind k' = Context.tapply k' in
@@ -1800,94 +1812,86 @@ module External_types = struct
   let bytes_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type in
     let open Annot.Syntax in
-    of_type
-      (create [ t_int ~loc () ^~> t_bytes ~loc (); t_nat () ~loc ^~> t_bytes ~loc () ])
+    of_type [ t_int ~loc () ^~> t_bytes ~loc (); t_nat () ~loc ^~> t_bytes ~loc () ]
 
 
   let int_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type in
     let open Annot.Syntax in
     of_type
-      (create
-         [ t_nat () ~loc ^~> t_int ~loc ()
-         ; t_bls12_381_fr ~loc () ^~> t_int ~loc ()
-         ; t_bytes ~loc () ^~> t_int ~loc ()
-         ])
+      [ t_nat () ~loc ^~> t_int ~loc ()
+      ; t_bls12_381_fr ~loc () ^~> t_int ~loc ()
+      ; t_bytes ~loc () ^~> t_int ~loc ()
+      ]
 
 
   let ediv_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type in
     let open Annot.Syntax in
     of_type
-      (create
-         [ t_nat ~loc ()
-           ^-> t_nat ~loc ()
-           ^~> t_option (t_pair (t_nat ~loc ()) (t_nat ~loc ()) ~loc ()) ~loc ()
-         ; t_int ~loc ()
-           ^-> t_int ~loc ()
-           ^~> t_option (t_pair (t_int ~loc ()) (t_nat ~loc ()) ~loc ()) ~loc ()
-         ; t_nat ~loc ()
-           ^-> t_int ~loc ()
-           ^~> t_option (t_pair (t_int ~loc ()) (t_nat ~loc ()) ~loc ()) ~loc ()
-         ; t_int ~loc ()
-           ^-> t_nat ~loc ()
-           ^~> t_option (t_pair (t_int ~loc ()) (t_nat ~loc ()) ~loc ()) ~loc ()
-         ; t_mutez ~loc ()
-           ^-> t_mutez ~loc ()
-           ^~> t_option (t_pair (t_nat ~loc ()) (t_mutez ~loc ()) ~loc ()) ~loc ()
-         ; t_mutez ~loc ()
-           ^-> t_nat ~loc ()
-           ^~> t_option (t_pair (t_mutez ~loc ()) (t_mutez ~loc ()) ~loc ()) ~loc ()
-         ])
+      [ t_nat ~loc ()
+        ^-> t_nat ~loc ()
+        ^~> t_option (t_pair (t_nat ~loc ()) (t_nat ~loc ()) ~loc ()) ~loc ()
+      ; t_int ~loc ()
+        ^-> t_int ~loc ()
+        ^~> t_option (t_pair (t_int ~loc ()) (t_nat ~loc ()) ~loc ()) ~loc ()
+      ; t_nat ~loc ()
+        ^-> t_int ~loc ()
+        ^~> t_option (t_pair (t_int ~loc ()) (t_nat ~loc ()) ~loc ()) ~loc ()
+      ; t_int ~loc ()
+        ^-> t_nat ~loc ()
+        ^~> t_option (t_pair (t_int ~loc ()) (t_nat ~loc ()) ~loc ()) ~loc ()
+      ; t_mumav ~loc ()
+        ^-> t_mumav ~loc ()
+        ^~> t_option (t_pair (t_nat ~loc ()) (t_mumav ~loc ()) ~loc ()) ~loc ()
+      ; t_mumav ~loc ()
+        ^-> t_nat ~loc ()
+        ^~> t_option (t_pair (t_mumav ~loc ()) (t_mumav ~loc ()) ~loc ()) ~loc ()
+      ]
 
 
   let and_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type in
     let open Annot.Syntax in
     of_type
-      (create
-         [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-         ])
+      [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+      ; t_int ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+      ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+      ]
 
 
   let or_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type in
     let open Annot.Syntax in
     of_type
-      (create
-         [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-         ])
+      [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+      ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+      ]
 
 
   let xor_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type in
     let open Annot.Syntax in
     of_type
-      (create
-         [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
-         ])
+      [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+      ; t_bytes ~loc () ^-> t_bytes ~loc () ^~> t_bytes ~loc ()
+      ]
 
 
   let lsl_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type in
     let open Annot.Syntax in
     of_type
-      (create
-         [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
-         ])
+      [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+      ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
+      ]
 
 
   let lsr_types : (Errors.typer_error, Main_warnings.all) t =
     let open Type in
     let open Annot.Syntax in
     of_type
-      (create
-         [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
-         ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
-         ])
+      [ t_nat ~loc () ^-> t_nat ~loc () ^~> t_nat ~loc ()
+      ; t_bytes ~loc () ^-> t_nat ~loc () ^~> t_bytes ~loc ()
+      ]
 end

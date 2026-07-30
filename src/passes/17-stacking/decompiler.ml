@@ -1,7 +1,6 @@
-open Errors
 open Mini_c.Types
-open Tezos_micheline.Micheline
-open Simple_utils.Trace
+open Mavryk_micheline.Micheline
+module Trace = Simple_utils.Trace
 
 let rec comb prim loc xs =
   match xs with
@@ -27,7 +26,7 @@ let normalize_edo_comb_value = function
   | _ -> fun x -> x
 
 
-let rec decompile_value ~(raise : (stacking_error, _) raise)
+let rec decompile_value ~(raise : (Errors.stacking_error, _) Trace.raise)
     : ('l, string) node -> ('l, string) node -> value
   =
  fun ty value ->
@@ -40,7 +39,7 @@ let rec decompile_value ~(raise : (stacking_error, _) raise)
     in
     let rec aux l : value =
       match l with
-      | [] -> raise.error (untranspilable ty value)
+      | [] -> raise.error (Errors.untranspilable ty value)
       | [ x ] -> x
       | hd :: tl ->
         let tl' = aux tl in
@@ -57,9 +56,9 @@ let rec decompile_value ~(raise : (stacking_error, _) raise)
   | Prim (_, "nat", [], _), Int (_, n) -> D_nat n
   | Prim (_, "chain_id", _, _), String (_, id) ->
     (* Before EDO :
-      let id = Tezos_base.TzPervasives.Chain_id.of_bytes_exn id in
-      let str = Tezos_crypto.Base58.simple_encode
-      (Tezos_base__TzPervasives.Chain_id.b58check_encoding)
+      let id = Mavryk_base.TzPervasives.Chain_id.of_bytes_exn id in
+      let str = Mavryk_crypto.Base58.simple_encode
+      (Mavryk_base__TzPervasives.Chain_id.b58check_encoding)
       id in
     *)
     D_string id
@@ -68,10 +67,10 @@ let rec decompile_value ~(raise : (stacking_error, _) raise)
   | Prim (_, "signature", [], _), String (_, n) -> D_string n
   | Prim (_, "timestamp", [], _), Int (_, n) -> D_timestamp n
   | Prim (_, "timestamp", [], _), String (_, n) ->
-    let open Tezos_base.TzPervasives.Time.Protocol in
+    let open Mavryk_base.TzPervasives.Time.Protocol in
     let n = Z.of_int64 (to_seconds (of_notation_exn n)) in
     D_timestamp n
-  | Prim (_, "mutez", [], _), Int (_, n) -> D_mutez n
+  | Prim (_, "mumav", [], _), Int (_, n) -> D_mumav n
   | Prim (_, "bool", [], _), Prim (_, "True", [], _) -> D_bool true
   | Prim (_, "bool", [], _), Prim (_, "False", [], _) -> D_bool false
   | Prim (_, "string", [], _), String (_, s) -> D_string s
@@ -96,7 +95,7 @@ let rec decompile_value ~(raise : (stacking_error, _) raise)
         | _ ->
           let ty = root (strip_locations ty) in
           let value = root (strip_locations value) in
-          raise.error (untranspilable ty value)
+          raise.error (Errors.untranspilable ty value)
       in
       List.map ~f:aux lst
     in
@@ -112,7 +111,7 @@ let rec decompile_value ~(raise : (stacking_error, _) raise)
         | _ ->
           let ty = root (strip_locations ty) in
           let value = root (strip_locations value) in
-          raise.error (untranspilable ty value)
+          raise.error (Errors.untranspilable ty value)
       in
       List.map ~f:aux lst
     in
@@ -134,7 +133,7 @@ let rec decompile_value ~(raise : (stacking_error, _) raise)
     D_set lst''
   | Prim (_, "operation", [], _), Bytes (_, op) -> D_operation op
   | (Prim (_, "lambda", [ _; _ ], _) as ty), Seq (_, _) ->
-    let pp_lambda = Format.asprintf "[lambda of type: %a ]" Michelson.pp ty in
+    let pp_lambda = Format.asprintf "[lambda of type: %a ]" Errors.Michelson.pp ty in
     D_string pp_lambda
   | Prim (xx, "ticket", [ ty ], _), Prim (_, "Pair", [ addr; v; amt ], _) ->
     ignore addr;
@@ -142,4 +141,4 @@ let rec decompile_value ~(raise : (stacking_error, _) raise)
     let v' = decompile_value ~raise ty v in
     let amt' = decompile_value ~raise ty_nat amt in
     D_ticket (v', amt')
-  | ty, v -> raise.error (untranspilable ty v)
+  | ty, v -> raise.error (Errors.untranspilable ty v)

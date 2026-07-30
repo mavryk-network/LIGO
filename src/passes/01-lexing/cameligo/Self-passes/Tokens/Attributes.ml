@@ -2,9 +2,9 @@
 
 (* Vendor dependencies *)
 
-module Region = Simple_utils.Region
-module Std    = Simple_utils.Std
-module Utils  = Simple_utils.Utils
+module Region   = Simple_utils.Region
+module Std      = Simple_utils.Std
+module Ligo_fun = Simple_utils.Ligo_fun
 
 (* Local dependencies *)
 
@@ -14,7 +14,7 @@ module Wrap      = Lexing_shared.Wrap
 
 (* Utilities *)
 
-let (<@) = Utils.(<@)
+let (<@) = Ligo_fun.(<@)
 
 type tokens = Token.t list
 

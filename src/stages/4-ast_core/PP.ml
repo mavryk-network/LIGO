@@ -1,10 +1,9 @@
 [@@@coverage exclude_file]
 
-module Int64 = Caml.Int64
 open Ligo_prim
 open Types
 open Format
-open Simple_utils.PP_helpers
+module PP_helpers = Simple_utils.PP_helpers
 
 type 'a pretty_printer = Format.formatter -> 'a -> unit
 
@@ -18,7 +17,7 @@ let rec type_expression ppf (te : type_expression) : unit =
 
 
 and bool ppf = fprintf ppf "bool"
-and layout = Simple_utils.PP_helpers.if_present Layout.pp
+and layout = PP_helpers.if_present Layout.pp
 
 and option ppf (te : type_expression) =
   let t = Combinators.get_t_option te in
@@ -35,10 +34,11 @@ and type_content : formatter -> type_content -> unit =
     Format.fprintf
       ppf
       "Parameter_of(%a)"
-      Simple_utils.PP_helpers.(list_sep Module_var.pp (const "."))
-      (List.Ne.to_list x)
-  | T_constant (t, _) -> string ppf (Literal_types.to_string t)
-  | T_sum (row, _) -> Row.PP.sum_type type_expression layout ppf row
+      PP_helpers.(list_sep Module_var.pp (const "."))
+      (Nonempty_list.to_list x)
+  | T_constant (t, _) -> PP_helpers.string ppf (Literal_types.to_string t)
+  | T_sum row -> Row.PP.sum_type type_expression layout ppf row
+  | T_union union -> Union.pp type_expression ppf union
   | T_record row -> Row.PP.record_type type_expression layout ppf row
   | T_arrow a -> Arrow.pp type_expression ppf a
   | T_app app -> Type_app.pp (Module_access.pp Type_var.pp) type_expression ppf app
@@ -66,12 +66,15 @@ and expression_content ppf (ec : expression_content) =
     Format.fprintf
       ppf
       "Contract_of(%a)"
-      Simple_utils.PP_helpers.(list_sep Module_var.pp (const "."))
-      (List.Ne.to_list n)
+      PP_helpers.(list_sep Module_var.pp (const "."))
+      (Nonempty_list.to_list n)
   | E_application a -> Application.pp expression ppf a
   | E_constructor c -> Constructor.pp expression ppf c
   | E_constant c -> Constant.pp expression ppf c
   | E_record m -> Record.pp expression ppf m
+  | E_tuple t -> Tuple.pp expression ppf t
+  | E_array a -> Array_repr.pp expression ppf a
+  | E_array_as_list a -> fprintf ppf "@[list(%a)]" (Array_repr.pp expression) a
   | E_accessor a -> Types.Accessor.pp expression ppf a
   | E_update u -> Types.Update.pp expression ppf u
   | E_lambda l -> Lambda.pp expression type_expression_option ppf l
@@ -113,6 +116,10 @@ and expression_content ppf (ec : expression_content) =
   | E_while while_loop -> While_loop.pp expression ppf while_loop
 
 
+and module_path ppf (mp : Module_var.t Nonempty_list.t) : unit =
+  PP_helpers.(ne_list_sep Module_var.pp (tag ".")) ppf mp
+
+
 and declaration ppf (d : declaration) =
   match Location.unwrap d with
   | D_value vd ->
@@ -123,13 +130,10 @@ and declaration ppf (d : declaration) =
     then Types.Pattern_decl.pp expression type_expression_option ppf pd
   | D_type td -> Types.Type_decl.pp type_expression ppf td
   | D_module md ->
-    Types.Module_decl.pp
-      module_expr
-      Simple_utils.PP_helpers.(option module_annotation)
-      ppf
-      md
+    Types.Module_decl.pp module_expr PP_helpers.(option module_annotation) ppf md
   | D_module_include me -> fprintf ppf "include (%a)" module_expr me
   | D_signature sd -> Types.Signature_decl.pp signature_expr ppf sd
+  | D_import import -> Import_decl_ext.pp ppf import
 
 
 and decl ppf d = declaration ppf d
@@ -177,14 +181,16 @@ and signature ppf (sig_ : signature) : unit =
   Format.fprintf
     ppf
     "@[<v>sig@[<v1>@,%a@]@,end@]"
-    (list_sep sig_item (tag "@,"))
+    PP_helpers.(list_sep sig_item (tag "@,"))
     sig_.items
 
 
 and signature_expr ppf (sig_expr : signature_expr) : unit =
   match Location.unwrap sig_expr with
   | S_sig sig_ -> Format.fprintf ppf "%a" signature sig_
-  | S_path path -> Simple_utils.PP_helpers.(ne_list_sep Module_var.pp (tag ".")) ppf path
+  | S_path path -> PP_helpers.(ne_list_sep Module_var.pp (tag ".")) ppf path
 
 
-let program ppf (p : program) = list_sep declaration (tag "@,") ppf p
+let program ppf (p : program) =
+  let open PP_helpers in
+  list_sep declaration (tag "@,") ppf p

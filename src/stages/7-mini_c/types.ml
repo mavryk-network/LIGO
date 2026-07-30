@@ -31,7 +31,7 @@ and type_base =
   | TB_bytes
   | TB_nat
   | TB_int
-  | TB_mutez
+  | TB_mumav
   | TB_operation
   | TB_address
   | TB_key
@@ -63,7 +63,7 @@ type value =
   | D_bool of bool
   | D_nat of Z.t
   | D_timestamp of Z.t
-  | D_mutez of Z.t
+  | D_mumav of Z.t
   | D_int of Z.t
   | D_string of string
   | D_bytes of bytes
@@ -109,9 +109,9 @@ and expression_content =
   | E_proj of expression * int * int
   (* E_update (record, index, update, field_count): field_count as for E_proj *)
   | E_update of expression * int * expression * int
-  | E_raw_michelson of (Location.t, string) Tezos_micheline.Micheline.node list
+  | E_raw_michelson of (Location.t, string) Mavryk_micheline.Micheline.node list
   | E_inline_michelson of
-      ((Location.t, string) Tezos_micheline.Micheline.node list * expression list)
+      ((Location.t, string) Mavryk_micheline.Micheline.node list * expression list)
   (* E_global_constant (hash, args) *)
   | E_global_constant of string * expression list
   | E_create_contract of

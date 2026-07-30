@@ -1,0 +1,9 @@
+{ LAMBDA
+    (pair int int)
+    (pair (list operation) int)
+    { UNPAIR ; ADD ; NIL operation ; PAIR } ;
+  DUP 2 ;
+  APPLY ;
+  SWAP ;
+  DROP }
+

@@ -1,5 +1,7 @@
 (* Regions of a file *)
 
+open Core
+
 (* A shorthand *)
 
 let sprintf = Printf.sprintf
@@ -149,8 +151,8 @@ let compare r1 r2 =
   let file_cmp = String.compare r1#file r2#file in
   let start_cmp = Pos.compare r1#start r2#start in
   let stop_cmp = Pos.compare r1#stop r2#stop in
-  (match file_cmp, start_cmp, stop_cmp with
-  | 0, 0, c | 0, c, _ | c, _, _ -> c)
+  match file_cmp, start_cmp, stop_cmp with
+  | 0, 0, c | 0, c, _ | c, _, _ -> c
 
 let lt r1 r2 = compare r1 r2 < 0
 
@@ -167,6 +169,8 @@ let cover r1 r2 =
     and pos_max p1 p2 = if Pos.lt p1 p2 then p2 else p1
     in make ~start:(pos_min r1#start r2#start) ~stop:(pos_max r1#stop r2#stop)
 
+type json = Yojson.Safe.t
+
 let to_yojson f =
   `Assoc [
       ("start", Pos.to_yojson f#start) ;
@@ -179,6 +183,11 @@ let to_human_yojson f =
       ("stop",  Pos.to_human_yojson f#stop) ;
     ]
 
+let error_yojson_format format =
+  Error ("Invalid JSON value.
+          An object with the following specification is expected:"
+         ^ format)
+
 let of_yojson = fun t ->
   match t with
     `Assoc [("start", start); ("stop", stop)] ->
@@ -186,7 +195,7 @@ let of_yojson = fun t ->
          Ok start, Ok stop -> Ok (make ~start ~stop)
        | (Error _ as e), _ | _, (Error _ as e) -> e)
   | _ ->
-     Utils.error_yojson_format "{start: Pos.t, stop: Pos.t}"
+    error_yojson_format "{start: Pos.t, stop: Pos.t}"
 
 let extract (x : region) =
   let start = x#start#compact `Point in
@@ -197,3 +206,6 @@ let sexp_of_t x =
   let start,end_ = extract x in
   Sexp.(List [ Atom start ; Atom end_ ])
 let t_of_sexp x = assert false
+
+let yojson_of_reg f {region; value} =
+  `Assoc [("region", to_yojson region); ("value", f value)]

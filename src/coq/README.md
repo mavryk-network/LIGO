@@ -40,7 +40,7 @@ emitted by the previous pass in
 [14-scoping/scoping.ml](../passes/14-scoping/scoping.ml).
 
 In [micheline.v](./micheline.v) a Coq version Micheline is defined
-which extracts directly to Tezos_micheline.
+which extracts directly to Mavryk_micheline.
 
 This Micheline is used for source (IR) types in [ligo.v](./ligo.v) and
 target (Michelson) types and programs in

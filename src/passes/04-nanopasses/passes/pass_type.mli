@@ -45,7 +45,7 @@ module type T = sig
     and a value of type [flag_arg].
     Note that all the pass are enabled/disabled before executing
   *)
-  val flag : (bool * flag_arg) option Caml.ref
+  val flag : (bool * flag_arg) option ref
 
   (* [set_flag] set the [flag] reference with provided value *)
   val set_flag : enable:bool -> flag_arg -> unit
@@ -91,7 +91,7 @@ val decompile_passes
   :  raise:raise_t
   -> ?stop_before:string
   -> sort:'a Selector.t
-  -> (module T) list
+  -> (module T) list list
   -> 'a
   -> 'a
 
@@ -101,6 +101,6 @@ val compile_passes
   :  raise:raise_t
   -> ?stop_before:string
   -> sort:'a Selector.t
-  -> (module T) list
+  -> (module T) list list
   -> 'a
   -> 'a

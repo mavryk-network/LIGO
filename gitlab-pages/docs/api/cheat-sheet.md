@@ -37,9 +37,9 @@ end
 
 let testC =
     let initial_storage = 42 in
-    let originated = Test.originate (contract_of C) initial_storage 0tez in
+    let originated = Test.originate (contract_of C) initial_storage 0mav in
     let p : C parameter_of = Increment 1 in
-    let _ = Test.transfer_exn originated.addr p 1mutez in
+    let _ = Test.transfer_exn originated.addr p 1mumav in
     assert (Test.get_storage originated.addr = initial_storage + 1)
 ```
 
@@ -48,7 +48,7 @@ let testC =
 <div className="example">
 
 ```cameligo
-let name : string = "Tezos"
+let name : string = "Mavryk"
 ```
 
 </div>
@@ -118,13 +118,13 @@ let booleanLogic : bool =
 
 </div>
 <div className="primitive">
-Mutez (micro tez)
+Mumav (micro mav)
 </div>
 <div className="example">
 
 ```cameligo
-let tez : tez = 42tez
-let tez : tez = 7mutez
+let mav : mav = 42mav
+let mav : mav = 7mumav
 ```
 
 </div>
@@ -134,8 +134,8 @@ Address
 <div className="example">
 
 ```cameligo
-let tz1address : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+let mv1address : address =
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 let kt1address : address =
   ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
 ```
@@ -295,7 +295,7 @@ Type Annotations
 
 ```cameligo
 let someAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 ```
 
 </div>
@@ -352,18 +352,18 @@ Maps
 <div className="example">
 
 ```cameligo
-type prices = (nat, tez) map
+type prices = (nat, mav) map
 
 let prices : prices =
   Map.literal [
-    (10n, 60mutez);
-    (50n, 30mutez);
-    (100n, 10mutez);
+    (10n, 60mumav);
+    (50n, 30mumav);
+    (100n, 10mumav);
   ]
 
-let price : tez option = Map.find_opt 50n prices
+let price : mav option = Map.find_opt 50n prices
 
-let prices : prices = Map.update 200n (Some 5mutez) prices
+let prices : prices = Map.update 200n (Some 5mumav) prices
 ```
 
 </div>
@@ -372,12 +372,12 @@ Contracts & Accounts
 </div>
 <div className="example">
 
-```cameligo group=tezos_specific
+```cameligo group=mavryk_specific
 let destinationAddress : address =
-  ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address)
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 
 let contract : unit contract =
-  match (Tezos.get_contract_opt (Tezos.get_sender ()) : unit contract option) with
+  match (Mavryk.get_contract_opt (Mavryk.get_sender ()) : unit contract option) with
     Some contract -> contract
     | None -> (failwith "no contract" : unit contract)
 ```
@@ -388,10 +388,10 @@ Transactions
 </div>
 <div className="example">
 
-```cameligo group=tezos_specific
+```cameligo group=mavryk_specific
 
 let payment : operation =
-  Tezos.transaction unit 100mutez contract
+  Mavryk.transaction unit 100mumav contract
 
 ```
 
@@ -517,10 +517,10 @@ namespace C {
   export type storage = int;
 
   @entry
-  const increment = (action: int, store: storage) : [list <operation>, storage] => [list([]), store + action];
+  const increment = (action: int, store: storage) : [list <operation>, storage] => [[], store + action];
 
   @entry
-  const decrement = (action: int, store: storage) : [list <operation>, storage] => [list([]), store - action];
+  const decrement = (action: int, store: storage) : [list <operation>, storage] => [[], store - action];
 
   @view
   const get_storage = (must_be_positive: bool, storage: int): int => {
@@ -534,9 +534,9 @@ namespace C {
 
 const testC = do {
     let initial_storage = 42;
-    let originated = Test.originate(contract_of(C), initial_storage, 0tez);
+    let originated = Test.originate(contract_of(C), initial_storage, 0mav);
     let p : parameter_of C = Increment(1);
-    Test.transfer_exn(originated.addr, p, 1mutez);
+    Test.transfer_exn(originated.addr, p, 1mumav);
     return assert(Test.get_storage(originated.addr) == initial_storage + 1);
 }
 ```
@@ -546,7 +546,7 @@ const testC = do {
 <div className="example">
 
 ```jsligo
-const name: string = "Tezos";
+const name: string = "Mavryk";
 ```
 
 </div>
@@ -616,13 +616,13 @@ const booleanLogic: bool =
 
 </div>
 <div className="primitive">
-Mutez (micro tez)
+Mumav (micro mav)
 </div>
 <div className="example">
 
 ```jsligo
-const tez_amount: tez = 42tez
-const tez_amount2: tez = tez_amount + 7mutez // == 42000007mutez
+const mav_amount: mav = 42mav
+const mav_amount2: mav = mav_amount + 7mumav // == 42000007mumav
 ```
 
 </div>
@@ -632,10 +632,8 @@ Address
 <div className="example">
 
 ```jsligo
-const tz1address: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
-const kt1address: address =
-  "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" as address;
+const mv1address: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
+const kt1address: address = "KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD";
 ```
 
 </div>
@@ -806,8 +804,7 @@ Type Annotations
 <div className="example">
 
 ```jsligo
-const someAddress: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+const someAddress: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
 ```
 
 </div>
@@ -865,17 +862,17 @@ Maps
 <div className="example">
 
 ```jsligo
-type prices = map<nat, tez>;
+type prices = map<nat, mav>;
 
-const prices: prices = Map.literal(list([
-  [10n, 60mutez],
-  [50n, 30mutez],
-  [100n, 10mutez]
-]));
+const prices: prices = Map.literal([
+  [10n, 60mumav],
+  [50n, 30mumav],
+  [100n, 10mumav]
+]);
 
-const price: option<tez> = Map.find_opt(50n, prices)
+const price: option<mav> = Map.find_opt(50n, prices)
 
-const prices2: prices = Map.update(200n, Some (5mutez), prices)
+const prices2: prices = Map.update(200n, Some (5mumav), prices)
 ```
 
 </div>
@@ -884,12 +881,11 @@ Contracts & Accounts
 </div>
 <div className="example">
 
-```jsligo group=tezos_specific
-const destinationAddress: address =
-  "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" as address;
+```jsligo group=mavryk_specific
+const destinationAddress: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
 
 const contract : contract<unit> =
-  match(Tezos.get_contract_opt(Tezos.get_sender()) as option<contract<unit>>) {
+  match(Mavryk.get_contract_opt(Mavryk.get_sender()) as option<contract<unit>>) {
     when(Some(contract)): contract;
     when(None()): failwith("no contract or wrong contract type")
   }
@@ -901,9 +897,9 @@ Transactions
 </div>
 <div className="example">
 
-```jsligo group=tezos_specific
+```jsligo group=mavryk_specific
 const payment: operation =
-  Tezos.transaction(unit, 100mutez, contract);
+  Mavryk.transaction(unit, 100mumav, contract);
 ```
 
 </div>
@@ -954,8 +950,8 @@ Namespace (auto-inferred type)
 ```jsligo
 namespace FA0_inferred {
   type storage = int;
-  @entry const add = (s : int, k : int) : [list<operation>, int] => [list([]), s + k];
-  @entry const extra = (s : int, k : int) : [list<operation>, int] => [list([]), s - k];
+  @entry const add = (s : int, k : int) : [list<operation>, int] => [[], s + k];
+  @entry const extra = (s : int, k : int) : [list<operation>, int] => [[], s - k];
 }
 ```
 
@@ -993,9 +989,9 @@ Namespace impmlementing
 
 ```jsligo
 namespace FA0 implements FA0_INTF {
-  type storage = int;
-  @entry const add = (s : int, k : int) : [list<operation>, int] => [list([]), s + k];
-  @entry const extra = (s : int, k : int) : [list<operation>, int] => [list([]), s - k];
+  export type storage = int;
+  @entry const add = (s : int, k : int) : [list<operation>, int] => [[], s + k];
+  @entry const extra = (s : int, k : int) : [list<operation>, int] => [[], s - k];
 }
 ```
 

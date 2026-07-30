@@ -31,12 +31,12 @@ lookupEnv var = fromMaybe (error . Text.pack $ "need to set " ++ var)
 main :: IO ()
 main = do
   ligoPath <- lookupEnv "LIGO_PATH"
-  octezClientPath <- lookupEnv "OCTEZ_CLIENT_PATH"
+  mavkitClientPath <- lookupEnv "MAVKIT_CLIENT_PATH"
   clientCounter <- newIORef 0
 
   let standardConfig = ServerConfig
         { scLigoPath = ligoPath
-        , scOctezClientPath = Just octezClientPath
+        , scMavkitClientPath = Just mavkitClientPath
         , scPort = 0 -- not used
         , scVerbosity = 0
         , scDockerizedLigoVersion = Nothing

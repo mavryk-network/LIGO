@@ -2,7 +2,8 @@ module Var = Simple_utils.Var
 module Tree = Simple_utils.Tree
 module Snippet = Simple_utils.Snippet
 module Location = Simple_utils.Location
-open Simple_utils.Display
+module Display = Simple_utils.Display
+module Ligo_Error = Simple_utils.Error
 open Ligo_prim
 
 type spilling_error =
@@ -10,11 +11,11 @@ type spilling_error =
   | `Spilling_no_type_variable of Type_var.t
   | `Spilling_unsupported_pattern_matching of Location.t
   | `Spilling_unsupported_recursive_function of Location.t * Value_var.t
-  | `Spilling_wrong_mini_c_value of Ast_aggregated.type_expression * Mini_c.value
+  | `Spilling_wrong_mini_c_value of Ast_expanded.type_expression * Mini_c.value
   | `Spilling_bad_decompile of Mini_c.value
   | `Spilling_could_not_parse_raw_michelson of Location.t * string
   | `Spilling_raw_michelson_must_be_seq of
-    Location.t * (Location.t, string) Tezos_micheline.Micheline.node
+    Location.t * (Location.t, string) Mavryk_micheline.Micheline.node
   ]
 [@@deriving poly_constructor { prefix = "spilling_" }]
 
@@ -27,7 +28,7 @@ let corner_case_message () =
 
 
 let error_ppformat
-    :  display_format:string display_format -> no_colour:bool -> Format.formatter
+    :  display_format:string Display.display_format -> no_colour:bool -> Format.formatter
     -> spilling_error -> unit
   =
  fun ~display_format ~no_colour f a ->
@@ -73,7 +74,7 @@ let error_ppformat
       let s =
         Format.asprintf
           "Invalid type.@.Expected \"%a\",@.but got \"%a\"."
-          Ast_aggregated.PP.type_expression
+          Ast_expanded.PP.type_expression
           expected
           Mini_c.PP.value
           actual
@@ -90,8 +91,8 @@ let error_ppformat
         loc
         code
     | `Spilling_raw_michelson_must_be_seq (loc, code) ->
-      let open Tezos_micheline.Micheline in
-      let open Tezos_micheline.Micheline_printer in
+      let open Mavryk_micheline.Micheline in
+      let open Mavryk_micheline.Micheline_printer in
       Format.fprintf
         f
         "@[<hv>%a@.Raw Michelson must be seq (with curly braces {}), got: %a.@]"
@@ -101,9 +102,9 @@ let error_ppformat
         (printable (fun s -> s) (strip_locations code)))
 
 
-let error_json : spilling_error -> Simple_utils.Error.t =
+let error_json : spilling_error -> Ligo_Error.t =
  fun e ->
-  let open Simple_utils.Error in
+  let open Ligo_Error in
   match e with
   | `Spilling_corner_case (loc, desc) ->
     let message =
@@ -141,7 +142,7 @@ let error_json : spilling_error -> Simple_utils.Error.t =
     let message =
       Format.asprintf
         "Invalid type.@.Expected \"%a\",@.but got \"%a\"."
-        Ast_aggregated.PP.type_expression
+        Ast_expanded.PP.type_expression
         expected
         Mini_c.PP.value
         actual
@@ -157,7 +158,7 @@ let error_json : spilling_error -> Simple_utils.Error.t =
     let content = make_content ~message ~location () in
     make ~stage ~content
   | `Spilling_raw_michelson_must_be_seq (location, code) ->
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let message =
       Format.asprintf
         "Raw Michelson must be seq (with curly braces {}), got: %a."

@@ -1,29 +1,31 @@
-module Michelson = Tezos_utils.Michelson
-module Location = Simple_utils.Location
-open Proto_alpha_utils
-open Simple_utils.Trace
+module Data_encoding = Proto_alpha_utils.Data_encoding
+module Trace = Proto_alpha_utils.Trace
+module Memory_proto_alpha = Proto_alpha_utils.Memory_proto_alpha
 open Memory_proto_alpha.Protocol.Script_ir_translator
 open Memory_proto_alpha.X
-open Simple_utils.Runned_result
+module Michelson = Mavryk_utils.Michelson
+module Location = Simple_utils.Location
+module Ligo_option = Simple_utils.Ligo_option
+module Runned_result = Simple_utils.Runned_result
 module Errors = Main_errors
 
-let parse_constant ~raise code =
-  let open Tezos_micheline in
-  let open Tezos_micheline.Micheline in
+let parse_constant ~(raise : _ Trace.raise) code =
+  let open Mavryk_micheline in
+  let open Mavryk_micheline.Micheline in
   let code, errs = Micheline_parser.tokenize code in
   let code =
     match errs with
     | _ :: _ ->
       raise.error
         (Errors.unparsing_michelson_tracer
-        @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+        @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
     | [] ->
       let code, errs = Micheline_parser.parse_expression ~check:false code in
       (match errs with
       | _ :: _ ->
         raise.error
           (Errors.unparsing_michelson_tracer
-          @@ List.map ~f:(fun x -> `Tezos_alpha_error x) errs)
+          @@ List.map ~f:(fun x -> `Mavryk_alpha_error x) errs)
       | [] -> map_node (fun _ -> ()) (fun x -> x) code)
   in
   Trace.trace_alpha_tzresult ~raise Errors.unparsing_michelson_tracer
@@ -33,8 +35,8 @@ let parse_constant ~raise code =
 type options = Memory_proto_alpha.options
 
 type dry_run_options =
-  { parameter_ty : (Stacking.Program.meta, string) Tezos_micheline.Micheline.node option
-        (* added to allow dry-running contract using `Tezos.self` *)
+  { parameter_ty : (Stacking.Program.meta, string) Mavryk_micheline.Micheline.node option
+        (* added to allow dry-running contract using `Mavryk.self` *)
   ; amount : string
   ; balance : string
   ; now : string option
@@ -43,7 +45,11 @@ type dry_run_options =
   }
 
 (* Shouldn't this be done by the cli parser ? *)
-let make_dry_run_options ~raise ?tezos_context ?(constants = []) (opts : dry_run_options)
+let make_dry_run_options
+    ~(raise : _ Trace.raise)
+    ?mavryk_context
+    ?(constants = [])
+    (opts : dry_run_options)
     : options Lwt.t
   =
   let open Proto_alpha_utils.Trace in
@@ -99,14 +105,14 @@ let make_dry_run_options ~raise ?tezos_context ?(constants = []) (opts : dry_run
         Lwt.map (Trace.trace_tzresult ~raise Errors.parsing_payload_tracer)
         @@ Memory_proto_alpha.prims_of_strings x
       in
-      let x = Tezos_micheline.Micheline.strip_locations x in
+      let x = Mavryk_micheline.Micheline.strip_locations x in
       Some x
     | None -> Lwt.return None
   in
   (* Parse constants *)
   let constants = List.map ~f:(parse_constant ~raise) constants in
   make_options
-    ?tezos_context
+    ?mavryk_context
     ~constants
     ?now
     ~amount
@@ -158,7 +164,7 @@ let pack_payload ~raise (payload : _ Michelson.t) ty =
   data
 
 
-let fetch_lambda_types ~raise (contract_ty : _ Michelson.t) =
+let fetch_lambda_types ~(raise : _ Trace.raise) (contract_ty : _ Michelson.t) =
   match contract_ty with
   | Prim (_, "lambda", [ in_ty; out_ty ], _) -> in_ty, out_ty
   | _ -> raise.error Errors.main_unknown (*TODO*)
@@ -186,7 +192,7 @@ let run_contract
         if List.is_empty ys
         then y
         else
-          Tezos_micheline.Micheline.Prim (-1, Michelson_v1_primitives.T_pair, y :: ys, [])
+          Mavryk_micheline.Micheline.Prim (-1, Michelson_v1_primitives.T_pair, y :: ys, [])
       in
       x, y
     | _ -> failwith ("Internal error: input_ty was not a pair " ^ __LOC__)
@@ -247,13 +253,13 @@ let run_contract
     let%map ty, value =
       ex_value_ty_to_michelson ~raise (Ex_typed_value (output_ty, output))
     in
-    Success (ty, value)
+    Runned_result.Success (ty, value)
   | Memory_proto_alpha.Fail expr ->
     let expr =
-      Tezos_micheline.Micheline.root
+      Mavryk_micheline.Micheline.root
       @@ Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims expr
     in
-    Lwt.return @@ Fail expr
+    Lwt.return @@ Runned_result.Fail expr
 
 
 let run_function
@@ -286,12 +292,12 @@ let run_function
     Lwt.map (Trace.trace_tzresult ~raise Errors.parsing_input_tracer)
     @@ Memory_proto_alpha.prims_of_strings input_michelson
   in
-  let tezos_context =
-    Option.map ~f:(fun ({ tezos_context; _ } : options) -> tezos_context) options
+  let mavryk_context =
+    Option.map ~f:(fun ({ mavryk_context; _ } : options) -> mavryk_context) options
   in
   let%bind input =
     Lwt.map (Trace.trace_tzresult ~raise Errors.parsing_input_tracer)
-    @@ Memory_proto_alpha.parse_michelson_data ?tezos_context input_michelson input_ty
+    @@ Memory_proto_alpha.parse_michelson_data ?mavryk_context input_michelson input_ty
   in
   let ty_stack_before = Script_typed_ir.Item_t (input_ty, Bot_t) in
   let ty_stack_after = Script_typed_ir.Item_t (output_ty, Bot_t) in
@@ -319,13 +325,13 @@ let run_function
     let%map ty, value =
       ex_value_ty_to_michelson ~raise (Ex_typed_value (output_ty, output))
     in
-    Success (ty, value)
+    Runned_result.Success (ty, value)
   | Memory_proto_alpha.Fail expr ->
     let expr =
-      Tezos_micheline.Micheline.root
+      Mavryk_micheline.Micheline.root
       @@ Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims expr
     in
-    Lwt.return @@ Fail expr
+    Lwt.return @@ Runned_result.Fail expr
 
 
 let run_expression
@@ -349,16 +355,16 @@ let run_expression
   let top_level = Script_tc_context.(init Data)
   and ty_stack_before = Script_typed_ir.Bot_t
   and ty_stack_after = Script_typed_ir.Item_t (exp_type', Bot_t) in
-  let tezos_context =
+  let mavryk_context =
     match options with
     | None -> None
-    | Some o -> Some o.Memory_proto_alpha.tezos_context
+    | Some o -> Some o.Memory_proto_alpha.mavryk_context
   in
   let%bind descr =
     Lwt.map (Trace.trace_tzresult ~raise Errors.parsing_code_tracer)
     @@ Memory_proto_alpha.parse_michelson_fail
          ?legacy
-         ?tezos_context
+         ?mavryk_context
          ~top_level
          exp
          ty_stack_before
@@ -374,17 +380,21 @@ let run_expression
     let%map ty, value =
       ex_value_ty_to_michelson ~raise (Ex_typed_value (exp_type', output))
     in
-    Success (ty, value)
+    Runned_result.Success (ty, value)
   | Memory_proto_alpha.Fail expr ->
     let expr =
-      Tezos_micheline.Micheline.root
+      Mavryk_micheline.Micheline.root
       @@ Memory_proto_alpha.Protocol.Michelson_v1_primitives.strings_of_prims expr
     in
-    Lwt.return @@ Fail expr
+    Lwt.return @@ Runned_result.Fail expr
 
 
-let run_failwith ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t)
-    : (int, string) Tezos_micheline.Micheline.node Lwt.t
+let run_failwith
+    ~(raise : _ Trace.raise)
+    ?options
+    (exp : _ Michelson.t)
+    (exp_type : _ Michelson.t)
+    : (int, string) Mavryk_micheline.Micheline.node Lwt.t
   =
   let open Lwt.Let_syntax in
   let%map expr = run_expression ~raise ?options exp exp_type in
@@ -395,7 +405,11 @@ let run_failwith ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t
   | Fail res -> res
 
 
-let run_no_failwith ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelson.t)
+let run_no_failwith
+    ~(raise : _ Trace.raise)
+    ?options
+    (exp : _ Michelson.t)
+    (exp_type : _ Michelson.t)
     : (int Michelson.michelson * int Michelson.michelson) Lwt.t
   =
   let open Lwt.Let_syntax in
@@ -407,7 +421,9 @@ let run_no_failwith ~raise ?options (exp : _ Michelson.t) (exp_type : _ Michelso
       Errors.main_unknown (* TODO : simple_fail "unexpected error of execution" *)
 
 
-let evaluate_expression ~raise ?options exp exp_type : int Michelson.michelson Lwt.t =
+let evaluate_expression ~(raise : _ Trace.raise) ?options exp exp_type
+    : int Michelson.michelson Lwt.t
+  =
   let open Lwt.Let_syntax in
   let%map etv = run_expression ~raise ?options exp exp_type in
   match etv with
@@ -415,8 +431,8 @@ let evaluate_expression ~raise ?options exp exp_type : int Michelson.michelson L
   | Fail res -> raise.error @@ Errors.main_execution_failed res
 
 
-let evaluate_constant ~raise ?options exp exp_type
-    : (Tezos_raw_protocol_018_Proxford.Script_expr_hash.t * int Michelson.michelson) Lwt.t
+let evaluate_constant ~(raise : _ Trace.raise) ?options exp exp_type
+    : (Memory_proto_alpha.Protocol.Script_expr_hash.t * int Michelson.michelson) Lwt.t
   =
   let open Lwt.Let_syntax in
   let%bind etv = run_expression ~raise ?options exp exp_type in
@@ -429,20 +445,20 @@ let evaluate_constant ~raise ?options exp exp_type
     let%bind env = Memory_proto_alpha.dummy_environment () in
     let%map _, hash, _ =
       Lwt.map (Trace.trace_alpha_tzresult ~raise (fun _ -> Errors.main_unknown))
-      @@ Memory_proto_alpha.register_constant env.tezos_context value_
+      @@ Memory_proto_alpha.register_constant env.mavryk_context value_
     in
     hash, value
   | Fail res -> raise.error @@ Errors.main_execution_failed res
 
 
 let clean_expression exp =
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline.Micheline in
   inject_locations (fun v -> v) (strip_locations exp)
 
 
 let clean_constant ~raise exp =
   let open Lwt.Let_syntax in
-  let open Tezos_micheline.Micheline in
+  let open Mavryk_micheline.Micheline in
   let value = inject_locations (fun v -> v) (strip_locations exp) in
   let value_ =
     Trace.trace_alpha_tzresult ~raise Errors.unparsing_michelson_tracer
@@ -451,7 +467,7 @@ let clean_constant ~raise exp =
   let%bind env = Memory_proto_alpha.dummy_environment () in
   let%map _, hash, _ =
     Lwt.map (Trace.trace_alpha_tzresult ~raise (fun _ -> Errors.main_unknown))
-    @@ Memory_proto_alpha.register_constant env.tezos_context value_
+    @@ Memory_proto_alpha.register_constant env.mavryk_context value_
   in
   hash, value
 
@@ -483,7 +499,7 @@ module Checks = struct
   let michelsonStorageView_check ~loc ~name ~storage_type (json : Yojson.Basic.t)
       : _ Lwt_result.t
     =
-    let open Tezos_micheline in
+    let open Mavryk_micheline in
     let open Lwt_result.Let_syntax in
     try%lwt
       let decode_json json =
@@ -509,7 +525,7 @@ module Checks = struct
         | None ->
           Lwt_result.return
             (Micheline.Prim
-               (0, Tezos_raw_protocol_018_Proxford.Michelson_v1_primitives.T_unit, [], []))
+               (0, Memory_proto_alpha.Protocol.Michelson_v1_primitives.T_unit, [], []))
       in
       let%bind storage_type =
         Lwt_result.map_error
@@ -541,14 +557,13 @@ module Checks = struct
 
 
   let restApiQuery_check ~loc (json : Yojson.Basic.t) =
-    let open Simple_utils.Result in
     try
       let _specificationUri = json |> member_exn "specificationUri" in
       let _path = json |> member_exn "path" in
       Ok ()
     with
     | _ ->
-      fail
+      Result.fail
         (`Metadata_error_JSON_object
           (loc, "required specificationUri and path in restApiQuery"))
 
@@ -588,7 +603,7 @@ module Checks = struct
     let open Yojson.Basic.Util in
     try%lwt
       let computed_hash =
-        Hex.(show @@ of_bytes (Tezos_crypto.Hacl.Hash.SHA256.digest Bytes.(of_string s)))
+        Hex.(show @@ of_bytes (Mavryk_crypto.Hacl.Hash.SHA256.digest Bytes.(of_string s)))
       in
       let%bind () =
         match sha256hash with
@@ -620,13 +635,13 @@ module Checks = struct
     }
 
   let uri_check (b : bytes) =
-    let valid_protocols = [ "http"; "https"; "ipfs"; "tezos-storage" ] in
-    let open Simple_utils.Option in
+    let valid_protocols = [ "http"; "https"; "ipfs"; "mavryk-storage" ] in
+    let open Ligo_option in
     let s = Bytes.to_string b in
     let uri = Uri.of_string @@ s in
     let* scheme = Uri.scheme uri in
     if List.mem ~equal:String.equal valid_protocols scheme
-    then return { sha256hash = None; uri; scheme }
+    then Option.return { sha256hash = None; uri; scheme }
     else if String.equal "sha256" scheme
     then (
       let uri_path = Uri.path uri in
@@ -635,46 +650,125 @@ module Checks = struct
       let uri = Uri.(of_string @@ pct_decode uri_path) in
       let* scheme = Uri.scheme uri in
       if List.mem ~equal:String.equal valid_protocols scheme
-      then return { sha256hash; uri; scheme }
+      then Option.return { sha256hash; uri; scheme }
       else None)
     else None
 
 
-  let convert_item (item : (int, string) Tezos_micheline.Micheline.node) =
+  let convert_item (item : (int, string) Mavryk_micheline.Micheline.node) =
     match item with
     | Prim (_, "Elt", [ String (_, k); Bytes (_, v) ], _) -> Some (k, v)
     | _ -> None
 
 
-  let convert (metadata : (int, string) Tezos_micheline.Micheline.node) =
+  let convert (metadata : (int, string) Mavryk_micheline.Micheline.node) =
     match metadata with
     | Seq (_, bigmap) -> Option.all (List.map ~f:convert_item bigmap)
     | _ -> None
 
 
-  let download ~loc uri
-      : (string, [> `Metadata_error_download of Location.t * string ]) Lwt_result.t
-    =
-    let open Lwt.Let_syntax in
-    let open Cohttp_lwt_unix in
-    try%lwt
-      let uri = Uri.of_string uri in
-      let headers = Cohttp.Header.of_list [ "Content-type", "application/json" ] in
-      let%bind _, body = Client.get ~headers uri in
-      let%bind body = Cohttp_lwt.Body.to_string body in
-      Lwt.return @@ Ok body
-    with
-    | _ -> Lwt.return (Error (`Metadata_error_download (loc, uri)))
+  module Json_download = struct
+    type error =
+      [ `Download_error
+      | `Timeout
+      ]
+
+    module Lru_uri_cache =
+      Lru.M.Make
+        (String)
+        (struct
+          type t = (string, error) result
+
+          let weight _ = 1
+        end)
+    (* Simple cache for keeping downloaded data; caps the overall size of data *)
+
+    type cache =
+      | No_cache
+      | Lru_cache of Lru_uri_cache.t
+
+    let use_lru_cache () : cache =
+      (* Using 1000 as size. Should be sufficient to fit all links in the
+         project, but prevents unlimitted growth in case of repetitive links
+         changes.
+
+         We expect downloaded metadata to be small, a few kilobytes maximum, so
+         overall cache size remains reasonable.
+      *)
+      Lru_cache (Lru_uri_cache.create 1000)
 
 
-  let tzip16_check
+    type enabled_options =
+      { cache : cache
+      ; timeout_sec : float option
+      }
+
+    type options =
+      [ `Unspecified
+      | `Disabled
+      | `Enabled of enabled_options
+      ]
+
+    let with_cache
+        :  cache -> (string -> ('r, error) Lwt_result.t) -> string
+        -> ('r, error) Lwt_result.t
+      = function
+      | No_cache -> Fn.id
+      | Lru_cache cache ->
+        fun run uri ->
+          (match Lru_uri_cache.find uri cache with
+          | Some x -> Lwt.return x
+          | None ->
+            let%lwt value = run uri in
+            let () = Lru_uri_cache.add uri value cache in
+            Lwt.return value)
+
+
+    let with_timeout
+        (time_opt : float option)
+        (action : 'a -> ('r, error) Lwt_result.t)
+        (arg : 'a)
+        : ('r, error) result Lwt.t
+      =
+      let open Lwt in
+      match time_opt with
+      | None -> action arg
+      | Some time ->
+        Lwt.pick [ action arg; (Lwt_unix.sleep time >|= fun () -> Error `Timeout) ]
+
+
+    let run ~loc uri : (string, error) Lwt_result.t =
+      let open Lwt.Let_syntax in
+      let open Cohttp_lwt_unix in
+      try%lwt
+        let uri = Uri.of_string uri in
+        let headers = Cohttp.Header.of_list [ "Content-type", "application/json" ] in
+        let%bind _, body = Client.get ~headers uri in
+        let%bind body = Cohttp_lwt.Body.to_string body in
+        Lwt.return @@ Ok body
+      with
+      | _ -> Lwt.return (Error `Download_error)
+
+
+    (* This is thread-safe, however does not make an effort at deduplicating
+       downloads of the same URLs *)
+    let run_with ~(options : enabled_options) ~loc uri =
+      Lwt.map (fun outcome ->
+          match outcome with
+          | Error `Download_error -> Error (`Metadata_error_download (loc, uri))
+          | Error `Timeout -> Error (`Metadata_download_timeout (loc, uri))
+          | Ok res -> Ok res)
+      @@ with_cache options.cache (with_timeout options.timeout_sec (run ~loc)) uri
+  end
+
+  let tzip16_check_metadata
       ~loc
-      ?json_download
+      ~(json_download : Json_download.options)
       ~storage_type
-      (metadata : (int, string) Tezos_micheline.Micheline.node)
+      (metadata : (int, string) Mavryk_micheline.Micheline.node)
     =
     let open Lwt_result.Let_syntax in
-    let of_option opt ~error = Lwt.return @@ Simple_utils.Result.of_option opt ~error in
+    let of_option opt ~error = Lwt.return @@ Result.of_option opt ~error in
     let%bind items = of_option ~error:(`Metadata_cannot_parse loc) @@ convert metadata in
     let%bind _, root =
       of_option ~error:(`Metadata_no_empty_key loc)
@@ -685,7 +779,7 @@ module Checks = struct
       @@ uri_check root
     in
     match scheme with
-    | "tezos-storage" ->
+    | "mavryk-storage" ->
       (match Uri.host uri with
       | None ->
         (* In case of empty host, the context is current contract (and thus current storage value) *)
@@ -693,11 +787,11 @@ module Checks = struct
         let location = String.chop_prefix_if_exists location ~prefix:"/" in
         let%bind () =
           of_option ~error:(`Metadata_slash_not_valid_URI (loc, location))
-          @@ Simple_utils.Option.some_if (not @@ String.contains location '/') ()
+          @@ Option.some_if (not @@ String.contains location '/') ()
         in
         let location = Uri.pct_decode location in
         let%bind _, json =
-          of_option ~error:(`Metadata_tezos_storage_not_found (loc, location))
+          of_option ~error:(`Metadata_mavryk_storage_not_found (loc, location))
           @@ List.find ~f:(fun (k, _) -> String.equal k location) items
         in
         json_check ~loc ?sha256hash ~storage_type Bytes.(to_string json)
@@ -705,10 +799,10 @@ module Checks = struct
     | "https" | "http" ->
       let uri = Uri.to_string uri in
       (match json_download with
-      | None -> Lwt_result.fail (`Metadata_json_download (loc, "an HTTP"))
-      | Some false -> Lwt_result.return ()
-      | Some true ->
-        let%bind json = download ~loc uri in
+      | `Unspecified -> Lwt_result.fail (`Metadata_json_download (loc, "an HTTP"))
+      | `Disabled -> Lwt_result.return ()
+      | `Enabled options ->
+        let%bind json = Json_download.run_with ~options ~loc uri in
         json_check ~loc ~storage_type ?sha256hash json)
     | "ipfs" ->
       (match Uri.host uri with
@@ -716,19 +810,19 @@ module Checks = struct
       | Some domain ->
         let uri = "https://ipfs.io/ipfs/" ^ domain in
         (match json_download with
-        | None -> Lwt_result.fail (`Metadata_json_download (loc, "an IPFS"))
-        | Some false -> Lwt_result.return ()
-        | Some true ->
-          let%bind json = download ~loc uri in
+        | `Unspecified -> Lwt_result.fail (`Metadata_json_download (loc, "an IPFS"))
+        | `Disabled -> Lwt_result.return ()
+        | `Enabled options ->
+          let%bind json = Json_download.run_with ~options ~loc uri in
           json_check ~loc ~storage_type ?sha256hash json))
     | _ -> Lwt_result.return ()
 
 
   let is_annoted_element
       annot
-      (type_ : (Mini_c.meta, string) Tezos_micheline.Micheline.node)
+      (type_ : (Mini_c.meta, string) Mavryk_micheline.Micheline.node)
     =
-    let open Tezos_micheline.Micheline in
+    let open Mavryk_micheline.Micheline in
     match type_ with
     | Prim (_, _, _, ss) -> List.mem ~equal:String.equal ss annot
     | _ -> false
@@ -736,10 +830,10 @@ module Checks = struct
 
   let rec find_annoted_element
       annot
-      (type_ : (Mini_c.meta, string) Tezos_micheline.Micheline.node)
-      (value : (int, string) Tezos_micheline.Micheline.node)
+      (type_ : (Mini_c.meta, string) Mavryk_micheline.Micheline.node)
+      (value : (int, string) Mavryk_micheline.Micheline.node)
     =
-    let open Tezos_micheline.Micheline in
+    let open Mavryk_micheline.Micheline in
     match type_, value with
     | Prim (_, "pair", types, _), Prim (_, "Pair", values, _) ->
       (match List.findi types ~f:(fun _ type_ -> is_annoted_element annot type_) with
@@ -755,11 +849,31 @@ module Checks = struct
     | _ -> None
 
 
-  let get_bigmap_value key (value : (int, string) Tezos_micheline.Micheline.node) =
-    let open Tezos_micheline.Micheline in
+  let get_bigmap_value key (value : (int, string) Mavryk_micheline.Micheline.node) =
+    let open Mavryk_micheline.Micheline in
     match value with
     | Prim (_, "Elt", [ String (_, k); v ], _) when String.equal key k -> Some v
     | _ -> None
+
+
+  let tzip16_check_storage
+      ~(raise : _ Trace.raise)
+      ~(json_download : Json_download.options)
+      ?(require_metadata_field = true)
+      ~storage_type
+      ~loc
+      (exp : (int, string) Mavryk_micheline.Micheline.node)
+      : unit Lwt.t
+    =
+    let open Lwt.Let_syntax in
+    match find_annoted_element "%metadata" storage_type exp with
+    | Some metadata ->
+      (match%map tzip16_check_metadata ~loc ~json_download ~storage_type metadata with
+      | Ok () -> ()
+      | Error w -> raise.warning w)
+    | None ->
+      Lwt.return
+      @@ if require_metadata_field then raise.warning (`Metadata_absent loc) else ()
 
 
   let storage
@@ -767,24 +881,21 @@ module Checks = struct
       ~(options : Compiler_options.t)
       ~type_
       ~loc
-      (exp : (int, string) Tezos_micheline.Micheline.node)
+      (exp : (int, string) Mavryk_micheline.Micheline.node)
       : unit Lwt.t
     =
-    let open Lwt.Let_syntax in
     if not options.middle_end.no_metadata_check
-    then (
-      match find_annoted_element "%metadata" type_ exp with
-      | Some metadata ->
-        let open Simple_utils.Trace in
-        (match%map
-           tzip16_check
-             ~loc
-             ?json_download:options.tools.json_download
-             ~storage_type:type_
-             metadata
-         with
-        | Ok () -> ()
-        | Error w -> raise.warning w)
-      | None -> Lwt.return ())
+    then
+      tzip16_check_storage
+        ~raise
+        ~require_metadata_field:false
+        ~json_download:
+          (match options.tools.json_download with
+          | None -> `Unspecified
+          | Some false -> `Disabled
+          | Some true -> `Enabled { cache = Json_download.No_cache; timeout_sec = None })
+        ~storage_type:type_
+        ~loc
+        exp
     else Lwt.return ()
 end

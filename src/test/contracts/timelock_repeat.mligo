@@ -10,8 +10,8 @@ type return = operation list * storage
 
 [@entry]
 let main (_ : parameter) (store : storage) : return =
-  (* Multiple evaluations of Tezos.get_now () give different values *)
-  let my_now : timestamp = Tezos.get_now () in
+  (* Multiple evaluations of Mavryk.get_now () give different values *)
+  let my_now : timestamp = Mavryk.get_now () in
   if my_now > store.next_use
   then
     let next_use = my_now + store.interval in

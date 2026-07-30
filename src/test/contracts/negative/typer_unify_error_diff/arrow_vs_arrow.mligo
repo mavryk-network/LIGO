@@ -1,6 +1,6 @@
 
 let main (_p : int) (s : int) : operation list * int =
-  let  x : int -> nat -> nat -> tez        = (fun _x _y _z -> 1tez) in
+  let  x : int -> nat -> nat -> mav        = (fun _x _y _z -> 1mav) in
   let _y : int -> int -> int -> int -> nat = x in
   //              ^^^    ^^^    ^^^    ^^^
   ([] : operation list), s

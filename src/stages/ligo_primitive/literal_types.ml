@@ -38,7 +38,7 @@ type t =
   | Int
   | Operation
   | Nat
-  | Tez
+  | Mav
   | Unit
   | Address
   | Signature
@@ -58,9 +58,9 @@ type t =
   | Sapling_transaction
   | Sapling_state
   | Baker_operation
-  | Bls12_381_g1
-  | Bls12_381_g2
-  | Bls12_381_fr
+  | Mavryk_bls12_381_g1
+  | Mavryk_bls12_381_g2
+  | Mavryk_bls12_381_fr
   | Never
   | Ticket
   | Dynamic_entrypoint
@@ -83,7 +83,7 @@ let to_string = function
   | Int -> "int"
   | Operation -> "operation"
   | Nat -> "nat"
-  | Tez -> "tez"
+  | Mav -> "mav"
   | Unit -> "unit"
   | Address -> "address"
   | Signature -> "signature"
@@ -103,9 +103,9 @@ let to_string = function
   | Sapling_transaction -> "sapling_transaction"
   | Sapling_state -> "sapling_state"
   | Baker_operation -> "baker_operation"
-  | Bls12_381_g1 -> "bls12_381_g1"
-  | Bls12_381_g2 -> "bls12_381_g2"
-  | Bls12_381_fr -> "bls12_381_fr"
+  | Mavryk_bls12_381_g1 -> "bls12_381_g1"
+  | Mavryk_bls12_381_g2 -> "bls12_381_g2"
+  | Mavryk_bls12_381_fr -> "bls12_381_fr"
   | Never -> "never"
   | Ticket -> "ticket"
   | Michelson_program -> "michelson_program"
@@ -128,7 +128,7 @@ let of_string_opt = function
   | "int" -> Some Int
   | "operation" -> Some Operation
   | "nat" -> Some Nat
-  | "tez" -> Some Tez
+  | "mav" -> Some Mav
   | "unit" -> Some Unit
   | "address" -> Some Address
   | "signature" -> Some Signature
@@ -148,9 +148,9 @@ let of_string_opt = function
   | "sapling_transaction" -> Some Sapling_transaction
   | "sapling_state" -> Some Sapling_state
   | "baker_operation" -> Some Baker_operation
-  | "bls12_381_g1" -> Some Bls12_381_g1
-  | "bls12_381_g2" -> Some Bls12_381_g2
-  | "bls12_381_fr" -> Some Bls12_381_fr
+  | "bls12_381_g1" -> Some Mavryk_bls12_381_g1
+  | "bls12_381_g2" -> Some Mavryk_bls12_381_g2
+  | "bls12_381_fr" -> Some Mavryk_bls12_381_fr
   | "never" -> Some Never
   | "ticket" -> Some Ticket
   | "michelson_program" -> Some Michelson_program
@@ -185,7 +185,7 @@ let to_arity = function
   | Int -> 0
   | Operation -> 0
   | Nat -> 0
-  | Tez -> 0
+  | Mav -> 0
   | Unit -> 0
   | Address -> 0
   | Signature -> 0
@@ -205,9 +205,9 @@ let to_arity = function
   | Sapling_transaction -> 1
   | Sapling_state -> 1
   | Baker_operation -> 0
-  | Bls12_381_g1 -> 0
-  | Bls12_381_g2 -> 0
-  | Bls12_381_fr -> 0
+  | Mavryk_bls12_381_g1 -> 0
+  | Mavryk_bls12_381_g2 -> 0
+  | Mavryk_bls12_381_fr -> 0
   | Never -> 0
   | Ticket -> 1
   | Michelson_program -> 0
@@ -241,7 +241,7 @@ let bytes = Bytes
 let int = Int
 let operation = Operation
 let nat = Nat
-let tez = Tez
+let mav = Mav
 let unit = Unit
 let address = Address
 let signature = Signature
@@ -261,9 +261,9 @@ let pvss_key = Pvss_key
 let sapling_transaction = Sapling_transaction
 let sapling_state = Sapling_state
 let baker_operation = Baker_operation
-let bls12_381_g1 = Bls12_381_g1
-let bls12_381_g2 = Bls12_381_g2
-let bls12_381_fr = Bls12_381_fr
+let bls12_381_g1 = Mavryk_bls12_381_g1
+let bls12_381_g2 = Mavryk_bls12_381_g2
+let bls12_381_fr = Mavryk_bls12_381_fr
 let never = Never
 let ticket = Ticket
 let michelson_program = Michelson_program
@@ -284,7 +284,7 @@ let v_bytes = Type_var.of_input_var (to_string Bytes)
 let v_int = Type_var.of_input_var (to_string Int)
 let v_operation = Type_var.of_input_var (to_string Operation)
 let v_nat = Type_var.of_input_var (to_string Nat)
-let v_tez = Type_var.of_input_var (to_string Tez)
+let v_mav = Type_var.of_input_var (to_string Mav)
 let v_unit = Type_var.of_input_var (to_string Unit)
 let v_address = Type_var.of_input_var (to_string Address)
 let v_signature = Type_var.of_input_var (to_string Signature)
@@ -305,9 +305,9 @@ let v_pvss_key = Type_var.of_input_var (to_string Pvss_key)
 let v_sapling_trasaction = Type_var.of_input_var (to_string Sapling_transaction)
 let v_sapling_state = Type_var.of_input_var (to_string Sapling_state)
 let v_baker_operation = Type_var.of_input_var (to_string Baker_operation)
-let v_bls12_381_g1 = Type_var.of_input_var (to_string Bls12_381_g1)
-let v_bls12_381_g2 = Type_var.of_input_var (to_string Bls12_381_g2)
-let v_bls12_381_fr = Type_var.of_input_var (to_string Bls12_381_fr)
+let v_bls12_381_g1 = Type_var.of_input_var (to_string Mavryk_bls12_381_g1)
+let v_bls12_381_g2 = Type_var.of_input_var (to_string Mavryk_bls12_381_g2)
+let v_bls12_381_fr = Type_var.of_input_var (to_string Mavryk_bls12_381_fr)
 let v_never = Type_var.of_input_var (to_string Never)
 let v_ticket = Type_var.of_input_var (to_string Ticket)
 let v_test_michelson = Type_var.of_input_var (to_string Michelson_program)

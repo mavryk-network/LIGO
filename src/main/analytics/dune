@@ -9,9 +9,10 @@
   prometheus
   prometheus_push
   compiler_options
-  environment
   syntax_types
   syntax)
+ (preprocess
+  (pps lwt_ppx))
  (modules analytics version))
 
 (rule

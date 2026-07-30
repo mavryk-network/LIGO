@@ -9,24 +9,24 @@ namespace Interfaces {
 };
 
 namespace IncDec implements Interfaces.IncDec {
-  type storage = int;
-  type ret = [list<operation>, storage];
+  export type storage = int;
+  export type ret = [list<operation>, storage];
 
   @entry
   const increment = (delta : int, store : storage) : ret =>
-    [list([]), store + delta];
+    [[], store + delta];
 
   @entry
   const decrement = (delta : int, store : storage) : ret =>
-    [list([]), store - delta];
+    [[], store - delta];
 
   @entry
   const reset = (_p : unit, _s : storage) : ret =>
-    [list([]), 0];
+    [[], 0];
 };
 
 namespace X implements { type t; const x : t } {
-  type t = int;
+  export type t = int;
   export const x = 42;
   const y = 5;
 };

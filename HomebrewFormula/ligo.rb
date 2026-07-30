@@ -1,18 +1,18 @@
 class Ligo < Formula
-  desc "Friendly Smart Contract Language for Tezos"
-  homepage "https://ligolang.org/"
+  desc "Friendly Smart Contract Language for Mavryk"
+  homepage "https://ligo.mavryk.org/"
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules
-  url "https://gitlab.com/ligolang/ligo.git", tag: "1.4.0", revision: "86548dbd16776c30fd47e5fdf48631cfffecaea3"
-  version "1.4.0"
-  head "https://gitlab.com/ligolang/ligo.git", branch: "dev"
+  url "https://gitlab.com/mavryk-network/ligo.git", tag: "1.7.0", revision: "86548dbd16776c30fd47e5fdf48631cfffecaea3"
+  version "1.7.0"
+  head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
 
   bottle do
     root_url "https://gitlab.com/api/v4/projects/12294987/packages/generic/ligo_bottle/current"
-  sha256 cellar: :any, arm64_ventura: "f02afec6be0e47b95716d46ad3881fa7277b7af86d9bcc054d2047fa3b62b643"
-  sha256 cellar: :any, ventura: "85d5b6dd4a26f88611b27ab8af2170c7a14782b8038e41bec5fe30e178817fe3"
+  sha256 cellar: :any, arm64_sonoma: "09e098ab450b300793c6351f014897a454347cba47528ab8b3f266401d6771a6"
+  sha256 cellar: :any, sonoma: "17a30966abd7a7886c9ba866e3dde7f4b80df4bb6f908a0e0bbe30e3a9a8de0b"
   end
 
   build_dependencies = %w[opam rust hidapi pkg-config gnu-sed cmake gcc]
@@ -32,7 +32,7 @@ class Ligo < Formula
 
   def install
     # ligo version is taken from the environment variable in build-time
-    ENV["LIGO_VERSION"] = "1.4.0"
+    ENV["LIGO_VERSION"] = "1.7.0"
     # avoid opam prompts
     ENV["OPAMYES"] = "true"
 
@@ -42,7 +42,7 @@ class Ligo < Formula
     system "scripts/setup_switch.sh"
     # TODO: remowe workarounds below and use the script provided by the ligo repo once
     # a new version is released
-    # Required for Tezos hangzhou protocol
+    # Required for Mavryk hangzhou protocol
     system "git", "submodule", "init"
     system "git", "submodule", "update", "--recursive"
     # Because sed has different options on MacOS >:(

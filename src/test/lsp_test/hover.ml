@@ -2,7 +2,6 @@ open Lsp_test_helpers.Handlers
 open Lsp_test_helpers.Common
 open Lsp_helpers
 module Requests = Ligo_lsp.Server.Requests
-open Requests.Handler
 
 type hover_test =
   { file : string
@@ -17,8 +16,10 @@ let get_hover_test ({ file; hover_positions } : hover_test) : unit =
     let path = normalize_path file in
     let actual_hover, diagnostics =
       test_run_session
-      @@ let@ uri = open_file path in
-         Requests.on_req_hover position uri
+      @@
+      let open Handler.Let_syntax in
+      let%bind uri = open_file path in
+      Requests.on_req_hover position uri
     in
     let test_info =
       Format.asprintf
@@ -27,7 +28,7 @@ let get_hover_test ({ file; hover_positions } : hover_test) : unit =
         Position.pp
         position
         Fmt.Dump.(list (pair Path.pp (list Diagnostic.pp)))
-        (Path_hashtbl.to_alist diagnostics)
+        (Hashtbl.to_alist diagnostics)
     in
     match actual_hover with
     | None -> failwith @@ "Expected a hover message, got none.\n" ^ test_info
@@ -96,7 +97,7 @@ let%expect_test "registry.jsligo" =
            "value": "map :\n  <src, dst>(_: (_: src) => dst) => (_: list<src>) => list<\n    dst\n  >",
            "language": "jsligo"
          },
-         "The call `map(f, list([a1; ...; an]))` applies the function `f` to\n    `a1`, ..., `an` (from left to right), and builds the list\n    `list([f(a1); ...; f(an)])` with the results returned by `f`."
+         "The call `List.map(f, list([a1; ...; an]))` applies the function `f` to\n    `a1`, ..., `an` (from left to right), and builds the list\n    `list([f(a1); ...; f(an)])` with the results returned by `f`."
        ]
      };
      { "contents": [ { "value": "primes : list<int>", "language": "jsligo" } ] };
@@ -137,7 +138,7 @@ let%expect_test "hovers.mligo" =
         ; pos ~line:70 ~character:5
         ; pos ~line:72 ~character:23
         ; pos ~line:75 ~character:4
-        ; pos ~line:75 ~character:35
+        ; pos ~line:75 ~character:36
         ; pos ~line:75 ~character:27
         ; pos ~line:77 ~character:28
         ; pos ~line:79 ~character:8
@@ -181,7 +182,7 @@ let%expect_test "hovers.mligo" =
            "value": "map : 'src 'dst.('src -> 'dst) -> 'src list -> 'dst list",
            "language": "cameligo"
          },
-         "The call `map f [a1; ...; an]` applies the function `f` to `a1`,\n    ..., `an` (from left to right), and builds the list\n    `[f a1; ...; f an]` with the results returned by `f`."
+         "The call `List.map f [a1; ...; an]` applies the function `f` to `a1`,\n    ..., `an` (from left to right), and builds the list\n    `[f a1; ...; f an]` with the results returned by `f`."
        ]
      };
      {
@@ -208,7 +209,7 @@ let%expect_test "hovers.mligo" =
      {
        "contents": [
          {
-           "value": "z : key_hash option -> tez -> int -> (operation * address)",
+           "value": "z : key_hash option -> mav -> int -> (operation * address)",
            "language": "cameligo"
          }
        ]
@@ -216,10 +217,10 @@ let%expect_test "hovers.mligo" =
      {
        "contents": [
          {
-           "value": "create_contract :\n  'param\n  'storage.('param, 'storage) entrypoint ->\n  key_hash option ->\n  tez -> 'storage -> (operation * address)",
+           "value": "create_contract :\n  'param\n  'storage.('param, 'storage) entrypoint ->\n  key_hash option ->\n  mav -> 'storage -> (operation * address)",
            "language": "cameligo"
          },
-         "The call `create_contract c e a s` returns a contract creation\n    operation (origination) for the entrypoint `e` (as a function)\n    with optional delegate `d`, initial amount `a` and initial\n    storage `s`, together with the address of the created\n    contract. Note that the created contract cannot be called\n    immediately afterwards (that is, `get_contract_opt` on that\n    address would return `None`), as the origination must be\n    performed successfully first, for example by calling a proxy\n    contract or itself."
+         "The call `Mavryk.create_contract e d a s` returns a contract creation\n    operation (origination) for the entrypoint `e` (as a function)\n    with optional delegate `d`, initial amount `a` and initial\n    storage `s`, together with the address of the created\n    contract. Note that the created contract cannot be called\n    immediately afterwards (that is, `Mavryk.get_contract_opt` on that\n    address would return `None`), as the origination must be\n    performed successfully first, for example by calling a proxy\n    contract or itself."
        ]
      };
      {
@@ -396,7 +397,7 @@ let%expect_test "hover_module.mligo" =
      {
        "contents": [
          {
-           "value": "module C : sig\n  val another : int\n\n  val foo : tez\n  end",
+           "value": "module C : sig\n  val another : int\n\n  val foo : mav\n  end",
            "language": "cameligo"
          }
        ]
@@ -412,13 +413,16 @@ let%expect_test "hover_module.mligo" =
      };
      {
        "contents": [
-         { "value": "module Mangled : (* Unresolved *)", "language": "cameligo" }
+         {
+           "value": "module Mangled : sig\n  val where : ^a\n  end",
+           "language": "cameligo"
+         }
        ]
      };
      {
        "contents": [
          {
-           "value": "module Mangled_with_sig : sig\n  type t\n\n  type int =  string\n  end",
+           "value": "module Mangled_with_sig : sig\n  type t\n\n  type int\n  end",
            "language": "cameligo"
          }
        ]
@@ -610,7 +614,7 @@ let%expect_test "hover_module.jsligo" =
      {
        "contents": [
          {
-           "value": "namespace C implements {\n  const foo: tez;\n  const another: int\n}",
+           "value": "namespace C implements {\n  const foo: mav;\n  const another: int\n}",
            "language": "jsligo"
          }
        ]
@@ -627,7 +631,7 @@ let%expect_test "hover_module.jsligo" =
      {
        "contents": [
          {
-           "value": "namespace Mangled implements /* Unresolved */",
+           "value": "namespace Mangled implements {\n  const where: ^a;\n  const v: int\n}",
            "language": "jsligo"
          }
        ]
@@ -635,7 +639,7 @@ let%expect_test "hover_module.jsligo" =
      {
        "contents": [
          {
-           "value": "namespace Mangled_with_sig implements {\n  type t;\n  type int = string\n}",
+           "value": "namespace Mangled_with_sig implements {\n  const where: ^a;\n  type t = string;\n  type int = string\n}",
            "language": "jsligo"
          }
        ]
@@ -643,7 +647,7 @@ let%expect_test "hover_module.jsligo" =
      {
        "contents": [
          {
-           "value": "namespace Mangled_with_inlined_sig implements {\n  const foo: int\n}",
+           "value": "namespace Mangled_with_inlined_sig implements {\n  const where: ^a;\n  const foo: int\n}",
            "language": "jsligo"
          }
        ]
@@ -1153,6 +1157,7 @@ let%expect_test "dynamic_entrypoints.jsligo" =
        ]
      }] |}]
 
+(* TODO: If we get a ghost identifier, then the module type is unresolved. *)
 let%expect_test "missing_module.mligo" =
   get_hover_test
     { file = "contracts/lsp/hover/missing_module.mligo"
@@ -1166,6 +1171,7 @@ let%expect_test "missing_module.mligo" =
        ]
      }] |}]
 
+(* TODO: If we get a ghost identifier, then the type annotation is unresolved. *)
 let%expect_test "missing_type_annot.mligo" =
   get_hover_test
     { file = "contracts/lsp/hover/missing_type_annot.mligo"
@@ -1179,6 +1185,7 @@ let%expect_test "missing_type_annot.mligo" =
        ]
      }] |}]
 
+(* TODO: If we get a ghost identifier, then the type is unresolved. *)
 let%expect_test "missing_type.mligo" =
   get_hover_test
     { file = "contracts/lsp/hover/missing_type.mligo"
@@ -1268,7 +1275,8 @@ let%expect_test "Preserves module path inside option type" =
     ; hover_positions = [ pos ~line:4 ~character:4 ]
     };
   [%expect
-    {| [{ "contents": [ { "value": "x : A.t option", "language": "cameligo" } ] }] |}]
+    {|
+      [{ "contents": [ { "value": "x : A.t option", "language": "cameligo" } ] }] |}]
 
 let%expect_test "Preserves module path of an imported module" =
   get_hover_test
@@ -1391,21 +1399,10 @@ let%expect_test "Disc union fields" =
     };
   [%expect
     {|
-    [{
-       "contents": [
-         { "value": "kind : [\"aaa\"] | [\"42\"]", "language": "jsligo" }
-       ]
-     };
-     {
-       "contents": [
-         { "value": "kind : [\"aaa\"] | [\"42\"]", "language": "jsligo" }
-       ]
-     };
-     {
-       "contents": [
-         { "value": "kind : [\"aaa\"] | [\"42\"]", "language": "jsligo" }
-       ]
-     }; { "contents": [ { "value": "a : int", "language": "jsligo" } ] };
+    [{ "contents": [ { "value": "kind : \"42\"", "language": "jsligo" } ] };
+     { "contents": [ { "value": "kind : \"aaa\"", "language": "jsligo" } ] };
+     { "contents": [ { "value": "kind : \"aaa\"", "language": "jsligo" } ] };
+     { "contents": [ { "value": "a : int", "language": "jsligo" } ] };
      { "contents": [ { "value": "a : int", "language": "jsligo" } ] };
      { "contents": [ { "value": "b : bool", "language": "jsligo" } ] };
      { "contents": [ { "value": "b : bool", "language": "jsligo" } ] }] |}]
@@ -1641,4 +1638,71 @@ let%expect_test "Polymorphic types (JsLIGO)" =
      { "contents": [ { "value": "type t = list<int>", "language": "jsligo" } ] };
      {
        "contents": [ { "value": "f3 : (x: t) => t<int>", "language": "jsligo" } ]
+     }] |}]
+
+let%expect_test "Recover from missing variable" =
+  get_hover_test
+    { file = "contracts/lsp/hover/recover_missing_variable.mligo"
+    ; hover_positions = [ pos ~line:0 ~character:4; pos ~line:1 ~character:4 ]
+    };
+  [%expect
+    {|
+    [{ "contents": [ { "value": "g : ^a", "language": "cameligo" } ] };
+     { "contents": [ { "value": "h : ^a", "language": "cameligo" } ] }] |}]
+
+let%expect_test "Recover from missing module" =
+  get_hover_test
+    { file = "contracts/lsp/hover/recover_missing_module.mligo"
+    ; hover_positions = [ pos ~line:0 ~character:4 ]
+    };
+  [%expect {|
+    [{ "contents": [ { "value": "a : int", "language": "cameligo" } ] }] |}]
+
+let%expect_test "Recover from missing record field" =
+  get_hover_test
+    { file = "contracts/lsp/hover/recover_missing_record_field.mligo"
+    ; hover_positions = [ pos ~line:0 ~character:4 ]
+    };
+  [%expect {|
+    [{ "contents": [ { "value": "a : ^a", "language": "cameligo" } ] }] |}]
+
+let%expect_test "Recover from type error" =
+  get_hover_test
+    { file = "contracts/lsp/hover/recover_type_error_1.mligo"
+    ; hover_positions =
+        [ pos ~line:1 ~character:6; pos ~line:2 ~character:6; pos ~line:5 ~character:4 ]
+    };
+  [%expect
+    {|
+    [{ "contents": [ { "value": "x : int", "language": "cameligo" } ] };
+     { "contents": [ { "value": "y : int", "language": "cameligo" } ] };
+     { "contents": [ { "value": "y : int", "language": "cameligo" } ] }] |}]
+
+let%expect_test "Recover from type error 2" =
+  get_hover_test
+    { file = "contracts/lsp/hover/recover_type_error_2.mligo"
+    ; hover_positions =
+        [ pos ~line:0 ~character:4; pos ~line:1 ~character:4; pos ~line:2 ~character:4 ]
+    };
+  [%expect
+    {|
+    [{ "contents": [ { "value": "a : string", "language": "cameligo" } ] };
+     {
+       "contents": [
+         { "value": "f : string -> string", "language": "cameligo" }
+       ]
+     }; { "contents": [ { "value": "g : string", "language": "cameligo" } ] }] |}]
+
+let%expect_test "Recover from type error 3" =
+  get_hover_test
+    { file = "contracts/lsp/hover/recover_type_error_3.mligo"
+    ; hover_positions = [ pos ~line:0 ~character:4; pos ~line:1 ~character:4 ]
+    };
+  [%expect
+    {|
+    [{
+       "contents": [ { "value": "g : 'a 'b.'a -> 'b", "language": "cameligo" } ]
+     };
+     {
+       "contents": [ { "value": "h : 'a 'b.'a -> 'b", "language": "cameligo" } ]
      }] |}]

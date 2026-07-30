@@ -1,4 +1,4 @@
-open Simple_utils.Display
+module Display = Simple_utils.Display
 module Scopes = Ligo_main.Main.Scopes.Api_helper
 module InfoApi = Ligo_api.Info
 module Raw_options = Compiler_options.Raw_options
@@ -8,7 +8,7 @@ let schema = "../main/scopes/schema.json"
 let validate_json_file file_name =
   let command_str = Format.sprintf "python3 -m jsonschema -i %s %s" file_name schema in
   Format.printf "command: %s\n" command_str;
-  let status = Caml.Sys.command @@ command_str in
+  let status = Sys_unix.command @@ command_str in
   if status > 0 then Alcotest.fail "JSON schema validation failed"
 
 
@@ -20,16 +20,14 @@ let schema_test_positive
     source_file
   =
   let _test () =
-    let temp_file_name =
-      Caml.Filename.temp_file ~temp_dir:"./" "get_scope_test" ".json"
-    in
+    let temp_file_name = Filename_unix.temp_file ~in_dir:"./" "get_scope_test" ".json" in
     let write data = Out_channel.write_all temp_file_name ~data in
-    let options = Raw_options.make ~with_types ~protocol_version:"current" () in
+    let options = Raw_options.make ~with_types () in
     match
       Lsp_helpers.Ligo_interface.Get_scope.get_scope_cli_result
         options
         ~source_file
-        ~display_format:json
+        ~display_format:Display.json
         ~no_colour
         ~defs_only
     with
@@ -51,17 +49,15 @@ let schema_test_negative
     source_file
   =
   let _test () =
-    let temp_file_name =
-      Caml.Filename.temp_file ~temp_dir:"./" "get_scope_test" ".json"
-    in
+    let temp_file_name = Filename_unix.temp_file ~in_dir:"./" "get_scope_test" ".json" in
     let write data = Out_channel.write_all temp_file_name ~data in
-    let options = Raw_options.make ~with_types ~protocol_version:"current" () in
+    let options = Raw_options.make ~with_types () in
     let res_str, actual_status =
       match
         Lsp_helpers.Ligo_interface.Get_scope.get_scope_cli_result
           options
           ~source_file
-          ~display_format:json
+          ~display_format:Display.json
           ~no_colour
           ~defs_only
       with
@@ -91,7 +87,7 @@ let schema_test_negative
 
 
 let files_in_dir dir_path =
-  Caml.Sys.readdir dir_path
+  Sys_unix.readdir dir_path
   |> Array.to_list
   |> List.filter ~f:(fun x ->
          match Filename.split_extension x with

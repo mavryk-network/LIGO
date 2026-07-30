@@ -55,18 +55,9 @@ const News = () => {
       description:
         "Ligo sources are available on our GitLab. Feel free to open an issue or contribute.",
       size: "small",
-      href: "https://gitlab.com/ligolang/ligo",
+      href: "https://gitlab.com/mavryk-network/ligo",
 
       cta: "Contribute to Ligo",
-    },
-    {
-      title: "Events",
-      description:
-        "The Ligo team is contributing too. See us at conferences to discover Ligo through a talk given by one of our teammates.",
-      size: "small",
-      href: "https://tezos.com/tez-dev",
-
-      cta: "ligo at tez/dev",
     },
     {
       title: (
@@ -76,9 +67,9 @@ const News = () => {
           on X
         </>
       ),
-      description: "Ligo team shares news on X (Twitter); don't miss them and follow us.",
+      description: "Mavryk Dynamics team shares news on X. Don't miss them and follow us.",
       size: "large",
-      href: "https://x.com/LigoLang",
+      href: "https://x.com/mavrykdynamics",
       cta: (
         <>
           Follow-us on{" "}

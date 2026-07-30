@@ -1,15 +1,16 @@
 open Ast_unified
 open Pass_type
-open Simple_utils.Trace
 open Errors
+module Trace = Simple_utils.Trace
 module Location = Simple_utils.Location
+module Ligo_option = Simple_utils.Ligo_option
+include Flag.No_arg ()
 
 (* generate helpers for sum_types : enum ; setter and getter
    possible TODOs:
    - use attribute value to allow chosing enum/get/set/all
    - add more type annotations in the generated function (for safety)
 *)
-include Flag.No_arg ()
 
 let name = __MODULE__
 
@@ -20,7 +21,12 @@ let prefix_let_lhs ~loc prefix str =
 let simple_decl ~loc lhs args let_rhs =
   d_let
     ~loc
-    { is_rec = false; type_params = None; pattern = lhs, args; rhs_type = None; let_rhs }
+    { is_rec = false
+    ; type_params = None
+    ; pattern = lhs :: args
+    ; rhs_type = None
+    ; let_rhs
+    }
 
 
 let gen_enum : ty_expr option Non_linear_rows.t * Location.t -> declaration list =
@@ -43,15 +49,14 @@ let gen_getters : ty_expr option Non_linear_rows.t * Location.t -> declaration l
            e_match
              ~loc
              { expr = ev_x
-             ; disc_label = None
              ; cases =
-                 ( { pattern = Some (p_variant ~loc label (Some p_x))
+                 [ { pattern = Some (p_variant ~loc label (Some p_x))
                    ; rhs = e_some ~loc ev_x
                    }
-                 , [ { pattern = Some (p_var ~loc (Variable.fresh ~loc ()))
-                     ; rhs = e_none ~loc
-                     }
-                   ] )
+                 ; { pattern = Some (p_var ~loc (Variable.fresh ~loc ()))
+                   ; rhs = e_none ~loc
+                   }
+                 ]
              }
          in
          simple_decl
@@ -91,14 +96,14 @@ let compile ~raise:_ =
   let program : _ program_ -> program =
    fun p ->
     let extended =
-      List.fold p ~init:[] ~f:(fun acc pe : program_entry list ->
-          let default = acc @ [ pe ] in
+      List.fold_right p ~init:[] ~f:(fun pe acc : program_entry list ->
+          let default = pe :: acc in
           let type_sum_decl_opt =
-            let open Simple_utils.Option in
+            let open Ligo_option in
             let* d = get_pe_declaration pe in
             let* { key; value }, decl = get_d_attr d in
             let* { name; type_expr } = get_d_type decl in
-            let* sum, _ = get_t_sum_raw type_expr in
+            let* sum = get_t_sum_raw type_expr in
             if String.equal key "ppx_helpers" && Option.is_none value
             then Some (decl, name, sum, get_t_loc type_expr)
             else None
@@ -110,7 +115,7 @@ let compile ~raise:_ =
   Fold { idle_fold with program }
 
 
-let reduction ~raise =
+let reduction ~(raise : _ Trace.raise) =
   { Iter.defaults with
     declaration =
       (function
@@ -134,11 +139,10 @@ let%expect_test "compile" =
        (type_expr
         (T_sum_raw
          (((Label Foo (Virtual generated)) ((associated_type ((TY_EXPR1))) (decl_pos 0)))
-          ((Label Bar (Virtual generated)) ((associated_type ()) (decl_pos 1))))()))))))))
+          ((Label Bar (Virtual generated)) ((associated_type ()) (decl_pos 1))))))))))))
   |}
   |-> compile;
-  [%expect
-    {|
+  [%expect{|
     ((PE_declaration
       (D_type
        ((name dyn_param)
@@ -146,8 +150,7 @@ let%expect_test "compile" =
          (T_sum_raw
           (((Label Foo (Virtual generated))
             ((associated_type ((TY_EXPR1))) (decl_pos 0)))
-           ((Label Bar (Virtual generated)) ((associated_type ()) (decl_pos 1))))
-          ())))))
+           ((Label Bar (Virtual generated)) ((associated_type ()) (decl_pos 1)))))))))
      (PE_declaration
       (D_let
        ((pattern ((P_var make_foo) (P_var x)))
@@ -167,7 +170,7 @@ let%expect_test "compile" =
        ((pattern ((P_var get_foo) (P_var x)))
         (let_rhs
          (E_match
-          ((expr (E_variable x)) (disc_label ())
+          ((expr (E_variable x))
            (cases
             (((pattern ((P_variant (Label Foo (Virtual generated)) ((P_var x)))))
               (rhs
@@ -184,7 +187,7 @@ let%expect_test "compile" =
        ((pattern ((P_var get_bar) (P_var x)))
         (let_rhs
          (E_match
-          ((expr (E_variable x)) (disc_label ())
+          ((expr (E_variable x))
            (cases
             (((pattern ((P_variant (Label Bar (Virtual generated)) ((P_var x)))))
               (rhs

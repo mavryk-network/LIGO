@@ -1,4 +1,4 @@
 author: Rémi Lesénéchal
 merge_request: '1133'
-title: fix dry-run rejecting Tezos.self
+title: fix dry-run rejecting Mavryk.self
 type: fixed

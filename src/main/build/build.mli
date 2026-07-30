@@ -149,4 +149,4 @@ val build_type_expression
   -> Syntax_types.t
   -> string
   -> Source_input.file_name option
-  -> (Mini_c.meta, string) Tezos_micheline.Micheline.node
+  -> (Mini_c.meta, string) Mavryk_micheline.Micheline.node

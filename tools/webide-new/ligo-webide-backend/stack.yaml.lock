@@ -19,33 +19,57 @@ packages:
   original:
     hackage: hspec-wai-json-0.11.0@sha256:1fdd66a61c84a9ba6f2e1673ed49b2da1f57f025cd3fb9a46d62620ff9259d63,1629
 - completed:
-    hackage: lorentz-0.15.0@sha256:5b2b52a8b7a6de7bf4bbf8dca4f9cd2ff2f138ce852099e7a4446a809e29463d,4571
+    commit: 81e76c8ea5148e7505af0e9e7f052ea154d0a00a
+    git: https://gitlab.com/mavryk-network/morley.git
+    name: mavryk-lorentz
     pantry-tree:
-      sha256: a93642b46d22739245ae46807ff03b87e9c261f79abf1a41d230e2edc5918027
-      size: 4123
+      sha256: 6d26ca5cc6162c7323a8f1490f45f399612eba266805598b04c8cc34020d10db
+      size: 4538
+    subdir: code/mavryk-lorentz
+    version: 0.15.0
   original:
-    hackage: lorentz-0.15.0
+    commit: 81e76c8ea5148e7505af0e9e7f052ea154d0a00a
+    git: https://gitlab.com/mavryk-network/morley.git
+    subdir: code/mavryk-lorentz
 - completed:
-    hackage: morley-1.19.0@sha256:42e84f6950c03943f0d7664e9b0bcb5ac9c176cf3316a4efa77a0e24b2a08bc9,10973
+    commit: 81e76c8ea5148e7505af0e9e7f052ea154d0a00a
+    git: https://gitlab.com/mavryk-network/morley.git
+    name: mavryk-morley
     pantry-tree:
-      sha256: 403a33d053cf0e3f6c3aca93ee1c4942c935da4d86ab9a969c3144fffd602e00
-      size: 12075
+      sha256: e79811e8fdc8e4d6e39978cd1cea08b1dc76eb4a016aa44bcb19d61b6deb18e9
+      size: 12373
+    subdir: code/mavryk-morley
+    version: 1.19.0
   original:
-    hackage: morley-1.19.0
+    commit: 81e76c8ea5148e7505af0e9e7f052ea154d0a00a
+    git: https://gitlab.com/mavryk-network/morley.git
+    subdir: code/mavryk-morley
 - completed:
-    hackage: morley-client-0.3.0@sha256:cca46092e141216cad1fdbdc3dee5766c7aa4a4071927e1c4836559d2d7df37c,8503
+    commit: 81e76c8ea5148e7505af0e9e7f052ea154d0a00a
+    git: https://gitlab.com/mavryk-network/morley.git
+    name: mavryk-morley-client
     pantry-tree:
-      sha256: 68052cc9d2d27029cbd3199d82a09fbbb757aa6a2d858bd22675abc1a64d6aad
-      size: 3796
+      sha256: 625c3a93fd7a7095c9780050da19439a318e8d8a1fb667efa02f02bd9b5cc1bc
+      size: 4165
+    subdir: code/mavryk-morley-client
+    version: 0.3.0
   original:
-    hackage: morley-client-0.3.0
+    commit: 81e76c8ea5148e7505af0e9e7f052ea154d0a00a
+    git: https://gitlab.com/mavryk-network/morley.git
+    subdir: code/mavryk-morley-client
 - completed:
-    hackage: morley-prelude-0.5.1@sha256:d7e26ed0c15b291899e1871f751079e8e0cdc03546d31dad9bfeb06946e733ab,2784
+    commit: 81e76c8ea5148e7505af0e9e7f052ea154d0a00a
+    git: https://gitlab.com/mavryk-network/morley.git
+    name: mavryk-morley-prelude
     pantry-tree:
-      sha256: 42c2dc761c33f57a76158b14a046b159e96d9c8f4079ede61c499e6a24e112bf
-      size: 602
+      sha256: 72c16a884b24f8d59caf632f0dbee9a03df2cf81b05cdc0ba607b220efd854d5
+      size: 792
+    subdir: code/mavryk-morley-prelude
+    version: 0.5.1
   original:
-    hackage: morley-prelude-0.5.1
+    commit: 81e76c8ea5148e7505af0e9e7f052ea154d0a00a
+    git: https://gitlab.com/mavryk-network/morley.git
+    subdir: code/mavryk-morley-prelude
 - completed:
     commit: c8b06c4c8a271fce0c2f41ab18e88d58e64bac52
     git: https://github.com/serokell/base-noprelude.git

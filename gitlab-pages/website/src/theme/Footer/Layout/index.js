@@ -7,7 +7,7 @@ import styles from "./index.module.scss";
 
 const COMMUNICATION_CHANNELS = [
   {
-    link: "https://discord.gg/tezos",
+    link: "https://discord.com/invite/FXYQyVf6fE",
     icon: {
       src: "img/communication_channels/discord.svg",
       width: "30",
@@ -17,7 +17,7 @@ const COMMUNICATION_CHANNELS = [
     description: "Join the Ligo Discord server. We're here to help.",
   },
   {
-    link: "https://www.youtube.com/playlist?list=PLmDOlM4rqLvInuervAU4YuU39ThuHw3fM",
+    link: "https://www.youtube.com/@MavrykNetwork",
     icon: {
       src: "img/communication_channels/youtube.svg",
       width: "33",
@@ -27,7 +27,7 @@ const COMMUNICATION_CHANNELS = [
     description: "See Ligo latest videos on YouTube",
   },
   {
-    link: "https://gitlab.com/ligolang/ligo/issues",
+    link: "https://gitlab.com/mavryk-network/ligo/issues",
     icon: {
       src: "img/communication_channels/gitlab.svg",
       width: "30",
@@ -37,7 +37,7 @@ const COMMUNICATION_CHANNELS = [
     description: "Need a fix? Create an issue on the Ligo GitLab.",
   },
   {
-    link: "https://x.com/ligolang",
+    link: "https://x.com/mavrykdynamics",
     icon: {
       src: "img/communication_channels/x.svg",
       width: "26",
@@ -47,7 +47,7 @@ const COMMUNICATION_CHANNELS = [
     description: "Follow Ligo on X / Twitter to get news.",
   },
   {
-    link: "https://t.me/LigoLang",
+    link: "https://t.me/mavryknetwork",
     icon: {
       src: "img/communication_channels/telegram.svg",
       width: "30",
@@ -57,7 +57,7 @@ const COMMUNICATION_CHANNELS = [
     description: "Talk with Ligo team on Telegram",
   },
   {
-    link: "https://www.linkedin.com/company/marigold-ligolang/",
+    link: "https://www.linkedin.com/company/mavryk-dynamics/",
     icon: {
       src: "img/communication_channels/linkedin.svg",
       width: "30",
@@ -81,7 +81,7 @@ export default function FooterLayout({ style, links, logo, copyright }) {
             )}
             <Title level={3}>Ligo</Title>
             <Subtitle className={styles["footer__brand-subtitle"]}>
-              The smart-contract language tailored for Tezos.
+              The smart-contract language tailored for Mavryk.
             </Subtitle>
           </div>
           <div className={styles["footer__links"]}>{links}</div>
