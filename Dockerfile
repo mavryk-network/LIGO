@@ -23,10 +23,13 @@ RUN apk update && apk upgrade && apk --no-cache add \
 ENV RUSTFLAGS='--codegen target-feature=-crt-static'
 # Make sure BLST_PORTABLE is used to build mavryk sub-module
 # If this flag is not setup, old processor can raise an illegal hardware instruction when Mavryk emit ADX instructions
-ENV ENV BLST_PORTABLE=ygit 
+ENV BLST_PORTABLE=y
 
 # Install opam switch & deps
 COPY scripts/setup_switch.sh /ligo/scripts/setup_switch.sh
+# opam/overlay supplies tezos-rust-libs.1.6, which upstream opam-repository no longer
+# carries; setup_switch.sh registers it as a repository behind the upstream one.
+COPY opam /ligo/opam
 RUN opam update \
   && sh scripts/setup_switch.sh
 COPY scripts/install_opam_deps.sh /ligo/scripts/install_opam_deps.sh

@@ -1,0 +1,77 @@
+# Verbatim copy of packages/tezos-rust-libs/tezos-rust-libs.1.6/opam as it stood in
+# ocaml/opam-repository at commit 1c62dbefdab36851f868daa1b8c75af4f8703e8f.
+#
+# tezos-rust-libs has since been pruned from the upstream repository, which now
+# carries only 1.0 and 1.1, while ligo.opam.locked pins 1.6. It is the only pin in
+# that lockfile upstream can no longer satisfy, so it is vendored here rather than
+# freezing the whole repository to an old commit (that would roll ~69 other pinned
+# packages -- dune 3.20.2, ppxlib 0.35.0, yojson 2.2.2, ... -- backwards).
+opam-version: "2.0"
+maintainer: "contact@tezos.com"
+authors: [ "Tezos devteam" ]
+homepage: "https://www.tezos.com/"
+bug-reports: "https://gitlab.com/tezos/tezos-rust-libs/issues"
+dev-repo: "git+https://gitlab.com/tezos/tezos-rust-libs.git"
+license: "LicenseRef-multiple"
+depends: ["conf-rust-2021"]
+build:[
+  [
+    "cargo"
+    "build"
+    "--target-dir" "target-librustzcash"
+    "--release"
+    "--package" "librustzcash"
+  ]
+  [
+    "cargo"
+    "build"
+    "--target-dir" "target-wasmer"
+    "--release"
+    "--package" "wasmer-c-api"
+    "--no-default-features"
+    "--features" "singlepass,cranelift,wat,middlewares"
+  ]
+]
+install: [
+  [ "mkdir" "-p" "%{lib}%/tezos-rust-libs" ]
+  [ "mkdir" "-p" "%{lib}%/tezos-rust-libs/rust" ]
+  [ "cp"
+      "librustzcash/include/librustzcash.h"
+      "target-librustzcash/release/librustzcash.a"
+      "wasmer-3.3.0/lib/c-api/wasm.h"
+      "wasmer-3.3.0/lib/c-api/wasmer.h"
+      "target-wasmer/release/libwasmer.a"
+      "%{lib}%/tezos-rust-libs"
+  ]
+  [ "cp"
+      "librustzcash/include/rust/types.h"
+      "%{lib}%/tezos-rust-libs/rust"
+  ]
+]
+synopsis: "Tezos: all rust dependencies and their dependencies"
+# Checksums re-pinned to the archive GitLab currently serves. GitLab regenerates
+# /-/archive/ zips on demand and changed its zip packaging after 2023, so the hashes
+# recorded upstream in 2023 no longer match and the fetch fails with "Bad checksum".
+# The *content* is unchanged: the zip embeds commit fae9ee1549045c2941fb1e31b28e1a3dcd577188,
+# which is exactly the v1.6 tag, and it carries the files the install: section below
+# copies. Verified byte-identical across repeated fetches (133618626 bytes).
+# mavryk-protocol sidesteps this with `opam install --no-checksums tezos-rust-libs.1.6`
+# (see .gitlab/ci/jobs/packaging/opam_package.yml); pinning the real hashes keeps
+# checksum verification on instead. If GitLab repackages again this will fail loudly
+# and the hashes below need refreshing.
+url {
+  src:
+    "https://gitlab.com/tezos/tezos-rust-libs/-/archive/v1.6/tezos-rust-libs-v1.6.zip"
+  checksum: [
+    "sha512=936af36785e69c40bc1e3e306865a9c6ca2936bc8e974c0a47f142f5617529586df4f9048efe1c99f1ef8edfe0bbe7592049b289a3925c414154f63dd4eaafb2"
+    "sha256=6c8c16816a95c9961fcc459d49b70e9af2915fb7e43f34a30680d5d8103bacb9"
+  ]
+}
+x-ci-accept-failures: [
+  "oraclelinux-8" # rust version is too old (need 1.62+)
+  "alpine-3.14" # rust version is too old (need 1.62+)
+  "alpine-3.15" # rust version is too old (need 1.62+)
+  "alpine-3.16" # rust version is too old (need 1.62+)
+  "alpine-3.19"
+]
+available: arch != "arm32" & arch != "ppc64" & arch != "s390x" & arch != "x86_32"
