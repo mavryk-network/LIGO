@@ -1,0 +1,15 @@
+type parameter =
+| ["Increment", int]
+| ["Decrement", int];
+
+type storage = int;
+
+type return_ = [list <operation>, storage];
+
+const main = ([action, store]: [parameter, storage]) : return_ => {
+  let storage = match (action) {
+    when (Increment(n)) : store + n;
+    when (Decrement(n)) : store - n
+  };
+  return [([] as list <operation>), storage];
+};

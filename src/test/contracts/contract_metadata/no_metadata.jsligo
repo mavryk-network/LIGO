@@ -1,0 +1,8 @@
+type param = int;
+
+type storage = int;
+
+type ret = [list<operation>, storage];
+
+@entry
+const main = (_p: param, s: storage): ret => [[], s];

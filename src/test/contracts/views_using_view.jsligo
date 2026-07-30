@@ -1,0 +1,32 @@
+type storage = int
+
+type parameter = | ["Default"]
+
+const x = 0
+
+type @return = [list<operation>, storage]
+
+@view
+const basic = (_a: address, s: storage) : storage => x + s
+
+@view
+const not_funny = (_: unit, s: storage) : storage =>
+  basic(Mavryk.get_sender(), x + s)
+
+@view
+const get_storage = (_: unit, s: storage) : storage => x + s
+
+@view
+const get_address = (_: unit, _s: storage) : address => Mavryk.get_sender()
+
+@view
+const super_not_funny = (_: unit, s: storage): storage =>
+    not_funny(unit, s) + get_storage(unit, s);
+
+@entry
+function main (action: parameter, _store: storage): @return {
+  return [
+    [], // No operations
+    (match(action) { when(Default()): 0 })
+  ]
+}

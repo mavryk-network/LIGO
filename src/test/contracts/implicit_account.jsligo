@@ -1,0 +1,2 @@
+let check = (kh : key_hash) : contract <unit> =>
+  Mavryk.implicit_account (kh);

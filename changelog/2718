@@ -1,0 +1,7 @@
+
+author: er433
+description: "\\nNew checks for metadata TZIP-16 are included.\\n\\n"
+merge_request: '2718'
+title: "Metadata TZIP-16: add warning on metadata URI/JSON when compiling storage (Michelson)"
+type: added
+            

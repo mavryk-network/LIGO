@@ -1,12 +1,162 @@
-(executable
-  (name test)
-  (libraries
-    simple-utils
-    ligo
-    alcotest
-  )
-  (preprocess
-    (pps simple-utils.ppx_let_generalized)
-  )
-  (flags (:standard -w +1..62-4-9-44-40-42-48@39@33 -open Simple_utils ))
-)
+(ocamllex md)
+
+(executables
+ (names
+  test
+  doc_test
+  repl_test
+  contract_test
+  get_scope_tests
+  pretty_printer_tests
+  lsp_test
+  decompiler_tests)
+ (libraries
+  simple-utils
+  ligo.mavryk-memory-proto-alpha
+  ligo.main_interpreter
+  ligo.api
+  ligo_init
+  ligo
+  ligo.unix
+  bos
+  repl
+  interpreter
+  alcotest
+  ligo.mavryk-utils
+  mavkit-libs.crypto
+  ligo_api
+  cli
+  prometheus
+  prometheus_format
+  prometheus_push
+  lsp_test_requests
+  package_management
+  lwt
+  lwt.unix
+  core_unix
+  core_unix.sys_unix
+  core_unix.filename_unix
+  core_kernel.nonempty_list)
+ (preprocess
+  (pps ppx_jane)))
+
+(rule
+ (alias doc-test)
+ (action
+  (run ./doc_test.exe))
+ (deps
+  (source_tree ../../gitlab-pages/docs)))
+
+(rule
+ (alias md_update)
+ (action
+  (run echo ".md files pushed in _build"))
+ (deps
+  (source_tree ../../gitlab-pages/docs)))
+
+(rule
+ (alias repl-test)
+ (action
+  (run ./repl_test.exe))
+ (deps
+  (source_tree ../../gitlab-pages/docs)
+  (source_tree projects)))
+
+(rule
+ (alias ligo-test)
+ (action
+  (run ./test.exe))
+ (deps
+  (glob_files contracts/*)
+  (glob_files contracts/deep_pattern_matching/*)
+  (glob_files contracts/vars_consts/*)
+  (glob_files contracts/positive/*)
+  (glob_files contracts/negative/*)
+  (glob_files preprocessor/*)
+  (glob_files install_tests/workflow/*)))
+
+(rule
+ (alias contract_test)
+ (action
+  (setenv
+   POSITIVE_CONTRACTS
+   "%{pos}"
+   (run ./contract_test.exe)))
+ (deps
+  (glob_files_rec contracts/*)
+  (:pos
+   (glob_files_rec contracts/positive/*))
+  (glob_files_rec contracts/negative/*)
+  (glob_files preprocessor/*)))
+
+(rule
+ (alias get_scope_tests)
+ (enabled_if
+  (<> %{ocaml-config:system} mingw64))
+ (deps
+  (:schema ../main/scopes/schema.json)
+  (glob_files contracts/*)
+  (glob_files contracts/negative/*)
+  (glob_files error-recovery/simple/cameligo/*.mligo)
+  (glob_files error-recovery/simple/cameligo/original/*.mligo)
+  (glob_files error-recovery/simple/jsligo/*.jsligo)
+  (glob_files error-recovery/simple/jsligo/original/*.jsligo)
+  (glob_files error-recovery/multiple_errors/*))
+ (action
+  (run ./get_scope_tests.exe -q -c)))
+
+(rule
+ (alias get_scope_tests_all)
+ (deps
+  (:schema ../main/scopes/schema.json)
+  (glob_files contracts/*)
+  (glob_files contracts/negative/*)
+  (glob_files error-recovery/simple/cameligo/*.mligo)
+  (glob_files error-recovery/simple/cameligo/original/*.mligo)
+  (glob_files error-recovery/simple/jsligo/*.jsligo)
+  (glob_files error-recovery/simple/jsligo/original/*.jsligo)
+  (glob_files error-recovery/multiple_errors/*))
+ (action
+  (run ./get_scope_tests.exe -c)))
+
+(alias
+ (name runtest)
+ (deps
+  (alias ligo-test)
+  (alias doc-test)
+  ;;  (alias parser-negative-tests)
+  (alias repl-test)
+  (alias contract_test)
+  (alias error-recovery/recovery-test)
+  (alias get_scope_tests)
+  (alias decompiler_tests)
+  (alias pretty-printer-tests)
+  (alias lsp-test)))
+
+(rule
+ (alias manual-test)
+ (action
+  (run ./manual_test.exe))
+ (deps
+  (glob_files contracts/*)))
+
+(rule
+ (alias decompiler_tests)
+ (action
+  (run ./decompiler_tests.exe))
+ (deps
+  (glob_files contracts/*)))
+
+(rule
+ (alias pretty-printer-tests)
+ (action
+  (run ./pretty_printer_tests.exe))
+ (deps
+  (source_tree contracts)))
+
+(rule
+ (alias lsp-test)
+ (action
+  (run ./lsp_test.exe))
+ (deps
+  (source_tree contracts)))

@@ -1,0 +1,9 @@
+(library
+ (name self_mini_c)
+ (public_name ligo.self_mini_c)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries ligo.mavryk-utils mini_c mavkit-libs.hacl compiler_options)
+ (inline_tests)
+ (preprocess
+  (pps ppx_expect ppx_let ppx_poly_constructor)))

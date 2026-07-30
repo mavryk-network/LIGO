@@ -1,0 +1,4 @@
+@entry
+let main = (p : int, _:  bool) : [list<operation>, bool] => {
+  return [[], p > 0]
+};

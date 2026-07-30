@@ -1,12 +1,54 @@
-This website was created with [Docusaurus](https://docusaurus.io/).
-
 # What's In This Document
-
+* [Website](#website)
 * [Get Started in 5 Minutes](#get-started-in-5-minutes)
 * [Directory Structure](#directory-structure)
 * [Editing Content](#editing-content)
 * [Adding Content](#adding-content)
 * [Full Documentation](#full-documentation)
+
+# Website
+
+This website is built using [Docusaurus 2](https://docusaurus.io/), a modern static website generator.
+
+### Installation
+
+```
+$ yarn
+```
+
+### Local Development
+
+```
+$ yarn start
+```
+
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+
+### Build
+
+```
+$ yarn build
+```
+
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
+
+### Deployment
+
+Using SSH:
+
+```
+$ USE_SSH=true yarn deploy
+```
+
+Not using SSH:
+
+```
+$ GIT_USER=<Your GitHub username> yarn deploy
+```
+
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+
+This website was created with [Docusaurus](https://docusaurus.io/).
 
 # Get Started in 5 Minutes
 
@@ -43,7 +85,7 @@ my-docusaurus/
     static/
       css/
       img/
-    package.json
+    ligo.json
     sidebar.json
     siteConfig.js
 ```
@@ -65,7 +107,7 @@ title: This Doc Needs To Be Edited
 Edit me...
 ```
 
-For more information about docs, click [here](https://docusaurus.io/docs/en/navigation)
+For more information about docs, click here
 
 ## Editing an existing blog post
 
@@ -81,7 +123,7 @@ title: This Blog Post Needs To Be Edited
 Edit me...
 ```
 
-For more information about blog posts, click [here](https://docusaurus.io/docs/en/adding-blog)
+For more information about blog posts, click here
 
 # Adding Content
 
@@ -114,7 +156,7 @@ My new content here..
 }
 ```
 
-For more information about adding new docs, click [here](https://docusaurus.io/docs/en/navigation)
+For more information about adding new docs, click here
 
 ## Adding a new blog post
 
@@ -144,7 +186,7 @@ title: New Blog Post
 Lorem Ipsum...
 ```
 
-For more information about blog posts, click [here](https://docusaurus.io/docs/en/adding-blog)
+For more information about blog posts, click here
 
 ## Adding items to your site's top navigation bar
 
@@ -167,7 +209,7 @@ For more information about blog posts, click [here](https://docusaurus.io/docs/e
 }
 ```
 
-For more information about the navigation bar, click [here](https://docusaurus.io/docs/en/navigation)
+For more information about the navigation bar, click here
 
 ## Adding custom pages
 
@@ -186,7 +228,7 @@ For more information about the navigation bar, click [here](https://docusaurus.i
 }
 ```
 
-For more information about custom pages, click [here](https://docusaurus.io/docs/en/custom-pages).
+For more information about custom pages, click here.
 
 # Full Documentation
 

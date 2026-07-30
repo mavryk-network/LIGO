@@ -1,0 +1,6 @@
+@entry
+let not_main = (_ : unit, s : int) : [list<operation>, int] => {
+  let s1 = s + 42;
+
+  return [[], s1]
+};

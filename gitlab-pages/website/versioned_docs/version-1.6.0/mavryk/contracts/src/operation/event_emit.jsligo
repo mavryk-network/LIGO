@@ -1,0 +1,5 @@
+type storage = unit;
+
+@entry
+const main = (param: [int, int], storage: unit) : [list<operation>, storage] =>
+  [[Mavryk.emit("%foo", param), Mavryk.emit("%bar", param[0])], storage];

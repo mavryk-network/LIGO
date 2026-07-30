@@ -1,0 +1,45 @@
+# Parameters of repository traversal.
+traversal:
+  # Glob patterns describing files which we pretend do not exist
+  # (so they are neither analyzed nor can be referenced).
+  ignored:
+    - vendors/**/*
+    - ligo.esy.lock/**/*
+    - static.esy.ligo.esy.lock/**/*
+    - src/README.md
+    - src/coq/README.md
+    - tools/vim/ligo/README.md
+
+# Verification parameters.
+verification:
+  # When checking external references, how long to wait on request before
+  # declaring "Response timeout".
+  externalRefCheckTimeout: 60s
+
+  # Glob patterns describing the files, references in which should not be analyzed.
+  notScanned:
+    - .gitlab/merge_request_templates/**/*
+    - .gitlab/issue_templates/**/*
+    - tools/webide-new/.github/pull_request_template.md
+
+  # Glob patterns describing the files which do not physically exist in the
+  # repository but should be treated as existing nevertheless.
+  virtualFiles:
+    - ../../issues
+    - ../../issues/*
+    - ../../merge_requests
+    - ../../merge_requests/*
+
+  # POSIX extended regular expressions that match external references
+  # that have to be ignored (not verified).
+  ignoreRefs:
+    # Ignore localhost links by default
+    - ^(https?|ftps?)://(localhost|127\.0\.0\.1).*
+
+# Parameters of scanners for various file types.
+scanners:
+  markdown:
+    # Flavor of markdown, e.g. GitHub-flavor.
+    #
+    # This affects which anchors are generated for headers.
+    flavor: GitLab

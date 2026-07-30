@@ -1,0 +1,20 @@
+(library
+ (name ligo_run)
+ (public_name ligo.run)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  cohttp-lwt-unix
+  simple-utils
+  parsing
+  ast_core
+  checking
+  ast_typed
+  spilling
+  mini_c
+  predefined
+  stacking
+  lru
+  ligo_compile)
+ (preprocess
+  (pps ppx_jane lwt_ppx)))

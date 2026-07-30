@@ -1,0 +1,6 @@
+---
+  title: "[Ithaca] Subtraction operator emmits `SUB_MUMAV` instruction when subtracting value of type `mav`."
+  merge_request: "1582"
+  author: "er433 & melwyn95"
+  type: "added"
+

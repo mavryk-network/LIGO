@@ -1,0 +1,26 @@
+(library
+ (name main_errors)
+ (public_name ligo.main_errors)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ligo.proto-alpha-utils
+  simple-utils
+  BuildSystem
+  preprocessing
+  parsing
+  unification
+  nanopasses
+  checking
+  self_ast_typed
+  aggregation
+  expansion
+  ligo_interpreter
+  spilling
+  self_ast_aggregated
+  self_mini_c
+  scoping
+  stacking
+  self_michelson)
+ (preprocess
+  (pps ppx_poly_constructor)))

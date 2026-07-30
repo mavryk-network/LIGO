@@ -1,0 +1,8 @@
+author: lesenechal.remi
+description: '- `ligo info list-declarations` now fail in case of a type error\n-
+  `ligo info list-declarations` now accepts a flag `--only-ep` to only display declarations
+  typed as an entrypoint (`parameter * storage ->
+  operation list * storage`)'
+merge_request: '1915'
+title: List decl improv
+type: added

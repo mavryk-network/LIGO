@@ -1,0 +1,12 @@
+(library
+ (name proto_alpha_utils)
+ (public_name ligo.proto-alpha-utils)
+ (libraries
+  ligo.mavryk-memory-proto-alpha
+  mavryk-protocol-002-PtBoreas.protocol
+  data-encoding
+  simple-utils
+  core
+  ligo.mavryk-utils)
+ (preprocess
+  (pps ppx_jane)))

@@ -1,0 +1,6 @@
+(library
+ (name compiler_options)
+ (public_name ligo.compiler_options)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils ast_typed syntax_types))

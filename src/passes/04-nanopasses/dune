@@ -1,0 +1,11 @@
+(library
+ (name nanopasses)
+ (public_name ligo.nanopasses)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries ast_unified ast_core passes compiler_options main_warnings)
+ (inline_tests
+  (libraries ligo.api)
+  (flags (-stop-on-error)))
+ (preprocess
+  (pps ppx_jane ppx_deriving.map ppx_woo ppx_poly_constructor)))

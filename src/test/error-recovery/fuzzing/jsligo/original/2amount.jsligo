@@ -1,0 +1,7 @@
+const check_ = (_ : unit) : int => {
+  if (Mavryk.get_amount() == (100 as mav)) {
+    return 42;
+  } else {
+    return 0;
+  };
+};

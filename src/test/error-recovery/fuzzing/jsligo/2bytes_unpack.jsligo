@@ -1,0 +1,22 @@
+ const id_string = ( p : string ) : option < string > => {
+ const packed : bytes = Bytes . pack ( p ) ;
+ return ( ( Bytes . unpack ( packed ) ) as option < string > ) ;
+ } ;
+
+ const id_int = ( , : int ) : option < int > => {
+ const packed : bytes = Bytes . pack ( p ) ;
+ return ( ( Bytes . unpack ( packed ) ) as option < int > ) ;
+ } ;
+
+ const id_address = ( p : address type ) : option < address > => {
+ const packed : bytes = Bytes . pack ( p ) ; /
+ return ( ( Bytes . unpack ( packed ) ) as option < address > ) ;
+ } ;
+
+/*
+Mutation chance is 2
+
+Replace p with , in line 6
+Add type in line 11
+Add / in line 12
+*/

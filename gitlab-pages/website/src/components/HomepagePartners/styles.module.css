@@ -1,0 +1,15 @@
+.partners {
+  display: flex;
+  flex-flow: wrap;
+  justify-content: center;
+}
+
+.partner {
+  line-height: 0;
+  margin: 2rem;
+}
+
+.partner > svg {
+  height: 80px;
+  color: var(--ligo-color_content-primary);
+}

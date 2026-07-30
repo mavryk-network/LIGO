@@ -1,0 +1,26 @@
+{
+    "defaultProtocol":{
+       "showName":"Boreas",
+       "name":"boreas"
+    },
+    "protocols":[
+       {
+          "showName":"Boreas",
+          "name":"boreas"
+       }
+    ],
+    "networks":[
+       {
+         "id":"mavrykatlasnet",
+         "group":"Mavryk",
+         "name":"Atlasnet",
+         "fullName":"Atlasnet Testnet",
+         "url":"https://atlasnet.rpc.mavryk.network",
+         "explorerUrl":"https://atlasnet.api.mavryk.network",
+         "symbol":"MAV",
+         "icon":"mavrykmain",
+         "faucetUrl": "https://atlasnet.faucet.mavryk.network",
+         "type":"atlasnet"
+       }
+    ]
+ }

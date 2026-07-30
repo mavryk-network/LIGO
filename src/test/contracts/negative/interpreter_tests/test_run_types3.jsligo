@@ -1,0 +1,4 @@
+import Test = Test.Next;
+
+const foo = (x: int): int => {return x};
+const bar = Test.Michelson.run(foo, {field: "toto"});

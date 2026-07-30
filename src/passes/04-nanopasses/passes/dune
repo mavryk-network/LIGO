@@ -1,0 +1,84 @@
+(library
+ (name passes)
+ (public_name ligo.passes)
+ (instrumentation
+  (backend bisect_ppx))
+ (modules
+  pass_type
+  flag
+  morphing
+  ; nanopasses:
+  wildcards
+  map_lookup
+  errors
+  unit_test_helpers
+  break_continue_outside
+  single_switch_block
+  t_for_alls
+  t_constant
+  t_arg
+  type_abstraction_declaration
+  compute_layout
+  named_fun
+  freeze_operators
+  duplicate_identifier
+  linear_signature
+  restrict_t_app
+  list_as_function
+  match_tc39
+  hack_literalize_jsligo
+  t_app_michelson_types
+  reverse_application
+  reduce_switch
+  structural_updates
+  returns
+  unstate
+  assign_transitivity
+  multi_bindings
+  initial_node_check
+  loop_variable
+  top_level_restriction
+  constructor_application
+  sum_type_helper_generator
+  standalone_constructor_removal
+  pattern_constructor_application
+  pattern_heuristic
+  object_to_record
+  no_parameter_function
+  let_syntax
+  generalize_functions
+  curry
+  linearity
+  external_hack
+  of_file
+  export_program_entry
+  export_declaration
+  import_restriction
+  projections
+  tuple_as_record
+  pattern_restriction
+  module_open_restriction
+  if_as_pattern_match
+  freeze_containers
+  reduce_sequence
+  restrict_typed_pattern
+  bytes_raw_code
+  detect_recursive
+  restrict_projections
+  unpunning
+  prefix_postfix_operators
+  for_to_while_loop
+  escaped_variables)
+ (libraries
+  ast_unified
+  syntax_types
+  mavkit-libs.crypto
+  mavkit-libs.base
+  compiler_options
+  main_warnings
+  core_kernel.nonempty_list)
+ (inline_tests
+  (libraries ligo.api)
+  (flags (-stop-on-error)))
+ (preprocess
+  (pps ppx_jane ppx_map ppx_deriving.map ppx_poly_constructor)))

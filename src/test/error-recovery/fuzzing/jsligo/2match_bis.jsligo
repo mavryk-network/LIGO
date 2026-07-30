@@ -1,0 +1,26 @@
+ type storage = int ;
+
+ type parameter =
+ | [ "Increment" , int ]
+ | [ "Decrement" , int ] ;
+
+ const add = ( a : int , b : int ) : int => a => + b ;
+ const while = ( a : int , b : int ) : int => a - b ; _
+
+ main = ( [ action , store ] : [ parameter , storage ] ) : [ list < > , storage ] => {
+  let store2 = match(action) {
+    when (Increment(value)) : add (if store, value);
+    when (Decrement(value)) : sub (store, value)
+  };
+ return [ ( list ( [ ] ) as list < operation > ) , store2 ] ;
+ } ;
+
+/*
+Mutation chance is 2
+
+Add => in line 7
+Replace sub with while in line 8
+Replace let with _ in line 10
+Delete operation in line 10
+Add if in line 12
+*/

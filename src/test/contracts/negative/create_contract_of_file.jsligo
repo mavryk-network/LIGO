@@ -1,0 +1,5 @@
+@entry
+const main = (u : unit, _ : unit) : [list<operation>, unit] => {
+  let [op, _addr] = (create_contract_of_file `./removed.mv`)(None(), 1mav, u);
+  return [[op], []]
+}

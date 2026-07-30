@@ -1,0 +1,3 @@
+-R . ligo_coq
+./ope.v
+./compiler.v

@@ -1,0 +1,14 @@
+(library
+ (name ligo_init)
+ (libraries
+  core
+  core_unix.filename_unix
+  bos
+  simple-utils
+  cli_helpers
+  commands
+  cohttp-lwt-unix
+  decompress.gz
+  tar-unix
+  api_helpers
+  ligo_formatter))

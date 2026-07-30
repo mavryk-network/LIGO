@@ -1,0 +1,31 @@
+.git
+.ci
+.direnv
+.github
+HomebrewFormula
+
+# OPAM / dune
+
+_opam
+_build
+*.install
+
+# dockerfiles
+Dockerfile
+Dockerfile.*
+docker
+.devcontainer
+
+# nix
+
+*.nix
+flake.lock
+nix
+result
+# vscode tests
+bin/
+client/out/
+ligo-vscode-*.vsix
+node_modules/
+.vscode-test/
+test-resources/

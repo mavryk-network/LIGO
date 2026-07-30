@@ -1,0 +1,119 @@
+export type pokeMessage = {
+    receiver : address,
+    feedback : string
+};
+
+export type storage = {
+  pokeTraces: map<address, pokeMessage>,
+  feedback: string,
+  ticketOwnership: map<address, ticket<string>> //ticket of claims
+};
+
+export type return_ = [list<operation>, storage];
+
+@entry
+const poke = (_p : unit, store: storage): return_ => {
+  let { pokeTraces, feedback, ticketOwnership } = store;
+    
+  //extract opt ticket from map
+  const [t, tom]: [option<ticket<string>>, map<address, ticket<string>>] =
+    Map.get_and_update(
+      Mavryk.get_source(),
+      None() as option<ticket<string>>,
+      ticketOwnership
+    );
+
+  return match(t) {
+    when(None()): failwith("User does not have tickets => not allowed");
+    when(Some(_t)): [
+      [] as list<operation>,
+      {
+        //let t burn
+        feedback,
+        pokeTraces: Map.add(
+          Mavryk.get_source(),
+          { receiver: Mavryk.get_self_address(), feedback: "" },
+          pokeTraces
+        ),
+        ticketOwnership: tom,
+      }
+    ];
+  };
+};
+
+@no_mutation
+@entry
+const pokeAndGetFeedback = (oracleAddress : address, store : storage) => {
+  let { pokeTraces, feedback, ticketOwnership } = store;
+  ignore(feedback);
+  //extract opt ticket from map
+  const [t, tom]: [option<ticket<string>>, map<address, ticket<string>>] =
+    Map.get_and_update(
+      Mavryk.get_source(),
+      None() as option<ticket<string>>,
+      ticketOwnership
+    );
+
+  //Read the feedback view
+  let feedbackOpt: option<string> = Mavryk.call_view(
+    "feedback",
+    unit,
+    oracleAddress
+  );
+
+  return match(t) {
+    when (None()): failwith("User does not have tickets => not allowed");
+    when (Some(_t)):
+      match (feedbackOpt) {
+        when (Some(feedback)): do {
+          let feedbackMessage = { receiver: oracleAddress, feedback: feedback };
+          return [
+            [] as list<operation>,
+            {
+              feedback,
+              pokeTraces: Map.add(
+                Mavryk.get_source(),
+                feedbackMessage,
+                pokeTraces
+              ),
+              ticketOwnership: tom,
+            }
+          ]
+        };
+        when (None()): failwith("Cannot find view feedback on given oracle address");
+      };
+  };
+};
+
+@entry
+const init = (p : [address, nat], store: storage) : return_ => {
+  let { pokeTraces, feedback, ticketOwnership } = store;
+  let a = p[0]; let ticketCount = p[1];
+  if (ticketCount == (0 as nat)) {
+    return [
+      [],
+      {
+        feedback,
+        pokeTraces,
+        ticketOwnership,
+      }
+    ]
+  } else {
+    const t : ticket<string> = Option.unopt(Mavryk.create_ticket("can_poke", ticketCount));
+    return [
+      [],
+      {
+        feedback,
+        pokeTraces,
+        ticketOwnership: Map.add(
+          a,
+          t,
+          ticketOwnership
+        ),
+      }
+    ]
+  }
+};
+
+@view
+const feedback = (_: unit, store: storage) : string => { return store.feedback };

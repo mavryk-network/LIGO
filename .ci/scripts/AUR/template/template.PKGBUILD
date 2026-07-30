@@ -1,0 +1,25 @@
+# Maintainer: LigoLang <infra at trili dot tech>
+pkgname=ligo-bin
+pkgver=LIGO_VERSION_PLACEHOLDER
+pkgrel=1
+pkgdesc="High Level Smart Contract Language for Mavryk (binary)"
+url="https://gitlab.com/mavryk-network/ligo"
+
+arch=('x86_64')
+license=('MIT')
+
+provides=('ligo')
+conflicts=('ligo' 'ligo-next')
+
+source=(DEB_PKG_URL_PLACEHOLDER)
+md5sums=('SKIP')
+
+prepare() {
+        cd "$srcdir/"
+        tar xvf data.tar.xz -C .
+}
+
+package() {
+        cd "$srcdir/"
+        cp -r usr ${pkgdir}
+}

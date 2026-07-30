@@ -1,0 +1,6 @@
+(vendored_dirs vendored-dune vendors)
+
+(env
+ (dev
+  (flags
+   (:standard -w -67))))

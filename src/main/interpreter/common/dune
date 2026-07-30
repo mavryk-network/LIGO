@@ -1,0 +1,22 @@
+(library
+ (name interpreter)
+ (public_name ligo.main_interpreter)
+ (instrumentation
+  (backend bisect_ppx))
+ (preprocess
+  (pps ppx_jane lwt_ppx))
+ (libraries
+  core
+  ast_aggregated
+  ligo_interpreter
+  ligo.mavryk-memory-proto-alpha
+  main_errors
+  ligo_compile
+  build
+  fuzz
+  ligo_run
+  self_ast_typed
+  mavryk-bls12-381
+  core_unix
+  core_unix.sys_unix
+  core_kernel.nonempty_list))

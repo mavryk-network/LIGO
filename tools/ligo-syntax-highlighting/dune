@@ -1,0 +1,6 @@
+(executable
+ (modes byte exe)
+ (name LigoSyntaxHighlighting)
+ ; (link_flags (-ccopt -static))
+ (modules regexp CameLIGO JsLIGO LigoSyntaxHighlighting)
+ (libraries cmdliner ligo.unix ligo.syntax_highlighting))

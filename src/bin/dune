@@ -1,14 +1,116 @@
+(library
+ (name cli)
+ (instrumentation
+  (backend bisect_ppx))
+ (preprocess
+  (pps ppx_deriving_yojson ppx_jane))
+ (libraries
+  core_unix
+  core_unix.sys_unix
+  core_unix.command_unix
+  core_kernel.version_util
+  core_kernel.caml_threads
+  simple-utils
+  cmdliner
+  ligo
+  ligo_init
+  ligo_compile
+  analytics
+  build
+  repl
+  install
+  publish
+  unpublish
+  ligo.cli_helpers
+  registry
+  lwt
+  lwt.unix
+  base64
+  prompt
+  ligo_api
+  ligo_docs)
+ (modules forgot_password user cli version))
+
+(library
+ (name repl)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils cmdliner ligo build lambda-term)
+ (modules repl))
+
+(library
+ (name prompt)
+ (modules prompt)
+ (libraries core_unix core_unix.sys_unix core lambda-term))
+
+(library
+ (name install)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  cli_helpers
+  simple-utils
+  lwt
+  lwt.unix
+  yojson
+  cohttp-lwt
+  cohttp
+  cohttp-lwt-unix
+  ligo_init
+  ligo_unix
+  package_management
+  str
+  fpath
+  bos
+  semver
+  prompt
+  lambda-term)
+ (preprocess
+  (pps ppx_deriving_yojson))
+ (modules install))
+
+(library
+ (name unpublish)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries package_management)
+ (preprocess
+  (pps ppx_deriving_yojson))
+ (modules unpublish))
+
+(library
+ (name publish)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries package_management)
+ (modules publish))
+
+(rule
+ (targets version.ml)
+ (action
+  (with-stdout-to
+   version.ml
+   (run "sh" "-c" "printf 'let version = \"%s\"' \"${LIGO_VERSION}\""))))
+
+; build static executable with --profile static
+
+(env
+ (static
+  (flags
+   (:standard -ccopt -static -cclib "-lgmp"))))
+
 (executable
-  (name cli)
-  (public_name ligo)
-  (libraries
-    simple-utils
-    cmdliner
-    ligo
-  )
-  (package ligo)
-  (preprocess
-    (pps simple-utils.ppx_let_generalized)
-  )
-  (flags (:standard -open Simple_utils))
-)
+ (name runligo)
+ (public_name ligo)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ligo_lsp
+  simple-utils
+  cmdliner
+  ligo
+  ligo.main_interpreter
+  ligo.api
+  cli)
+ (modules runligo)
+ (package ligo))

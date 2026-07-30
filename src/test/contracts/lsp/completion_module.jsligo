@@ -1,0 +1,12 @@
+namespace Foo {
+  export const module_field = 5
+  export const another_thing = "asdad"
+
+  export namespace Bar {
+    export const nested = { left: 1; right: 2 }
+  }
+}
+
+const x = Foo.
+const y = Foo.Bar.
+const z = Foo.Bar.nested.

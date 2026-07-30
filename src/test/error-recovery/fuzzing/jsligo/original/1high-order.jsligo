@@ -1,0 +1,44 @@
+/* Test a function which takes another function as an argument */
+
+const foobar = (i : int): int => {
+  let foo: (a: int) => int = (i: int) => i;
+  let bar: ((a:((a: int) => int)) => int) = (f : ((a: int) => int)) => f (i);
+  return bar (foo);
+};
+
+/* higher order function with more than one argument */
+
+const higher2 = (i : int, f : ((i: int) => int)) : int => {
+  let ii : int = f (i);
+  return ii;
+};
+
+const foobar2 = (i : int) : int => {
+  let foo2 : ((a: int) => int) = (i : int) => i;
+  return higher2 (i, foo2);
+};
+
+const a : int = 0;
+
+const foobar3 = (i : int) : int => {
+  let foo2: (a: int) => int = (i : int) => a + i;
+  return higher2 (i, foo2);
+};
+
+const f = (i : int) : int => i;
+
+const g = (i : int) : int => f (i);
+
+const foobar4 = (i : int) : int => g (g (i));
+
+const higher3 = (i : int, f : ((a:int) => int), g : ((a: int) => int)) : int => {
+  let ii : int = f (g (i));
+  return ii;
+};
+
+const foobar5 = (i : int) : int => {
+  const a : int = 0;
+  const foo : (a: int) => int = (i : int) => a + i;
+  let goo : (a: int) => int = (i : int) => foo (i);
+  return higher3 (i, foo, goo);
+};

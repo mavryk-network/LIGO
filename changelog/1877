@@ -1,0 +1,6 @@
+author: er433
+description: '#### Deprecated: `Mavryk.amount`, `Mavryk.balance`, `Mavryk.now`, `Mavryk.sender`,
+  `Mavryk.source`, `Mavryk.level`, `Mavryk.self_address`, `Mavryk.chain_id`, `Mavryk.total_voting_power`'
+merge_request: '1877'
+title: Remove thunked constants
+type: deprecated

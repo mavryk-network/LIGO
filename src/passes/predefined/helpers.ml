@@ -1,0 +1,30 @@
+module Michelson = struct
+  open Mavryk_utils.Michelson
+
+  type predicate =
+    | Simple of unit michelson
+    | Special of ((string -> unit michelson) -> unit michelson)
+  (* | Special of (Mini_c.expression list -> Mini_c.type_expression -> (unit michelson * Mini_c.expression list) option *)
+
+  (* TODO why did these exist? *)
+  let simple_constant c = Simple c
+  let simple_unary c = Simple c
+  let simple_binary c = Simple c
+  let simple_ternary c = Simple c
+
+  (* A special operator which just applies type arguments to a
+     Michelson prim. *)
+  let trivial_special prim = Special (fun with_args -> with_args prim)
+
+  (* A more special operator which might apply type (or script)
+     arguments to some part of its output. *)
+  let special c = Special c
+
+  let unpredicate loc apply_args pred =
+    Mavryk_micheline.Micheline.map_node
+      (fun _ -> loc)
+      (fun p -> p)
+      (match pred with
+      | Simple code -> code
+      | Special code -> code apply_args)
+end

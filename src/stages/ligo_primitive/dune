@@ -1,0 +1,25 @@
+(library
+ (name ligo_prim)
+ (public_name ligo.ligo_primitive)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  simple-utils
+  hex
+  mavkit-libs.hacl
+  core_kernel.nonempty_list
+  zarith)
+ (inline_tests)
+ (preprocess
+  (pps
+   ppx_jane
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_deriving.fold
+   ppx_deriving.map
+   ppx_deriving.iter
+   ppx_deriving.make
+   ppx_print_constant
+   ppx_read_constant
+   ppx_deriving_yojson
+   ppx_is)))

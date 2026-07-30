@@ -1,0 +1,182 @@
+open Mini_c
+open Ligo_prim
+
+type mapper_type = type_expression -> type_expression
+
+let rec map_type_expression : mapper_type -> type_expression -> type_expression =
+ fun f t ->
+  let self = map_type_expression f in
+  let self_annotated (a, b) = a, self b in
+  let t' = f t in
+  let return type_content = { t' with type_content } in
+  match t'.type_content with
+  | T_base _ as c -> return c
+  | T_or (t1, t2) ->
+    let t1 = self_annotated t1 in
+    let t2 = self_annotated t2 in
+    return @@ T_or (t1, t2)
+  | T_tuple ts ->
+    let ts = List.map ~f:self_annotated ts in
+    return @@ T_tuple ts
+  | T_function (t1, t2) ->
+    let t1 = self t1 in
+    let t2 = self t2 in
+    return @@ T_function (t1, t2)
+  | T_option t ->
+    let t = self t in
+    return @@ T_option t
+  | T_list t ->
+    let t = self t in
+    return @@ T_list t
+  | T_set t ->
+    let t = self t in
+    return @@ T_set t
+  | T_contract t ->
+    let t = self t in
+    return @@ T_contract t
+  | T_ticket t ->
+    let t = self t in
+    return @@ T_ticket t
+  | T_map (t1, t2) ->
+    let t1 = self t1 in
+    let t2 = self t2 in
+    return @@ T_map (t1, t2)
+  | T_big_map (t1, t2) ->
+    let t1 = self t1 in
+    let t2 = self t2 in
+    return @@ T_big_map (t1, t2)
+  | (T_sapling_state _ | T_sapling_transaction _) as c -> return c
+
+
+type mapper = expression -> expression
+
+let rec map_expression : mapper -> expression -> expression =
+ fun f e ->
+  let self = map_expression f in
+  let e' = f e in
+  let return content = { e' with content } in
+  match e'.content with
+  | (E_variable _ | E_literal _ | E_raw_michelson _) as em -> return em
+  | E_inline_michelson (code, arguments) ->
+    let arguments = List.map ~f:self arguments in
+    return @@ E_inline_michelson (code, arguments)
+  | E_constant c ->
+    let lst = List.map ~f:self c.arguments in
+    return @@ E_constant { cons_name = c.cons_name; arguments = lst }
+  | E_closure af ->
+    let body = self af.body in
+    return @@ E_closure { af with body }
+  | E_rec { func = af; rec_binder } ->
+    let body = self af.body in
+    return @@ E_rec { func = { af with body }; rec_binder }
+  | E_application (farg1, farg2) ->
+    let farg' = self farg1, self farg2 in
+    return @@ E_application farg'
+  | E_iterator (s, ((name, tv), body), exp) ->
+    let exp', body' = self exp, self body in
+    return @@ E_iterator (s, ((name, tv), body'), exp')
+  | E_fold (((name, tv), body), col, init) ->
+    let body', col', init = self body, self col, self init in
+    return @@ E_fold (((name, tv), body'), col', init)
+  | E_fold_right (((name, tv), body), (col, el_ty), init) ->
+    let body', col', init = self body, self col, self init in
+    return @@ E_fold_right (((name, tv), body'), (col', el_ty), init)
+  | E_if_bool (cab1, cab2, cab3) ->
+    let cab' = self cab1, self cab2, self cab3 in
+    return @@ E_if_bool cab'
+  | E_if_none (c, n, ((name, tv), s)) ->
+    let c', n', s' = self c, self n, self s in
+    return @@ E_if_none (c', n', ((name, tv), s'))
+  | E_if_cons (c, n, (((hd, hdtv), (tl, tltv)), cons)) ->
+    let c', n', cons' = self c, self n, self cons in
+    return @@ E_if_cons (c', n', (((hd, hdtv), (tl, tltv)), cons'))
+  | E_if_left (c, ((name_l, tvl), l), ((name_r, tvr), r)) ->
+    let c', l', r' = self c, self l, self r in
+    return @@ E_if_left (c', ((name_l, tvl), l'), ((name_r, tvr), r'))
+  | E_let_in (expr, inline, ((v, tv), body)) ->
+    let expr', body' = self expr, self body in
+    return @@ E_let_in (expr', inline, ((v, tv), body'))
+  | E_tuple exprs ->
+    let exprs = List.map ~f:self exprs in
+    return @@ E_tuple exprs
+  | E_let_tuple (expr, (xs, body)) ->
+    let expr', body' = self expr, self body in
+    return @@ E_let_tuple (expr', (xs, body'))
+  | E_proj (expr, i, n) ->
+    let expr = self expr in
+    return @@ E_proj (expr, i, n)
+  | E_update (expr, i, update, n) ->
+    let expr = self expr in
+    let update = self update in
+    return @@ E_update (expr, i, update, n)
+  | E_global_constant (hash, args) ->
+    let args = List.map ~f:self args in
+    return @@ E_global_constant (hash, args)
+  | E_create_contract (p, s, ((x, t), code), args) ->
+    let args = List.map ~f:self args in
+    let code = self code in
+    return @@ E_create_contract (p, s, ((x, t), code), args)
+  | E_let_mut_in (expr, ((x, a), body)) ->
+    let expr = self expr in
+    let body = self body in
+    return @@ E_let_mut_in (expr, ((x, a), body))
+  | E_deref x -> return @@ E_deref x
+  | E_assign (x, e) ->
+    let e = self e in
+    return @@ E_assign (x, e)
+  | E_for_each (coll, coll_type, (xs, body)) ->
+    let coll = self coll in
+    let body = self body in
+    return @@ E_for_each (coll, coll_type, (xs, body))
+  | E_for (start, final, incr, (x, body)) ->
+    let start = self start in
+    let final = self final in
+    let incr = self incr in
+    let body = self body in
+    return @@ E_for (start, final, incr, (x, body))
+  | E_while (cond, body) ->
+    let cond = self cond in
+    let body = self body in
+    return @@ E_while (cond, body)
+
+
+let map_sub_level_expression : mapper -> anon_function -> anon_function =
+ fun f e ->
+  let ({ binder; body } : anon_function) = e in
+  let body = map_expression f body in
+  { binder; body }
+
+
+(* Conservative purity test: ok to treat pure things as impure, must
+   not treat impure things as pure. *)
+
+let rec is_pure : expression -> bool =
+ fun e ->
+  match e.content with
+  | E_literal _ | E_closure _ | E_rec _ | E_variable _ -> true
+  | E_if_bool (cond, bt, bf)
+  | E_if_none (cond, bt, (_, bf))
+  | E_if_cons (cond, bt, (_, bf))
+  | E_if_left (cond, (_, bt), (_, bf)) -> List.for_all ~f:is_pure [ cond; bt; bf ]
+  | E_let_in (e1, _, (_, e2)) -> List.for_all ~f:is_pure [ e1; e2 ]
+  | E_tuple exprs -> List.for_all ~f:is_pure exprs
+  | E_let_tuple (e1, (_, e2)) -> List.for_all ~f:is_pure [ e1; e2 ]
+  | E_proj (e, _i, _n) -> is_pure e
+  | E_update (expr, _i, update, _n) -> List.for_all ~f:is_pure [ expr; update ]
+  | E_constant c ->
+    Constant.constant'_is_pure c.cons_name && List.for_all ~f:is_pure c.arguments
+  | E_global_constant (_hash, _args) ->
+    (* hashed code can be impure :( *)
+    false
+  | E_create_contract _ (* very not pure *) | E_inline_michelson _ -> false
+  | E_raw_michelson _ -> true
+  (* TODO E_let_mut_in is pure when the rhs is pure and the body's
+         only impurity is assign/deref of the bound mutable variable *)
+  | E_let_mut_in _ | E_assign _ | E_deref _ -> false
+  (* these could be pure through the exception above for
+         E_let_mut_in *)
+  | E_for _ | E_for_each _ -> false
+  (* never pure in any important case *)
+  | E_while _ -> false
+  (* I'm not sure about these. Maybe can be tested better? *)
+  | E_application _ | E_iterator _ | E_fold _ | E_fold_right _ -> false

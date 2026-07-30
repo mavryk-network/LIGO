@@ -1,0 +1,211 @@
+// @ts-check
+// Note: type annotations allow type checking and IDEs autocompletion
+
+const lightCodeTheme = require("prism-react-renderer/themes/github");
+const darkCodeTheme = require("prism-react-renderer/themes/dracula");
+const singleTheme = require("prism-react-renderer/themes/duotoneLight");
+
+/** @type {import('@docusaurus/types').Config} */
+const config = {
+  title: "Ligo",
+  url: "https://ligo.mavryk.org",
+  baseUrl: "/",
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "warn",
+  favicon: "img/favicon.svg",
+  projectName: "ligo",
+  organizationName: "mavryk-network",
+  customFields: {
+    REACT_APP_GOOGLE_ANALYTICS_ID: "G-V5S4SDLK4Z",
+  },
+  // Even if you don't use internalization, you can use this field to set useful
+  // metadata like html lang. For example, if your site is Chinese, you may want
+  // to replace "en" with "zh-Hans".
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en"],
+  },
+
+  plugins: ["@ligo/syntax", "docusaurus-plugin-sass"],
+
+  presets: [
+    [
+      "@docusaurus/preset-classic",
+      /** @type {import('@docusaurus/preset-classic').Options} */
+      ({
+        docs: {
+          path: "../docs",
+          sidebarPath: require.resolve("./sidebars.js"),
+          sidebarCollapsed: true,
+        },
+        blog: {
+          showReadingTime: true,
+          readingTime: ({ content, frontMatter, defaultReadingTime }) =>
+            defaultReadingTime({ content, options: { wordsPerMinute: 300 } }),
+          blogTitle: "Ligo Blog",
+          blogDescription: "On the Ligo Blog, you will find news, release guides and explainers.",
+          blogSidebarCount: 0,
+        },
+
+        theme: {
+          customCss: [
+            require.resolve("./src/css/colors.css"),
+            require.resolve("./src/css/breakpoints.scss"),
+            require.resolve("./src/css/theme-light.css"),
+            require.resolve("./src/css/custom.css"),
+          ],
+        },
+      }),
+    ],
+  ],
+
+  themeConfig:
+    /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
+    ({
+      colorMode: {
+        defaultMode: "dark",
+        disableSwitch: false,
+        respectPrefersColorScheme: false,
+      },
+      // announcementBar: {
+      //   id: "support_us",
+      //   content:
+      //     "<b></b>",
+      //   backgroundColor: "#003ee0",
+      //   textColor: "#efefef",
+      //   isCloseable: false,
+      // },
+      navbar: {
+        logo: {
+          width: "104",
+          height: "32",
+          alt: "LIGO Logo",
+          src: "img/logo/logo.svg",
+          srcDark: "img/logo/logo-night.svg",
+        },
+        items: [
+          { type: "docsVersionDropdown", position: "left" },
+          { to: "docs/intro/introduction", label: "Docs", position: "left", target: "_self" },
+          { to: "docs/reference/toplevel-reference", label: "API", position: "left" },
+          { to: "docs/faq/intro", label: "FAQ", position: "left" },
+          // { to: "blog", label: "Blog", position: "left" },
+          // { to: "https://packages.ligo.mavryk.org/packages", label: "Registry", position: "right" },
+          { to: "https://ide.mavryk.org/", label: "Web IDE", position: "right" },
+        ],
+      },
+      footer: {
+        logo: {
+          alt: "Ligo Logo",
+          src: "img/ligo-logo.svg",
+          srcDark: "img/ligo-logo-light.svg",
+          width: 50,
+          height: 50,
+        },
+        style: "dark",
+        links: [
+          {
+            title: "LEARN LIGO",
+            items: [
+              {
+                label: "Get started",
+                to: "docs/intro/introduction",
+              },
+              {
+                label: "Registry",
+                href: "https://packages.ligo.mavryk.org/packages",
+              },
+              {
+                label: "Ligo CLI",
+                to: "docs/api/cli-commands",
+              },
+              {
+                label: "Changelog",
+                to: "docs/intro/changelog",
+              },
+              {
+                label: "FAQ",
+                to: "docs/faq/intro",
+              },
+            ],
+          },
+          {
+            title: "COMMUNITY",
+            items: [
+              {
+                label: "Discord",
+                href: "https://discord.gg/mavrykdynamics",
+                rel: "noopener noreferrer nofollow",
+              },
+              {
+                label: "YouTube",
+                href: "https://www.youtube.com/@MavrykNetwork",
+                rel: "noopener noreferrer nofollow",
+              },
+              {
+                label: "X",
+                href: "https://x.com/mavrykdynamics",
+                rel: "noopener noreferrer nofollow",
+              },
+              {
+                label: "Telegram",
+                href: "https://t.me/mavryknetwork",
+                rel: "noopener noreferrer nofollow",
+              },
+              {
+                label: "LinkedIn",
+                href: "https://www.linkedin.com/company/mavryk-dynamics/",
+                rel: "noopener noreferrer nofollow",
+              },
+            ],
+          },
+          {
+            title: "CONTRIBUTE",
+            items: [
+              {
+                label: "Sources",
+                href: "https://gitlab.com/mavryk-network/ligo",
+                rel: "noopener noreferrer nofollow",
+              },
+              {
+                label: "Issues",
+                href: "https://gitlab.com/mavryk-network/ligo/-/issues",
+                rel: "noopener noreferrer nofollow",
+              },
+              // {
+              //   label: "Bounties",
+              //   href: "https://bounties.ligo.mavryk.org",
+              //   rel: "noopener noreferrer nofollow",
+              // },
+            ],
+          },
+        ],
+        copyright: `Copyright © ${new Date().getFullYear()} LIGO. All rights reserved.`,
+      },
+      image: "img/logo/logo.png",
+      prism: {
+        theme: lightCodeTheme,
+        darkTheme: darkCodeTheme,
+        singleTheme: singleTheme,
+      },
+      algolia: {
+        // The application ID provided by Algolia
+        appId: "M23OB8S3C8",
+
+        // Public API key: it is safe to commit it
+        apiKey: "bca633f86972382356a13c68b81de25f",
+
+        indexName: "ligolang",
+
+        // Optional: see doc section below
+        contextualSearch: true,
+
+        // Optional: Algolia search parameters
+        searchParameters: {},
+
+        // Optional: path for search page that enabled by default (`false` to disable it)
+        searchPagePath: "search",
+      },
+    }),
+};
+
+module.exports = config;

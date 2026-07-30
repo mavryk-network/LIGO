@@ -1,0 +1,25 @@
+import Test = Test.Next;
+
+const assert = Assert.assert;
+
+namespace C {
+  type storage = int;
+
+  @entry
+  const increment = (action: int, store: storage) : [list <operation>, storage] => [[], store + action];
+
+  @entry
+  const decrement = (action: int, store: storage) : [list <operation>, storage] => [[], store - action];
+};
+
+const test_increment = (() => {
+  let initial_storage = 42;
+  let orig =
+      Test.Originate.contract(contract_of(C), initial_storage, 0 as mav);
+  let contr : contract<parameter_of C> =
+      Test.Typed_address.to_contract(orig.taddr);
+  let p : parameter_of C = Increment(1);
+  Test.Contract.transfer_exn(contr, p, 1 as mumav);
+  return assert(Test.Typed_address.get_storage(orig.taddr)
+                == initial_storage + 1);
+}) ();

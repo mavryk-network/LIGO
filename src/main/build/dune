@@ -1,0 +1,15 @@
+(library
+ (name build)
+ (public_name ligo.build)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  main_errors
+  preprocessing
+  simple-utils
+  ligo_compile
+  ligo_lib
+  ligo_prim
+  BuildSystem)
+ (preprocess
+  (pps ppx_jane)))

@@ -1,0 +1,9 @@
+type t = { b: ticket<string> };
+
+const { b } = { b: Option.unopt(Mavryk.create_ticket("one", 10 as nat)) };
+
+type storage = ticket<string>;
+
+@entry
+const main = (_p: unit, _s: storage): [list<operation>, storage] =>
+  [[], Option.unopt(Mavryk.join_tickets([b, b]))];

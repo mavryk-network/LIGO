@@ -1,0 +1,16 @@
+(library
+ (name scopes)
+ (public_name ligo.scopes)
+ (instrumentation
+  (backend bisect_ppx))
+ (preprocess
+  ; For benchmarking add "landmarks-ppx" to the "pps" stanza.
+  (pps ppx_here ppx_let ppx_jane))
+ (libraries
+  main_errors
+  ligo_compile
+  simple-utils
+  ast_typed
+  compiler_options
+  fileutils
+  core_kernel.nonempty_list))

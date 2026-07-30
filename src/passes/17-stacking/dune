@@ -1,0 +1,15 @@
+(library
+ (name stacking)
+ (public_name ligo.stacking)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  simple-utils
+  ligo.proto-alpha-utils
+  ligo_coq_ocaml
+  self_michelson
+  mini_c
+  mavkit-libs.hacl)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane ppx_inline_test ppx_poly_constructor)))

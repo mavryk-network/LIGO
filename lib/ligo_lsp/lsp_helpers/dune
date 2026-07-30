@@ -1,0 +1,39 @@
+(library
+ (name lsp_helpers)
+ (public_name ligo.ligo_lsp.lsp_helpers)
+ (flags
+  (:standard -w +A-4-40-42-44-70))
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  core_unix.filename_unix
+  core_unix.sys_unix
+  core_kernel.nonempty_list
+  ligo_api
+  ligo_run
+  linol
+  linol-lwt
+  lsp
+  compiler_options
+  simple-utils
+  yojson
+  scopes
+  syntax_types
+  checking
+  nanopasses
+  unification
+  decompile
+  build
+  ligo.preprocessing
+  ligo.package_management.alpha_shared)
+ (inline_tests
+  (libraries ligo.api))
+ (preprocess
+  (staged_pps
+   ppx_jane
+   ppx_import
+   ppx_deriving.eq
+   ppx_deriving.ord
+   ppx_deriving.show
+   ppx_deriving_yojson
+   lwt_ppx)))

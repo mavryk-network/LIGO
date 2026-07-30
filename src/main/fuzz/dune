@@ -1,0 +1,14 @@
+(library
+ (name fuzz)
+ (public_name ligo.fuzz)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  ligo.fuzz.shared
+  main_errors
+  ligo_compile
+  ligo.decompile
+  simple-utils
+  compiler_options
+  qcheck
+  syntax))

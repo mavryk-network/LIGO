@@ -1,0 +1,8 @@
+(library
+ (name ligo_interpreter)
+ (public_name ligo.ligo_interpreter)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries simple-utils ligo.proto-alpha-utils ast_aggregated ligo_prim)
+ (preprocess
+  (pps ppx_deriving_yojson)))

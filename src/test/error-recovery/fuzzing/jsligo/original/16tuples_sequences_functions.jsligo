@@ -1,0 +1,54 @@
+const a = 1;
+const b = (1 as nat);
+const c = (2 as mumav);
+const d = (1 as nat) + (2 as nat);
+const e = (1 as mumav) + (3 as mumav);
+const f = [a, c];
+const g = [a + 1, c];
+/* let h = ["a" + "2", d]; */
+const i = (a: int, b: int): int => a + b;
+const j = (a: int, b: int): int => a - b;
+/* not supported by typer yet: let k = () => b; */
+/* not supported by typer yet: let l = () => i(2,3); */
+// let m = {
+//     let z = 3;
+//     z;
+// };
+const n = (a: int): int => a + 1;
+const o = (a: int): int => a + 1;
+const n2 = (a: int, _b: int): int => a + 1;
+const o2 = (a: int, _b: int): int => a + 1;
+// let p = {{
+//     3;
+// }};
+const q = {
+  f: 3,
+  g: 6,
+  h: {
+    i: "bla",
+    j: 1 + 2,
+    k: {
+      l: 1,
+      z: 2
+    }
+  }
+};
+
+/*
+Not supported yet by parser:
+
+const r = {
+  a: 1
+};
+*/
+
+// let s = {
+//     let a = 2;
+//     {
+//       z: a,
+//       a
+//     };
+// };
+
+// let t = (((((((2)))))));
+// let u = if (true) { 1; } else { 2; };

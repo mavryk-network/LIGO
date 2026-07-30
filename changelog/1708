@@ -1,0 +1,5 @@
+author: er433
+description: ''
+merge_request: '1708'
+title: Fix Mavryk.call_view with impure
+type: fixed

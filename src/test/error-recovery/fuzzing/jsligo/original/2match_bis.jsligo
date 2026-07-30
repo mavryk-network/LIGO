@@ -1,0 +1,17 @@
+type storage = int;
+
+type parameter =
+| ["Increment", int]
+| ["Decrement", int];
+
+const add = (a: int, b: int): int => a + b;
+const sub = (a: int, b: int): int => a - b;
+
+const main = ([action, store] : [parameter, storage]): [list <operation>, storage] => {
+  let store2 = match(action) {
+    when (Increment(value)) : add (store, value);
+    when (Decrement(value)) : sub (store, value)
+  };
+  return [([] as list <operation>), store2];
+};
+

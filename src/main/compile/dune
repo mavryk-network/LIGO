@@ -1,0 +1,35 @@
+(library
+ ; ligo_compile instead of compile because of a dune bug
+ (name ligo_compile)
+ (public_name ligo.ligo_compile)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries
+  main_errors
+  simple-utils
+  ligo.proto-alpha-utils
+  preprocessing
+  parsing
+  cst
+  nanopasses
+  ast_unified
+  unification
+  ast_core
+  checking
+  ast_typed
+  self_ast_typed
+  expansion
+  spilling
+  mini_c
+  self_mini_c
+  scoping
+  stacking
+  self_michelson
+  aggregation
+  ast_aggregated
+  self_ast_aggregated
+  compiler_options
+  syntax
+  core_kernel.nonempty_list)
+ (preprocess
+  (pps ppx_jane)))

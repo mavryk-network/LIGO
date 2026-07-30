@@ -1,0 +1,8 @@
+(library
+ (name self_ast_typed)
+ (public_name ligo.self_ast_typed)
+ (instrumentation
+  (backend bisect_ppx))
+ (libraries checking simple-utils ast_typed core_kernel.nonempty_list)
+ (preprocess
+  (pps ppx_poly_constructor)))

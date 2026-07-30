@@ -1,0 +1,20 @@
+namespace Foo {
+
+  type storage = int;
+  type ret = [list<operation>, storage];
+  // Three entrypoints
+
+  @entry
+  const increment = (delta: int, store: storage): ret =>
+    [[], store + delta];
+
+  @entry
+  const decrement = (delta: int, store: storage): ret =>
+    [[], store - delta];
+
+  @entry
+  const reset = (_u: unit, _s: storage): ret => [[], 0]
+};
+
+
+let test = Test.log (Test.compile_value(contract_of(Foo)))

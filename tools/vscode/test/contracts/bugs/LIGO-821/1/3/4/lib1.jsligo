@@ -1,0 +1,20 @@
+#import "@ligo/math-lib/rational/rational.mligo" "R"
+
+type storage = list<[int, int]>;
+
+type return_ = [list<operation>, storage];
+
+const foo = (xs : storage) : storage => {
+  let res = R.new(0);
+  for (const x of xs) {
+    let [a, b] = x;
+    let r = R.div(R.new(a))(R.new(b));
+    res = R.add(res)(r);
+  };
+  return [[res.p, res.q]];
+}
+
+@entry
+const main = (_action : unit, store : storage) : return_ => {
+  return [[], foo (store)]
+};

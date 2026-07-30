@@ -1,0 +1,25 @@
+(library
+ (name checking)
+ (public_name ligo.checking)
+ (libraries
+  simple-utils
+  type
+  ast_core
+  ast_typed
+  nanopasses
+  unification
+  predefined
+  compiler_options
+  main_warnings
+  syntax_types
+  ocaml-compiler-libs.common
+  simple-diff)
+ (preprocess
+  (pps
+   ppx_jane
+   ppx_poly_constructor
+   ppx_woo
+   ppx_map
+   ppx_import
+   ppx_deriving.map
+   ppx_deriving_yojson)))

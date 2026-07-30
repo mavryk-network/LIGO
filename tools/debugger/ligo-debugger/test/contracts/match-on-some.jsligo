@@ -1,0 +1,9 @@
+@entry
+let main = (_ : unit, s : option<int>) : [list<operation>, option<int>] => {
+  const s2 = match (s) {
+    when(Some(x)): x + 1;
+    when(None): 0;
+  };
+
+  return [[], Some(s2)]
+};

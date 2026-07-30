@@ -1,0 +1,17 @@
+type parameter = ["Increment", int] | ["Extend", never];
+
+type storage = int;
+
+@entry
+const main = (action: parameter, store: storage): [list<operation>, storage] => {
+  return [
+    [],
+    (
+      match(action)
+        {
+          when(Increment(n)): store + n;
+          when(Extend(k)): (Mavryk.never(k) as storage);
+        }
+    )
+  ]
+};

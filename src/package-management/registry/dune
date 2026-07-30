@@ -1,0 +1,13 @@
+(library
+ (name registry)
+ (libraries
+  core
+  package_management_external_libs
+  package_management_shared
+  cli_helpers
+  cohttp
+  cohttp-lwt
+  cohttp-lwt-unix
+  yojson)
+ (preprocess
+  (pps ppx_deriving_yojson)))
