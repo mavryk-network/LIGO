@@ -30,6 +30,7 @@ let get_comment syntax =
     match syntax with
     | Syntax_types.CameLIGO -> Preprocessing_cameligo.Config.block
     | Syntax_types.JsLIGO -> Preprocessing_jsligo.Config.block
+    | Syntax_types.PascaLIGO -> Preprocessing_pascaligo.Config.block (* MAVRYK: PascaLIGO *)
   in
   match block with
   | Some x -> x#opening, x#closing
@@ -151,6 +152,8 @@ let print_module
   = function
   | CameLIGO -> print_module_with_description CameLIGO cameligo_module
   | JsLIGO -> print_module_with_description JsLIGO jsligo_module
+  (* MAVRYK: PascaLIGO TODO(M4). Reuses the CameLIGO module description for LSP hover. *)
+  | PascaLIGO -> print_module_with_description PascaLIGO cameligo_module
 
 (* Functions made for debugging *)
 

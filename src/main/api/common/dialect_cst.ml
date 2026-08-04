@@ -72,6 +72,10 @@ let get_cst_exn
     let module Parse = Parsing.Jsligo.Make (Parameters.Options) in
     JsLIGO
       (Parse.parse_file ~preprocess ~preprocess_define ?project_root ~raise c_unit file)
+  (* MAVRYK: PascaLIGO TODO(M4). The generic ('cameligo,'jsligo) dialect wrapper has
+     no PascaLIGO arm yet; this tooling path is unsupported for now. *)
+  | PascaLIGO ->
+    Stdlib.raise (Fatal_cst_error "PascaLIGO CST is not supported by this operation.")
 
 
 let get_cst

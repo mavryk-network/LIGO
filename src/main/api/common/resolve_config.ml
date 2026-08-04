@@ -73,6 +73,8 @@ let pp_type_expression ~raise ~syntax f type_expr =
         let open Parsing.Jsligo in
         let cst = decompile_ty_expr unified_type_expr in
         Pretty.print_type_expr Pretty.default_state cst
+      (* MAVRYK: PascaLIGO. Type decompilation is a stub; caught by the outer handler. *)
+      | PascaLIGO -> failwith "Printing a PascaLIGO type is not supported."
     in
     PPrint.ToFormatter.compact f pp
   with

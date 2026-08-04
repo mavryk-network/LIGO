@@ -16,6 +16,9 @@ val is_cameligo : string -> bool
 (** Tests whether the given string has a valid JsLIGO suffix. *)
 val is_jsligo : string -> bool
 
+(** Tests whether the given string has a valid PascaLIGO suffix. *)
+val is_pascaligo : string -> bool
+
 (** Tests whether the given string has a valid LIGO suffix. *)
 val is_ligo : string -> bool
 
@@ -24,3 +27,6 @@ val cameligo_glob : string
 
 (** A glob pattern for JsLIGO files. *)
 val jsligo_glob : string
+
+(** A glob pattern for PascaLIGO files. *)
+val pascaligo_glob : string

@@ -16,6 +16,7 @@ let preprocess_file ~raise ~(options : Compiler_options.frontend) ~(meta : meta)
     match meta.syntax with
     | CameLIGO -> Cameligo.preprocess_file
     | JsLIGO -> Jsligo.preprocess_file
+    | PascaLIGO -> Pascaligo.preprocess_file (* MAVRYK: PascaLIGO *)
   in
   Trace.trace ~raise preproc_tracer
   @@ Simple_utils.Trace.from_result
@@ -34,6 +35,7 @@ let preprocess_string
     match meta.syntax with
     | CameLIGO -> Cameligo.preprocess_string
     | JsLIGO -> Jsligo.preprocess_string
+    | PascaLIGO -> Pascaligo.preprocess_string (* MAVRYK: PascaLIGO *)
   in
   Trace.trace ~raise preproc_tracer
   @@ Trace.from_result
@@ -53,6 +55,7 @@ let preprocess_raw_input
     match meta.syntax with
     | CameLIGO -> Cameligo.preprocess_raw_input
     | JsLIGO -> Jsligo.preprocess_raw_input
+    | PascaLIGO -> Pascaligo.preprocess_raw_input (* MAVRYK: PascaLIGO *)
   in
   Trace.trace ~raise preproc_tracer
   @@ Trace.from_result
@@ -76,6 +79,7 @@ end
 
 module Cameligo = Make (Preprocessing_cameligo.Config)
 module Jsligo = Make (Preprocessing_jsligo.Config)
+module Pascaligo = Make (Preprocessing_pascaligo.Config) (* MAVRYK: PascaLIGO *)
 
 let parse_and_abstract_cameligo ~raise ~preprocess_define buffer file_path =
   let module Parse = Parsing.Cameligo.Make (Cameligo.Options) in
@@ -129,6 +133,33 @@ let parse_and_abstract_type_expression_jsligo ~raise ~preprocess_define buffer =
   Unification.Jsligo.compile_type_expression raw
 
 
+(* MAVRYK: PascaLIGO *)
+let parse_and_abstract_pascaligo ~raise ~preprocess_define buffer file_path =
+  let module Parse = Parsing.Pascaligo.Make (Pascaligo.Options) in
+  let raw =
+    Trace.trace ~raise parser_tracer
+    @@ Parse.parse_file buffer ~preprocess_define file_path
+  in
+  Unification.Pascaligo.compile_program raw
+
+
+let parse_and_abstract_expression_pascaligo ~raise ~preprocess_define buffer =
+  let module Parse = Parsing.Pascaligo.Make (Pascaligo.Options) in
+  let raw =
+    Trace.trace ~raise parser_tracer @@ Parse.parse_expression ~preprocess_define buffer
+  in
+  Unification.Pascaligo.compile_expression raw
+
+
+let parse_and_abstract_type_expression_pascaligo ~raise ~preprocess_define buffer =
+  let module Parse = Parsing.Pascaligo.Make (Pascaligo.Options) in
+  let raw =
+    Trace.trace ~raise parser_tracer
+    @@ Parse.parse_type_expression ~preprocess_define buffer
+  in
+  Unification.Pascaligo.compile_type_expression raw
+
+
 let parse_and_abstract ~raise ~(meta : meta) ~preprocess_define buffer file_path
     : Ast_unified.program
   =
@@ -136,6 +167,7 @@ let parse_and_abstract ~raise ~(meta : meta) ~preprocess_define buffer file_path
     match meta.syntax with
     | CameLIGO -> parse_and_abstract_cameligo
     | JsLIGO -> parse_and_abstract_jsligo
+    | PascaLIGO -> parse_and_abstract_pascaligo (* MAVRYK: PascaLIGO *)
   in
   parse_and_abstract ~raise ~preprocess_define buffer file_path
 
@@ -151,6 +183,7 @@ let parse_and_abstract_expression
     match meta.syntax with
     | CameLIGO -> parse_and_abstract_expression_cameligo
     | JsLIGO -> parse_and_abstract_expression_jsligo
+    | PascaLIGO -> parse_and_abstract_expression_pascaligo (* MAVRYK: PascaLIGO *)
   in
   parse_and_abstract ~raise ~preprocess_define buffer
 
@@ -166,6 +199,7 @@ let parse_and_abstract_type_expression
     match meta.syntax with
     | CameLIGO -> parse_and_abstract_type_expression_cameligo
     | JsLIGO -> parse_and_abstract_type_expression_jsligo
+    | PascaLIGO -> parse_and_abstract_type_expression_pascaligo (* MAVRYK: PascaLIGO *)
   in
   parse_and_abstract ~raise ~preprocess_define buffer
 
@@ -186,11 +220,21 @@ let parse_and_abstract_string_jsligo ~raise ~preprocess_define buffer =
   Unification.Jsligo.compile_program raw
 
 
+(* MAVRYK: PascaLIGO *)
+let parse_and_abstract_string_pascaligo ~raise ~preprocess_define buffer =
+  let module Parse = Parsing.Pascaligo.Make (Pascaligo.Options) in
+  let raw =
+    Trace.trace ~raise parser_tracer @@ Parse.parse_string ~preprocess_define buffer
+  in
+  Unification.Pascaligo.compile_program raw
+
+
 let parse_and_abstract_string ~raise (syntax : Syntax_types.t) buffer =
   let parse_and_abstract =
     match syntax with
     | CameLIGO -> parse_and_abstract_string_cameligo
     | JsLIGO -> parse_and_abstract_string_jsligo
+    | PascaLIGO -> parse_and_abstract_string_pascaligo (* MAVRYK: PascaLIGO *)
   in
   parse_and_abstract ~raise buffer
 
@@ -205,11 +249,18 @@ let pretty_print_jsligo_cst ?preprocess ?project_root ~raise buffer file_path =
   Parse.pretty_print_cst ?preprocess ?project_root ~raise buffer file_path
 
 
+(* MAVRYK: PascaLIGO *)
+let pretty_print_pascaligo_cst ?preprocess ?project_root ~raise buffer file_path =
+  let module Parse = Parsing.Pascaligo.Make (Pascaligo.Options) in
+  Parse.pretty_print_cst ?preprocess ?project_root ~raise buffer file_path
+
+
 let pretty_print_cst ~raise ~(meta : meta) buffer file_path =
   let print =
     match meta.syntax with
     | CameLIGO -> pretty_print_cameligo_cst
     | JsLIGO -> pretty_print_jsligo_cst
+    | PascaLIGO -> pretty_print_pascaligo_cst (* MAVRYK: PascaLIGO *)
   in
   Trace.trace ~raise parser_tracer @@ print buffer file_path
 
@@ -250,10 +301,30 @@ let pretty_print_jsligo ?jsligo ?preprocess ?project_root ~raise buffer file_pat
     file_path
 
 
+(* MAVRYK: PascaLIGO *)
+let pretty_print_pascaligo ?jsligo ?preprocess ?project_root ~raise buffer file_path =
+  let module Options = struct
+    include Pascaligo.Options
+
+    let jsligo = jsligo
+  end
+  in
+  let module Parse = Parsing.Pascaligo.Make (Options) in
+  Parse.pretty_print_file
+    Parsing.Pascaligo.Pretty.default_state
+    ?jsligo
+    ?preprocess
+    ?project_root
+    ~raise
+    buffer
+    file_path
+
+
 let pretty_print ?preprocess ~raise ~(meta : meta) buffer file_path =
   let print =
     match meta.syntax with
     | CameLIGO -> pretty_print_cameligo
     | JsLIGO -> pretty_print_jsligo
+    | PascaLIGO -> pretty_print_pascaligo (* MAVRYK: PascaLIGO *)
   in
   Trace.trace ~raise parser_tracer @@ print ?preprocess buffer file_path

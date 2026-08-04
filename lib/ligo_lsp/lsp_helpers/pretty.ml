@@ -94,6 +94,8 @@ let pretty_print_signature
         Buffer.contents
         <@ pretty_print_signature_expr Parsing.Cameligo.Pretty.default_state
         <@ Unification.Jsligo.decompile_sig_expr
+      (* MAVRYK: PascaLIGO TODO(M4). No module signatures. *)
+      | PascaLIGO -> fun _ -> failwith "PascaLIGO signatures are not supported."
     in
     `Ok (to_syntax unified_sig)
   | Error err ->
@@ -121,7 +123,9 @@ let decompile_type
         (match syntax with
         | JsLIGO -> JsLIGO (Unification_jsligo.Decompile.decompile_type_expression s)
         | CameLIGO ->
-          CameLIGO (Unification_cameligo.Decompile.decompile_type_expression s))
+          CameLIGO (Unification_cameligo.Decompile.decompile_type_expression s)
+        (* MAVRYK: PascaLIGO TODO(M4). Type decompilation unsupported; caught below. *)
+        | PascaLIGO -> failwith "PascaLIGO type decompilation is not supported.")
   with
   | exn -> Error (`Exn exn)
 
@@ -140,7 +144,9 @@ let pretty_print_variant
     then (
       match syntax with
       | CameLIGO -> Ok (Dialect_cst.CameLIGO None)
-      | JsLIGO -> Ok (JsLIGO None))
+      | JsLIGO -> Ok (JsLIGO None)
+      (* MAVRYK: PascaLIGO TODO(M4). *)
+      | PascaLIGO -> Error (`Exn (Failure "PascaLIGO is not supported here.")))
     else (
       match decompile_type ~syntax typ with
       | Ok (CameLIGO typ) -> Ok (CameLIGO (Some typ))

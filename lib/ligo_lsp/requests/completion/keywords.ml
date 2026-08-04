@@ -37,3 +37,5 @@ let jsligo_keyword_completions : CompletionItem.t list =
 let get_keyword_completions : Syntax_types.t -> CompletionItem.t list = function
   | CameLIGO -> cameligo_keyword_completions
   | JsLIGO -> jsligo_keyword_completions
+  (* MAVRYK: PascaLIGO TODO(M4). Reuses CameLIGO keyword completions for now. *)
+  | PascaLIGO -> cameligo_keyword_completions

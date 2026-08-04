@@ -130,7 +130,7 @@ let vdef_doc
     let prefix =
       match syntax with
       | JsLIGO -> !^"let" ^//^ !^name ^^ colon
-      | CameLIGO -> !^"val" ^//^ !^name ^//^ colon
+      | CameLIGO | PascaLIGO -> !^"val" ^//^ !^name ^//^ colon (* MAVRYK: PascaLIGO *)
     in
     Docs_utils.decompile_type_case ~raise ~escape_html_characters:true ~syntax ~prefix t
   in

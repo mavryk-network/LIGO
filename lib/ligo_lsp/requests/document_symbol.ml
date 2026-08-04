@@ -79,6 +79,9 @@ let make_def_info (syntax : Syntax_types.t) (def : Def.t)
         | CameLIGO, Signature -> Interface
         | JsLIGO, Module -> Namespace
         | JsLIGO, Signature -> Interface
+        (* MAVRYK: PascaLIGO. Modules are [module X is …], like CameLIGO. *)
+        | PascaLIGO, Module -> SymbolKind.Module
+        | PascaLIGO, Signature -> Interface
       in
       detail, kind, name, decl_range, range
     | Label { name; decl_range; range; content; label_case; _ } ->

@@ -35,6 +35,8 @@ let specialise_and_print (syntax : Syntax_types.t) source : Buffer.t =
     match syntax with
     | CameLIGO -> specialise_and_print_cameligo
     | JsLIGO -> specialise_and_print_jsligo
+    (* MAVRYK: PascaLIGO. Decompilation to PascaLIGO is unsupported (parity with 0.73). *)
+    | PascaLIGO -> fun _ -> failwith "Decompilation to PascaLIGO is not supported."
   in
   specialise_and_print source
 
@@ -44,6 +46,8 @@ let specialise_and_print_expression (syntax : Syntax_types.t) source =
     match syntax with
     | CameLIGO -> specialise_and_print_expression_cameligo
     | JsLIGO -> specialise_and_print_expression_jsligo
+    (* MAVRYK: PascaLIGO *)
+    | PascaLIGO -> fun _ -> failwith "Decompilation to PascaLIGO is not supported."
   in
   specialise_and_print source
 
@@ -53,5 +57,7 @@ let specialise_and_print_ty (syntax : Syntax_types.t) source =
     match syntax with
     | CameLIGO -> specialise_and_print_ty_cameligo
     | JsLIGO -> specialise_and_print_ty_jsligo
+    (* MAVRYK: PascaLIGO *)
+    | PascaLIGO -> fun _ -> failwith "Decompilation to PascaLIGO is not supported."
   in
   specialise_and_print source

@@ -35,6 +35,11 @@ let nseq_map f (hd, tl) = (f hd, Stdlib.List.map f tl)
 let nseq_to_region to_region (hd, tl) =
   Cst_shared.Nodes.ne_list_to_region to_region Simple_utils.Ne_list.(hd :: tl)
 
+(* MAVRYK: PascaLIGO. Module signatures ([module type …]) are a post-0.73 feature
+   PascaLIGO does not have. This phantom (uninhabited) type satisfies the shared
+   CST/Pretty signature; the parser never produces a value of it. *)
+type signature_expr = |
+
 open Utils
 
 (* Lexemes *)

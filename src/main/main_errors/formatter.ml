@@ -110,19 +110,8 @@ let rec error_ppformat
       Format.fprintf
         f
         "@[<hv>Invalid file extension '%s'. @.Use '.mligo' for CameLIGO, '.jsligo' for \
-         JsLIGO, or the --syntax option.@]"
+         JsLIGO, '.ligo' for PascaLIGO, or the --syntax option.@]"
         extension
-    | `Main_deprecated_pascaligo_filename filename ->
-      Format.fprintf
-        f
-        "@[<hv>Invalid file extension for '%s'.@.PascaLIGO is deprecated.@.Hint: You can \
-         use LIGO 0.73.0 with the --deprecated flag.@]"
-        filename
-    | `Main_deprecated_pascaligo_syntax () ->
-      Format.fprintf
-        f
-        "@[<hv>Invalid syntax.@.PascaLIGO is deprecated.@.Hint: You can use LIGO 0.73.0 \
-         with the --deprecated flag.@]"
     | `Main_transpilation_unsupported_syntaxes (src_syntax, dst_syntax) ->
       Format.fprintf
         f
@@ -635,9 +624,6 @@ let rec error_json : Types.all -> Ligo_Error.t list =
     [ make ~stage:"" ~content ]
   (* Top-level errors *)
   | `Build_error_tracer e -> [ BuildSystem.Errors.error_json e ]
-  | `Main_deprecated_pascaligo_filename _ | `Main_deprecated_pascaligo_syntax _ ->
-    let content = make_content ~message:"PascaLIGO is deprecated" () in
-    [ make ~stage:"command line interpreter" ~content ]
   | `Main_transpilation_unsupported_syntaxes _ ->
     let content = make_content ~message:"Unsupported syntaxes for transpilation" () in
     [ make ~stage:"command line interpreter" ~content ]
