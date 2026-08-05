@@ -118,11 +118,15 @@ let mk_decompiler_test { code; expected; syntax; name } =
     match syntax with
     | JsLIGO -> `JsLIGO (Unification.Jsligo.decompile_ty_expr ast_unified)
     | CameLIGO -> `Cameligo (Unification.Cameligo.decompile_ty_expr ast_unified)
+    (* MAVRYK: PascaLIGO *)
+    | PascaLIGO -> `Pascaligo (Unification.Pascaligo.decompile_ty_expr ast_unified)
   in
   let doc =
     match cst with
     | `JsLIGO cst -> Parsing.Jsligo.Pretty.(print_type_expr default_state cst)
     | `Cameligo cst -> Parsing.Cameligo.Pretty.(print_type_expr default_state cst)
+    (* MAVRYK: PascaLIGO *)
+    | `Pascaligo cst -> Parsing.Pascaligo.Pretty.(print_type_expr default_state cst)
   in
   check
     raw_string
@@ -359,6 +363,22 @@ let decompiler_ty_expr_tests =
       |}
       ; expected = "A.B.t"
       ; syntax = JsLIGO
+      }
+      (* MAVRYK: PascaLIGO *)
+    ; { name = "function type"
+      ; code = "type t is int -> string"
+      ; expected = "int -> string"
+      ; syntax = PascaLIGO
+      }
+    ; { name = "record type"
+      ; code = "type t is record [x : int; y : string]"
+      ; expected = "record [x : int; y : string]"
+      ; syntax = PascaLIGO
+      }
+    ; { name = "type application"
+      ; code = "type t is map (int, string)"
+      ; expected = "map (int, string)"
+      ; syntax = PascaLIGO
       }
     ]
 

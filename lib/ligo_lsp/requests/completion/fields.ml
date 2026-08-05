@@ -423,3 +423,6 @@ let get_fields_completions ~(normalize : Path.normalization) (input : Common.inp
   match input.cst with
   | CameLIGO cst -> complete_fields ~normalize (module C_CameLIGO) { input with cst }
   | JsLIGO cst -> complete_fields ~normalize (module C_JsLIGO) { input with cst }
+  (* MAVRYK: PascaLIGO. Record-field/module completions need a C_PascaLIGO completion
+     module; deferred (keyword completion already works). Degrades to no field completions. *)
+  | PascaLIGO _cst -> []

@@ -78,5 +78,8 @@ let on_req_folding_range : Path.t -> FoldingRange.t list option Handler.t =
   @@ fun cst ->
   Handler.return
   @@ Dialect_cst.from_dialect
-       { cameligo = folding_range_cameligo; jsligo = folding_range_jsligo }
+       { cameligo = folding_range_cameligo
+       ; jsligo = folding_range_jsligo
+       ; pascaligo = (fun _ -> None) (* MAVRYK: PascaLIGO. Folding ranges deferred. *)
+       }
        cst

@@ -15,6 +15,9 @@ let to_json (cst : Dialect_cst.t) : json =
     match cst with
     | CameLIGO cst -> Cst.Cameligo.yojson_of_cst cst, "CameLIGO"
     | JsLIGO cst -> Cst.Jsligo.yojson_of_cst cst, "JsLIGO"
+    (* MAVRYK: PascaLIGO. The PascaLIGO CST does not derive [yojson] (unlike CameLIGO/JsLIGO),
+       so the msgpack CST dump — consumed by the debugger (M6) — is not available yet. *)
+    | PascaLIGO _cst -> `Null, "PascaLIGO"
   in
   `Assoc [ "cst", cst_json; "lang", `String lang ]
 

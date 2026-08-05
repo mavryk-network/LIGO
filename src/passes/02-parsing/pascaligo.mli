@@ -62,3 +62,6 @@ val pretty_print            : Pretty.state -> CST.t -> Buffer.t
 val pretty_print_expression : Pretty.state -> CST.expr -> Buffer.t
 val pretty_print_pattern    : ?cols:int -> Pretty.state -> CST.pattern -> Buffer.t
 val pretty_print_type_expr  : Pretty.state -> CST.type_expr -> Buffer.t *)
+
+(* MAVRYK: PascaLIGO — needed by the LSP (lib/ligo_lsp) for signature hover. *)
+val pretty_print_signature_expr : Pretty.state -> CST.signature_expr -> Buffer.t

@@ -80,6 +80,20 @@ let jsligo_module =
   ; semicolon_at_the_end = true
   }
 
+(* MAVRYK: PascaLIGO. Module syntax: `module M is { … }`, `module M : S is …`,
+   `module type N is sig … end`. *)
+let pascaligo_module =
+  { module_keyword = "module"
+  ; signature_keyword = "module type"
+  ; import_keyword = "module"
+  ; module_annotation_sign = ":"
+  ; signature_annotation_sign = Some "is"
+  ; sign_on_import = "is"
+  ; open_ = "{"
+  ; close = "}"
+  ; semicolon_at_the_end = false
+  }
+
 let print_module_with_description
     :  Syntax_types.t -> project_root:Path.t option -> module_pp_mode -> string
     -> Scopes.Types.mdef -> Lsp.Types.MarkedString.t
@@ -152,8 +166,8 @@ let print_module
   = function
   | CameLIGO -> print_module_with_description CameLIGO cameligo_module
   | JsLIGO -> print_module_with_description JsLIGO jsligo_module
-  (* MAVRYK: PascaLIGO TODO(M4). Reuses the CameLIGO module description for LSP hover. *)
-  | PascaLIGO -> print_module_with_description PascaLIGO cameligo_module
+  (* MAVRYK: PascaLIGO *)
+  | PascaLIGO -> print_module_with_description PascaLIGO pascaligo_module
 
 (* Functions made for debugging *)
 

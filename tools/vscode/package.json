@@ -1,7 +1,7 @@
 {
-    "name": "ligo-vscode",
-    "displayName": "LIGO Lang",
-    "description": "LIGO VSCode extension includes syntax highlighting, debugger, and a language server for LIGO.",
+    "name": "mavryk-ligo-vscode",
+    "displayName": "MavrykLigo",
+    "description": "Mavryk LIGO VSCode extension: syntax highlighting (CameLIGO, JsLIGO, PascaLIGO), debugger, and a language server.",
     "author": "Serokell",
     "license": "MIT",
     "version": "1.7.0",
@@ -9,7 +9,7 @@
         "type": "git",
         "url": "https://gitlab.com/mavryk-network/ligo"
     },
-    "publisher": "ligolang-publish",
+    "publisher": "mavryk-network",
     "categories": [
         "Programming Languages"
     ],
@@ -20,6 +20,7 @@
     "activationEvents": [
         "onLanguage:mligo",
         "onLanguage:jsligo",
+        "onLanguage:ligo",
         "onDebugResolve:ligo"
     ],
     "icon": "logo.png",
@@ -53,6 +54,21 @@
                     "dark": "logo.png"
                 },
                 "configuration": "./syntaxes/jsligo.configuration.json"
+            },
+            {
+                "id": "ligo",
+                "aliases": [
+                    "PascaLIGO"
+                ],
+                "extensions": [
+                    ".ligo",
+                    ".pligo"
+                ],
+                "icon": {
+                    "light": "logo.png",
+                    "dark": "logo.png"
+                },
+                "configuration": "./syntaxes/ligo.configuration.json"
             }
         ],
         "grammars": [
@@ -65,6 +81,11 @@
                 "language": "jsligo",
                 "scopeName": "source.jsligo",
                 "path": "./syntaxes/jsligo.tmLanguage.json"
+            },
+            {
+                "language": "ligo",
+                "scopeName": "source.ligo",
+                "path": "./syntaxes/ligo.tmLanguage.json"
             }
         ],
         "configuration": {

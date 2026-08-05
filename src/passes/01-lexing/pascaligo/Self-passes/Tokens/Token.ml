@@ -399,6 +399,8 @@ module T =
                        ~init:map lexemes
       in List.fold_left ~f:apply ~init:empty_map keywords
 
+    let keywords_list = Map.keys keywords
+
     (* Ghost keywords *)
 
     let ghost_and       = wrap_and       Region.ghost
@@ -598,6 +600,8 @@ module T =
         List.fold_left ~f:(fun map lex -> add map (lex, mk_sym))
                        ~init:map lexemes
       in List.fold_left ~f:apply ~init:empty_map symbols
+
+    let symbols_list = Map.keys symbols
 
     (* Ghost symbols *)
 
