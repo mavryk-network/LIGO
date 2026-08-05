@@ -70,6 +70,7 @@ let rec terminate_decl terminator = function
 | D_Directive d -> D_Directive d
 | D_Fun       d -> D_Fun      {d with value = {d.value with terminator}}
 | D_Module    d -> D_Module   {d with value = {d.value with terminator}}
+| D_Signature d -> D_Signature {d with value = {d.value with terminator}}
 | D_Type      d -> D_Type     {d with value = {d.value with terminator}}
 
 (* Hooking attributes, if any *)
@@ -343,11 +344,12 @@ top_declaration:
 | "<directive>"    { D_Directive       $1 } (* Only at top-level *)
 
 declaration:
-  type_decl    { D_Type   $1 }
-| const_decl   { D_Const  $1 }
-| fun_decl     { D_Fun    $1 }
-| module_decl  { D_Module $1 }
-| attr_decl    { D_Attr   $1 }
+  type_decl      { D_Type   $1 }
+| const_decl     { D_Const  $1 }
+| fun_decl       { D_Fun    $1 }
+| module_decl    { D_Module $1 }
+| signature_decl { D_Signature $1 }   (* MAVRYK: PascaLIGO module signatures *)
+| attr_decl      { D_Attr   $1 }
 
 (* Attributed declaration *)
 
@@ -468,7 +470,16 @@ core_type:
 | record_type          { T_Record $1 }
 | par(type_expr)       { T_Par    $1 }
 | qualified_type
+| parameter_of_type    { $1 }
 | attr_type            { $1 }
+
+(* Parameter type of a module's entrypoints *)
+
+parameter_of_type:
+  "parameter_of" nsepseq(module_name,".") {
+    let stop   = nsepseq_to_region (fun x -> x#region) $2 in
+    let region = cover $1#region stop
+    in T_ParameterOf {region; value=$2} }
 
 (* Attributed core types *)
 
@@ -627,10 +638,70 @@ parameter:
    second is the verbose one. *)
 
 module_decl:
-  "module" module_name "is" module_expr {
-    let region = cover $1#region (module_expr_to_region $4) in
-    let value  = {kwd_module=$1; name=$2; kwd_is=$3;
-                  module_expr=$4; terminator=None}
+  "module" module_name ioption(module_constraint) "is" module_expr {
+    let region = cover $1#region (module_expr_to_region $5) in
+    let value  = {kwd_module=$1; name=$2; annotation=$3; kwd_is=$4;
+                  module_expr=$5; terminator=None}
+    in {region; value} }
+
+(* MAVRYK: PascaLIGO module signatures — [module M : S is …] and [module type N is sig … end] *)
+
+module_constraint:
+  ":" signature_expr { ($1, $2) }
+
+signature_decl:
+  "module" "type" module_name "is" signature_expr {
+    let region = cover $1#region (signature_expr_to_region $5) in
+    let value  = {kwd_module=$1; kwd_type=$2; name=$3; kwd_is=$4;
+                  signature_expr=$5; terminator=None}
+    in {region; value} }
+
+signature_expr:
+  module_path(module_name) { S_Path (mk_mod_path $1 (fun x -> x#region)) }
+| module_name              { S_Var $1 }
+| signature_sig            { S_Sig $1 }
+
+signature_sig:
+  "sig" ioption(nseq(sig_item ";"? { $1 })) "end" {
+    let sig_items =
+      match $2 with None -> [] | Some seq -> CST.nseq_to_list seq in
+    let region = cover $1#region $3#region in
+    let value  = {kwd_sig=$1; sig_items; kwd_end=$3}
+    in {region; value} }
+
+sig_item:
+  sig_val     { Sig_Value   $1 }
+| sig_type    { Sig_Type    $1 }
+| sig_include { Sig_Include $1 }
+| sig_attr    { Sig_Attr    $1 }
+
+sig_attr:
+  "[@attr]" sig_item {
+    let region = cover $1#region (sig_item_to_region $2)
+    in {region; value = ($1, $2)} }
+
+sig_val:
+  "const" variable type_annotation {
+    let colon, val_type = $3 in
+    let value  = {kwd_const=$1; var=$2; colon; val_type}
+    and region = cover $1#region (type_expr_to_region val_type)
+    in {region; value} }
+
+sig_type:
+  "type" type_name "is" type_expr {
+    let type_rhs = Some ($3, $4) in
+    let value    = {kwd_type=$1; name=$2; type_rhs}
+    and region   = cover $1#region (type_expr_to_region $4)
+    in {region; value} }
+| "type" type_name {
+    let value  = {kwd_type=$1; name=$2; type_rhs=None}
+    and region = cover $1#region (variable_to_region $2)
+    in {region; value} }
+
+sig_include:
+  "include" signature_expr {
+    let region = cover $1#region (signature_expr_to_region $2) in
+    let value  = {kwd_include=$1; signature_expr=$2}
     in {region; value} }
 
 module_expr:
@@ -1154,7 +1225,16 @@ core_expr:
 | attr_expr       { E_Attr     $1 }
 | application     { E_App      $1 }
 | ctor            { E_Ctor     $1 }
+| contract_of_expr { E_ContractOf $1 }
 | left_expr       { $1 }
+
+(* Contract of a module (for the testing framework) *)
+
+contract_of_expr:
+  "contract_of" nsepseq(module_name,".") {
+    let stop   = nsepseq_to_region (fun x -> x#region) $2 in
+    let region = cover $1#region stop
+    in {region; value=$2} }
 
 (* Applications *)
 

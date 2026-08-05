@@ -327,6 +327,17 @@ let rec compile_type_expression : CST.type_expr -> AST.ty_expr =
     let field = self t.field in
     let field_as_open = TODO_do_in_parsing.field_as_open_t t in
     TODO_unify_in_cst.tnested_mod_access (field, field_as_open) module_path
+  | T_ParameterOf t ->
+    let t, loc = r_split t in
+    let path =
+      Nseq.to_ne_list
+      @@ Nseq.map
+           (fun t ->
+             let x, loc = w_split t in
+             TODO_do_in_parsing.mvar ~loc x)
+      @@ Nseq.nsepseq_to_nseq t
+    in
+    t_contract_parameter ~loc path
   | T_Par t -> self (r_fst t).inside
   | T_Record t ->
     let t, loc = r_split t in
@@ -729,6 +740,14 @@ and compile_expression : CST.expr -> AST.expr =
     let field = self ma.field in
     let field_as_open = TODO_do_in_parsing.field_as_open ma in
     e_module_open_in ~loc { module_path; field; field_as_open }
+  | E_ContractOf c ->
+    let c, loc = r_split c in
+    let path =
+      Nseq.to_ne_list
+      @@ Nseq.map (fun x -> TODO_do_in_parsing.mvar ~loc:(w_snd x) (w_fst x))
+      @@ Nseq.nsepseq_to_nseq c
+    in
+    e_contract ~loc path
   | E_Update up ->
     let up, loc = r_split up in
     let structure = self up.structure in
@@ -926,7 +945,18 @@ and compile_declaration : CST.declaration -> AST.declaration =
     let d, loc = r_split d in
     let name = TODO_do_in_parsing.mvar ~loc:(w_snd d.name) (w_fst d.name) in
     let mod_expr = compile_module d.module_expr in
-    d_module { name; mod_expr; annotation = { signatures = []; filter = true } } ~loc
+    (* MAVRYK: PascaLIGO. [module M : S is …] — the signature annotation. *)
+    let signatures =
+      Option.to_list
+        (Option.map d.annotation ~f:(fun (_colon, se) -> compile_signature_expr se))
+    in
+    d_module { name; mod_expr; annotation = { signatures; filter = true } } ~loc
+  | D_Signature d ->
+    (* MAVRYK: PascaLIGO. [module type N is sig … end] *)
+    let d, loc = r_split d in
+    let name = TODO_do_in_parsing.mvar ~loc:(w_snd d.name) (w_fst d.name) in
+    let sig_expr = compile_signature_expr d.signature_expr in
+    d_signature { name; sig_expr; extends = [] } ~loc
 
 
 (* ========================== MODULES ===================================== *)
@@ -951,6 +981,65 @@ and compile_module : CST.module_expr -> AST.mod_expr =
     let s, loc = w_split m in
     let v = TODO_do_in_parsing.mvar ~loc s in
     m_var v ~loc
+
+
+(* ===================== MODULE SIGNATURES (MAVRYK: PascaLIGO) ============= *)
+
+and compile_signature_expr : CST.signature_expr -> AST.sig_expr =
+ fun se ->
+  match se with
+  | S_Sig s ->
+    let s, loc = r_split s in
+    let items = List.map ~f:compile_sig_item s.sig_items in
+    ({ fp = Location.wrap ~loc (S_body items) } : AST.sig_expr)
+  | S_Path p ->
+    let p, loc = r_split p in
+    let module_path =
+      Nseq.map
+        (fun t -> TODO_do_in_parsing.mvar ~loc:(w_snd t) (w_fst t))
+        (Nseq.nsepseq_to_nseq p.module_path)
+    in
+    let field = TODO_do_in_parsing.mvar ~loc:(w_snd p.field) (w_fst p.field) in
+    let path = Nseq.to_ne_list (Nseq.append module_path (field, [])) in
+    ({ fp = Location.wrap ~loc (S_path path) } : AST.sig_expr)
+  | S_Var m ->
+    let s, loc = w_split m in
+    let v = TODO_do_in_parsing.mvar ~loc s in
+    ({ fp = Location.wrap ~loc (S_path (Nseq.to_ne_list (v, []))) } : AST.sig_expr)
+
+and compile_sig_item : CST.sig_item -> AST.sig_entry =
+ fun si ->
+  match si with
+  | Sig_Value sv ->
+    let sv, loc = r_split sv in
+    let var =
+      let x = get_var sv.var in
+      TODO_do_in_parsing.var ~loc:(w_snd x) (w_fst x)
+    in
+    let ty = compile_type_expression sv.val_type in
+    ({ fp = Location.wrap ~loc (S_value (var, ty, false)) } : AST.sig_entry)
+  | Sig_Type st ->
+    let st, loc = r_split st in
+    let tname =
+      let x = get_var st.name in
+      TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x)
+    in
+    (match st.type_rhs with
+     | None -> ({ fp = Location.wrap ~loc (S_type_var tname) } : AST.sig_entry)
+     | Some (_kwd_is, te) ->
+       let ty = compile_type_expression te in
+       ({ fp = Location.wrap ~loc (S_type (tname, [], ty)) } : AST.sig_entry))
+  | Sig_Include si ->
+    let si, loc = r_split si in
+    let se = compile_signature_expr si.signature_expr in
+    ({ fp = Location.wrap ~loc (S_include se) } : AST.sig_entry)
+  | Sig_Attr sa ->
+    let (attr, item), loc = r_split sa in
+    let attr = translate_attr_pascaligo (w_fst attr) in
+    let item = compile_sig_item item in
+    (* [S_attr] also exists in [statement_content_]; annotate to disambiguate. *)
+    let content : (_, _, _) AST.sig_entry_content_ = S_attr (attr, item) in
+    ({ fp = Location.wrap ~loc content } : AST.sig_entry)
 
 
 (* ========================== PROGRAM ===================================== *)

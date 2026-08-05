@@ -116,6 +116,7 @@ and print_declaration state = function
 | D_Directive d -> print_D_Directive state d
 | D_Fun       d -> print_D_Fun       state d
 | D_Module    d -> print_D_Module    state d
+| D_Signature d -> print_D_Signature state d
 | D_Type      d -> print_D_Type      state d
 
 (* Attributed declaration *)
@@ -191,6 +192,12 @@ and print_D_Module state (node: module_decl reg) =
     mk_child print_module_expr node.module_expr]
   in Tree.make state "D_Module" children
 
+(* MAVRYK: PascaLIGO. Coarse CST print for module signatures; deep printing is a TODO(M4). *)
+and print_D_Signature state (node: signature_decl reg) =
+  let node = node.value in
+  let children = Tree.[ mk_child make_literal node.name ]
+  in Tree.make state "D_Signature" children
+
 and print_module_expr state (node: module_expr) =
   match node with
     M_Body e -> print_M_Body state e
@@ -241,6 +248,7 @@ and print_type_expr state = function
 | T_Int     t -> print_T_Int     state t
 | T_ModPath t -> print_T_ModPath state t
 | T_Par     t -> print_T_Par     state t
+| T_ParameterOf t -> print_T_ParameterOf state t
 | T_Record  t -> print_T_Record  state t
 | T_String  t -> print_T_String  state t
 | T_Sum     t -> print_T_Sum     state t
@@ -307,6 +315,12 @@ and print_module_path :
 
 and print_T_Par state (node: type_expr par reg) =
   Tree.make_unary state "T_Par" print_type_expr node.value.inside
+
+(* Parameter of a module's entrypoints *)
+
+and print_T_ParameterOf state (node: parameter_of reg) =
+  let Region.{value; region} = node in
+  Tree.of_nsepseq state ~region "T_ParameterOf" Tree.make_literal value
 
 (* Record types *)
 
@@ -811,6 +825,7 @@ and print_expr state = function
 | E_Ctor      e -> print_E_Ctor      state e
 | E_Cond      e -> print_E_Cond      state e
 | E_Cons      e -> print_E_Cons      state e
+| E_ContractOf e -> print_E_ContractOf state e
 | E_Div       e -> print_E_Div       state e
 | E_Equal     e -> print_E_Equal     state e
 | E_Fun       e -> print_E_Fun       state e
@@ -942,6 +957,10 @@ and print_E_Cons state (node: sharp bin_op reg) =
   print_bin_op state "E_Cons" node
 
 (* Data constructor as expressions *)
+
+and print_E_ContractOf state (node: contract_of) =
+  let Region.{value; region} = node in
+  Tree.of_nsepseq state ~region "E_ContractOf" Tree.make_literal value
 
 and print_E_Ctor state (node: ctor) =
   let region = node#region in

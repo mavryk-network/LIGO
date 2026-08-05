@@ -7,7 +7,8 @@ let () =
        "Contract test"
        [ (*Coase_tests.main *)
          Vote_tests.main
-       ; Id_tests.main (* ; Id_tests_p.main *)
+       ; Id_tests.main
+       ; Id_tests_p.main (* MAVRYK: PascaLIGO — semantic-equivalence parity with id.mligo *)
        ; Basic_multisig_tests.main
        ; Multisig_tests.main
          (* ; Multisig_v2_tests.main *)

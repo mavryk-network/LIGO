@@ -35,10 +35,9 @@ let nseq_map f (hd, tl) = (f hd, Stdlib.List.map f tl)
 let nseq_to_region to_region (hd, tl) =
   Cst_shared.Nodes.ne_list_to_region to_region Simple_utils.Ne_list.(hd :: tl)
 
-(* MAVRYK: PascaLIGO. Module signatures ([module type …]) are a post-0.73 feature
-   PascaLIGO does not have. This phantom (uninhabited) type satisfies the shared
-   CST/Pretty signature; the parser never produces a value of it. *)
-type signature_expr = |
+(* MAVRYK: PascaLIGO. Module signatures ([module type …]) — the real [signature_expr]
+   and its companion nodes (signature_decl, sig_item, …) are defined in the recursive
+   type block below (they reference type_expr / module_path). *)
 
 open Utils
 
@@ -66,6 +65,7 @@ type kwd_from      = lexeme wrap
 type kwd_function  = lexeme wrap
 type kwd_if        = lexeme wrap
 type kwd_in        = lexeme wrap
+type kwd_include   = lexeme wrap
 type kwd_is        = lexeme wrap
 type kwd_list      = lexeme wrap
 type kwd_map       = lexeme wrap
@@ -80,6 +80,7 @@ type kwd_record    = lexeme wrap
 type kwd_recursive = lexeme wrap
 type kwd_remove    = lexeme wrap
 type kwd_set       = lexeme wrap
+type kwd_sig       = lexeme wrap
 type kwd_skip      = lexeme wrap
 type kwd_step      = lexeme wrap
 type kwd_then      = lexeme wrap
@@ -204,6 +205,7 @@ and declaration =
 | D_Directive of Directive.t
 | D_Fun       of fun_decl     reg
 | D_Module    of module_decl  reg
+| D_Signature of signature_decl reg   (* MAVRYK: PascaLIGO module signatures *)
 | D_Type      of type_decl    reg
 
 (* Constant declaration *)
@@ -249,6 +251,7 @@ and fun_decl = {
 and module_decl = {
   kwd_module   : kwd_module;
   name         : module_name;
+  annotation   : (colon * signature_expr) option;  (* MAVRYK: PascaLIGO. [module M : S is …] *)
   kwd_is       : kwd_is;
   module_expr  : module_expr;
   terminator   : semi option
@@ -262,6 +265,52 @@ and module_expr =
 and module_body = {
   enclosing    : block_enclosing;
   declarations : declarations
+}
+
+(* Signature declaration (MAVRYK: PascaLIGO. [module type N is sig … end]) *)
+
+and signature_decl = {
+  kwd_module     : kwd_module;
+  kwd_type       : kwd_type;
+  name           : module_name;
+  kwd_is         : kwd_is;
+  signature_expr : signature_expr;
+  terminator     : semi option
+}
+
+and signature_expr =
+  S_Sig  of signature_body reg
+| S_Path of module_name module_path reg
+| S_Var  of module_name
+
+and signature_body = {
+  kwd_sig   : kwd_sig;
+  sig_items : sig_item list;
+  kwd_end   : kwd_end
+}
+
+and sig_item =
+  Sig_Attr    of (attribute * sig_item) reg
+| Sig_Include of sig_include reg
+| Sig_Type    of sig_type reg
+| Sig_Value   of sig_value reg
+
+and sig_include = {
+  kwd_include    : kwd_include;
+  signature_expr : signature_expr
+}
+
+and sig_type = {
+  kwd_type : kwd_type;
+  name     : type_name;
+  type_rhs : (kwd_is * type_expr) option
+}
+
+and sig_value = {
+  kwd_const : kwd_const;
+  var       : variable;
+  colon     : colon;
+  val_type  : type_expr
 }
 
 (* Type declaration *)
@@ -290,6 +339,7 @@ and type_expr =
 | T_Int     of int_literal                         (*              42 *)
 | T_ModPath of type_expr module_path reg           (*     A.B.(x * y) *)
 | T_Par     of type_expr par reg                   (*        (x -> y) *)
+| T_ParameterOf of parameter_of reg                (*  parameter_of M *)
 | T_Record  of field_decl reg compound reg (* record [a; [@a1] b : t] *)
 | T_String  of string_literal                      (*           "foo" *)
 | T_Sum     of sum_type reg                        (* [@a] A | B of t *)
@@ -310,6 +360,11 @@ and 'a module_path = {
   selector    : dot;
   field       : 'a
 }
+
+(* Contract of / parameter of a module *)
+
+and contract_of  = (module_name, dot) nsepseq reg
+and parameter_of = (module_name, dot) nsepseq
 
 (* Compound constructs (lists, sets, records, maps) *)
 
@@ -593,6 +648,7 @@ and expr =
 | E_CodeInj   of code_inj reg
 | E_Cond      of expr conditional reg
 | E_Cons      of sharp bin_op reg               (* head :: tail    *)
+| E_ContractOf of contract_of                   (* contract_of M   *)
 | E_Ctor      of ctor                           (* C               *)
 | E_Div       of slash bin_op reg               (* x / y           *)
 | E_Equal     of equal bin_op reg               (* x = y           *)
@@ -739,6 +795,7 @@ let rec type_expr_to_region = function
 | T_Int     t -> t#region
 | T_ModPath {region; _}
 | T_Par     {region; _}
+| T_ParameterOf {region; _}
 | T_Record  {region; _} -> region
 | T_String  t -> t#region
 | T_Sum     {region; _} -> region
@@ -763,6 +820,7 @@ let rec expr_to_region = function
 | E_Equal     {region; _}
 | E_Cond      {region; _}
 | E_Cons      {region; _}
+| E_ContractOf {region; _}
 | E_Div       {region; _}
 | E_Fun       {region; _}
 | E_Geq       {region; _}
@@ -829,7 +887,20 @@ let decl_to_region = function
 | D_Directive dir -> Directive.to_region dir
 | D_Fun    {region; _}
 | D_Module {region; _}
+| D_Signature {region; _}
 | D_Type   {region; _} -> region
+
+(* MAVRYK: PascaLIGO module signatures *)
+let signature_expr_to_region = function
+  S_Sig  {region; _}
+| S_Path {region; _} -> region
+| S_Var  v -> v#region
+
+let sig_item_to_region = function
+  Sig_Attr    {region; _}
+| Sig_Include {region; _}
+| Sig_Type    {region; _}
+| Sig_Value   {region; _} -> region
 
 let test_clause_to_region = function
   ClauseInstr instr -> instr_to_region instr

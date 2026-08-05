@@ -98,7 +98,9 @@ module T =
     | Block     of lexeme Wrap.t  (* block     *)
     | Case      of lexeme Wrap.t  (* case      *)
     | Const     of lexeme Wrap.t  (* const     *)
-    | Contains  of lexeme Wrap.t  (* contains  *)
+    | Contains  of lexeme Wrap.t  (* contains     *)
+    | ContractOf  of lexeme Wrap.t  (* contract_of  *)
+    | ParameterOf of lexeme Wrap.t  (* parameter_of *)
     | Else      of lexeme Wrap.t  (* else      *)
     | End       of lexeme Wrap.t  (* end       *)
     | For       of lexeme Wrap.t  (* for       *)
@@ -106,6 +108,7 @@ module T =
     | Function  of lexeme Wrap.t  (* function  *)
     | If        of lexeme Wrap.t  (* if        *)
     | In        of lexeme Wrap.t  (* in        *)
+    | Include   of lexeme Wrap.t  (* include   *)
     | Is        of lexeme Wrap.t  (* is        *)
     | List      of lexeme Wrap.t  (* list      *)
     | Map       of lexeme Wrap.t  (* map       *)
@@ -120,6 +123,7 @@ module T =
     | Recursive of lexeme Wrap.t  (* recursive *)
     | Remove    of lexeme Wrap.t  (* remove    *)
     | Set       of lexeme Wrap.t  (* set       *)
+    | Sig       of lexeme Wrap.t  (* sig       *)
     | Skip      of lexeme Wrap.t  (* skip      *)
     | Step      of lexeme Wrap.t  (* step      *)
     | Then      of lexeme Wrap.t  (* then      *)
@@ -209,6 +213,8 @@ module T =
     | Case      t
     | Const     t
     | Contains  t
+    | ContractOf  t
+    | ParameterOf t
     | Else      t
     | End       t
     | For       t
@@ -216,6 +222,7 @@ module T =
     | Function  t
     | If        t
     | In        t
+    | Include   t
     | Is        t
     | List      t
     | Map       t
@@ -230,6 +237,7 @@ module T =
     | Recursive t
     | Remove    t
     | Set       t
+    | Sig       t
     | Skip      t
     | Step      t
     | Then      t
@@ -256,6 +264,8 @@ module T =
     let wrap_case      = wrap "case"
     let wrap_const     = wrap "const"
     let wrap_contains  = wrap "contains"
+    let wrap_contract_of  = wrap "contract_of"
+    let wrap_parameter_of = wrap "parameter_of"
     let wrap_else      = wrap "else"
     let wrap_end       = wrap "end"
     let wrap_for       = wrap "for"
@@ -263,6 +273,7 @@ module T =
     let wrap_function  = wrap "function"
     let wrap_if        = wrap "if"
     let wrap_in        = wrap "in"
+    let wrap_include   = wrap "include"
     let wrap_is        = wrap "is"
     let wrap_list      = wrap "list"
     let wrap_map       = wrap "map"
@@ -277,6 +288,7 @@ module T =
     let wrap_recursive = wrap "recursive"
     let wrap_remove    = wrap "remove"
     let wrap_set       = wrap "set"
+    let wrap_sig       = wrap "sig"
     let wrap_skip      = wrap "skip"
     let wrap_step      = wrap "step"
     let wrap_then      = wrap "then"
@@ -295,6 +307,8 @@ module T =
     let mk_Case      region = Case      (wrap_case      region)
     let mk_Const     region = Const     (wrap_const     region)
     let mk_Contains  region = Contains  (wrap_contains  region)
+    let mk_ContractOf  region = ContractOf  (wrap_contract_of  region)
+    let mk_ParameterOf region = ParameterOf (wrap_parameter_of region)
     let mk_Else      region = Else      (wrap_else      region)
     let mk_End       region = End       (wrap_end       region)
     let mk_For       region = For       (wrap_for       region)
@@ -302,6 +316,7 @@ module T =
     let mk_Function  region = Function  (wrap_function  region)
     let mk_If        region = If        (wrap_if        region)
     let mk_In        region = In        (wrap_in        region)
+    let mk_Include   region = Include   (wrap_include   region)
     let mk_Is        region = Is        (wrap_is        region)
     let mk_List      region = List      (wrap_list      region)
     let mk_Map       region = Map       (wrap_map       region)
@@ -316,6 +331,7 @@ module T =
     let mk_Recursive region = Recursive (wrap_recursive region)
     let mk_Remove    region = Remove    (wrap_remove    region)
     let mk_Set       region = Set       (wrap_set       region)
+    let mk_Sig       region = Sig       (wrap_sig       region)
     let mk_Skip      region = Skip      (wrap_skip      region)
     let mk_Step      region = Step      (wrap_step      region)
     let mk_Then      region = Then      (wrap_then      region)
@@ -335,6 +351,8 @@ module T =
       mk_Case;
       mk_Const;
       mk_Contains;
+      mk_ContractOf;
+      mk_ParameterOf;
       mk_Else;
       mk_End;
       mk_For;
@@ -342,6 +360,7 @@ module T =
       mk_Function;
       mk_If;
       mk_In;
+      mk_Include;
       mk_Is;
       mk_List;
       mk_Map;
@@ -356,6 +375,7 @@ module T =
       mk_Recursive;
       mk_Remove;
       mk_Set;
+      mk_Sig;
       mk_Skip;
       mk_Step;
       mk_Then;
@@ -388,6 +408,8 @@ module T =
     let ghost_case      = wrap_case      Region.ghost
     let ghost_const     = wrap_const     Region.ghost
     let ghost_contains  = wrap_contains  Region.ghost
+    let ghost_contract_of  = wrap_contract_of  Region.ghost
+    let ghost_parameter_of = wrap_parameter_of Region.ghost
     let ghost_else      = wrap_else      Region.ghost
     let ghost_end       = wrap_end       Region.ghost
     let ghost_for       = wrap_for       Region.ghost
@@ -395,6 +417,7 @@ module T =
     let ghost_function  = wrap_function  Region.ghost
     let ghost_if        = wrap_if        Region.ghost
     let ghost_in        = wrap_in        Region.ghost
+    let ghost_include   = wrap_include   Region.ghost
     let ghost_is        = wrap_is        Region.ghost
     let ghost_list      = wrap_list      Region.ghost
     let ghost_map       = wrap_map       Region.ghost
@@ -409,6 +432,7 @@ module T =
     let ghost_recursive = wrap_recursive Region.ghost
     let ghost_remove    = wrap_remove    Region.ghost
     let ghost_set       = wrap_set       Region.ghost
+    let ghost_sig       = wrap_sig       Region.ghost
     let ghost_skip      = wrap_skip      Region.ghost
     let ghost_step      = wrap_step      Region.ghost
     let ghost_then      = wrap_then      Region.ghost
@@ -425,6 +449,8 @@ module T =
     let ghost_Case      = Case      ghost_case
     let ghost_Const     = Const     ghost_const
     let ghost_Contains  = Contains  ghost_contains
+    let ghost_ContractOf  = ContractOf  ghost_contract_of
+    let ghost_ParameterOf = ParameterOf ghost_parameter_of
     let ghost_Else      = Else      ghost_else
     let ghost_End       = End       ghost_end
     let ghost_For       = For       ghost_for
@@ -432,6 +458,7 @@ module T =
     let ghost_Function  = Function  ghost_function
     let ghost_If        = If        ghost_if
     let ghost_In        = In        ghost_in
+    let ghost_Include   = Include   ghost_include
     let ghost_Is        = Is        ghost_is
     let ghost_List      = List      ghost_list
     let ghost_Map       = Map       ghost_map
@@ -446,6 +473,7 @@ module T =
     let ghost_Recursive = Recursive ghost_recursive
     let ghost_Remove    = Remove    ghost_remove
     let ghost_Set       = Set       ghost_set
+    let ghost_Sig       = Sig       ghost_sig
     let ghost_Skip      = Skip      ghost_skip
     let ghost_Step      = Step      ghost_step
     let ghost_Then      = Then      ghost_then
@@ -770,6 +798,8 @@ module T =
     | "Case"      -> ghost_case#payload
     | "Const"     -> ghost_const#payload
     | "Contains"  -> ghost_contains#payload
+    | "ContractOf"  -> ghost_contract_of#payload
+    | "ParameterOf" -> ghost_parameter_of#payload
     | "Else"      -> ghost_else#payload
     | "End"       -> ghost_end#payload
     | "For"       -> ghost_for#payload
@@ -777,6 +807,7 @@ module T =
     | "Function"  -> ghost_function#payload
     | "If"        -> ghost_if#payload
     | "In"        -> ghost_in#payload
+    | "Include"   -> ghost_include#payload
     | "Is"        -> ghost_is#payload
     | "List"      -> ghost_list#payload
     | "Map"       -> ghost_map#payload
@@ -791,6 +822,7 @@ module T =
     | "Recursive" -> ghost_recursive#payload
     | "Remove"    -> ghost_remove#payload
     | "Set"       -> ghost_set#payload
+    | "Sig"       -> ghost_sig#payload
     | "Skip"      -> ghost_skip#payload
     | "Step"      -> ghost_step#payload
     | "Then"      -> ghost_then#payload
@@ -902,6 +934,8 @@ module T =
     | Case      t -> t#region, "Case"
     | Const     t -> t#region, "Const"
     | Contains  t -> t#region, "Contains"
+    | ContractOf  t -> t#region, "ContractOf"
+    | ParameterOf t -> t#region, "ParameterOf"
     | Else      t -> t#region, "Else"
     | End       t -> t#region, "End"
     | For       t -> t#region, "For"
@@ -909,6 +943,7 @@ module T =
     | Function  t -> t#region, "Function"
     | If        t -> t#region, "If"
     | In        t -> t#region, "In"
+    | Include   t -> t#region, "Include"
     | Is        t -> t#region, "Is"
     | List      t -> t#region, "List"
     | Map       t -> t#region, "Map"
@@ -923,6 +958,7 @@ module T =
     | Recursive t -> t#region, "Recursive"
     | Remove    t -> t#region, "Remove"
     | Set       t -> t#region, "Set"
+    | Sig       t -> t#region, "Sig"
     | Skip      t -> t#region, "Skip"
     | Step      t -> t#region, "Step"
     | Then      t -> t#region, "Then"

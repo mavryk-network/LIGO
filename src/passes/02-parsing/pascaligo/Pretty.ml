@@ -117,6 +117,7 @@ and print_declaration = function
 | D_Directive d -> print_D_Directive d
 | D_Fun       d -> print_D_Fun       d
 | D_Module    d -> print_D_Module    d
+| D_Signature d -> print_D_Signature d
 | D_Type      d -> print_D_Type      d
 
 (* Attributed declaration *)
@@ -249,9 +250,58 @@ and print_param thread pattern param_type =
 and print_D_Module (node : module_decl reg) =
   let node        = node.value in
   let name        = token node.name
-  and module_expr = print_module_expr node.module_expr
-  in group (string "module " ^^ name ^^ string " is "
+  and module_expr = print_module_expr node.module_expr in
+  let annotation  =
+    match node.annotation with
+      None -> empty
+    | Some (_colon, sig_expr) -> string " : " ^^ print_signature_expr sig_expr
+  in group (string "module " ^^ name ^^ annotation ^^ string " is "
             ^^ module_expr)
+
+(* MAVRYK: PascaLIGO module signatures *)
+
+and print_D_Signature (node : signature_decl reg) =
+  let node = node.value in
+  group (string "module type " ^^ token node.name ^^ string " is "
+         ^^ print_signature_expr node.signature_expr)
+
+and print_signature_expr (node : signature_expr) =
+  match node with
+    S_Sig  s -> print_S_Sig s
+  | S_Path p -> print_M_Path p
+  | S_Var  v -> token v
+
+and print_S_Sig (node : signature_body reg) =
+  let node  = node.value in
+  let items = separate_map (string ";" ^^ hardline) group
+                (List.map ~f:print_sig_item node.sig_items) in
+  group (string "sig" ^^ nest 2 (hardline ^^ items) ^^ hardline ^^ string "end")
+
+and print_sig_item = function
+  Sig_Value   d -> print_sig_value   d
+| Sig_Type    d -> print_sig_type    d
+| Sig_Include d -> print_sig_include d
+| Sig_Attr    d -> print_sig_attr    d
+
+and print_sig_value (node : sig_value reg) =
+  let node = node.value in
+  group (string "const " ^^ print_variable node.var ^^ string " : "
+         ^^ print_type_expr node.val_type)
+
+and print_sig_type (node : sig_type reg) =
+  let node = node.value in
+  let rhs  = match node.type_rhs with
+      None -> empty
+    | Some (_kwd_is, te) -> string " is " ^^ print_type_expr te
+  in group (string "type " ^^ print_variable node.name ^^ rhs)
+
+and print_sig_include (node : sig_include reg) =
+  let node = node.value in
+  group (string "include " ^^ print_signature_expr node.signature_expr)
+
+and print_sig_attr (node : (attribute * sig_item) reg) =
+  let attr, item = node.value in
+  print_attributes (print_sig_item item) [attr]
 
 and print_module_expr (node : module_expr) =
   match node with
@@ -299,6 +349,7 @@ and print_type_expr = function
 | T_Int     t -> print_T_Int     t
 | T_ModPath t -> print_T_ModPath t
 | T_Par     t -> print_T_Par     t
+| T_ParameterOf t -> print_T_ParameterOf t
 | T_Record  t -> print_T_Record  t
 | T_String  t -> print_T_String  t
 | T_Sum     t -> print_T_Sum     t
@@ -376,6 +427,11 @@ and print_module_path
 
 and print_T_Par (node : type_expr par reg) =
   print_par print_type_expr node
+
+and print_T_ParameterOf (node : parameter_of reg) =
+  let modules = Utils.nsepseq_to_list node.value in
+  let sep     = string "." ^^ break 0 in
+  string "parameter_of " ^^ group (separate_map sep token modules)
 
 (* Record type *)
 
@@ -875,6 +931,7 @@ and print_expr (node : expr) =
   | E_Equal     e -> print_E_Equal     e
   | E_Cond      e -> print_E_Cond      e
   | E_Cons      e -> print_E_Cons      e
+  | E_ContractOf e -> print_E_ContractOf e
   | E_Div       e -> print_E_Div       e
   | E_Fun       e -> print_E_Fun       e
   | E_Geq       e -> print_E_Geq       e
@@ -1000,6 +1057,11 @@ and print_E_Cond (node : expr conditional reg) =
 and print_E_Cons (node : sharp bin_op reg) = print_bin_op node
 
 (* Constructor in expressions *)
+
+and print_E_ContractOf (node : contract_of) =
+  let modules = Utils.nsepseq_to_list node.value in
+  let sep     = string "." ^^ break 0 in
+  string "contract_of " ^^ group (separate_map sep token modules)
 
 and print_E_Ctor (node : ctor) = token node
 
@@ -1207,9 +1269,8 @@ let print_pattern     _state = print_pattern
 let print_expr        _state = print_expr
 let print_declaration _state = print_declaration
 
-(* MAVRYK: PascaLIGO has no module signatures; [signature_expr] is uninhabited. *)
-let print_signature_expr _state (x : CST.signature_expr) : PPrint.document =
-  match x with _ -> .
+(* MAVRYK: PascaLIGO module signatures. *)
+let print_signature_expr _state = print_signature_expr
 
 type cst            = CST.t
 type expr           = CST.expr

@@ -108,6 +108,7 @@ type _ sing =
   | S_minus_eq : minus_eq sing
   | S_module_body : module_body sing
   | S_module_decl : module_decl sing
+  | S_signature_decl : signature_decl sing  (* MAVRYK: PascaLIGO. Coarse (leaf) fold; deep signature traversal is a TODO(M4) tooling item. *)
   | S_module_expr : module_expr sing
   | S_module_name : module_name sing
   | S_module_path : 'a sing -> 'a module_path sing
@@ -324,6 +325,7 @@ let fold'
     | D_Directive node -> node -| S_directive
     | D_Fun node -> node -| S_reg S_fun_decl
     | D_Module node -> node -| S_reg S_module_decl
+    | D_Signature node -> node -| S_reg S_signature_decl
     | D_Type node -> node -| S_reg S_type_decl)
   | S_declarations -> process @@ node -| S_nseq S_declaration
   | S_directive -> () (* Leaf *)
@@ -345,6 +347,7 @@ let fold'
     | E_Ctor node -> node -| S_ctor
     | E_Cond node -> node -| S_reg (S_conditional S_expr)
     | E_Cons node -> node -| S_reg (S_bin_op  S_sharp)
+    | E_ContractOf node -> node -| S_reg (S_nsepseq (S_module_name, S_dot))
     | E_Div node -> node -| S_reg (S_bin_op  S_slash)
     | E_Equal node -> node -| S_reg (S_bin_op  S_equal)
     | E_Fun node -> node -| S_reg S_fun_expr
@@ -550,13 +553,14 @@ let fold'
     [ enclosing -| S_block_enclosing
     ; declarations -| S_declarations ]
   | S_module_decl ->
-    let { kwd_module; name; kwd_is; module_expr; terminator } = node in
+    let { kwd_module; name; annotation = _; kwd_is; module_expr; terminator } = node in
     process_list
     [ kwd_module -| S_kwd_module
     ; name -| S_module_name
     ; kwd_is -| S_kwd_is
     ; module_expr -| S_module_expr
     ; terminator -| S_option S_semi ]
+  | S_signature_decl -> ()  (* MAVRYK: PascaLIGO. Coarse leaf; see TODO(M4). *)
   | S_module_expr -> process
     (match node with
       M_Body node -> node -| S_reg S_module_body
@@ -738,6 +742,7 @@ let fold'
     | T_Int node -> node -| S_wrap (S_tuple_2 (S_lexeme, S_z))
     | T_ModPath node -> node -| S_reg (S_module_path S_type_expr)
     | T_Par node -> node -| S_reg (S_par S_type_expr)
+    | T_ParameterOf node -> node -| S_reg (S_nsepseq (S_module_name, S_dot))
     | T_Record node -> node -| S_reg (S_compound (S_reg S_field_decl))
     | T_String node -> node -| S_string_literal
     | T_Sum node -> node -| S_reg S_sum_type

@@ -282,11 +282,15 @@ let   cameligo_sym = "->" | "<>" | "::" | "||" | "&&" | "'" | "|>" | "^" | ":="
 let     jsligo_sym =   "..." | "?" | "!" | "%" | "==" | "!=" | "+=" | "-="
                    | "*=" | "/="| "%=" | "=>" | "++" | "--" | "#" | "<<"
                    | "<<=" | "&" (* | ">=" | ">>=" | ">>" : See parser. *)
+(* MAVRYK: PascaLIGO. The not-equal operator "=/=" is unique to PascaLIGO;
+   without it here, ocamllex longest-match splits "=/=" into "=" + "/=". *)
+let  pascaligo_sym = "=/="
 
 let symbol =
      common_sym
 |  cameligo_sym
 |    jsligo_sym
+| pascaligo_sym  (* MAVRYK: PascaLIGO *)
 
 (* RULES *)
 
