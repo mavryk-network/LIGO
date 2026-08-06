@@ -73,3 +73,35 @@ Note that the sub-namespace `Coin` had to be prefixed by the keyword
 `export` to enable access to its contents.
 
 </Syntax>
+
+
+<Syntax syntax="pascaligo">
+
+Modules can be nested, which means that we can define a module inside
+another module. As an illustration, let us define a variant of `Euro`
+in which the constants are all grouped inside using a sub-module.
+
+```pascaligo group=module_nesting
+module Euro is {
+  type t is nat
+
+  function add (const a : t; const b : t) : t is a + b
+
+  module Coin is {
+    const one : t = 1n
+    const two : t = 2n
+  }
+}
+```
+
+To access nested modules we simply apply the selection operator more
+than once:
+
+```pascaligo group=module_nesting
+type storage is Euro.t
+
+function increment (const s : storage) : storage is
+  Euro.add (s, Euro.Coin.one)
+```
+
+</Syntax>

@@ -28,6 +28,16 @@ const contains_2: bool = Big_map.mem(2, my_map); // == true
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_map_searching
+const my_map : big_map (int, string) =
+  Big_map.literal (list [(1,"one"); (2,"two")])
+const contains_2 : bool = Big_map.mem (2, my_map) // = True
+```
+
+</Syntax>
+
 In practice, however, we would like to get the value associated to the
 key we searched. This is achieved by means of `Big_map.find_opt`.
 
@@ -43,6 +53,14 @@ let v : string option = Big_map.find_opt 2 my_map
 
 ```jsligo group=big_map_searching
 const v : option<string> = Big_map.find_opt(2, my_map);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_map_searching
+const v : option (string) = Big_map.find_opt (2, my_map)
 ```
 
 </Syntax>
@@ -71,6 +89,18 @@ let force_access = (key, map) => {
     when(None): failwith("No value.")
   };
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_map_searching
+function force_access (const key : int; const m : big_map (int, string)) : string is
+  case Big_map.find_opt (key, m) of [
+    Some (value) -> value
+  | None -> failwith ("No value.")
+  ]
 ```
 
 </Syntax>

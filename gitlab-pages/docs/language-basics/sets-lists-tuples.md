@@ -39,6 +39,21 @@ triple of the same type: `[x, y]` has always a different type from
 `[x, y, z]`, whereas `[y, x]` might have the same type as `[x, y]`.
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+Tuples gather a given number of values in a specific order and those
+values, called *components*, can be retrieved by their index
+(position).  Probably the most common tuple is the *pair*. For
+example, if we were storing coordinates on a two dimensional grid we
+might use a pair `(x,y)` to store the coordinates `x` and `y`. There
+is a *specific order*, so `(y,x)` is not equal to `(x,y)` in
+general. The number of components is part of the type of a tuple, so,
+for example, we cannot add an extra component to a pair and obtain a
+triple of the same type: `(x,y)` has always a different type from
+`(x,y,z)`, whereas `(y,x)` might have the same type as `(x,y)`.
+
+</Syntax>
 Like records, tuple components can be of arbitrary types.
 
 ### Defining Tuples
@@ -63,6 +78,16 @@ let friends : two_people = ("Alice", "Johnson") // Optional parentheses
 type two_people = [string, string];  // Alias
 
 const friends: two_people = ["Alice", "Johnson"];
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=tuple
+type two_people is string * string  // Alias
+
+const friends : two_people = ("Alice", "Johnson") // Optional parentheses
 ```
 
 </Syntax>
@@ -132,6 +157,30 @@ let destruct_record = (x : { a : int , b : string }) : int => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+### Destructuring
+
+If we want to get the first and second names of the `two_people` type, we can use
+destructuring. Destructuring a tuple allows you to give names to the elements
+inside the tuple.
+
+```pascaligo group=tuple
+const (person_a, person_b) : two_people = friends
+```
+
+This also works in functions:
+
+```pascaligo group=tuple
+function first_person (const (person_a, _) : two_people) : string is person_a
+const alice : string = first_person (friends)
+```
+
+Notice that we use the underscore to indicate that we ignore the last element
+of the tuple.
+
+</Syntax>
+
 ### Accessing Components
 
 Accessing the components of a tuple in OCaml is achieved by
@@ -154,6 +203,14 @@ let first_name : string = friends.0
 
 ```jsligo group=tuple
 const first_name_component = friends[0];
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=tuple
+const first_name : string = friends.0
 ```
 
 </Syntax>
@@ -192,6 +249,15 @@ const my_list : list<int> = [1, 2, 2]; // The head is 1, the tail is [2, 2]
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=lists
+const empty_list : list (int) = list []
+const my_list : list (int) = list [1; 2; 2]  // The head is 1, the tail is [2; 2]
+```
+
+</Syntax>
+
 
 ### Adding to Lists
 
@@ -223,6 +289,18 @@ const larger_list : list<int> = [5, ...my_list]; // [5,1,2,2]
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, the *cons operator* is infix and noted `#`. It is not
+symmetric: on the left lies the element to cons, and, on the right, a
+list on which to cons.
+
+```pascaligo group=lists
+const larger_list : list (int) = 5 # my_list  // [5;1;2;2]
+```
+
+</Syntax>
+
 ### Accessing list elements
 
 You cannot access element directly in list but you can access the
@@ -243,6 +321,15 @@ let tail : int list option = List.tail_opt my_list (* [2;2] *)
 ```jsligo group=lists
 const head: option<int> = List.head_opt(my_list); // 1
 const tail: option<list<int>> = List.tail_opt(my_list); // [2,2]
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=lists
+const head : option (int) = List.head_opt (my_list)
+const tail : option (list (int)) = List.tail_opt (my_list)
 ```
 
 </Syntax>
@@ -296,6 +383,15 @@ const assert_all_greater_than_three = (l: list<int>): unit => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=lists
+function assert_all_greater_than_three (const l : list (int)) : unit is
+  List.iter (function (const i : int) : unit is assert (i > 3), l)
+```
+
+</Syntax>
+
 
 #### Mapped Operation over Lists
 
@@ -323,6 +419,17 @@ const increment = i => i + 1;
 
 // Creates a new list with all elements incremented by 1
 const plus_one: list<int> = List.map(increment, larger_list); // [6,2,3,3]
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=lists
+function increment (const i : int) : int is i + 1
+
+// Creates a new list with all elements incremented by 1
+const plus_one : list (int) = List.map (increment, larger_list)  // [6,2,3,3]
 ```
 
 </Syntax>
@@ -367,6 +474,15 @@ const sum_of_elements: int = List.fold (sum, my_list, 0);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=lists
+function sum (const acc_i : int * int) : int is acc_i.0 + acc_i.1
+const sum_of_elements : int = List.fold_left (sum, 0, my_list)
+```
+
+</Syntax>
+
 ## Sets
 
 Sets are unordered collections of values of the same type, like lists
@@ -394,6 +510,17 @@ In JsLIGO, the empty set is denoted by the predefined value
 
 ```jsligo group=sets
 const my_empty_set: set<int> = Set.empty;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, the empty set is denoted by the predefined value
+`Set.empty`.
+
+```pascaligo group=sets
+const my_set : set (int) = Set.empty
 ```
 
 </Syntax>
@@ -440,6 +567,26 @@ ligo run evaluate-expr gitlab-pages/docs/language-basics/src/sets-lists-tuples/s
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, you can create a non-empty set using the `Set.literal` function
+which takes a list of elements & returns a set.
+
+```pascaligo group=sets
+const my_set : set (int) = Set.literal (list [3; 2; 2; 1])
+```
+
+You can check that `2` is not repeated in `my_set` by using the LIGO
+compiler like this (the output will sort the elements of the set, but
+that order is not significant for the compiler):
+
+```shell
+ligo run evaluate-expr gitlab-pages/docs/language-basics/src/sets-lists-tuples/sets.ligo my_set
+# Outputs: SET_ADD(3 , SET_ADD(2 , SET_ADD(1 , SET_EMPTY())))
+```
+
+</Syntax>
+
 ### Adding an element to a Set
 
 You can add an element to a set, using `Set.add` function.
@@ -456,6 +603,14 @@ let with_999 : int set = Set.add 999 my_set
 
 ```jsligo group=sets
 const with_999: set<int> = Set.add(999, my_set);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=sets
+const with_999 : set (int) = Set.add (999, my_set)
 ```
 
 </Syntax>
@@ -484,6 +639,17 @@ const contains_3: bool = Set.mem(3, my_set);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, the predefined predicate `Set.mem` tests for membership
+in a set as follows:
+
+```pascaligo group=sets
+const contains_3 : bool = Set.mem (3, my_set)
+```
+
+</Syntax>
+
 
 
 ### Cardinal of Sets
@@ -504,6 +670,14 @@ let cardinal : nat = Set.size my_set
 
 ```jsligo group=sets
 const cardinal: nat = Set.size(my_set);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=sets
+const cardinal : nat = Set.size (my_set)
 ```
 
 </Syntax>
@@ -535,6 +709,19 @@ without some elements.
 ```jsligo group=sets
 const larger_set: set<int> = Set.add(4, my_set);
 const smaller_set: set<int> = Set.remove(3, my_set);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, we can use the predefined functions `Set.add` and
+`Set.remove`. We update a given set by creating another one, with or
+without some elements.
+
+```pascaligo group=sets
+const larger_set : set (int) = Set.add (4, my_set)
+const smaller_set : set (int) = Set.remove (3, my_set)
 ```
 
 </Syntax>
@@ -583,6 +770,15 @@ const assert_all_greater_than_three = s => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=sets
+function assert_all_greater_than_three (const s : set (int)) : unit is
+  Set.iter (function (const i : int) : unit is assert (i > 3), s)
+```
+
+</Syntax>
+
 
 #### Folded Operation
 
@@ -617,6 +813,19 @@ signature `val fold_right : ('acc * 'elt -> 'acc) * 'elt set * 'acc ->
 ```jsligo group=sets
 const sum = ([acc, i]: [int, int]) => acc + i;
 const sum_of_elements = Set.fold (sum, my_set, 0);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The predefined fold over sets is called `Set.fold`. In PascaLIGO, its
+arguments are tupled as `Set.fold (folder, set, initial_accumulator)`,
+and the folder function must take a single tuple-typed parameter.
+
+```pascaligo group=sets
+function sum (const acc_i : int * int) : int is acc_i.0 + acc_i.1
+const sum_of_elements : int = Set.fold (sum, my_set, 0)
 ```
 
 </Syntax>

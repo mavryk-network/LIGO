@@ -1,5 +1,7 @@
 import CAMELIGO_EXAMPLE from "!!raw-loader!./cameligo.mligo";
 import JSLIGO_EXAMPLE from "!!raw-loader!./jsligo.jsligo";
+// MAVRYK: PascaLIGO — restored third syntax on the homepage showcase.
+import PASCALIGO_EXAMPLE from "!!raw-loader!./pascaligo.ligo";
 import { useColorMode } from "@docusaurus/theme-common";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import TabItem from "@theme/TabItem";
@@ -27,6 +29,7 @@ function CodeExamples(props) {
       values={[
         { label: "JsLIGO", value: "jsligo" },
         { label: "CameLIGO", value: "cameligo" },
+        { label: "PascaLIGO", value: "pascaligo" },
       ]}
     >
       <TabItem value="jsligo">
@@ -70,6 +73,28 @@ function CodeExamples(props) {
           className={styles["code-examples__cta"]}
         >
           try cameligo online
+        </a>
+      </TabItem>
+
+      <TabItem value="pascaligo">
+        <Highlight {...defaultProps} language="pascaligo" code={PASCALIGO_EXAMPLE} theme={prismTheme}>
+          {({ className, style, tokens, getLineProps, getTokenProps }) => (
+            <pre className={clsx(className, styles["code-examples__ide"])} style={style}>
+              {tokens.map((line, i) => (
+                <div {...getLineProps({ line, key: i })}>
+                  {line.map((token, key) => (
+                    <span {...getTokenProps({ token, key })} />
+                  ))}
+                </div>
+              ))}
+            </pre>
+          )}
+        </Highlight>
+        <a
+          href="https://ide.mavryk.org"
+          className={styles["code-examples__cta"]}
+        >
+          try pascaligo online
         </a>
       </TabItem>
     </Tabs>

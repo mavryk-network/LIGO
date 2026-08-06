@@ -56,6 +56,24 @@ const test_bytes_bitwise_module = (() => {
 ```
 
 </Syntax>
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=test_bitwise
+const test_bytes_bitwise_ops =
+  block {
+    const b_and         = Bitwise.and         (0x0005, 0x0106);
+    const b_or          = Bitwise.or          (0x0005, 0x0106);
+    const b_xor         = Bitwise.xor         (0x0005, 0x0106);
+    const b_shift_left  = Bitwise.shift_left  (0x06,   8n);
+    const b_shift_right = Bitwise.shift_right (0x0006, 1n);
+  } with assert (b_and         = 0x0004
+             and b_or          = 0x0107
+             and b_xor         = 0x0103
+             and b_shift_left  = 0x0600
+             and b_shift_right = 0x0003)
+```
+
+</Syntax>
 
 #### Conversion between `bytes`-`int` & `bytes`-`nat`
 
@@ -95,6 +113,23 @@ const test_bytes_int = int(0x1234) // 4660
 
 /* int -> bytes */
 const test_int_bytes = bytes(4660) // 0x1234
+```
+
+</Syntax>
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=test_bytes_conv
+// bytes -> nat
+const test_bytes_nat = nat (0x1234) // 1234n
+
+// nat -> bytes
+const test_nat_bytes = bytes (4660n) // 0x1234
+
+// bytes -> int
+const test_bytes_int = int (0x1234) // 4660
+
+// int -> bytes
+const test_int_bytes = bytes (4660) // 0x1234
 ```
 
 </Syntax>

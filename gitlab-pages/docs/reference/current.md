@@ -35,6 +35,15 @@ let check = (p: unit, s: mav):[list<operation>, mav] =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function check (const p : unit; const s : mav) : list (operation) * mav is
+  ((nil : list (operation)), Mavryk.get_balance ())
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="cameligo">
 val get_now : unit -> timestamp
 </SyntaxTitle>
@@ -77,6 +86,18 @@ let one_day_later = some_date + one_day;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b
+const today         = Mavryk.get_now ()
+const one_day       = 86_400
+const in_24_hrs     = today + one_day
+const some_date     = ("2000-01-01t10:10:10Z" : timestamp)
+const one_day_later = some_date + one_day
+```
+
+</Syntax>
+
 
 #### 24 hours ago
 
@@ -100,6 +121,16 @@ let in_24_hrs = today - one_day;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+const today     = Mavryk.get_now ()
+const one_day   = 86_400
+const in_24_hrs = today - one_day
+```
+
+</Syntax>
+
 
 #### Comparing Timestamps
 
@@ -118,6 +149,14 @@ let not_tomorrow = (Mavryk.get_now () = in_24_hrs)
 
 ```jsligo group=c
 let not_tomorrow = (Mavryk.get_now() == in_24_hrs);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+const not_tomorrow = (Mavryk.get_now () = in_24_hrs)
 ```
 
 </Syntax>
@@ -151,6 +190,15 @@ function threshold (p : unit) {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function threshold (const p : unit) : int is
+  if Mavryk.get_amount () = 100mav then 42 else 0
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="cameligo">
 val get_sender : unit -> address
 </SyntaxTitle>
@@ -173,6 +221,14 @@ let check (p : unit) = Mavryk.get_sender ()
 
 ```jsligo group=e
 let check = (p : unit) => Mavryk.get_sender ();
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function check (const p : unit) : address is Mavryk.get_sender ()
 ```
 
 </Syntax>
@@ -208,6 +264,16 @@ let check = (p : key_hash) => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function check (const p : key_hash) : address is block {
+  const c = Mavryk.implicit_account (p)
+} with Mavryk.address (c)
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="cameligo">
 val get_self_address : unit -> address
 </SyntaxTitle>
@@ -230,6 +296,14 @@ let check (p : unit) = Mavryk.get_self_address ()
 
 ```jsligo group=g
 let check = (p : unit) => Mavryk.get_self_address();
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function check (const p : unit) : address is Mavryk.get_self_address ()
 ```
 
 </Syntax>
@@ -262,6 +336,14 @@ let check = (p: unit) => Mavryk.self("%default");
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function check (const p : unit) : contract (unit) is Mavryk.self ("%default")
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="cameligo">
 val implicit_account : key_hash -> 'a contract
 </SyntaxTitle>
@@ -288,6 +370,14 @@ let check (kh : key_hash) = Mavryk.implicit_account kh
 
 ```jsligo group=i
 let check = (kh: key_hash) => Mavryk.implicit_account(kh);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function check (const kh : key_hash) : contract (unit) is Mavryk.implicit_account (kh)
 ```
 
 </Syntax>
@@ -338,6 +428,14 @@ let check (p : unit) = Mavryk.get_source ()
 
 ```jsligo group=j
 let check = (p : unit) => Mavryk.get_source();
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function check (const p : unit) : address is Mavryk.get_source ()
 ```
 
 </Syntax>
@@ -395,6 +493,24 @@ let main = (_ignore: unit, storage: storage) : [list<operation>, storage] => {
     return [[], packed];
   };
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+type storage is bytes
+
+[@entry]
+function main (const _ignore : unit; const store : storage) : list (operation) * storage is
+  block {
+    const packed = Bytes.pack (Mavryk.get_chain_id ())
+  } with
+    if store =/= packed then
+      (failwith ("wrong chain") : list (operation) * storage)
+    else
+      ((nil : list (operation)), packed)
 ```
 
 </Syntax>
@@ -566,6 +682,15 @@ type tr = sapling_transaction<8>;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=sap_t
+type st is sapling_state (8)
+type tr is sapling_transaction (8)
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="cameligo">
 val sapling_empty_state : 'n sapling_state
 </SyntaxTitle>
@@ -586,6 +711,14 @@ let x = Mavryk.sapling_empty_state
 
 ```jsligo group=sap_t
 let x = Mavryk.sapling_empty_state ;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=sap_t
+const x = Mavryk.sapling_empty_state
 ```
 
 </Syntax>
@@ -626,6 +759,18 @@ let f = (tr : tr) =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=sap_t
+function f (const tr : tr) : int * st is
+  case Mavryk.sapling_verify_update (tr, x) of [
+    Some (p) -> p.1
+  | None -> (failwith ("failed") : int * st)
+  ]
+```
+
+</Syntax>
+
 ### Linearity
 
 If a contract storage type contains a ticket, you must destructure the parameter-storage pair within the body to preserve storage linearity (e.g. avoid `DUP`-ing storage).
@@ -662,6 +807,23 @@ function main (i: parameter, store : storage): result {
   let [_x, ret] = Big_map.get_and_update ("hello", Some(my_ticket1), store);
   return [[], ret]
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=contract_ticket
+type storage is big_map (string, ticket (int))
+type parameter is int
+type result is list (operation) * storage
+
+[@entry]
+function main (const i : parameter; const store : storage) : result is
+  block {
+    const my_ticket1 = Option.unopt (Mavryk.create_ticket (i, 10n));
+    const (_x, x) = Big_map.get_and_update ("hello", Some (my_ticket1), store);
+  } with ((nil : list (operation)), x)
 ```
 
 </Syntax>

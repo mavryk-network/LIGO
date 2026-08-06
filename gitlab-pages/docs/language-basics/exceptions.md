@@ -40,6 +40,20 @@ The call to failwith sometimes needs to be annotated with a type when the type-c
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=failwith
+type storage is unit
+type result is list (operation) * storage
+
+[@entry] function main (const _param : unit; const _store : storage) : result is
+  failwith ("This contract always fails.")
+```
+
+The call to failwith sometimes needs to be annotated with a type when the type-checker cannot infer the correct type, e.g. `(failwith ("message") : result)`.
+
+</Syntax>
+
 ## Assertions
 
 Assertions can be used to ensure a certain condition is met when
@@ -84,6 +98,22 @@ const some = (o: option<unit>, s : unit) : [list<operation>, unit] => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=failwith_alt
+[@entry] function main (const p : bool; const s : unit) : list (operation) * unit is
+  block {
+    const u : unit = assert (p)
+  } with ((nil : list (operation)), s)
+
+[@entry] function some (const o : option (unit); const s : unit) : list (operation) * unit is
+  block {
+    const u : unit = assert_some (o)
+  } with ((nil : list (operation)), s)
+```
+
+</Syntax>
+
 You can use `assert_with_error` or `assert_some_with_error` to use a custom error message
 
 <Syntax syntax="cameligo">
@@ -105,6 +135,17 @@ let main = (p: bool, s: unit) : [list<operation>, unit] => {
   assert_with_error (p, "My custom error message.");
   return [[], s];
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=failwith_assert_with_error
+[@entry] function main (const p : bool; const s : unit) : list (operation) * unit is
+  block {
+    const u : unit = assert_with_error (p, "My custom error message.")
+  } with ((nil : list (operation)), s)
 ```
 
 </Syntax>

@@ -52,5 +52,26 @@ type transfer =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The attributes `[@layout comb]` and `[@layout tree]` can be placed
+before a record type expression (that is, before `record [ ... ]`),
+and before the leading vertical bar `|` of a variant type expression,
+in order to explicitly choose the desired layout.
+
+For example,
+
+```pascaligo group=layout
+type transfer is
+  [@layout comb]
+  record [
+    [@annot from] address_from : address;
+    [@annot to] address_to : address;
+    value : nat
+  ]
+```
+
+</Syntax>
+
 Note that the default layout is `comb`, and, except for
 inter-operations with pre-1.0.0, it should not be updated.

@@ -18,6 +18,12 @@ But this has been forbidden in CameLIGO, you have to add parentheses instead:
 let y = -(-1) (* In CameLIGO *)
 ```
 
+PascaLIGO also requires the parentheses for consecutive `-` operators:
+
+```pascaligo
+const y : int = -(-1) // In PascaLIGO
+```
+
 ### Unary '+' operator
 
 This is possible in OCaml but not CameLIGO :
@@ -37,6 +43,14 @@ let res =
   type t = int list in
   let x : t = [42] in
   43 :: x
+```
+
+PascaLIGO does not have an inline `type ... in` form; the closest equivalent is a plain type declaration in the same scope:
+
+```pascaligo
+type t is list (int)
+const x : t = list [42]
+const res : t = 43 # x
 ```
 
 ### Entry point declarations
@@ -78,6 +92,34 @@ type planet = Earth | Mars | Earth2
   store ^ " " ^ world
 ```
 
+The same contract in PascaLIGO:
+
+```pascaligo
+type storage is string
+type result is list (operation) * storage
+
+[@entry] function hello (const _u : unit; const _store : storage) : result is
+  ((nil : list (operation)), "hello")
+
+[@entry] function big (const _u : unit; const store : storage) : result is
+  ((nil : list (operation)), store ^ " big")
+
+type planet is
+  Earth of unit
+| Mars of unit
+| Earth2 of unit
+
+[@view] function world (const p : planet; const store : storage) : string is
+  block {
+    const desc : string =
+      case p of [
+        Earth (_u)  -> " pale blue dot"
+      | Mars (_u)   -> " pale red dot"
+      | Earth2 (_u) -> failwith ("backup planet not found")
+      ]
+  } with store ^ " " ^ desc
+```
+
 ### Semicolons in `begin ... end` sequences
 
 In OCaml, the last instruction of a `begin ... end` sequence can be terminated by a semicolon `;`, but not in CameLIGO.
@@ -95,6 +137,19 @@ let main (_p : unit) (s : storage) : operation list * storage =
     end
   in
   [], s
+```
+
+PascaLIGO has an equivalent `begin ... end` block form, but it does allow a semicolon after the last instruction:
+
+```pascaligo group=semicolons
+type storage is int
+
+[@entry]
+function main (const _p : unit; const s : storage) : list (operation) * storage is
+  begin
+    assert (1 = 1);
+    assert (2 = 2); // a trailing semicolon here is fine
+  end with ((nil : list (operation)), s)
 ```
 
 ### Name punning

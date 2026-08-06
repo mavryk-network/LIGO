@@ -66,3 +66,31 @@ const tick = (_: ticket<int>, x: [int, int])
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+The attribute `[@dyn_entry]` on a function indicates that said
+function should be made available as a *dynamic entrypoint* of the
+smart contract.
+
+Dynamic entry points can be removed or updated without deploying a new
+contract, unlike entrypoints attributed with `[@entry]` (those cannot
+be modified after the contract is originated). Dynamic entrypoints can
+be used for example to implement a DAO (Decentralized Autonomous
+Organization) with a built-in update mechanism that allows
+participants to vote on upgrades to the contract, in a manner somewhat
+akin to the amending process of the Mavryk protocol itself.
+
+```pascaligo group=dyn_entry
+type storage is record [ storage : int; dynamic_entrypoints ]
+
+[@dyn_entry]
+function one (const _u : unit; const _i : int) : list (operation) * int is
+  ((nil : list (operation)), 1)
+
+[@dyn_entry]
+function tick (const _t : ticket (int); const p : int * int) : list (operation) * (int * int) is
+  ((nil : list (operation)), p)
+```
+
+</Syntax>

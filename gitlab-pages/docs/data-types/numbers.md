@@ -78,6 +78,34 @@ const baekman_nat : nat = 100_0000n
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=int_and_nat
+// The following are integers
+const zero = 0
+const million = 1_000_000 // Grouping in French
+const baekman = 100_0000 // Grouping in Korean
+
+// The following are natural numbers
+const zero_nat = 0n
+const million_nat = 1_000_000n
+const baekman_nat = 100_0000n
+```
+
+As a form of documentation, a type can be ascribed to each constant:
+
+```pascaligo group=typed_int_and_nat
+const zero : int = 0
+const million : int = 1_000_000
+const baekman : int = 100_0000
+
+const zero_nat : nat = 0n
+const million_nat : nat = 1_000_000n
+const baekman_nat : nat = 100_0000n
+```
+
+</Syntax>
+
 ## Casting
 
 In mathematics, natural numbers are a strict subset of integers, and
@@ -110,6 +138,14 @@ const two : nat = abs(2);  // Explicit cast from int to nat
 ```
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=casting
+const one : int = int (1n); // Explicit cast from nat to int
+const two : nat = abs (2);  // Explicit cast from int to nat
+```
+</Syntax>
+
 ## Adding
 
 Addition in LIGO is accomplished by means of the `+` binary operator,
@@ -134,6 +170,18 @@ let d : int = 10 + 5n   // int + nat yields int
 <Syntax syntax="jsligo">
 
 ```jsligo group=additing
+const a : int = 5 + 10;    // int + int yields int
+const b : nat = 5n + 10n;  // nat + nat yields nat
+const c : int = 5n + 10;   // nat + int yields int
+const d : int = 10 + 5n;   // int + nat yields int
+// const error : nat = 5n + 10;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=additing
 const a : int = 5 + 10;    // int + int yields int
 const b : nat = 5n + 10n;  // nat + nat yields nat
 const c : int = 5n + 10;   // nat + int yields int
@@ -176,6 +224,18 @@ const d : int = 5 - 10n;  // int - nat yields int
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=subtracting
+const a : int = 5 - 10;   // int - int yields int
+const b : int = 5n - 2n;  // nat - nat yields int
+const c : int = 10n - 5;  // nat - int yields int
+const d : int = 5 - 10n;  // int - nat yields int
+// const error : nat = 5n - 2n;
+```
+
+</Syntax>
+
 ## Negating
 
 The arithmetic negation of a number is the same as subtracting that
@@ -194,6 +254,15 @@ let b : int = -5n // - nat yields int
 <Syntax syntax="jsligo">
 
 ```jsligo group=negating
+const a : int = -5;  // - int yields int
+const b : int = -5n; // - nat yields int
+// const error : nat = -5n;
+```
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=negating
 const a : int = -5;  // - int yields int
 const b : int = -5n; // - nat yields int
 // const error : nat = -5n;
@@ -229,6 +298,17 @@ const d : int = 5 * 10n;  // int * nat yields int
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=multiplying
+const a : int = 5 * 10;   // int * int yields int
+const b : nat = 5n * 2n;  // nat * nat yields nat
+const c : int = 10n * 5;  // nat * int yields int
+const d : int = 5 * 10n;  // int * nat yields int
+```
+
+</Syntax>
+
 ## Dividing
 
 Because LIGO features neither floating-point nor fixed-point
@@ -253,6 +333,17 @@ let d : int = 10 / 3n   // int / nat yields int
 <Syntax syntax="jsligo">
 
 ```jsligo group=dividing
+const a : int = 10 / 3;    // int / int yields int
+const b : nat = 10n / 3n;  // nat / nat yields nat
+const c : int = 10n / 3;   // nat / int yields int
+const d : int = 10 / 3n;   // int / nat yields int
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=dividing
 const a : int = 10 / 3;    // int / int yields int
 const b : nat = 10n / 3n;  // nat / nat yields nat
 const c : int = 10n / 3;   // nat / int yields int
@@ -294,6 +385,25 @@ const a : nat = 120  % 9;  // int % int yields nat
 const b : nat = 120n % 9;  // nat % int yields nat
 const c : nat = 120n % 9n; // nat % nat yields nat
 const d : nat = 120  % 9n; // int % nat yields nat
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The binary operator `mod` returns the <em>positive modulo</em> of the
+Euclidean division, that is, the following holds:
+
+> (n*(a/n)+(a%n) == a) && (0n <= a % n) && (a % n < abs(n))
+
+It is overloaded as the Euclidean division `/` to allow for
+all four combinations of natural numbers and integers.
+
+```pascaligo group=mod
+const a : nat = 120  mod 9;  // int mod int yields nat
+const b : nat = 120n mod 9;  // nat mod int yields nat
+const c : nat = 120n mod 9n; // nat mod nat yields nat
+const d : nat = 120  mod 9n; // int mod nat yields nat
 ```
 
 </Syntax>

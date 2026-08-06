@@ -73,3 +73,25 @@ const comp_sum = ([x,y]) => x + y;
 
 
 </Syntax>
+
+
+<Syntax syntax="pascaligo">
+
+Function expressions are introduced with the `function` keyword,
+followed by the parameters, then an optional return-type annotation
+and `is`, followed by the body (an expression):
+
+```pascaligo group=lambdas
+const sum = function (const x : int; const y : int) : int is x + y  // Uncurried
+const add = function (const (x, y) : int * int) : int is x + y      // Curried
+const increment = function (const x : int) : int is x + 1
+```
+
+We now see that `function (const x : int; const y : int) : int is x
++ y` and `function (const (x, y) : int * int) : int is x + y` are
+expressions, and we can use them *without a name* in contexts where
+functions of type `int -> int -> int`, respectively `int * int ->
+int`, are valid. In the dedicated sections on lists, maps and sets, we
+present how lambdas are most useful.
+
+</Syntax>

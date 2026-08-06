@@ -18,6 +18,12 @@ import Syntax from '@theme/Syntax';
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+# Modules
+
+</Syntax>
+
 <Syntax syntax="jsligo">
 
 > Note that in JsLIGO modules are called `namespaces`.
@@ -84,6 +90,27 @@ exported.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Modules are introduced using the `module` keyword. For example, the
+following code defines a module `EURO` that packages together a type,
+called `t`, together with an operation `add` that sums two values of
+the given currency, as well as constants for zero and one.
+
+```pascaligo group=EURO
+module EURO is {
+  type t is nat
+  function add (const a : t; const b : t) : t is a + b
+  const zero : t = 0n
+  const one : t = 1n
+}
+```
+
+As we can see, in PascaLIGO we use a `module ... is { ... }` block to
+group together the definitions made in the module.
+
+</Syntax>
+
 ## Using Modules
 
 We can access a module's components by using the selection operator
@@ -110,6 +137,17 @@ type storage = EURO.t;
 @entry
 let main = (_action: unit, store: storage): [list<operation>, storage] =>
   [[], EURO.add (store, EURO.one)];
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=EURO
+type storage is EURO.t
+
+[@entry] function main (const _action : unit; const store : storage) : list (operation) * storage is
+  ((nil : list (operation)), EURO.add (store, EURO.one))
 ```
 
 </Syntax>
@@ -141,6 +179,19 @@ namespace EURO {
   export const add = (a: t, b: t) : t => a + b;
   export const zero: t = 0;
   export const one: t = 1;
+}
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=EURO2
+module EURO is {
+  type t is int
+  function add (const a : t; const b : t) : t is a + b
+  const zero : t = 0
+  const one : t = 1
 }
 ```
 
@@ -198,6 +249,23 @@ namespace EURO {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=EURO3
+module EURO is {
+  type t is nat
+
+  function add (const a : t; const b : t) : t is a + b
+
+  module CONST is {
+    const zero : t = 0n
+    const one : t = 1n
+  }
+}
+```
+
+</Syntax>
+
 To access nested modules we simply apply the selection operator more
 than once:
 
@@ -221,6 +289,17 @@ type storage = EURO.t;
 @entry
 let main = (_action: unit, store: storage) : [list<operation>, storage] =>
  [[], EURO.add (store, EURO.CONST.one)]
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=EURO3
+type storage is EURO.t
+
+[@entry] function main (const _action : unit; const store : storage) : list (operation) * storage is
+  ((nil : list (operation)), EURO.add (store, EURO.CONST.one))
 ```
 
 </Syntax>
@@ -267,6 +346,21 @@ export const one: t = 1n;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+For example, in PascaLIGO, we can create a file `imported.ligo`:
+
+```pascaligo group=imported
+type t is nat
+
+function add (const a : t; const b : t) : t is a + b
+
+const zero : t = 0n
+const one : t = 1n
+```
+
+</Syntax>
+
 <Syntax syntax="cameligo">
 
 Later, in another file, we can import `imported.mligo` as a module, and
@@ -305,6 +399,24 @@ const main = (_action: unit, store: storage): [list<operation>, storage] =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Later, in another file, we can import `imported.ligo` as a module, and
+use its definitions. For example, we could create an `importer.ligo`
+that imports all definitions from `imported.ligo` as the module
+`EURO`:
+
+```pascaligo group=importer
+#import "gitlab-pages/docs/language-basics/src/modules/imported.ligo" "EURO"
+
+type storage is EURO.t
+
+[@entry] function main (const _action : unit; const store : storage) : list (operation) * storage is
+  ((nil : list (operation)), EURO.add (store, EURO.one))
+```
+
+</Syntax>
+
 We can compile the file that uses the `#import` statement directly,
 without having to mention the imported file.
 
@@ -320,6 +432,14 @@ ligo compile contract --library . gitlab-pages/docs/language-basics/src/modules/
 
 ```shell
 ligo compile contract --library . gitlab-pages/docs/language-basics/src/modules/importer.jsligo
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile contract --library . gitlab-pages/docs/language-basics/src/modules/importer.ligo
 ```
 
 </Syntax>
@@ -344,6 +464,14 @@ module US_DOLLAR = EURO
 
 ```jsligo group=EURO
 import US_DOLLAR = EURO;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=EURO
+module US_DOLLAR is EURO
 ```
 
 </Syntax>
@@ -385,6 +513,22 @@ namespace C {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+When a module contains declarations that are tagged with the attribute
+`@entry`, then a contract can be obtained from such module. All
+declarations in the module tagged as `@entry` are grouped, and a
+dispatcher contract is generated.
+
+```pascaligo group=contract
+module C is {
+  [@entry] function increment (const p : int; const s : int) : list (operation) * int is ((nil : list (operation)), s + p)
+  [@entry] function decrement (const p : int; const s : int) : list (operation) * int is ((nil : list (operation)), s - p)
+}
+```
+
+</Syntax>
+
 A module can be compiled as a contract using `-m`:
 
 <Syntax syntax="cameligo">
@@ -399,6 +543,14 @@ ligo compile contract gitlab-pages/docs/language-basics/src/modules/contract.mli
 
 ```shell
 ligo compile contract gitlab-pages/docs/language-basics/src/modules/contract.jsligo -m C
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile contract gitlab-pages/docs/language-basics/src/modules/contract.ligo -m C
 ```
 
 </Syntax>
@@ -432,6 +584,18 @@ const test = do {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=contract
+const test_it = block {
+  const orig = Test.originate (contract_of C, 0, 0mumav);
+  const _r = Test.transfer_exn (orig.addr, Increment (42), 0mumav);
+  const s = Test.get_storage (orig.addr);
+} with assert (s = 42)
+```
+
+</Syntax>
+
 ## Module Inclusion
 
 <Syntax syntax="cameligo">
@@ -460,6 +624,16 @@ end
 
 <Syntax syntax="jsligo">
 This feature is not available in JsLIGO.
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+PascaLIGO 0.73 does not have a module-body `include` declaration: its
+grammar only allows `include` inside a `sig ... end` signature, to
+combine module *types* (see the "Module Types" section below). A new
+module cannot splice another module's declarations into its own body
+this way, so this particular example is not available in PascaLIGO.
+
 </Syntax>
 
 ## Module Types
@@ -593,6 +767,52 @@ namespace FAAll_wo_opt_val implements FAAll_INTF {
 }
 
 ```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+Until now, we dealt with implicit module types, also known as
+signatures. Having explicitly declared module types enables abstraction
+and reusability by inclusion of signatures. Module types are introduced
+with `module type ... is sig ... end`:
+
+```pascaligo group=contract2
+module type FA0_SIG is sig
+  type t
+  [@entry] const transfer : unit -> t -> list (operation) * t
+end
+
+module type FA0Ext_SIG is sig
+  include FA0_SIG
+  [@entry] const transfer2 : unit -> t -> list (operation) * t
+end
+```
+
+Notice how `t` in the type of `transfer2` refers to `t` in the
+signature `FA0_SIG` and remains abstract. We can now revisit the
+examples above by constraining the module definitions with the module
+types:
+
+```pascaligo group=contract2
+module FA0 : FA0_SIG is {
+  type t is unit
+  [@entry] function transfer (const _p : unit; const _s : t) : list (operation) * t is ((nil : list (operation)), Unit)
+}
+
+module FA0Ext : FA0Ext_SIG is {
+  type t is unit
+  [@entry] function transfer (const _p : unit; const _s : t) : list (operation) * t is ((nil : list (operation)), Unit)
+  [@entry] function transfer2 (const a : unit; const b : t) : list (operation) * t is transfer (a, b)
+}
+```
+
+Note how module definitions must instantiate any abstract type (here
+`t`). Also, when a module is constrained by a signature, it must
+implement the types and values in the latter, but no more: this is a
+filtering semantics. Unlike CameLIGO, PascaLIGO 0.73 does not support
+`include` at the module (body) level, only at the signature level, so
+`FA0Ext` here restates `transfer` instead of including it from `FA0`.
 
 </Syntax>
 

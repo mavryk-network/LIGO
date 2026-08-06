@@ -29,3 +29,13 @@ const contains_3 = Big_set.mem(3, new_big_set); // == false
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_set_removing
+const my_big_set : big_set (int) = Big_set.literal (list [3; 2; 2; 1])
+const new_big_set : big_set (int) = Big_set.remove (3, my_big_set)
+const contains_3 : bool = Big_set.mem (3, new_big_set) // = False
+```
+
+</Syntax>

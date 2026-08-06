@@ -109,7 +109,8 @@ let get_groups md_file : snippetsmap =
               | Some (_, sh) ->
                 failwith "internal test error: group name shouldn't be 'run_shell_xxx'") )
       | [ Md.Field "skip" ] | _ -> nb_shell_blocks, grp_map)
-    | Some ("cameligo" as s) | Some ("jsligo" as s) ->
+    (* MAVRYK: PascaLIGO — validate ```pascaligo doc snippets alongside cameligo/jsligo. *)
+    | Some ("cameligo" as s) | Some ("jsligo" as s) | Some ("pascaligo" as s) ->
       ( nb_shell_blocks
       , let () =
           (*sanity check*)
@@ -226,6 +227,7 @@ let write_to_files ~raise md_filename grp_list : bool =
         match syntax with
         | CameLIGO -> ".mligo"
         | JsLIGO -> ".jsligo"
+        | PascaLIGO -> ".ligo" (* MAVRYK: PascaLIGO *)
       in
       let output_filename = Filename.of_parts [ dirname; grp ^ extension ] in
       (* Create directory both in _build and in the repository (otherwise the _build uses the old version) *)

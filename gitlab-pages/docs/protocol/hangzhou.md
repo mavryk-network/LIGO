@@ -175,6 +175,55 @@ let open_or_fail = ([ck, c, @time] : [chest_key, chest, nat]) : bytes => {
 ```
 
 </Syntax>
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+type storage is bytes
+type parameter is chest_key * chest
+
+type return is list (operation) * storage
+
+function main (const p : parameter; const _s : storage) : return is
+  block {
+    const (ck, c) = p;
+    const new_s =
+      case Mavryk.open_chest (ck, c, 10n) of [
+        Ok_opening (b) -> b
+      | Fail_timelock (_u) -> 0x00
+      | Fail_decrypt (_u) -> 0x01
+      ]
+  } with ((nil : list (operation)), new_s)
+
+
+function test (const _u : unit) : unit is
+  block {
+    const init_storage : bytes = 0x00;
+    const (addr, _o1, _o2) = Test.originate (main, init_storage, 0mav);
+    const payload = 0x0101;
+    function test_open (const cc : chest_key * chest; const expected : bytes) : unit is
+      block {
+        const x : contract (parameter) = Test.to_contract (addr);
+        const _r = Test.transfer_to_contract_exn (x, cc, 0mav);
+        const s = Test.get_storage (addr);
+      } with assert (s = expected);
+    const _test1 =
+      block {
+        const (chest1, chest_key1) = Test.create_chest (payload, 10n);
+      } with test_open ((chest_key1, chest1), payload);
+    const _test2 =
+      block {
+        const (chest2, _k2) = Test.create_chest (payload, 10n);
+        const (_c2, chest_key2) = Test.create_chest (0x2020, 10n);
+      } with test_open ((chest_key2, chest2), 0x01);
+    const _test3 =
+      block {
+        const (chest3, _k3) = Test.create_chest (payload, 2n);
+        const chest_key3 = Test.create_chest_key (chest3, 10n);
+      } with test_open ((chest_key3, chest3), 0x00);
+  } with unit
+```
+
+</Syntax>
 
 ### On-chain views
 
@@ -238,6 +287,26 @@ let view3 = ([_ , _s]: [unit , storage]) : int => 42;
 ```
 
 </Syntax>
+<Syntax syntax="pascaligo">
+
+```pascaligo group=views
+type storage is string
+
+[@entry] function main (const _p : unit; const s : storage) : list (operation) * storage is
+  ((nil : list (operation)), s)
+
+// view 'view1', simply returns the storage
+[@view] function view1 (const _p : unit; const s : storage) : storage is s
+
+// view 'v2', returns true if the storage has a given length
+[@view] function v2 (const expected_length : nat; const s : storage) : bool is
+  (String.length (s) = expected_length)
+
+// view 'v3' returns a constant int
+[@view] function v3 (const _p : unit; const _s : storage) : int is 42
+```
+
+</Syntax>
 
 > Note: `[@view]` attribute is only supported for top-level functions.
 >
@@ -264,6 +333,14 @@ let view_call ((name,parameter,addr): string * int * address) : int option = Mav
 
 ```jsligo group=views
 let view_call = ([name,parameter,addr]: [string , int , address]) : option<int> => Mavryk.call_view ("sto_plus_n", 1, addr)
+```
+
+</Syntax>
+<Syntax syntax="pascaligo">
+
+```pascaligo group=views
+function view_call (const _name : string; const _param : int; const addr : address) : option (int) is
+  Mavryk.call_view ("sto_plus_n", 1, addr)
 ```
 
 </Syntax>

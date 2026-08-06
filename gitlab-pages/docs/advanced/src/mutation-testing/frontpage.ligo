@@ -1,0 +1,1 @@
+function twice (const x : int) : int is x * x

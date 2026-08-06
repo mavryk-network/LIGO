@@ -1,6 +1,7 @@
 import React, { useContext } from "react";
 
-const valid = ["jsligo", "cameligo"];
+// MAVRYK: PascaLIGO — restored as a first-class third syntax.
+const valid = ["jsligo", "cameligo", "pascaligo"];
 
 const ctx = {
   syntax: (() => {

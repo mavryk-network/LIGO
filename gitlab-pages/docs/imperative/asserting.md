@@ -41,6 +41,18 @@ const incr_if_some = (b: option<unit>, n: int) : int => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=asserting
+function incr_if_true (const b : bool; const n : int) : int is
+  block { assert (b) } with n + 1
+
+function incr_if_some (const b : option (unit); const n : int) : int is
+  block { assert_some (b) } with n + 1
+```
+
+</Syntax>
+
 You can use `assert_with_error` or `assert_some_with_error` to use a
 custom error message.
 
@@ -61,6 +73,15 @@ const incr_if_true = (b: bool, n: int) : int => {
   assert_with_error (b, "My custom error message.");
   return n+1;
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=assert_with_error
+function incr_if_true (const b : bool; const n : int) : int is
+  block { assert_with_error (b, "My custom error message.") } with n + 1
 ```
 
 </Syntax>

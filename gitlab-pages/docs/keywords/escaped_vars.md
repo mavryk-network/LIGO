@@ -29,3 +29,11 @@ decorators are not considered valid escaped identifiers, e.g. `@entry`
 is invalid as a variable.
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=keywords
+const @from = ("mv2fakefakefakefakefakefakefak82z7t2" : address)
+```
+
+</Syntax>

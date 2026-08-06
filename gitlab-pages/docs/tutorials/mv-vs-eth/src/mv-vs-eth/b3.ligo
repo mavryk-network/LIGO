@@ -1,0 +1,1 @@
+type creature is record [ heads_count : nat; legs_count : nat; tails_count : nat ]

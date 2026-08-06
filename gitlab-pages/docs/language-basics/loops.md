@@ -149,6 +149,64 @@ ligo run evaluate-expr \
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+PascaLIGO is an imperative language, so the preferred way to write
+iterations is by means of loops, but it also supports recursive
+functions, which can be used to iterate as in a purely functional
+language. Here is how to compute the greatest common divisors of two
+natural numbers by means of Euclid's algorithm using a recursive
+function:
+
+```pascaligo group=gcd
+recursive function iter (const x : nat; const y : nat) : nat is
+  if y = 0n then x else iter (y, x mod y)
+
+function gcd (const x : nat; const y : nat) : nat is
+  if x < y then iter (y, x) else iter (x, y)
+```
+
+PascaLIGO also features loops, which we understand as syntactic
+constructs where the state of a stopping condition is mutated. There
+are two kinds of loops: for-loops and while-loops. Here is again
+Euclid's algorithm, but using mutation and a while-loop:
+
+```pascaligo group=gcd-loop
+function gcd (const a : nat; const b : nat) : nat is {
+  var x : nat := a;
+  var y : nat := b;                     // we will modify x and y
+  if x < y then {
+    const z : nat = x;
+    x := y;
+    y := z
+  };
+  var r : nat := 0n;
+  while y =/= 0n {
+    r := x mod y;
+    x := y;
+    y := r
+  }
+} with x
+```
+
+Here is how to check if a string is a palindrome or not using a `for`
+loop:
+
+```pascaligo group=a
+function get_char (const s : string; const idx : nat) : string is
+  String.sub (idx, 1n, s)
+
+function is_palindrome (const s : string) : bool is {
+  var p : string := "";
+  const length : nat = String.length (s);
+  for i := 0 to int (length) - 1 {
+    p := get_char (s, abs (i)) ^ p
+  }
+} with p = s
+```
+
+</Syntax>
+
 <Syntax syntax="jsligo">
 
 ## for-of Loops

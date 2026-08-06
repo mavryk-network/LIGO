@@ -1,0 +1,1 @@
+function check (const _u : unit) : contract (unit) is Mavryk.self ("%default")

@@ -68,3 +68,40 @@ const sub = (delta: int, store: storage) : result =>
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+It is sometimes useful or necessary to modify the default semantics of
+a LIGO construct. This is done by annotating the construct with an
+*attribute*. Attributes have one of the three forms:
+
+  1. `[@name_of_attribute]`,
+  2. `[@name_of_attribute "Some string"]`,
+  3. `[@name_of_attribute name]`.
+
+Attributes are located just before the construct they apply to,
+contrary to OCaml. (Also, contrary to OCaml, LIGO attributes only have
+one
+`[@` opening syntax.) Attributes can be composed by simple juxtaposition, like so:
+
+```pascaligo group=attributes
+type storage is int
+type result is list (operation) * storage
+
+[@entry] [@no_mutation]
+function sub (const delta : int; const store : storage) : result is
+  ((nil : list (operation)), store - delta)
+```
+
+## Internal attributes
+
+Furthermore, the following attributes are used internally by the
+compiler. You may encounter them when exporting the Abstract Syntax
+Tree (AST) after a certain compilation pass, but they should not
+appear in normal source code:
+
+* `[@thunk]`
+* `[@hidden]`
+* `[@public]`
+
+</Syntax>

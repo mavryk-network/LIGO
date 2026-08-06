@@ -1,0 +1,1 @@
+type animal is Elephant of unit | Dog of unit | Cat of unit

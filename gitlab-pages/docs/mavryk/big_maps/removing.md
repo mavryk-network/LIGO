@@ -31,3 +31,14 @@ const contains_3 = Big_map.mem(2, new_map); // == false
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_map_removing
+const my_map : big_map (int, string) =
+  Big_map.literal (list [ (1, "one"); (2, "two") ])
+const new_map = Big_map.remove (2, my_map)
+const contains_3 = Big_map.mem (2, new_map) // = False
+```
+
+</Syntax>

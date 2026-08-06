@@ -464,7 +464,7 @@
         "compile": "npm run esbuild-base -- --sourcemap",
         "esbuild-base": "esbuild ./client/src/extension.ts --bundle --outfile=./client/out/extension.js --external:vscode --format=cjs --platform=node",
         "watch": "tsc -b -w",
-        "package": "vsce package",
+        "package": "vsce package --no-dependencies",
         "lint": "eslint client --ext .ts",
         "build-tests": "tsc -p ./test/",
         "test": "npm run build-tests && node client/out/test/driver.js",
@@ -472,7 +472,6 @@
         "extest-deploy": "npm run build-tests && extest setup-and-run --yarn --offline --code_version 1.81.1 client/out/test/vsc-test/commands-deploy.test.js"
     },
     "dependencies": {
-        "@mavrykdynamics/mavlet-sdk": "^4.2.3",
         "@mavrykdynamics/webmavryk-signer": "^2.0.0",
         "@mavrykdynamics/webmavryk": "^2.0.0",
         "@vscode/debugadapter-testsupport": "1.55.1",

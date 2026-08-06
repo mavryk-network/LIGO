@@ -34,6 +34,17 @@ export const foo = 144;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=included
+(* This is "included.ligo" *)
+(* Demonstrate PascaLIGO inclusion statements, see includer.ligo *)
+
+const foo = 144
+```
+
+</Syntax>
+
 And then you can include this code using the `#include` statement like
 so:
 
@@ -53,6 +64,16 @@ let bar = foo
 #include "gitlab-pages/docs/advanced/src/include/included.jsligo"
 
 const bar = foo;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+#include "gitlab-pages/docs/advanced/src/include/included.ligo"
+
+const bar = foo
 ```
 
 </Syntax>

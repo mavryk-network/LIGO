@@ -31,3 +31,17 @@ const tail_opt = <elt>(list: List.t<elt>) : option<List.t<elt>> =>
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+The attribute `[@deprecated "Some explanation."]` is used in libraries
+to deprecate some values. For instance, in the module `List` of the
+standard library:
+
+```pascaligo group=deprecated
+[@inline] [@deprecated "Use `List.tail` instead."]
+function tail_opt<elt> (const lst : list (elt)) : option (list (elt)) is
+  List.tail (lst)
+```
+
+</Syntax>

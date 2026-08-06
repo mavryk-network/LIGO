@@ -45,6 +45,22 @@ const michelson_add = n =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The syntax for embedding Michelson is by means of the
+`[%Michelson ...]` special hook. The ellipsis is meant to denote a
+verbatim string annotated with a type, which contains the Michelson
+code to be injected in the generated Michelson and the type (that of a
+function) of the Michelson code.
+
+```pascaligo group=michelson_inj
+function michelson_add (const n : nat * nat) : nat is block {
+  const f : (nat * nat -> nat) = [%Michelson ({| { UNPAIR ; ADD } |} : nat * nat -> nat)];
+} with f (n)
+```
+
+</Syntax>
+
 Note that the type annotation is required, because the embedded
 Michelson code is not type-checked by the LIGO compiler, which
 therefore assumes that the given type is correct.
@@ -64,6 +80,15 @@ In the example above, the notation `` ` ... ` `` is used to represent a
 verbatim string literal, that is, an uninterpreted string, which here
 contains a piece of Michelson code. The type annotation describes the
 behaviour of the Michelson code:
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+In the example above, the notation ```{| ... |}``` is used to
+represent a verbatim string literal, that is, an uninterpreted string,
+which here contains a piece of Michelson code. The type annotation
+describes the behaviour of the Michelson code:
 
 </Syntax>
 
@@ -108,6 +133,14 @@ outputs:
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The same holds in PascaLIGO: as long as the function resulting from an
+`[%Michelson ...]` hook is not applied, the compiler leaves the
+embedded Michelson code unmodified.
+
+</Syntax>
+
 As we can see, the embedded Michelson code was not modified. However,
 if the resulting function is applied, then the embedded Michelson code
 could be modified/optimised by the compiler. To demonstrate this
@@ -142,6 +175,19 @@ outputs:
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+As we can see, the embedded Michelson code is not modified. However,
+if the resulting function is applied, then the embedded Michelson code
+could be modified/optimised by the compiler. To demonstrate this
+behaviour, a call can be introduced in the example above by applying
+the Michelson hook, once bound to a name, to an argument, for instance
+inside a `block { ... } with ...`. In this case, the first two
+instructions will be removed by the LIGO compiler because they have no
+effect on the final result.
+
+</Syntax>
+
 ### External injection
 
 Sometimes the Michelson code we wish to inject is better maintained
@@ -161,6 +207,14 @@ extension `.mv`.
 This is achieved by the special hook `(of_file ...)`, where the
 ellipsis is a *verbatim* string containing a file path to a Michelson
 file with extension `.mv`.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+This is achieved by the special hook `[%of_file ...]`, where the
+ellipsis is a string containing a file path to a Michelson file with
+extension `.mv`.
 
 </Syntax>
 
@@ -197,6 +251,24 @@ const main = (param: unit, _storage: unit) : [list<operation>, unit] => {
     (None(), 1mav, param)
   return [[op], []];
 }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+This is achieved by the special hook `[%create_contract_of_file ...]`,
+where the ellipsis is a string containing the file path to a Michelson
+file with extension `.mv`.
+
+```pascaligo group=michelson_inj
+[@entry]
+function main (const param : unit; const _s : unit) : list (operation) * unit is
+  block {
+    const cc =
+      [%create_contract_of_file "gitlab-pages/docs/mavryk/contracts/src/compiled.mv"];
+    const op_addr = cc ((None : option (key_hash)), 1mav, param);
+  } with (list [op_addr.0], Unit)
 ```
 
 </Syntax>

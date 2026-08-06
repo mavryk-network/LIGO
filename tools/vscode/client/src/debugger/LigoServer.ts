@@ -95,8 +95,9 @@ export default class LigoServer implements vscode.Disposable {
   }
 
   private static showError(msg: string) {
-    vscode.window.showErrorMessage(msg).
-      then(_ => undefined)
-    throw new Error(msg)
+    // MAVRYK: PascaLIGO. Do NOT throw here. A debugger-adapter problem — e.g. the M6
+    // `ligo-debugger` binary not being built — must never abort extension activation and
+    // take the language server (LSP) down with it. Surface it, but keep going.
+    vscode.window.showWarningMessage(msg).then(_ => undefined)
   }
 }

@@ -13,7 +13,8 @@ const USER_TIME_ZONE = Intl.DateTimeFormat().resolvedOptions().timeZone;
 const COOKIE_CONSENT_NAME = "cookie_consent";
 const isUserInEurope = () => USER_TIME_ZONE.toLocaleLowerCase().startsWith("europe");
 
-const VALID_SYNTAXES = ["jsligo", "cameligo"];
+// MAVRYK: PascaLIGO — restored as a first-class third syntax.
+const VALID_SYNTAXES = ["jsligo", "cameligo", "pascaligo"];
 const DEFAULT_SYNTAX = "jsligo";
 const LOCAL_STORAGE_SYNTAX_KEY = "syntax";
 
