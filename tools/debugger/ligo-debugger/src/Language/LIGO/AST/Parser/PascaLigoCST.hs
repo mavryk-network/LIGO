@@ -134,8 +134,8 @@ newtype SignatureBody = SignatureBody { sbSigItems :: [SigItem] }
 data SigItem
   = SigAttr (Reg (Tuple1 SigItem))
   | SigInclude (Reg (Tuple1 SignatureExpr))
-  | SigType (Reg SigType)
-  | SigValue (Reg SigValue)
+  | SType (Reg SigType)
+  | SValue (Reg SigValue)
   deriving stock (Show, Generic)
   deriving anyclass (NFData)
 
@@ -580,8 +580,8 @@ instance MessagePack SigItem where
   fromObjectWith cfg = withMsgVariant "SigItem" \(name, arg) -> asumMsg
     [ SigAttr    <$> (guardMsg (name == "Sig_Attr"   ) >> fromObjectWith cfg arg)
     , SigInclude <$> (guardMsg (name == "Sig_Include") >> fromObjectWith cfg arg)
-    , SigType    <$> (guardMsg (name == "Sig_Type"   ) >> fromObjectWith cfg arg)
-    , SigValue   <$> (guardMsg (name == "Sig_Value"  ) >> fromObjectWith cfg arg)
+    , SType    <$> (guardMsg (name == "Sig_Type"   ) >> fromObjectWith cfg arg)
+    , SValue   <$> (guardMsg (name == "Sig_Value"  ) >> fromObjectWith cfg arg)
     ]
 
 instance MessagePack SigType where
@@ -999,9 +999,9 @@ toAST CST{..} =
       where
         sigItemConv :: SigItem -> LIGO Info
         sigItemConv = \case
-          SigValue (unpackReg -> (r', SigValue{..})) ->
+          SValue (unpackReg -> (r', SigValue{..})) ->
             fastMake r' (AST.SValue (makeWrappedLexeme AST.Name (unVariable svVar)) (typeExprConv svValType))
-          SigType (unpackReg -> (r', SigType{..})) ->
+          SType (unpackReg -> (r', SigType{..})) ->
             fastMake r' (AST.SType (makeWrappedLexeme AST.TypeName (unVariable stTypeName)) (typeExprConv . unTuple1 <$> stTypeRhs))
           SigInclude (unpackReg -> (r', Tuple1 sigExpr)) ->
             fastMake r' (AST.SInclude $ signatureExprConv sigExpr)
@@ -1237,7 +1237,7 @@ toAST CST{..} =
         fastMake r (AST.TString (makeWrappedLexeme AST.CString (escapeText <$> str)))
       TSum (unpackReg -> (r, SumType{..})) ->
         let
-          variants = toList $ vtVariants <&> \(unpackReg -> (r', Variant{..})) ->
+          variants = vtVariants <&> \(unpackReg -> (r', Variant{..})) ->
             fastMake r' (AST.Variant (makeWrappedLexeme AST.Name vCtor) (typeExprConv . unTuple1 <$> maybeToList vCtorArgs))
         in fastMake r (AST.TSum def variants)
       TVar (unVariable -> var@(unpackWrap -> (r, v)))
@@ -1249,7 +1249,7 @@ toAST CST{..} =
     modAccessOf r parts =
       let
         lastPart = unVariable (last parts)
-        initParts = init (toList parts)
+        initParts = init parts
         modPath = ModulePath initParts (makeWrappedLexeme AST.ModuleName lastPart)
       in fastMake r (modPathConv modPath)
 

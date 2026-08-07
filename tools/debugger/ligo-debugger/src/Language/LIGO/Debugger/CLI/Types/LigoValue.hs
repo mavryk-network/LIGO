@@ -39,7 +39,7 @@ import Morley.Michelson.Untyped qualified as U
 import Morley.Mavryk.Core qualified as T
 import Morley.Mavryk.Crypto.BLS12381 (toMichelsonBytes)
 
-import Language.LIGO.AST.Skeleton (Lang (Caml, Js))
+import Language.LIGO.AST.Skeleton (Lang (Caml, Js, Pascal)) -- MAVRYK: PascaLIGO
 import Language.LIGO.Debugger.CLI.Exception
 import Language.LIGO.Debugger.CLI.Helpers
 import Language.LIGO.Debugger.CLI.Types
