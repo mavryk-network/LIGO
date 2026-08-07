@@ -18,6 +18,7 @@ import Control.MessagePack
   (asumMsg, guardMsg, withMsgMap, withMsgVariant, (.:), (.:?))
 import Data.Default (def)
 import Data.List.NonEmpty ((<|))
+import Data.List.NonEmpty qualified as NE -- MAVRYK: PascaLIGO
 import Data.MessagePack (MessagePack)
 import Data.MessagePack.Types (fromObjectWith)
 
@@ -27,6 +28,31 @@ import Language.LIGO.AST.Parser.Common
 import Language.LIGO.AST.Skeleton (Info, LIGO)
 import Language.LIGO.AST.Skeleton qualified as AST
 import Language.LIGO.Range
+
+-- MAVRYK: PascaLIGO. The frontend restores [nseq] as the local tuple ('a * 'a list)
+-- (see src/stages/1-cst/pascaligo/CST.ml); its yojson serializes as a single-element
+-- array wrapping the flattened sequence — [[e0,e1,…]] — unlike CameLIGO's [Ne_list],
+-- which is the flat [e0,e1,…]. These peel that extra layer off an nseq-encoded field.
+unNseq :: [[a]] -> [a] -- MAVRYK: PascaLIGO
+unNseq = concat
+
+-- MAVRYK: PascaLIGO. An [nseq] field serializes in one of two shapes depending on position:
+-- the ppx tuple [hd, [tl…]] (e.g. module_body.declarations, map_lookup.keys) or a single-wrapped
+-- flat list [[e0,e1,…]] (e.g. the top-level t.decl). [NseqList] decodes either into a plain list.
+newtype NseqList a = NseqList { unNseqList :: [a] }
+  deriving stock (Show, Generic)
+  deriving anyclass (NFData)
+
+instance MessagePack a => MessagePack (NseqList a) where
+  fromObjectWith cfg obj = NseqList <$> asumMsg
+    [ (\(hd, tl) -> hd : tl) <$> fromObjectWith cfg obj -- ppx tuple [hd, [tl]]
+    , unNseq <$> fromObjectWith cfg obj                 -- single-wrapped flat [[…]]
+    ]
+
+-- MAVRYK: PascaLIGO. [parameters]/[call_args] are wrapped in [par reg] ((…)); peel the
+-- [Reg]+[Par'] layers to reach the inner list the decoder wants.
+unPar :: Par a -> a -- MAVRYK: PascaLIGO
+unPar = pInside . rValue
 
 -----------
 -- Types --
@@ -94,7 +120,7 @@ data TypeDecl = TypeDecl
 
 -- | @module M is …@ / @module M : S is …@.
 data ModuleDecl = ModuleDecl
-  { mdName :: Variable
+  { mdName :: WrappedLexeme -- MAVRYK: PascaLIGO. [module_name = lexeme wrap], not a Var/Esc variable.
   , mdAnnotation :: Maybe (Tuple1 SignatureExpr)
   , mdModuleExpr :: ModuleExpr
   }
@@ -201,7 +227,7 @@ data TypeExpr
   deriving anyclass (NFData)
 
 data FieldDecl = FieldDecl
-  { fdFieldName :: WrappedLexeme
+  { fdFieldName :: Variable -- MAVRYK: PascaLIGO. [field_name = variable] (Var/Esc), not a plain wrap.
   , fdFieldType :: Maybe TypeAnnotation
   }
   deriving stock (Show, Generic)
@@ -236,7 +262,7 @@ data Pattern
   | PNat WrappedTupleLexeme
   | PNil WrappedLexeme
   | PPar (Par Pattern)
-  | PRecord (Reg (Compound (Reg (Field WrappedLexeme Pattern))))
+  | PRecord (Reg (Compound (Reg (Field Pattern Pattern)))) -- MAVRYK: PascaLIGO. field_lhs is a pattern (P_Var name), not a lexeme.
   | PString WrappedLexeme
   | PTuple (Par (Tuple Pattern))
   | PTyped (Reg (Pattern, TypeAnnotation))
@@ -247,8 +273,8 @@ data Pattern
 
 -- | A record field (shared by patterns, records, updates).
 data Field lhs rhs
-  = Punned (Reg (Tuple1 lhs))
-  | Complete (Reg (FullField lhs rhs))
+  = Punned lhs -- MAVRYK: PascaLIGO. {attributes, pun} — the pun lhs directly, not [Reg (Tuple1 …)].
+  | Complete (FullField lhs rhs) -- MAVRYK: PascaLIGO. {attributes, field_lhs, field_lens, field_rhs} — not [Reg]-wrapped.
   deriving stock (Show, Generic)
   deriving anyclass (NFData)
 
@@ -302,7 +328,7 @@ data Expr
   | EOr SomeBinOp
   | EPar (Par Expr)
   | EProj (Reg Projection)
-  | ERecord (Reg (Compound (Reg (Field WrappedLexeme Expr))))
+  | ERecord (Reg (Compound (Reg (Field Expr Expr)))) -- MAVRYK: PascaLIGO. field_lhs is an expr (E_Var name), not a lexeme.
   | ESet (Reg (Compound Expr))
   | ESetMem (Reg SetMembership)
   | EString WrappedLexeme
@@ -359,7 +385,7 @@ data Projection = Projection
   deriving anyclass (NFData)
 
 data Selection
-  = FieldName WrappedLexeme
+  = FieldName Variable -- MAVRYK: PascaLIGO. Projection field is [variable] (Var/Esc), not a plain wrap.
   | Component WrappedTupleLexeme
   deriving stock (Show, Generic)
   deriving anyclass (NFData)
@@ -490,14 +516,20 @@ data WhileLoop = WhileLoop { wlCond :: Expr, wlBlock :: Reg Block }
 -----------------
 
 instance MessagePack Variable where
-  fromObjectWith cfg = withMsgVariant "Variable" \(name, arg) -> asumMsg
-    [ Variable <$> (guardMsg (name == "Var") >> fromObjectWith cfg arg)
-    , Variable <$> (guardMsg (name == "Esc") >> fromObjectWith cfg arg)
+  -- MAVRYK: PascaLIGO. [variable] is the Var/Esc variant (["Var"|"Esc", wrap]), but several
+  -- name positions are plain [lexeme wrap]s instead (module_name, ctor, …). Accept both: the
+  -- variant form first, then a bare wrap fallback, so every name decodes to a Variable uniformly.
+  fromObjectWith cfg obj = asumMsg
+    [ withMsgVariant "Variable" (\(name, arg) -> asumMsg
+        [ Variable <$> (guardMsg (name == "Var") >> fromObjectWith cfg arg)
+        , Variable <$> (guardMsg (name == "Esc") >> fromObjectWith cfg arg)
+        ]) obj
+    , Variable <$> fromObjectWith cfg obj
     ]
 
 instance MessagePack CST where
   fromObjectWith _ = withMsgMap "CST" \o -> do
-    cstDecl <- o .: "decl"
+    cstDecl <- unNseqList <$> (o .: "decl") -- MAVRYK: PascaLIGO (nseq, either shape)
     cstEof <- o .: "eof"
     pure CST{..}
 
@@ -521,7 +553,7 @@ instance MessagePack ConstDecl where
 instance MessagePack FunDecl where
   fromObjectWith _ = withMsgMap "FunDecl" \o -> do
     fdFunName <- o .: "fun_name"
-    fdParameters <- o .: "parameters"
+    fdParameters <- (map rValue . unPar) <$> (o .: "parameters") -- MAVRYK: PascaLIGO ([par reg] of [param_decl reg])
     fdRetType <- o .:? "ret_type"
     fdReturn <- o .: "return"
     pure FunDecl{..}
@@ -555,7 +587,7 @@ instance MessagePack ModuleExpr where
 
 instance MessagePack ModuleBody where
   fromObjectWith _ = withMsgMap "ModuleBody" \o -> do
-    mbDeclarations <- o .: "declarations"
+    mbDeclarations <- unNseqList <$> (o .: "declarations") -- MAVRYK: PascaLIGO (nseq, either shape)
     pure ModuleBody{..}
 
 instance MessagePack SignatureDecl where
@@ -670,7 +702,7 @@ instance MessagePack Pattern where
 
 instance (MessagePack lhs, MessagePack rhs) => MessagePack (Field lhs rhs) where
   fromObjectWith cfg = withMsgVariant "Field" \(name, arg) -> asumMsg
-    [ Punned   <$> (guardMsg (name == "Punned"  ) >> fromObjectWith cfg arg)
+    [ Punned   <$> (guardMsg (name == "Punned"  ) >> withMsgMap "Punned" (\o -> o .: "pun") arg) -- MAVRYK: PascaLIGO ({attributes, pun})
     , Complete <$> (guardMsg (name == "Complete") >> fromObjectWith cfg arg)
     ]
 
@@ -765,7 +797,7 @@ instance MessagePack CodeInj where
 
 instance MessagePack FunExpr where
   fromObjectWith _ = withMsgMap "FunExpr" \o -> do
-    feParameters <- o .: "parameters"
+    feParameters <- (map rValue . unPar) <$> (o .: "parameters") -- MAVRYK: PascaLIGO ([par reg] of [param_decl reg])
     feRetType <- o .:? "ret_type"
     feReturn <- o .: "return"
     pure FunExpr{..}
@@ -773,7 +805,7 @@ instance MessagePack FunExpr where
 instance MessagePack MapLookup where
   fromObjectWith _ = withMsgMap "MapLookup" \o -> do
     mlMap <- o .: "map"
-    mlKeys <- o .: "keys"
+    mlKeys <- (NE.fromList . unNseqList) <$> (o .: "keys") -- MAVRYK: PascaLIGO (nseq, either shape)
     pure MapLookup{..}
 
 instance MessagePack Projection where
@@ -966,7 +998,7 @@ toAST CST{..} =
     moduleDeclConv (unpackReg -> (r, ModuleDecl{..})) =
       let
         annMb = signatureExprConv . unTuple1 <$> mdAnnotation
-        name = makeWrappedLexeme AST.Name (unVariable mdName)
+        name = makeWrappedLexeme AST.Name mdName
         modExpr = moduleExprConv mdModuleExpr
       in case mdModuleExpr of
         MBody{} -> fastMake r (AST.BModuleDecl name (one <$> annMb) modExpr)
@@ -1037,12 +1069,15 @@ toAST CST{..} =
         makeConstantPat :: Range -> AST.Constant (LIGO Info) -> LIGO Info
         makeConstantPat r c = fastMake r $ AST.IsConstant (fastMake r c)
 
-        fieldPatConv :: Reg (Field WrappedLexeme Pattern) -> LIGO Info
-        fieldPatConv (unpackReg -> (_, f)) = case f of
-          Punned (unpackReg -> (r, Tuple1 lhs)) ->
-            fastMake r (AST.IsRecordCapture (makeWrappedLexeme AST.FieldName lhs))
-          Complete (unpackReg -> (r, FullField{..})) ->
-            fastMake r (AST.IsRecordField (makeWrappedLexeme AST.FieldName ffFieldLhs) (patConv ffFieldRhs))
+        fieldPatConv :: Reg (Field Pattern Pattern) -> LIGO Info
+        fieldPatConv (unpackReg -> (r, f)) = case f of
+          Punned lhs ->
+            fastMake r (AST.IsRecordCapture (patFieldName lhs))
+          Complete FullField{..} ->
+            fastMake r (AST.IsRecordField (patFieldName ffFieldLhs) (patConv ffFieldRhs))
+          where -- MAVRYK: PascaLIGO. field_lhs is a pattern (P_Var name); take the name, best-effort otherwise.
+            patFieldName (PVar v) = makeWrappedLexeme AST.FieldName (unVariable v)
+            patFieldName p = patConv p
 
     exprConv :: Expr -> LIGO Info
     exprConv = \case
@@ -1139,16 +1174,19 @@ toAST CST{..} =
           let
             name = exprConv pRecordOrTuple
             selection = toList $ pFieldPath <&> \case
-              FieldName fName -> makeWrappedLexeme AST.FieldName fName
+              FieldName fName -> makeWrappedLexeme AST.FieldName (unVariable fName)
               Component n -> makeWrappedLexeme AST.CInt (unTuple1 <$> n)
           in fastMake r (AST.QualifiedName name selection)
 
-        fieldExprConv :: Reg (Field WrappedLexeme Expr) -> LIGO Info
-        fieldExprConv (unpackReg -> (_, f)) = case f of
-          Punned (unpackReg -> (r, Tuple1 lhs)) ->
-            fastMake r (AST.Capture (makeWrappedLexeme AST.FieldName lhs))
-          Complete (unpackReg -> (r, FullField{..})) ->
-            fastMake r (AST.FieldAssignment [makeWrappedLexeme AST.FieldName ffFieldLhs] (exprConv ffFieldRhs))
+        fieldExprConv :: Reg (Field Expr Expr) -> LIGO Info
+        fieldExprConv (unpackReg -> (r, f)) = case f of
+          Punned lhs ->
+            fastMake r (AST.Capture (exprFieldName lhs))
+          Complete FullField{..} ->
+            fastMake r (AST.FieldAssignment [exprFieldName ffFieldLhs] (exprConv ffFieldRhs))
+          where -- MAVRYK: PascaLIGO. field_lhs is an expr (E_Var name); take the name, best-effort otherwise.
+            exprFieldName (EVar v) = makeWrappedLexeme AST.FieldName (unVariable v)
+            exprFieldName e = exprConv e
 
     -- Blocks/statements: PascaLIGO is imperative; map a block to a sequence of node conversions.
     blockConv :: Reg Block -> [LIGO Info]
@@ -1231,7 +1269,7 @@ toAST CST{..} =
       TRecord (unpackReg -> (r, Compound decls)) ->
         let
           fieldDecls = decls <&> \(unpackReg -> (r', FieldDecl{..})) ->
-            fastMake r' (AST.TField (makeWrappedLexeme AST.Name fdFieldName) (typeAnnotationConv <$> fdFieldType))
+            fastMake r' (AST.TField (makeWrappedLexeme AST.Name (unVariable fdFieldName)) (typeAnnotationConv <$> fdFieldType))
         in fastMake r (AST.TRecord def fieldDecls)
       TString str@(unpackWrap -> (r, _)) ->
         fastMake r (AST.TString (makeWrappedLexeme AST.CString (escapeText <$> str)))

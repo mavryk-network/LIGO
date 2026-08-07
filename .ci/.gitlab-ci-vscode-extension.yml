@@ -82,7 +82,10 @@ vscode-extension:
   script:
     - mkdir -p tools/vscode/bin
     - cp -r Linux tools/vscode/bin
-    - cp -r Darwin tools/vscode/bin
+    # MAVRYK: PascaLIGO. The macOS artifact (debugger-build-macos) is not in `needs` (commented out
+    # above), so the Darwin dir may be absent — guard the copy so the job packages a Linux-only .vsix
+    # instead of failing. Restores/covers automatically if debugger-build-macos is re-enabled.
+    - '[ -d Darwin ] && cp -r Darwin tools/vscode/bin || echo "Darwin artifact absent (macOS build disabled); packaging without it"'
     - cd tools/vscode
     - mv ligo-debugger-platform-dispatcher.sh bin/ligo-debugger
     - make package

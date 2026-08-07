@@ -5305,3 +5305,121 @@ interactive_type_expr: UIdent ARROW
 Ill-formed type expression.
 At this point, if the type expression is complete, the end of the
 input is expected.
+
+interactive_type_expr: ParameterOf ZWSP
+
+Ill-formed 'parameter_of' type.
+At this point, a module path (for example M or M.N) is expected.
+
+interactive_expr: ContractOf UIdent ZWSP
+
+Ill-formed module path.
+At this point, one of the following is expected:
+  * a dot '.' followed by a module name;
+  * the end of the module path.
+
+interactive_expr: ContractOf UIdent DOT ZWSP
+
+Ill-formed module path.
+At this point, a module name is expected after the dot '.'.
+
+interactive_expr: ContractOf ZWSP
+
+Ill-formed 'contract_of' expression.
+At this point, a module path (for example M or M.N) is expected.
+
+contract: Module UIdent Is Begin Const UIdent EQ EIdent ARROW
+
+Ill-formed module body.
+At this point, one of the following is expected:
+  * another declaration;
+  * a closing brace '}'.
+
+contract: Module UIdent COLON ZWSP
+
+Ill-formed module type annotation.
+At this point, a signature expression is expected after the colon ':'.
+
+contract: Module UIdent COLON UIdent ZWSP
+
+Ill-formed module path.
+At this point, a dot '.' followed by a module name is expected.
+
+contract: Module UIdent COLON Sig ZWSP
+
+Ill-formed signature.
+At this point, one of the following is expected:
+  * a signature item ('type', 'const', 'include', or an attribute);
+  * the keyword 'end'.
+
+contract: Module UIdent COLON Sig Type ZWSP
+
+Ill-formed signature item.
+At this point, a type name is expected after the keyword 'type'.
+
+contract: Module UIdent COLON Sig Type EIdent ZWSP
+
+Ill-formed signature type.
+At this point, the keyword 'is' is expected.
+
+contract: Module UIdent COLON Sig Type EIdent Is ZWSP
+
+Ill-formed signature type.
+At this point, a type expression is expected after the keyword 'is'.
+
+contract: Module UIdent COLON Sig Include ZWSP
+
+Ill-formed signature inclusion.
+At this point, a signature expression is expected after the keyword 'include'.
+
+contract: Module UIdent COLON Sig Const ZWSP
+
+Ill-formed signature value.
+At this point, a value name is expected after the keyword 'const'.
+
+contract: Module UIdent COLON Sig Const EIdent ZWSP
+
+Ill-formed signature value.
+At this point, a colon ':' is expected.
+
+contract: Module UIdent COLON Sig Const EIdent COLON ZWSP
+
+Ill-formed signature value.
+At this point, a type expression is expected after the colon ':'.
+
+contract: Module UIdent COLON Sig Attr ZWSP
+
+Ill-formed signature item.
+At this point, a signature item is expected after the attribute.
+
+contract: Module UIdent COLON Sig Include UIdent Recursive
+
+Ill-formed signature.
+At this point, one of the following is expected:
+  * another signature item;
+  * the keyword 'end'.
+
+contract: Module UIdent COLON UIdent Type
+
+Ill-formed module declaration.
+At this point, the keyword 'is' is expected.
+
+contract: Module UIdent COLON UIdent Is ZWSP
+
+Ill-formed module declaration.
+At this point, a module expression is expected after the keyword 'is'.
+
+contract: Module Type ZWSP
+
+Ill-formed module type declaration.
+At this point, a module type name is expected after 'module type'.
+
+contract: Module Type UIdent ZWSP
+
+Ill-formed module type declaration.
+At this point, the keyword 'is' is expected.
+
+contract: Module Type UIdent Is ZWSP
+
+Ill-formed module type declaration.
+At this point, a signature expression is expected after the keyword 'is'.

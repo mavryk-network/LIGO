@@ -28,7 +28,7 @@ debugger-danger-instant-checks:
     - ubuntu-amd64
   image: ruby:3.2.2
   before_script: &install_danger
-    - gem install --quiet danger-gitlab
+    - gem install --quiet faraday-retry danger-gitlab # MAVRYK: faraday-retry is required by Faraday v2+ (danger-gitlab's HTTP client) or Danger fails to set up the API
   script:
     - danger --fail-on-errors=true
         --dangerfile=./danger/instant-checks.rb
@@ -43,7 +43,7 @@ debugger-danger-hlint:
     - ubuntu-amd64
   image: ruby:3.2.2
   before_script:
-    - gem install --quiet danger-gitlab
+    - gem install --quiet faraday-retry danger-gitlab # MAVRYK: faraday-retry is required by Faraday v2+ (danger-gitlab's HTTP client) or Danger fails to set up the API
     - wget -qO- https://github.com/ndmitchell/hlint/releases/download/v3.6.1/hlint-3.6.1-x86_64-linux.tar.gz | tar xz
     - ln -sf "$PWD/hlint-3.6.1/hlint" /usr/bin/hlint
   script:

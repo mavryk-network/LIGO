@@ -169,6 +169,70 @@ type verbatim_literal = lexeme wrap [@@deriving yojson_of]
 
 type keyword = lexeme wrap [@@deriving yojson_of]
 
+(* MAVRYK: PascaLIGO. Structural punctuation and keyword lexemes carry no content the debugger's
+   CST decoder consumes. Like CameLIGO (which tags each use with [@yojson.opaque]) we make them
+   serialize as "<opaque>" so [filter_opaque] (src/main/api/common/dump_cst.ml) strips them,
+   keeping tuples and separated lists at the arity the shared Haskell decoders expect. Shadowing
+   per-type (rather than per-use) covers every occurrence and cannot miss a site.
+
+   NOTE: arithmetic/comparison/logical OPERATORS are deliberately NOT shadowed — they are the
+   [op] of bin_op/un_op and the Haskell keeps them (AST.BinOp/UnOp use the operator lexeme). The
+   one operator with a structural use, [times] in [cartesian], is opaqued there per-use instead. *)
+let yojson_of_opaque (_ : lexeme wrap) = `String "<opaque>"
+let yojson_of_kwd_begin = yojson_of_opaque
+let yojson_of_kwd_big_map = yojson_of_opaque
+let yojson_of_kwd_block = yojson_of_opaque
+let yojson_of_kwd_case = yojson_of_opaque
+let yojson_of_kwd_const = yojson_of_opaque
+let yojson_of_kwd_down = yojson_of_opaque
+let yojson_of_kwd_else = yojson_of_opaque
+let yojson_of_kwd_end = yojson_of_opaque
+let yojson_of_kwd_for = yojson_of_opaque
+let yojson_of_kwd_from = yojson_of_opaque
+let yojson_of_kwd_function = yojson_of_opaque
+let yojson_of_kwd_if = yojson_of_opaque
+let yojson_of_kwd_in = yojson_of_opaque
+let yojson_of_kwd_include = yojson_of_opaque
+let yojson_of_kwd_is = yojson_of_opaque
+let yojson_of_kwd_list = yojson_of_opaque
+let yojson_of_kwd_map = yojson_of_opaque
+let yojson_of_kwd_module = yojson_of_opaque
+(* MAVRYK: PascaLIGO. [kwd_nil]/[kwd_skip] are NOT shadowed: they are the sole payload of
+   [E_Nil]/[P_Nil]/[I_Skip], and the decoder reads that wrap for its source region. *)
+let yojson_of_kwd_of = yojson_of_opaque
+let yojson_of_kwd_patch = yojson_of_opaque
+let yojson_of_kwd_record = yojson_of_opaque
+let yojson_of_kwd_recursive = yojson_of_opaque
+let yojson_of_kwd_remove = yojson_of_opaque
+let yojson_of_kwd_set = yojson_of_opaque
+let yojson_of_kwd_sig = yojson_of_opaque
+let yojson_of_kwd_step = yojson_of_opaque
+let yojson_of_kwd_then = yojson_of_opaque
+let yojson_of_kwd_to = yojson_of_opaque
+let yojson_of_kwd_type = yojson_of_opaque
+let yojson_of_kwd_var = yojson_of_opaque
+let yojson_of_kwd_while = yojson_of_opaque
+let yojson_of_kwd_with = yojson_of_opaque
+let yojson_of_arrow = yojson_of_opaque
+let yojson_of_assign = yojson_of_opaque
+let yojson_of_colon = yojson_of_opaque
+let yojson_of_comma = yojson_of_opaque
+let yojson_of_dot = yojson_of_opaque
+let yojson_of_lbrace = yojson_of_opaque
+let yojson_of_lbracket = yojson_of_opaque
+let yojson_of_lpar = yojson_of_opaque
+let yojson_of_rbrace = yojson_of_opaque
+let yojson_of_rbracket = yojson_of_opaque
+let yojson_of_rpar = yojson_of_opaque
+let yojson_of_semi = yojson_of_opaque
+let yojson_of_vbar = yojson_of_opaque
+let yojson_of_plus_eq = yojson_of_opaque
+let yojson_of_minus_eq = yojson_of_opaque
+let yojson_of_times_eq = yojson_of_opaque
+let yojson_of_slash_eq = yojson_of_opaque
+let yojson_of_vbar_eq = yojson_of_opaque
+let yojson_of_attribute (_ : attribute) = `String "<opaque>"
+
 (* Parentheses *)
 
 type 'a par = {
@@ -361,7 +425,9 @@ and type_tuple = type_expr tuple
 
 (* Cartesian type *)
 
-and cartesian = (type_expr * times * (type_expr,times) nsepseq) reg
+(* MAVRYK: PascaLIGO. [times] is structural here (the [*] between cartesian factors), so it is
+   opaqued per-use — unlike its role as the E_Mult operator, where the Haskell keeps it. *)
+and cartesian = (type_expr * (times [@yojson.opaque]) * (type_expr, (times [@yojson.opaque])) nsepseq) reg
 
 (* Module paths *)
 
