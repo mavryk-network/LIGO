@@ -32,17 +32,19 @@ compileExpression request =
       ExitSuccess -> pure (CompilerResponse $ Text.pack out)
       ExitFailure _ -> throwM $ LigoCompilerError $ Text.pack err
 
-data Dialect = CameLIGO | JsLIGO
+data Dialect = CameLIGO | JsLIGO | PascaLIGO -- MAVRYK: PascaLIGO
   deriving stock (Eq, Show, Ord, Enum)
 
 prettyDialect :: Dialect -> String
 prettyDialect = \case
   CameLIGO -> "cameligo"
   JsLIGO -> "jsligo"
+  PascaLIGO -> "pascaligo" -- MAVRYK: PascaLIGO
 
 inferDialect :: FilePath -> Maybe Dialect
 inferDialect filepath =
   case Text.takeWhileEnd (/= '.') (Text.pack filepath) of
     "mligo" -> Just CameLIGO
     "jsligo" -> Just JsLIGO
+    "ligo" -> Just PascaLIGO -- MAVRYK: PascaLIGO
     _ -> Nothing

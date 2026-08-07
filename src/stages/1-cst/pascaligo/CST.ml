@@ -15,17 +15,25 @@ module Region    = Simple_utils.Region
 module Wrap = Lexing_shared.Wrap
 module Attr = Lexing_shared.Attr
 
+(* MAVRYK: PascaLIGO: derive yojson_of over the CST so `ligo info dump-cst`
+   emits a real PascaLIGO CST for the debugger (M6). Mirrors cameligo/jsligo. *)
+open Ppx_yojson_conv_lib.Yojson_conv.Primitives
+
 (* Utilities *)
 
 type 'a reg = 'a Region.reg
 type 'payload wrap = 'payload Wrap.wrap
+
+(* MAVRYK: PascaLIGO *)
+let yojson_of_reg = Region.yojson_of_reg
+let yojson_of_wrap = Wrap.yojson_of_wrap
 
 (* MAVRYK: PascaLIGO. [nseq] was removed from Simple_utils.Utils (replaced by
    Ne_list.t, a different representation). PascaLIGO's CST and its downstream
    unification pass were written against the tuple representation, so we restore
    it locally to keep the frontend self-consistent. [nsepseq]/[sepseq] are
    unchanged upstream and still come from [open Utils]. *)
-type 'a nseq = 'a * 'a list
+type 'a nseq = 'a * 'a list [@@deriving yojson_of] (* MAVRYK: PascaLIGO *)
 
 (* MAVRYK: PascaLIGO. Compatibility helpers for the tuple [nseq]. Upstream moved
    these onto Ne_list.t; we keep the tuple form the PascaLIGO frontend was written
@@ -45,119 +53,121 @@ open Utils
 
 type lexeme = string
 
+let yojson_of_lexeme s = `String s (* MAVRYK: PascaLIGO *)
+
 (* Keywords of PascaLIGO *)
 
 (* IMPORTANT: The types are sorted alphabetically. If you add or
    modify some, please make sure they remain in order. *)
 
-type kwd_and       = lexeme wrap
-type kwd_begin     = lexeme wrap
-type kwd_big_map   = lexeme wrap
-type kwd_block     = lexeme wrap
-type kwd_case      = lexeme wrap
-type kwd_const     = lexeme wrap
-type kwd_contains  = lexeme wrap
-type kwd_down      = lexeme wrap
-type kwd_else      = lexeme wrap
-type kwd_end       = lexeme wrap
-type kwd_for       = lexeme wrap
-type kwd_from      = lexeme wrap
-type kwd_function  = lexeme wrap
-type kwd_if        = lexeme wrap
-type kwd_in        = lexeme wrap
-type kwd_include   = lexeme wrap
-type kwd_is        = lexeme wrap
-type kwd_list      = lexeme wrap
-type kwd_map       = lexeme wrap
-type kwd_mod       = lexeme wrap
-type kwd_module    = lexeme wrap
-type kwd_nil       = lexeme wrap
-type kwd_not       = lexeme wrap
-type kwd_of        = lexeme wrap
-type kwd_or        = lexeme wrap
-type kwd_patch     = lexeme wrap
-type kwd_record    = lexeme wrap
-type kwd_recursive = lexeme wrap
-type kwd_remove    = lexeme wrap
-type kwd_set       = lexeme wrap
-type kwd_sig       = lexeme wrap
-type kwd_skip      = lexeme wrap
-type kwd_step      = lexeme wrap
-type kwd_then      = lexeme wrap
-type kwd_to        = lexeme wrap
-type kwd_type      = lexeme wrap
-type kwd_var       = lexeme wrap
-type kwd_while     = lexeme wrap
-type kwd_with      = lexeme wrap
+type kwd_and       = lexeme wrap [@@deriving yojson_of]
+type kwd_begin     = lexeme wrap [@@deriving yojson_of]
+type kwd_big_map   = lexeme wrap [@@deriving yojson_of]
+type kwd_block     = lexeme wrap [@@deriving yojson_of]
+type kwd_case      = lexeme wrap [@@deriving yojson_of]
+type kwd_const     = lexeme wrap [@@deriving yojson_of]
+type kwd_contains  = lexeme wrap [@@deriving yojson_of]
+type kwd_down      = lexeme wrap [@@deriving yojson_of]
+type kwd_else      = lexeme wrap [@@deriving yojson_of]
+type kwd_end       = lexeme wrap [@@deriving yojson_of]
+type kwd_for       = lexeme wrap [@@deriving yojson_of]
+type kwd_from      = lexeme wrap [@@deriving yojson_of]
+type kwd_function  = lexeme wrap [@@deriving yojson_of]
+type kwd_if        = lexeme wrap [@@deriving yojson_of]
+type kwd_in        = lexeme wrap [@@deriving yojson_of]
+type kwd_include   = lexeme wrap [@@deriving yojson_of]
+type kwd_is        = lexeme wrap [@@deriving yojson_of]
+type kwd_list      = lexeme wrap [@@deriving yojson_of]
+type kwd_map       = lexeme wrap [@@deriving yojson_of]
+type kwd_mod       = lexeme wrap [@@deriving yojson_of]
+type kwd_module    = lexeme wrap [@@deriving yojson_of]
+type kwd_nil       = lexeme wrap [@@deriving yojson_of]
+type kwd_not       = lexeme wrap [@@deriving yojson_of]
+type kwd_of        = lexeme wrap [@@deriving yojson_of]
+type kwd_or        = lexeme wrap [@@deriving yojson_of]
+type kwd_patch     = lexeme wrap [@@deriving yojson_of]
+type kwd_record    = lexeme wrap [@@deriving yojson_of]
+type kwd_recursive = lexeme wrap [@@deriving yojson_of]
+type kwd_remove    = lexeme wrap [@@deriving yojson_of]
+type kwd_set       = lexeme wrap [@@deriving yojson_of]
+type kwd_sig       = lexeme wrap [@@deriving yojson_of]
+type kwd_skip      = lexeme wrap [@@deriving yojson_of]
+type kwd_step      = lexeme wrap [@@deriving yojson_of]
+type kwd_then      = lexeme wrap [@@deriving yojson_of]
+type kwd_to        = lexeme wrap [@@deriving yojson_of]
+type kwd_type      = lexeme wrap [@@deriving yojson_of]
+type kwd_var       = lexeme wrap [@@deriving yojson_of]
+type kwd_while     = lexeme wrap [@@deriving yojson_of]
+type kwd_with      = lexeme wrap [@@deriving yojson_of]
 
 (* Symbols *)
 
 (* IMPORTANT: The types are sorted alphabetically. If you add or
    modify some, please make sure they remain in order. *)
 
-type arrow      = lexeme wrap  (* ->  *)
-type assign     = lexeme wrap  (* :=  *)
-type caret      = lexeme wrap  (* ^   *)
-type colon      = lexeme wrap  (* :   *)
-type comma      = lexeme wrap  (* ,   *)
-type sharp      = lexeme wrap  (* #   *)
-type dot        = lexeme wrap  (* .   *)
-type equal      = lexeme wrap  (* =   *)
-type geq        = lexeme wrap  (* >=  *)
-type gt         = lexeme wrap  (* >   *)
-type lbrace     = lexeme wrap  (* {   *)
-type lbracket   = lexeme wrap  (* [   *)
-type leq        = lexeme wrap  (* <=  *)
-type lpar       = lexeme wrap  (* (   *)
-type lt         = lexeme wrap  (* <   *)
-type minus      = lexeme wrap  (* -   *)
-type neq        = lexeme wrap  (* =/= *)
-type plus       = lexeme wrap  (* +   *)
-type rbrace     = lexeme wrap  (* }   *)
-type rbracket   = lexeme wrap  (* ]   *)
-type rpar       = lexeme wrap  (* )   *)
-type semi       = lexeme wrap  (* ;   *)
-type slash      = lexeme wrap  (* /   *)
-type times      = lexeme wrap  (* *   *)
-type vbar       = lexeme wrap  (* |   *)
-type plus_eq    = lexeme wrap  (* +=  *)
-type minus_eq   = lexeme wrap  (* -=  *)
-type times_eq   = lexeme wrap  (* *=  *)
-type slash_eq   = lexeme wrap  (* /=  *)
-type vbar_eq    = lexeme wrap  (* |=  *)
+type arrow      = lexeme wrap  (* ->  *) [@@deriving yojson_of]
+type assign     = lexeme wrap  (* :=  *) [@@deriving yojson_of]
+type caret      = lexeme wrap  (* ^   *) [@@deriving yojson_of]
+type colon      = lexeme wrap  (* :   *) [@@deriving yojson_of]
+type comma      = lexeme wrap  (* ,   *) [@@deriving yojson_of]
+type sharp      = lexeme wrap  (* #   *) [@@deriving yojson_of]
+type dot        = lexeme wrap  (* .   *) [@@deriving yojson_of]
+type equal      = lexeme wrap  (* =   *) [@@deriving yojson_of]
+type geq        = lexeme wrap  (* >=  *) [@@deriving yojson_of]
+type gt         = lexeme wrap  (* >   *) [@@deriving yojson_of]
+type lbrace     = lexeme wrap  (* {   *) [@@deriving yojson_of]
+type lbracket   = lexeme wrap  (* [   *) [@@deriving yojson_of]
+type leq        = lexeme wrap  (* <=  *) [@@deriving yojson_of]
+type lpar       = lexeme wrap  (* (   *) [@@deriving yojson_of]
+type lt         = lexeme wrap  (* <   *) [@@deriving yojson_of]
+type minus      = lexeme wrap  (* -   *) [@@deriving yojson_of]
+type neq        = lexeme wrap  (* =/= *) [@@deriving yojson_of]
+type plus       = lexeme wrap  (* +   *) [@@deriving yojson_of]
+type rbrace     = lexeme wrap  (* }   *) [@@deriving yojson_of]
+type rbracket   = lexeme wrap  (* ]   *) [@@deriving yojson_of]
+type rpar       = lexeme wrap  (* )   *) [@@deriving yojson_of]
+type semi       = lexeme wrap  (* ;   *) [@@deriving yojson_of]
+type slash      = lexeme wrap  (* /   *) [@@deriving yojson_of]
+type times      = lexeme wrap  (* *   *) [@@deriving yojson_of]
+type vbar       = lexeme wrap  (* |   *) [@@deriving yojson_of]
+type plus_eq    = lexeme wrap  (* +=  *) [@@deriving yojson_of]
+type minus_eq   = lexeme wrap  (* -=  *) [@@deriving yojson_of]
+type times_eq   = lexeme wrap  (* *=  *) [@@deriving yojson_of]
+type slash_eq   = lexeme wrap  (* /=  *) [@@deriving yojson_of]
+type vbar_eq    = lexeme wrap  (* |=  *) [@@deriving yojson_of]
 
 (* End-of-File *)
 
-type eof = lexeme wrap
+type eof = lexeme wrap [@@deriving yojson_of]
 
 (* Literals *)
 
 type variable =
   Var of lexeme wrap (* foo  *)
 | Esc of lexeme wrap (* @foo without the @ *)
+[@@deriving yojson_of] (* MAVRYK: PascaLIGO *)
 
-type type_param  = variable
-type type_name   = variable
-type type_var    = variable
-type field_name  = variable
+type type_param  = variable [@@deriving yojson_of]
+type type_name   = variable [@@deriving yojson_of]
+type type_var    = variable [@@deriving yojson_of]
+type field_name  = variable [@@deriving yojson_of]
+type module_name = lexeme wrap [@@deriving yojson_of]
+type ctor        = lexeme wrap [@@deriving yojson_of]
+type attribute   = (Attr.t [@yojson.opaque]) wrap [@@deriving yojson_of]
+type collection  = lexeme wrap [@@deriving yojson_of]
+type language    = lexeme Region.reg wrap [@@deriving yojson_of]
+type string_     = lexeme wrap [@@deriving yojson_of]
+type verbatim    = lexeme wrap [@@deriving yojson_of]
 
-type module_name = lexeme wrap
-type ctor        = lexeme wrap
-type attribute   = Attr.t wrap
-type collection  = lexeme wrap
-type language    = lexeme Region.reg wrap
-type string_     = lexeme wrap
-type verbatim    = lexeme wrap
+type string_literal   = lexeme wrap [@@deriving yojson_of]
+type int_literal      = (lexeme * (Z.t [@yojson.opaque])) wrap [@@deriving yojson_of]
+type nat_literal      = int_literal [@@deriving yojson_of]
+type bytes_literal    = (lexeme * (Hex.t [@yojson.opaque])) wrap [@@deriving yojson_of]
+type mumav_literal    = (lexeme * (Int64.t [@yojson.opaque])) wrap [@@deriving yojson_of]
+type mav_literal      = (lexeme * (Q.t [@yojson.opaque]))     wrap [@@deriving yojson_of]
+type verbatim_literal = lexeme wrap [@@deriving yojson_of]
 
-type string_literal   = lexeme wrap
-type int_literal      = (lexeme * Z.t) wrap
-type nat_literal      = int_literal
-type bytes_literal    = (lexeme * Hex.t) wrap
-type mumav_literal    = (lexeme * Int64.t) wrap
-type mav_literal      = (lexeme * Q.t)     wrap
-type verbatim_literal = lexeme wrap
-
-type keyword = lexeme wrap
+type keyword = lexeme wrap [@@deriving yojson_of]
 
 (* Parentheses *)
 
@@ -165,7 +175,7 @@ type 'a par = {
   lpar   : lpar;
   inside : 'a;
   rpar   : rpar
-}
+} [@@deriving yojson_of]
 
 (* Brackets *)
 
@@ -173,7 +183,7 @@ type 'a brackets = {
   lbracket : lbracket;
   inside   : 'a;
   rbracket : rbracket
-}
+} [@@deriving yojson_of]
 
 (* Chevrons *)
 
@@ -181,7 +191,7 @@ type 'a chevrons = {
   lchevron : lt;
   inside   : 'a;
   rchevron : gt
-}
+} [@@deriving yojson_of]
 
 (* CONCRETE SYNTAX TREE (CST) *)
 
@@ -202,7 +212,7 @@ and declarations = declaration nseq
 and declaration =
   D_Attr      of (attribute * declaration) reg
 | D_Const     of const_decl   reg
-| D_Directive of Directive.t
+| D_Directive of (Directive.t [@yojson.opaque])
 | D_Fun       of fun_decl     reg
 | D_Module    of module_decl  reg
 | D_Signature of signature_decl reg   (* MAVRYK: PascaLIGO module signatures *)
@@ -777,6 +787,7 @@ and update = {
   kwd_with  : kwd_with;
   update    : expr
 }
+[@@deriving yojson_of] (* MAVRYK: PascaLIGO: derive the whole CST for dump-cst (M6) *)
 
 (* PROJECTING REGIONS *)
 

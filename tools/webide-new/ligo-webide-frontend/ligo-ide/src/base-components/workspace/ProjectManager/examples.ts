@@ -36,6 +36,25 @@ const incrementJ = `export namespace Counter {
 };
 `;
 
+// MAVRYK: PascaLIGO — restored third syntax.
+const incrementP = `module Counter is {
+  type storage is int
+
+  type ret is list (operation) * storage
+
+  (* Three entrypoints *)
+
+  [@entry] function increment (const delta : int; const store : storage) : ret is
+    ((nil : list (operation)), store + delta)
+
+  [@entry] function decrement (const delta : int; const store : storage) : ret is
+    ((nil : list (operation)), store - delta)
+
+  [@entry] function reset (const _u : unit; const _s : storage) : ret is
+    ((nil : list (operation)), 0)
+}
+`;
+
 const testM = `#import "../contracts/Contract.mligo" "Contract"
 
 (* Tests example *)
@@ -86,9 +105,30 @@ const test_increment =
   )();
 `;
 
+// MAVRYK: PascaLIGO — restored third syntax.
+const testP = `#import "../contracts/Contract.ligo" "Contract"
+
+(* Tests example *)
+
+const initial_storage = 42
+
+const test_initial_storage = block {
+  const orig = Test.originate (contract_of Contract.Counter, initial_storage, 0mumav)
+} with assert (Test.get_storage (orig.addr) = initial_storage)
+
+const test_increment = block {
+  const orig = Test.originate (contract_of Contract.Counter, initial_storage, 0mumav);
+  const contr = Test.to_contract (orig.addr);
+  const _op = Test.transfer_to_contract_exn (contr, Increment (1), 1mumav)
+} with assert (Test.get_storage (orig.addr) = initial_storage + 1)
+`;
+
 const incrementMStorage = "0";
 
 const incrementJStorage = "0";
+
+// MAVRYK: PascaLIGO
+const incrementPStorage = "0";
 
 const config = (name: string, projectName: string, syntax: string) => `{
   "main": "./contracts/${name}.${syntax}",
@@ -121,6 +161,14 @@ export const getExamples = (
               content: incrementJ,
             }
           : undefined,
+      // MAVRYK: PascaLIGO
+      contractP:
+        syntax === "ligo"
+          ? {
+              name: `.workspaces/${name}/contracts/Contract.ligo`,
+              content: incrementP,
+            }
+          : undefined,
 
       testM:
         syntax === "mligo"
@@ -136,6 +184,14 @@ export const getExamples = (
               content: testJ,
             }
           : undefined,
+      // MAVRYK: PascaLIGO
+      testP:
+        syntax === "ligo"
+          ? {
+              name: `.workspaces/${name}/tests/Counter.ligo`,
+              content: testP,
+            }
+          : undefined,
 
       storageM:
         syntax === "mligo"
@@ -149,6 +205,14 @@ export const getExamples = (
           ? {
               name: `.workspaces/${name}/storages/InitialStorage`,
               content: incrementJStorage,
+            }
+          : undefined,
+      // MAVRYK: PascaLIGO
+      storageP:
+        syntax === "ligo"
+          ? {
+              name: `.workspaces/${name}/storages/InitialStorage`,
+              content: incrementPStorage,
             }
           : undefined,
 

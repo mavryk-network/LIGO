@@ -68,7 +68,8 @@ async function loadProjectFileContentsRecursively(fileTree, filePromiseMap) {
 }
 
 function isLigoPath(path) {
-  return path.endsWith(".mligo") || path.endsWith(".jsligo");
+  // MAVRYK: PascaLIGO — .ligo is a first-class LIGO source extension.
+  return path.endsWith(".mligo") || path.endsWith(".jsligo") || path.endsWith(".ligo");
 }
 
 function createLanguageClient(transports) {
@@ -76,7 +77,7 @@ function createLanguageClient(transports) {
     name: "Sample Language Client",
     clientOptions: {
       // use a language id as a document selector
-      documentSelector: ["cameligoext", "jsligoext"],
+      documentSelector: ["cameligoext", "jsligoext", "pascaligoext"], // MAVRYK: PascaLIGO
       // disable the default error handler
       errorHandler: {
         error: () => ({ action: ErrorAction.Continue }),

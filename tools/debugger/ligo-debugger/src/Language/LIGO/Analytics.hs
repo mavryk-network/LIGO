@@ -168,6 +168,7 @@ generateDebuggerLaunchAnalytics skipAnalytics program = unless skipAnalytics do
       getExt program <&> \case
         Caml -> "CameLIGO"
         Js -> "JsLIGO"
+        Pascal -> "PascaLIGO" -- MAVRYK: PascaLIGO
 
     formatMaybe :: Maybe Text -> Text
     formatMaybe = maybe Text.empty (flip Text.snoc '_')
