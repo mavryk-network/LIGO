@@ -4,7 +4,7 @@ include:
   - '/.ci/.gitlab-ci-tools-common.yml'
 
 variables:
-  MAVKIT_VERSION: "v16.1"
+  MAVKIT_VERSION: "mavkit-v20.4"
 
 vscode-extension-test:
   extends: .docker-image

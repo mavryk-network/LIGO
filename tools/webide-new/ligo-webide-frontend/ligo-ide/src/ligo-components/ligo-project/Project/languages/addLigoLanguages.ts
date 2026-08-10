@@ -51,7 +51,10 @@ export const addLigoLanguages = async (editor: monaco.editor.ICodeEditor) => {
   );
   monaco.languages.setLanguageConfiguration("jsligoext", convertConfiguration(jsligoConfiguration));
   // MAVRYK: PascaLIGO
-  monaco.languages.setLanguageConfiguration("pascaligoext", convertConfiguration(ligoConfiguration));
+  monaco.languages.setLanguageConfiguration(
+    "pascaligoext",
+    convertConfiguration(ligoConfiguration)
+  );
   monaco.languages.setLanguageConfiguration("tzext", convertConfiguration(jsligoConfiguration));
 
   const mligoRegistry = new Registry({
