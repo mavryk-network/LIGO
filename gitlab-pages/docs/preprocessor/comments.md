@@ -35,6 +35,13 @@ Comments are blocks enclosed between `(*` and `*)`, and start with
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Comments are blocks enclosed between `(*` and `*)`, and start with
+`//` for line comments.
+
+</Syntax>
+
 <Syntax syntax="jsligo">
 
 Comments are blocks enclosed between `/*` and `*/`, and start with

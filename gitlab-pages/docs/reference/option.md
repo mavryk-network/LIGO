@@ -16,6 +16,9 @@ val value : &#39;a.&#39;a -&gt; &#39;a option -&gt; &#39;a
 <SyntaxTitle syntax="jsligo">
 let value: &lt;a&gt;(&#95;: a) =&gt; (&#95;: option&lt;a&gt;) =&gt; a
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const value : a -&gt; option (a) -&gt; a
+</SyntaxTitle>
 <Syntax syntax="cameligo">
 
 The call `value d opt` is `v` if `opt` is `Some v`, and `d`
@@ -30,12 +33,22 @@ The call `value(d, opt)` is `v` if `opt` is `Some(v)`, and `d`
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `value (d, opt)` is `v` if `opt` is `Some (v)`, and `d`
+    otherwise.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val value&#95;with&#95;error : &#39;err &#39;a.&#39;err -&gt; &#39;a option -&gt; &#39;a
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let value&#95;with&#95;error: &lt;err, a&gt;(&#95;: err) =&gt; (&#95;: option&lt;a&gt;) =&gt; a
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const value&#95;with&#95;error : err -&gt; option (a) -&gt; a
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -53,12 +66,23 @@ The call `value_with_error(err, opt)` terminates with the error
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `value_with_error (err, opt)` terminates with the error
+    `err` if, and only if, `opt` is `None`; otherwise it is `Some (v)`
+    and `v` is returned.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val value&#95;exn : &#39;err &#39;a.&#39;err -&gt; &#39;a option -&gt; &#39;a
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let value&#95;exn: &lt;err, a&gt;(&#95;: err) =&gt; (&#95;: option&lt;a&gt;) =&gt; a
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const value&#95;exn : err -&gt; option (a) -&gt; a
 </SyntaxTitle>
 **Deprecated:** Use `Option.value_with_error` instead.
 
@@ -78,12 +102,23 @@ The call `value_exn(err, opt)` terminates with the error `err` if,
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `value_exn (err, opt)` terminates with the error `err` if,
+    and only if, `opt` is `None`; otherwise it is `Some (v)` and `v` is
+    returned.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val unopt&#95;with&#95;error : &#39;a.&#39;a option -&gt; string -&gt; &#39;a
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let unopt&#95;with&#95;error: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; (&#95;: string) =&gt; a
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const unopt&#95;with&#95;error : option (a) -&gt; string -&gt; a
 </SyntaxTitle>
 **Deprecated:** Use `Option.value_with_error` instead.
 
@@ -103,12 +138,23 @@ The call `unopt_with_error(opt, err)` terminates with the error
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `unopt_with_error (opt, err)` terminates with the error
+    `err` if, and only if, `opt` is `None`; otherwise it is
+    `Some (v)` and `v` is returned.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val unopt : &#39;a.&#39;a option -&gt; &#39;a
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let unopt: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; a
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const unopt : option (a) -&gt; a
 </SyntaxTitle>
 **Deprecated:** Use `Option.value_with_error` instead.
 
@@ -128,12 +174,23 @@ The call `unopt(opt)` terminates with the string
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `unopt (opt)` terminates with the string
+    `"option is None"` if, and only if, `opt` is `None`; otherwise it is
+    `Some (v)` and `v` is returned.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val map : &#39;a &#39;b.(&#39;a -&gt; &#39;b) -&gt; &#39;a option -&gt; &#39;b option
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let map: &lt;a, b&gt;(&#95;: (&#95;: a) =&gt; b) =&gt; (&#95;: option&lt;a&gt;) =&gt; option&lt;b&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const map : (a -&gt; b) -&gt; option (a) -&gt; option (b)
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -149,12 +206,22 @@ The call `map(f, opt)` is `None()` if `opt` is `None()`, and
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `map (f, opt)` is `None` if `opt` is `None`, and
+    `Some (f (v))` if `opt` is `Some (v)`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val is&#95;none : &#39;a.&#39;a option -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let is&#95;none: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const is&#95;none : option (a) -&gt; bool
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -170,12 +237,22 @@ The call `is_none(opt)` is `true` if, and only if, `opt` is
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `is_none (opt)` is `true` if, and only if, `opt` is
+    `None`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val is&#95;some : &#39;a.&#39;a option -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let is&#95;some: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const is&#95;some : option (a) -&gt; bool
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -188,5 +265,12 @@ The call `is_some opt` is `false` if, and only if, `opt` is
 
 The call `is_some(opt)` is `false` if, and only if, `opt` is
     `None()`.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The call `is_some (opt)` is `false` if, and only if, `opt` is
+    `None`.
 
 </Syntax>

@@ -26,4 +26,8 @@ val create_ticket : 'value -> nat -> ('value ticket) option
 let create_ticket: 'value => nat => option&lt;ticket&lt;'value&gt;&gt;
 </SyntaxTitle>
 
+<SyntaxTitle syntax="pascaligo">
+const create_ticket : value -> nat -> option (ticket (value))
+</SyntaxTitle>
+
 Now `create_ticket` returns an `option`, preventing the creation of zero valued tickets.

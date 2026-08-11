@@ -192,7 +192,9 @@ and print_D_Module state (node: module_decl reg) =
     mk_child print_module_expr node.module_expr]
   in Tree.make state "D_Module" children
 
-(* MAVRYK: PascaLIGO. Coarse CST print for module signatures; deep printing is a TODO(M4). *)
+(* MAVRYK: PascaLIGO. Coarse CST print for module signatures. The LSP-facing deep traversal now
+   lives in Fold.ml (S_signature_decl folds into its sig items); this debug-only `print cst`
+   rendering is kept coarse on purpose (deepening it would only churn goldens with no LSP benefit). *)
 and print_D_Signature state (node: signature_decl reg) =
   let node = node.value in
   let children = Tree.[ mk_child make_literal node.name ]

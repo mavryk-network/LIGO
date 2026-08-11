@@ -14,6 +14,9 @@ val bootstrap : nat -&gt; address
 <SyntaxTitle syntax="jsligo">
 let bootstrap: (&#95;: nat) =&gt; address
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const bootstrap : nat -&gt; address
+</SyntaxTitle>
 Returns the address corresponding to the nth bootstrapped
           contract.
 
@@ -23,6 +26,9 @@ val bootstrap&#95;typed&#95;address : &#39;a &#39;b.nat -&gt; (&#39;a, &#39;b) t
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let bootstrap&#95;typed&#95;address: &lt;a, b&gt;(&#95;: nat) =&gt; typed&#95;address&lt;a, b&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const bootstrap&#95;typed&#95;address : nat -&gt; typed&#95;address (a, b)
 </SyntaxTitle>
 Returns the typed address corresponding to the nth bootstrapped
           contract currently loaded. The types are inferred from those

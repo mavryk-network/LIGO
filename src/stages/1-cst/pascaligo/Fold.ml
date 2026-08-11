@@ -108,7 +108,13 @@ type _ sing =
   | S_minus_eq : minus_eq sing
   | S_module_body : module_body sing
   | S_module_decl : module_decl sing
-  | S_signature_decl : signature_decl sing  (* MAVRYK: PascaLIGO. Coarse (leaf) fold; deep signature traversal is a TODO(M4) tooling item. *)
+  | S_signature_decl : signature_decl sing  (* MAVRYK: PascaLIGO module signatures (deep fold, mirrors CameLIGO). *)
+  | S_signature_expr : signature_expr sing
+  | S_signature_body : signature_body sing
+  | S_sig_item : sig_item sing
+  | S_sig_include : sig_include sing
+  | S_sig_type : sig_type sing
+  | S_sig_value : sig_value sing
   | S_module_expr : module_expr sing
   | S_module_name : module_name sing
   | S_module_path : 'a sing -> 'a module_path sing
@@ -561,7 +567,52 @@ let fold'
     ; kwd_is -| S_kwd_is
     ; module_expr -| S_module_expr
     ; terminator -| S_option S_semi ]
-  | S_signature_decl -> ()  (* MAVRYK: PascaLIGO. Coarse leaf; see TODO(M4). *)
+  (* MAVRYK: PascaLIGO. Deep signature fold (was a coarse leaf) so LSP features — hover,
+     document-symbols, go-to-definition, folding — reach inside [module type N is sig … end]. *)
+  | S_signature_decl ->
+    let { kwd_module; kwd_type; name; kwd_is; signature_expr; terminator } : signature_decl = node in
+    process_list
+    [ kwd_module -| S_kwd_module
+    ; kwd_type -| S_kwd_type
+    ; name -| S_module_name
+    ; kwd_is -| S_kwd_is
+    ; signature_expr -| S_signature_expr
+    ; terminator -| S_option S_semi ]
+  | S_signature_expr -> process
+    (match node with
+      S_Sig node -> node -| S_reg S_signature_body
+    | S_Path node -> node -| S_reg (S_module_path S_module_name)
+    | S_Var node -> node -| S_module_name)
+  | S_signature_body ->
+    let { kwd_sig; sig_items; kwd_end } : signature_body = node in
+    process_list
+    [ kwd_sig -| S_kwd_module
+    ; sig_items -| S_list S_sig_item
+    ; kwd_end -| S_kwd_end ]
+  | S_sig_item -> process
+    (match node with
+      Sig_Attr node -> node -| S_reg (S_tuple_2 (S_attribute, S_sig_item))
+    | Sig_Include node -> node -| S_reg S_sig_include
+    | Sig_Type node -> node -| S_reg S_sig_type
+    | Sig_Value node -> node -| S_reg S_sig_value)
+  | S_sig_include ->
+    let { kwd_include; signature_expr } : sig_include = node in
+    process_list
+    [ kwd_include -| S_kwd_module
+    ; signature_expr -| S_signature_expr ]
+  | S_sig_type ->
+    let { kwd_type; name; type_rhs } : sig_type = node in
+    process_list
+    [ kwd_type -| S_kwd_type
+    ; name -| S_type_name
+    ; type_rhs -| S_option (S_tuple_2 (S_kwd_is, S_type_expr)) ]
+  | S_sig_value ->
+    let { kwd_const; var; colon; val_type } : sig_value = node in
+    process_list
+    [ kwd_const -| S_kwd_const
+    ; var -| S_variable
+    ; colon -| S_colon
+    ; val_type -| S_type_expr ]
   | S_module_expr -> process
     (match node with
       M_Body node -> node -| S_reg S_module_body

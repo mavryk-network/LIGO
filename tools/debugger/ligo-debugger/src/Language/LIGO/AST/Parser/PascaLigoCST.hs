@@ -222,6 +222,10 @@ data TypeExpr
   | TRecord (Reg (Compound (Reg FieldDecl)))
   | TString WrappedLexeme
   | TSum (Reg SumType)
+  -- MAVRYK: PascaLIGO. Anonymous union type "t1 | t2 | ..." (mirrors [T_Union of union_type reg];
+  -- union_type = (type_expr, vbar) nsepseq, and vbar is opaque, so it decodes as [NonEmpty TypeExpr]
+  -- exactly like [TParameterOf]).
+  | TUnion (Reg (NonEmpty TypeExpr))
   | TVar Variable
   deriving stock (Show, Generic)
   deriving anyclass (NFData)
@@ -657,6 +661,7 @@ instance MessagePack TypeExpr where
     , TRecord      <$> (guardMsg (name == "T_Record"     ) >> fromObjectWith cfg arg)
     , TString      <$> (guardMsg (name == "T_String"     ) >> fromObjectWith cfg arg)
     , TSum         <$> (guardMsg (name == "T_Sum"        ) >> fromObjectWith cfg arg)
+    , TUnion       <$> (guardMsg (name == "T_Union"      ) >> fromObjectWith cfg arg)
     , TVar         <$> (guardMsg (name == "T_Var"        ) >> fromObjectWith cfg arg)
     ]
 
@@ -1278,6 +1283,10 @@ toAST CST{..} =
           variants = vtVariants <&> \(unpackReg -> (r', Variant{..})) ->
             fastMake r' (AST.Variant (makeWrappedLexeme AST.Name vCtor) (typeExprConv . unTuple1 <$> maybeToList vCtorArgs))
         in fastMake r (AST.TSum def variants)
+      -- MAVRYK: PascaLIGO. A union lowers to a sum, so represent it in the skeleton as an [AST.TSum]
+      -- over the union's member type expressions (mirrors JsLigoCST.toAST's TUnion case).
+      TUnion (unpackReg -> (r, objects)) ->
+        fastMake r (AST.TSum def $ typeExprConv <$> objects)
       TVar (unVariable -> var@(unpackWrap -> (r, v)))
         | v == "_" -> fastMake r AST.TWildcard
         | otherwise -> makeWrappedLexeme AST.TypeName var

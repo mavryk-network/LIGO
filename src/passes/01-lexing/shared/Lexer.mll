@@ -282,9 +282,13 @@ let   cameligo_sym = "->" | "<>" | "::" | "||" | "&&" | "'" | "|>" | "^" | ":="
 let     jsligo_sym =   "..." | "?" | "!" | "%" | "==" | "!=" | "+=" | "-="
                    | "*=" | "/="| "%=" | "=>" | "++" | "--" | "#" | "<<"
                    | "<<=" | "&" (* | ">=" | ">>=" | ">>" : See parser. *)
-(* MAVRYK: PascaLIGO. The not-equal operator "=/=" is unique to PascaLIGO;
-   without it here, ocamllex longest-match splits "=/=" into "=" + "/=". *)
-let  pascaligo_sym = "=/="
+(* MAVRYK: PascaLIGO. "=/=" (PascaLIGO not-equal) and "|=" (PascaLIGO's VBAR_EQ patch-lens; "|=" is
+   also JsLIGO's BIT_OR_EQ) are absent from the sym groups above, so ocamllex longest-match would
+   split "=/=" into "=" + "/=" and "|=" into "|" + "=", and the parser would never receive the
+   intended token even though the grammar and Token.ml already define it. Kept in this group since
+   PascaLIGO is what surfaced the "|=" gap; the shared [symbol] regexp below applies it to every
+   syntax whose Token.ml maps "|=". *)
+let  pascaligo_sym = "=/=" | "|="
 
 let symbol =
      common_sym

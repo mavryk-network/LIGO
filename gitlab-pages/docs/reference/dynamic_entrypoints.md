@@ -14,6 +14,9 @@ type t = (nat, bytes) big&#95;map
 <SyntaxTitle syntax="jsligo">
 type t = big&#95;map&lt;nat, bytes&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type t = (nat, bytes) big&#95;map
+</SyntaxTitle>
 Type `t` is an alias of the predefined type
       `dynamic_entrypoints`.
 
@@ -29,6 +32,9 @@ let set:
   &lt;param, storage&gt;(&#95;: dynamic&#95;entrypoint&lt;param, storage&gt;) =&gt; (&#95;: option&lt;entrypoint&lt;param, storage&gt;&gt;) =&gt; (
     &#95;: dynamic&#95;entrypoints
   ) =&gt; dynamic&#95;entrypoints
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const set : dynamic&#95;entrypoint (param, storage) -&gt; option (entrypoint (param, storage)) -&gt; dynamic&#95;entrypoints -&gt; dynamic&#95;entrypoints
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -52,6 +58,17 @@ The call `set(dyn, None(), dyn_map)` returns a copy of the map of
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `set (dyn, None, dyn_map)` returns a copy of the map of
+      dynamic entrypoints `dyn_map` where the dynamic entrypoint `dyn`
+      is not associated to a static entrypoint. The call `set (dyn,
+      (Some entrypoint), dyn_map)` is a copy of `dyn_map` where the
+      dynamic entrypoint `dyn` is associated to the static entrypoint
+      `entrypoint`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val set&#95;bytes :
@@ -61,6 +78,9 @@ val set&#95;bytes :
 <SyntaxTitle syntax="jsligo">
 let set&#95;bytes:
   &lt;param, storage&gt;(&#95;: dynamic&#95;entrypoint&lt;param, storage&gt;) =&gt; (&#95;: option&lt;bytes&gt;) =&gt; (&#95;: dynamic&#95;entrypoints) =&gt; dynamic&#95;entrypoints
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const set&#95;bytes : dynamic&#95;entrypoint (param, storage) -&gt; option (bytes) -&gt; dynamic&#95;entrypoints -&gt; dynamic&#95;entrypoints
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -88,6 +108,19 @@ The call `set_bytes(dyn, None(), dyn_map)` returns a copy of the
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `set_bytes (dyn, None, dyn_map)` returns a copy of the map
+      of dynamic entrypoints `dyn_map` where the dynamic entrypoint
+      `dyn` is not associated to a static entrypoint. The call
+      `set_bytes (dyn, (Some bytes), dyn_map)` is a copy of `dyn_map`
+      where the dynamic entrypoint `dyn` is associated to the static
+      entrypoint encoded by the sequence of bytes `bytes`. If that
+      sequence is invalid, any call to the dynamic entrypoint will
+      fail.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val get :
@@ -99,6 +132,9 @@ let get:
   &lt;param, storage&gt;(&#95;: dynamic&#95;entrypoint&lt;param, storage&gt;) =&gt; (&#95;: dynamic&#95;entrypoints) =&gt; option&lt;
     entrypoint&lt;param, storage&gt;
   &gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get : dynamic&#95;entrypoint (param, storage) -&gt; dynamic&#95;entrypoints -&gt; option (entrypoint (param, storage))
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -115,6 +151,16 @@ The call `get dyn dyn_map` is `None` if the dynamic entrypoint
 The call `get(dyn, dyn_map)` is `None()` if the dynamic
       entrypoint `dyn` is absent from the dynamic entrypoints map
       `dyn_map`. Otherwise, it is `Some(entry)`, where `entry` is a
+      static entrypoint that is callable (like a function). See type
+      `entrypoint`.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The call `get (dyn, dyn_map)` is `None` if the dynamic entrypoint
+      `dyn` is absent from the dynamic entrypoints map
+      `dyn_map`. Otherwise, it is `Some entry`, where `entry` is a
       static entrypoint that is callable (like a function). See type
       `entrypoint`.
 

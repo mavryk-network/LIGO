@@ -91,3 +91,49 @@ JsLIGO's keywords are the following:
   <li> <code>@layout</code> </li>
 </ul>
 </Syntax>
+
+<Syntax syntax="pascaligo">
+PascaLIGO's keywords are the following:
+<ul>
+  <li> <code>and</code> </li>
+  <li> <code>begin</code> </li>
+  <li> <code>big_map</code> </li>
+  <li> <code>block</code> </li>
+  <li> <code>case</code> </li>
+  <li> <code>const</code> </li>
+  <li> <code>contains</code> </li>
+  <li> <code>contract_of</code> </li>
+  <li> <code>else</code> </li>
+  <li> <code>end</code> </li>
+  <li> <code>for</code> </li>
+  <li> <code>from</code> </li>
+  <li> <code>function</code> </li>
+  <li> <code>if</code> </li>
+  <li> <code>in</code> </li>
+  <li> <code>include</code> </li>
+  <li> <code>is</code> </li>
+  <li> <code>list</code> </li>
+  <li> <code>map</code> </li>
+  <li> <code>mod</code> </li>
+  <li> <code>module</code> </li>
+  <li> <code>nil</code> </li>
+  <li> <code>not</code> </li>
+  <li> <code>of</code> </li>
+  <li> <code>or</code> </li>
+  <li> <code>parameter_of</code> </li>
+  <li> <code>patch</code> </li>
+  <li> <code>record</code> </li>
+  <li> <code>recursive</code> </li>
+  <li> <code>remove</code> </li>
+  <li> <code>set</code> </li>
+  <li> <code>sig</code> </li>
+  <li> <code>skip</code> </li>
+  <li> <code>step</code> </li>
+  <li> <code>then</code> </li>
+  <li> <code>to</code> </li>
+  <li> <code>type</code> </li>
+  <li> <code>var</code> </li>
+  <li> <code>while</code> </li>
+  <li> <code>with</code> </li>
+</ul>
+</Syntax>

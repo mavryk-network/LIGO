@@ -432,3 +432,39 @@ function is_it_a_nat (const i : int) : bool is
 ```
 
 </Syntax>
+
+## Union types
+
+A *union type* is an **anonymous** variant: a type built directly from the union
+of several other types, without naming a data constructor for each case. A value
+of `int | string` is either an `int` or a `string`. Union types unify to an
+ordinary sum type internally.
+
+<Syntax syntax="cameligo">
+
+Union types are not available in CameLIGO — use a named variant type instead.
+
+</Syntax>
+
+<Syntax syntax="jsligo">
+
+```jsligo group=unions
+type int_or_string = int | string;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=unions
+type int_or_string is int | string
+```
+
+Because `|` also separates the cases of a *named* variant type, PascaLIGO tells
+the two apart by the leading token of each case: a variant case starts with an
+**uppercase** constructor (as in `Head of unit | Tail of unit` above), whereas a
+union member is an ordinary **type expression** (`int | string`, lowercase type
+names, literals, records, …). To nest a union inside a variant's argument,
+parenthesise it: `Foo of (int | string)`.
+
+</Syntax>

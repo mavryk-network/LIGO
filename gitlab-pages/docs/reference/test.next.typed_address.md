@@ -14,6 +14,9 @@ val transfer : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&g
 <SyntaxTitle syntax="jsligo">
 let transfer: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; test&#95;exec&#95;result
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const transfer : typed&#95;address (p, s) -&gt; p -&gt; mav -&gt; test&#95;exec&#95;result
+</SyntaxTitle>
 Bakes a transaction by sending an amount of mav with a parameter
          from the current source to another account. Returns the amount of
          gas consumed by the execution of the contract.
@@ -24,6 +27,9 @@ val transfer&#95;exn : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let transfer&#95;exn: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; nat
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const transfer&#95;exn : typed&#95;address (p, s) -&gt; p -&gt; mav -&gt; nat
 </SyntaxTitle>
 Bakes a transaction by sending an amount of mav with a parameter
         from the current source to another account. Returns the amount of
@@ -37,6 +43,9 @@ val get&#95;storage : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#3
 <SyntaxTitle syntax="jsligo">
 let get&#95;storage: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; s
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;storage : typed&#95;address (p, s) -&gt; s
+</SyntaxTitle>
 Gets the storage of a typed account.
 
 
@@ -45,6 +54,9 @@ val get&#95;balance : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get&#95;balance: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; mav
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;balance : typed&#95;address (p, s) -&gt; mav
 </SyntaxTitle>
 Gets the balance of an account in mav.
 
@@ -55,12 +67,18 @@ val to&#95;address : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; addr
 <SyntaxTitle syntax="jsligo">
 let to&#95;address: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; address
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;address : typed&#95;address (p, s) -&gt; address
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 val to&#95;contract : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p contract
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let to&#95;contract: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; contract&lt;p&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;contract : typed&#95;address (p, s) -&gt; contract (p)
 </SyntaxTitle>
 Gets the contract corresponding to the default entrypoint of a
         typed address: the contract parameter in the result will be the
@@ -73,6 +91,9 @@ val get&#95;entrypoint : &#39;p &#39;s &#39;q.string -&gt; (&#39;p, &#39;s) type
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get&#95;entrypoint: &lt;p, s, q&gt;(&#95;: string) =&gt; (&#95;: typed&#95;address&lt;p, s&gt;) =&gt; contract&lt;q&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;entrypoint : string -&gt; typed&#95;address (p, s) -&gt; contract (q)
 </SyntaxTitle>
 Gets the contract corresponding to an entrypoint of a typed
         address: the contract parameter in the result will be the type of

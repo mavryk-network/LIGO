@@ -352,7 +352,8 @@ interactive_type_expr: EIdent LPAR UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_type_expr: EIdent LPAR UIdent COMMA ZWSP
 ##
@@ -560,7 +561,8 @@ interactive_type_expr: LPAR UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_type_expr: VBAR Attr ZWSP
 ##
@@ -997,7 +999,8 @@ contract: Const LPAR UIdent COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 contract: Const List LBRACKET UIdent ZWSP
 ##
@@ -1259,7 +1262,8 @@ interactive_expr: Function LPAR Const UIdent COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 contract: Recursive Function EIdent LT EIdent GT ZWSP
 ##
@@ -2083,7 +2087,8 @@ interactive_expr: Begin Var UIdent COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_expr: Begin Var UIdent COLON UIdent ASS ZWSP
 ##
@@ -2231,7 +2236,8 @@ interactive_expr: Begin Var UIdent LT EIdent GT COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_expr: Begin Var UIdent LT EIdent GT COLON UIdent ASS ZWSP
 ##
@@ -2725,7 +2731,8 @@ contract: Function EIdent LT EIdent GT LPAR RPAR COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 contract: Function EIdent LT EIdent GT LPAR RPAR COLON UIdent Is ZWSP
 ##
@@ -2971,7 +2978,8 @@ contract: Const UIdent LT EIdent GT COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 contract: Const UIdent LT EIdent GT COLON UIdent EQ ZWSP
 ##
@@ -4624,7 +4632,8 @@ interactive_expr: If EIdent Then Function LT EIdent GT LPAR RPAR COLON UIdent AR
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_expr: If EIdent Then Function LT EIdent GT LPAR RPAR COLON UIdent Is ZWSP
 ##
@@ -4700,7 +4709,8 @@ interactive_expr: If EIdent Then Function LPAR RPAR COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_expr: If EIdent Then Function LPAR RPAR COLON UIdent Is ZWSP
 ##
@@ -5253,7 +5263,8 @@ interactive_expr: Function LT EIdent GT LPAR RPAR COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_expr: Function LT EIdent GT LPAR RPAR COLON UIdent Is ZWSP
 ##
@@ -5327,7 +5338,8 @@ interactive_expr: Function LPAR RPAR COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_expr: Function LPAR RPAR COLON UIdent Is ZWSP
 ##
@@ -5424,7 +5436,8 @@ interactive_expr: LPAR EIdent COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_expr: LPAR EIdent Type
 ##
@@ -5940,7 +5953,8 @@ contract: Recursive Function EIdent LT EIdent GT LPAR RPAR COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 contract: Recursive Function EIdent LT EIdent GT LPAR RPAR COLON UIdent Is ZWSP
 ##
@@ -6011,7 +6025,8 @@ contract: Recursive Function EIdent LPAR RPAR COLON UIdent ARROW
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 contract: Recursive Function EIdent LPAR RPAR COLON UIdent Is ZWSP
 ##
@@ -6109,7 +6124,8 @@ interactive_type_expr: ZWSP
 ##
 
 Ill-formed type expression.
-At this point, a type expression is expected.
+At this point, a type expression is expected (for example the codomain to the
+right of a "->" arrow, or a member to the right of a "|" union).
 
 interactive_type_expr: UIdent ARROW
 ##

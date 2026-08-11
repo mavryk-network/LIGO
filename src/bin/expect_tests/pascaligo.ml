@@ -174,3 +174,31 @@ let%expect_test _ =
 
     Everything at the top-level was executed.
     - test exited with value (). |}]
+
+(* --- Union types "t1 | t2 | ..." (the last CameLIGO/JsLIGO grammar-parity gap). An anonymous
+   union lowers to a sum (Union.Injection), so a coercion injects the value into an [or]. The
+   uppercase-ctor / lowercase-type lexical split keeps "A | B" a variant (see the constructor test
+   above), so these never collide. --- *)
+
+(* First member injects Left. *)
+let%expect_test _ =
+  run_ligo_good [ "compile"; "expression"; "pascaligo"; "(42 : int | string)" ];
+  [%expect {| (Left 42) |}]
+
+(* Second member injects Right. *)
+let%expect_test _ =
+  run_ligo_good [ "compile"; "expression"; "pascaligo"; {|("hi" : int | string)|} ];
+  [%expect {| (Right "hi") |}]
+
+(* Three members nest the [or]. *)
+let%expect_test _ =
+  run_ligo_good [ "compile"; "expression"; "pascaligo"; "(1n : int | nat | string)" ];
+  [%expect {| (Right (Left 1)) |}]
+
+(* A malformed union (missing member after "|") produces the tailored parser message. *)
+let%expect_test _ =
+  run_ligo_bad [ "compile"; "expression"; "pascaligo"; "(42 : int | )" ];
+  [%expect
+    {|
+    Ill-formed union type.
+    At this point, a type expression is expected, as a member to the right of the vertical bar "|". |}]

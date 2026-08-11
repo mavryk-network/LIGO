@@ -14,6 +14,9 @@ val get&#95;balance : address -&gt; mav
 <SyntaxTitle syntax="jsligo">
 let get&#95;balance: (&#95;: address) =&gt; mav
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;balance : address -&gt; mav
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 val to&#95;typed&#95;address : &#39;a &#39;b.address -&gt; (&#39;a, &#39;b) typed&#95;address
@@ -21,10 +24,16 @@ val to&#95;typed&#95;address : &#39;a &#39;b.address -&gt; (&#39;a, &#39;b) type
 <SyntaxTitle syntax="jsligo">
 let to&#95;typed&#95;address: &lt;a, b&gt;(&#95;: address) =&gt; typed&#95;address&lt;a, b&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;typed&#95;address : address -&gt; typed&#95;address (a, b)
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 val get&#95;storage : &#39;b.address -&gt; &#39;b
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get&#95;storage: &lt;b&gt;(&#95;: address) =&gt; b
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;storage : address -&gt; b
 </SyntaxTitle>

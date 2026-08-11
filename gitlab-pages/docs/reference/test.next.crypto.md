@@ -14,3 +14,6 @@ val sign : string -&gt; bytes -&gt; signature
 <SyntaxTitle syntax="jsligo">
 let sign: (&#95;: string) =&gt; (&#95;: bytes) =&gt; signature
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const sign : string -&gt; bytes -&gt; signature
+</SyntaxTitle>

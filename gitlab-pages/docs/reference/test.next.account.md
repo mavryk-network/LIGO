@@ -17,6 +17,9 @@ val address : nat -&gt; address
 <SyntaxTitle syntax="jsligo">
 let address: (n: nat) =&gt; address
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const address : nat -&gt; address
+</SyntaxTitle>
 Returns the address of the nth bootstrapped account.
 
 
@@ -25,6 +28,9 @@ val alice : unit -&gt; address
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let alice: (&#95;: unit) =&gt; address
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const alice : unit -&gt; address
 </SyntaxTitle>
 Returns the address of the 0th bootstrapped account.
 
@@ -35,6 +41,9 @@ val bob : unit -&gt; address
 <SyntaxTitle syntax="jsligo">
 let bob: (&#95;: unit) =&gt; address
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const bob : unit -&gt; address
+</SyntaxTitle>
 Returns the address of the 1st bootstrapped account.
 
 
@@ -43,6 +52,9 @@ val carol : unit -&gt; address
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let carol: (&#95;: unit) =&gt; address
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const carol : unit -&gt; address
 </SyntaxTitle>
 Returns the address of the 2nd bootstrapped account.
 
@@ -53,6 +65,9 @@ val dan : unit -&gt; address
 <SyntaxTitle syntax="jsligo">
 let dan: (&#95;: unit) =&gt; address
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const dan : unit -&gt; address
+</SyntaxTitle>
 Returns the address of the 3rd bootstrapped account.
 
 
@@ -61,6 +76,9 @@ val add : string -&gt; key -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let add: (&#95;: string) =&gt; (&#95;: key) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const add : string -&gt; key -&gt; unit
 </SyntaxTitle>
 Adds an account specfied by secret key & public key to the test
         context.
@@ -76,12 +94,22 @@ type info = &#123;
 <SyntaxTitle syntax="jsligo">
 type info = &#123; addr: address; pk: key; sk: string &#125;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type info is record [
+ addr : address;
+ pk : key;
+ sk : string
+]
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 val info : nat -&gt; Test.Next.Account.info
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let info: (&#95;: nat) =&gt; Test.Next.Account.info
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const info : nat -&gt; Test.Next.Account.info
 </SyntaxTitle>
 Returns the address information of the nth bootstrapped
         account.
@@ -92,5 +120,8 @@ val new : unit -&gt; Test.Next.Account.info
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let new: (&#95;: unit) =&gt; Test.Next.Account.info
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const new : unit -&gt; Test.Next.Account.info
 </SyntaxTitle>
 Creates and returns information of a new account.
