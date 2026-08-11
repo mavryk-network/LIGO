@@ -353,6 +353,7 @@ and print_type_expr = function
 | T_Record  t -> print_T_Record  t
 | T_String  t -> print_T_String  t
 | T_Sum     t -> print_T_Sum     t
+| T_Union   t -> print_T_Union   t
 | T_Var     t -> print_T_Var     t
 
 (* Application of type constructor *)
@@ -469,6 +470,11 @@ and print_compound : 'a.('a -> document) -> 'a compound reg -> document =
 and print_T_String (node : lexeme wrap) = print_string node
 
 (* Sum type *)
+
+and print_T_Union (node : union_type reg) =
+  let head, tail = node.value in
+  let app t = group (break 1 ^^ string "| " ^^ print_type_expr t)
+  in print_type_expr head ^^ concat_map (fun (_,t) -> app t) tail
 
 and print_T_Sum (node : sum_type reg) =
   print_sum_type ~attr:false node

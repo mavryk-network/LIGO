@@ -417,6 +417,7 @@ and type_expr =
 | T_Record  of field_decl reg compound reg (* record [a; [@a1] b : t] *)
 | T_String  of string_literal                      (*           "foo" *)
 | T_Sum     of sum_type reg                        (* [@a] A | B of t *)
+| T_Union   of union_type reg                      (*   x | y | z ... *)
 | T_Var     of type_var                            (*           @t  t *)
 
 (* Application of type constructors *)
@@ -472,6 +473,14 @@ and variant = {
   ctor       : ctor;
   ctor_args  : (kwd_of * type_expr) option;
 }
+
+(* Union types *)
+
+(* MAVRYK: PascaLIGO. Anonymous union type "x | y | z" (unifies to Ast_unified
+   T_union, then lowered to a sum). Uses [nsepseq] like [sum_type] (not JsLIGO's
+   [nsep_or_pref]); a single member never reaches here (the parser returns the
+   bare type instead). *)
+and union_type = (type_expr, vbar) nsepseq
 
 (* STATEMENTS *)
 
@@ -876,6 +885,7 @@ let rec type_expr_to_region = function
 | T_Record  {region; _} -> region
 | T_String  t -> t#region
 | T_Sum     {region; _} -> region
+| T_Union   {region; _} -> region
 | T_Var     t -> variable_to_region t
 
 (* IMPORTANT: In the following function definition, the data

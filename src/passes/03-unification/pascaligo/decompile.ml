@@ -55,7 +55,7 @@ let parens : CST.type_expr -> CST.type_expr =
 let p : ?arrow_rhs:bool -> CST.type_expr -> CST.type_expr =
  fun ?(arrow_rhs = false) t ->
   let needs_parens : CST.type_expr -> bool = function
-    | T_Fun _ | T_Cart _ | T_Sum _ | T_Attr _ | T_ParameterOf _ -> true
+    | T_Fun _ | T_Cart _ | T_Sum _ | T_Union _ | T_Attr _ | T_ParameterOf _ -> true
     | T_App _ | T_Par _ | T_Var _ | T_Record _ | T_ModPath _ | T_Int _ | T_String _ ->
       false
   in
@@ -166,7 +166,11 @@ let ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
     CST.T_ModPath
       (w
       @@ decompile_mod_path { module_path; field = decompile_tvar field; field_as_open })
-  | T_union _ -> failwith "Decompiler: union types should appear only in JsLIGO"
+  | T_union summands ->
+    (* MAVRYK: PascaLIGO. PascaLIGO now emits T_union too (anonymous union types). *)
+    (match Utils.list_to_sepseq summands ghost_vbar with
+     | None -> failwith "Decompiler: got a T_union with no members"
+     | Some nsepseq -> CST.T_Union (w nsepseq))
   | T_named_fun _ -> failwith "Decompiler: named arguments should appear only in JsLIGO"
   | T_contract_parameter x ->
     CST.T_ParameterOf

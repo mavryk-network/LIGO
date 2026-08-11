@@ -366,6 +366,12 @@ let rec compile_type_expression : CST.type_expr -> AST.ty_expr =
       TODO_unify_in_cst.compile_rows lst
     in
     t_sum_raw variants ~loc
+  | T_Union t ->
+    (* MAVRYK: PascaLIGO. Anonymous union "x | y | ..." -> shared Ast_unified
+       T_union node (identical to JsLIGO); the checker later lowers it to a sum. *)
+    let t, loc = r_split t in
+    let summands = List.map ~f:self (nsepseq_to_list t) in
+    t_union summands ~loc
   | T_Var t ->
     let loc = w_snd (get_var t) in
     t_var_esc ~loc (type_evar t)

@@ -145,6 +145,7 @@ type _ sing =
   | S_statements : statements sing
   | S_string_literal : string_literal sing
   | S_sum_type : sum_type sing
+  | S_union_type : union_type sing
   | S_test_clause : test_clause sing
   | S_times : times sing
   | S_times_eq : times_eq sing
@@ -697,6 +698,7 @@ let fold'
     process_list
     [ lead_vbar -| S_option S_vbar
     ; variants -| S_nsepseq (S_reg S_variant, S_vbar) ]
+  | S_union_type -> process @@ node -| S_nsepseq (S_type_expr, S_vbar)
   | S_test_clause -> process
     (match node with
       ClauseInstr node -> node -| S_instruction
@@ -746,6 +748,7 @@ let fold'
     | T_Record node -> node -| S_reg (S_compound (S_reg S_field_decl))
     | T_String node -> node -| S_string_literal
     | T_Sum node -> node -| S_reg S_sum_type
+    | T_Union node -> node -| S_reg S_union_type
     | T_Var node -> node -| S_type_name)
   | S_type_name -> process @@ node -| S_variable
   | S_type_params -> process @@ node -| S_nsepseq (S_type_name, S_comma)

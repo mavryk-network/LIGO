@@ -252,6 +252,7 @@ and print_type_expr state = function
 | T_Record  t -> print_T_Record  state t
 | T_String  t -> print_T_String  state t
 | T_Sum     t -> print_T_Sum     state t
+| T_Union   t -> print_T_Union   state t
 | T_Var     t -> print_T_Var     state t
 
 (* Application of type constructors *)
@@ -349,6 +350,10 @@ and print_T_String state (node: string_literal) =
 and print_T_Sum state (node: sum_type reg) =
   let Region.{region; value} = node in
   Tree.of_nsepseq state ~region "T_Sum" print_variant value.variants
+
+and print_T_Union state (node: union_type reg) =
+  let Region.{region; value} = node in
+  Tree.of_nsepseq state ~region "T_Union" print_type_expr value
 
 and print_variant state (node: variant reg) =
   let node     = node.value in

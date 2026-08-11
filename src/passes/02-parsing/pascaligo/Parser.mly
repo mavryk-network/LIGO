@@ -381,7 +381,25 @@ type_var:
 interactive_type_expr: type_expr EOF { $1 }
 
 type_expr:
-  sum_type | fun_type_level { $1 }
+  sum_type | union_type_level { $1 }
+
+(* Union types *)
+
+(* MAVRYK: PascaLIGO. Anonymous union types "t1 | t2 | ...". Disambiguated from
+   sum types (variants) by PascaLIGO's uppercase-ctor / lowercase-type lexical
+   split: a union member is a [fun_type_level] (led by a lowercase type name, a
+   literal, "(", a record, ...), never a bare <uident>, so [union_type_level]
+   and [sum_type] never collide on a leading token (conflict-free under
+   --strict). A single member is just that type (no T_Union wrapper). Nest a
+   union inside a variant argument with parentheses: "Foo of (int | string)". *)
+union_type_level:
+  nsepseq(fun_type_level,"|") {
+    match $1 with
+      hd, [] -> hd
+    | _ ->
+        let region = nsepseq_to_region type_expr_to_region $1
+        in T_Union {region; value=$1}
+  }
 
 (* Sum types *)
 
