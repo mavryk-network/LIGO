@@ -35,7 +35,8 @@ let decompile_attr : AST.Attribute.t -> CST.attribute =
 
 (* [A.B.field] module path, mirroring the CameLIGO decompiler. *)
 let decompile_mod_path
-    : type a. (AST.Mod_variable.t Nonempty_list.t, a) AST.Mod_access.t -> a CST.module_path
+    : type a.
+      (AST.Mod_variable.t Nonempty_list.t, a) AST.Mod_access.t -> a CST.module_path
   =
  fun { module_path; field; field_as_open = _ } ->
   let module_path =
@@ -139,8 +140,8 @@ let ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
     let fields =
       List.map
         row
-        ~f:(fun ( AST.Label.Label (field, _)
-                , { associated_type; attributes; decl_pos = _ } ) ->
+        ~f:(fun (AST.Label.Label (field, _), { associated_type; attributes; decl_pos = _ })
+           ->
           w
             CST.
               { attributes = List.map ~f:decompile_attr attributes
@@ -169,15 +170,13 @@ let ty_expr : CST.type_expr AST.ty_expr_ -> CST.type_expr =
   | T_union summands ->
     (* MAVRYK: PascaLIGO. PascaLIGO now emits T_union too (anonymous union types). *)
     (match Utils.list_to_sepseq summands ghost_vbar with
-     | None -> failwith "Decompiler: got a T_union with no members"
-     | Some nsepseq -> CST.T_Union (w nsepseq))
+    | None -> failwith "Decompiler: got a T_union with no members"
+    | Some nsepseq -> CST.T_Union (w nsepseq))
   | T_named_fun _ -> failwith "Decompiler: named arguments should appear only in JsLIGO"
   | T_contract_parameter x ->
     CST.T_ParameterOf
       (w
-         (Utils.nsepseq_of_ne_list
-            (Nonempty_list.map ~f:decompile_mvar x)
-            ~sep:ghost_dot))
+         (Utils.nsepseq_of_ne_list (Nonempty_list.map ~f:decompile_mvar x) ~sep:ghost_dot))
   (* PascaLIGO has no [forall] type; drop the quantifiers, keep the inner type (LSP display). *)
   | T_abstraction Abstraction.{ type_; _ } | T_for_all Abstraction.{ type_; _ } -> type_
   | T_for_alls Abstractions.{ type_; _ } -> type_
@@ -204,8 +203,7 @@ let sig_expr
 
 
 let sig_entry
-    :  (CST.signature_expr, CST.sig_item, CST.type_expr) AST.sig_entry_
-    -> CST.sig_item
+    : (CST.signature_expr, CST.sig_item, CST.type_expr) AST.sig_entry_ -> CST.sig_item
   = function
   | { wrap_content = AST.S_value (v, ty, _optional); _ } ->
     CST.Sig_Value
@@ -218,9 +216,15 @@ let sig_entry
            })
   | { wrap_content = AST.S_type (v, _params, ty); _ } ->
     CST.Sig_Type
-      (w CST.{ kwd_type = ghost_type; name = Var (ghost_tvar v); type_rhs = Some (ghost_is, ty) })
+      (w
+         CST.
+           { kwd_type = ghost_type
+           ; name = Var (ghost_tvar v)
+           ; type_rhs = Some (ghost_is, ty)
+           })
   | { wrap_content = AST.S_type_var v; _ } ->
-    CST.Sig_Type (w CST.{ kwd_type = ghost_type; name = Var (ghost_tvar v); type_rhs = None })
+    CST.Sig_Type
+      (w CST.{ kwd_type = ghost_type; name = Var (ghost_tvar v); type_rhs = None })
   | { wrap_content = AST.S_include se; _ } ->
     CST.Sig_Include (w CST.{ kwd_include = ghost_include; signature_expr = se })
   | { wrap_content = AST.S_attr (attr, si); _ } ->

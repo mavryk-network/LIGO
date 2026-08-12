@@ -138,7 +138,10 @@ let vdef_doc
       match syntax with
       | JsLIGO -> !^"let" ^//^ !^name ^^ colon
       | CameLIGO -> !^"val" ^//^ !^name ^//^ colon
-      | PascaLIGO -> !^"const" ^//^ !^name ^//^ colon (* MAVRYK: PascaLIGO. PascaLIGO uses [const], not [val]. *)
+      | PascaLIGO ->
+        !^"const"
+        ^//^ !^name
+        ^//^ colon (* MAVRYK: PascaLIGO. PascaLIGO uses [const], not [val]. *)
     in
     Docs_utils.decompile_type_case ~raise ~escape_html_characters:true ~syntax ~prefix t
   in

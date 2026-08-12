@@ -5,7 +5,9 @@ module AST = Ast_unified
 module Option = Core.Option
 module Region = Simple_utils.Region
 module Ligo_fun = Simple_utils.Ligo_fun
+
 let ( <@ ) = Ligo_fun.( <@ )
+
 open AST (* Brings types and combinators functions *)
 
 (* MAVRYK: PascaLIGO. [nseq] is kept as the tuple ['a * 'a list]; upstream removed
@@ -18,6 +20,7 @@ module Nseq = struct
   let map f (hd, tl) = f hd, List.map ~f tl
   let append (hd1, tl1) (hd2, tl2) = hd1, List.append tl1 (hd2 :: tl2)
   let nsepseq_to_nseq (hd, tl) = hd, List.map ~f:snd tl
+
   (* Bridge to the shared Ne_list.t that several Ast_unified combinators now expect. *)
   let to_ne_list (hd, tl) = Simple_utils.Ne_list.(hd :: tl)
 end
@@ -42,9 +45,11 @@ let translate_attr_pascaligo : CST.Attr.t -> AST.Attribute.t =
 let get_var : CST.variable -> CST.lexeme CST.wrap = function
   | CST.Var v | CST.Esc v -> v
 
+
 let value_evar : CST.variable -> AST.Value_escaped_var.t = function
   | CST.Var v -> Raw (Ligo_prim.Value_var.of_input_var ~loc:(w_snd v) (w_fst v))
   | CST.Esc v -> Esc (Ligo_prim.Value_var.of_input_var ~loc:(w_snd v) (w_fst v))
+
 
 let type_evar : CST.variable -> AST.Ty_escaped_var.t = function
   | CST.Var v -> Raw (Ligo_prim.Type_var.of_input_var ~loc:(w_snd v) (w_fst v))
@@ -101,7 +106,9 @@ module TODO_do_in_parsing = struct
 
   let label_as_var (e : CST.expr) : Label.t Location.wrap =
     match e with
-    | E_Var x -> let x = get_var x in Location.wrap ~loc:(w_snd x) @@ Label.of_string (w_fst x)
+    | E_Var x ->
+      let x = get_var x in
+      Location.wrap ~loc:(w_snd x) @@ Label.of_string (w_fst x)
     | _ -> failwith "would not make sense ? tofix"
 
 
@@ -276,11 +283,12 @@ let extract_type_params
     : CST.type_params CST.chevrons CST.reg -> Ligo_prim.Type_var.t Simple_utils.Ne_list.t
   =
  fun tp ->
-  Nseq.to_ne_list @@ Nseq.map
-    (fun x ->
-      let x, loc = w_split (get_var x) in
-      TODO_do_in_parsing.tvar ~loc x)
-    (Nseq.nsepseq_to_nseq @@ (r_fst tp).inside)
+  Nseq.to_ne_list
+  @@ Nseq.map
+       (fun x ->
+         let x, loc = w_split (get_var x) in
+         TODO_do_in_parsing.tvar ~loc x)
+       (Nseq.nsepseq_to_nseq @@ (r_fst tp).inside)
 
 
 (* ========================== TYPES ======================================== *)
@@ -331,8 +339,7 @@ let rec compile_type_expression : CST.type_expr -> AST.ty_expr =
     let t, loc = r_split t in
     let path =
       Nseq.to_ne_list
-      @@ Nseq.map
-           (fun t ->
+      @@ Nseq.map (fun t ->
              let x, loc = w_split t in
              TODO_do_in_parsing.mvar ~loc x)
       @@ Nseq.nsepseq_to_nseq t
@@ -410,11 +417,12 @@ and compile_pattern : CST.pattern -> AST.pattern =
   | P_ModPath p ->
     let p, loc = r_split p in
     let module_path =
-      Nseq.to_ne_list @@ Nseq.map
-        (fun x ->
-          let x, loc = w_split x in
-          TODO_do_in_parsing.mvar ~loc x)
-        (Nseq.nsepseq_to_nseq p.module_path)
+      Nseq.to_ne_list
+      @@ Nseq.map
+           (fun x ->
+             let x, loc = w_split x in
+             TODO_do_in_parsing.mvar ~loc x)
+           (Nseq.nsepseq_to_nseq p.module_path)
     in
     let field = self p.field in
     p_mod_access ~loc Mod_access.{ module_path; field; field_as_open = true }
@@ -440,7 +448,9 @@ and compile_pattern : CST.pattern -> AST.pattern =
         | Punned { pun; attributes } ->
           TODO_do_in_parsing.weird_attributes attributes;
           let loc = Location.lift @@ CST.pattern_to_region pun in
-          let pun, _ = w_split (get_var (TODO_do_in_parsing.compile_pattern_record_lhs pun)) in
+          let pun, _ =
+            w_split (get_var (TODO_do_in_parsing.compile_pattern_record_lhs pun))
+          in
           Punned (Location.wrap ~loc (Label.of_string pun))
         | Complete { field_lhs; field_lens = _; field_rhs; attributes } ->
           TODO_do_in_parsing.weird_attributes attributes;
@@ -515,7 +525,8 @@ and compile_for_map : CST.for_map -> (_, _) AST.For_collection.for_map =
  fun m ->
   let binding =
     let k, _, v = m.binding in
-    let k = get_var k and v = get_var v in
+    let k = get_var k
+    and v = get_var v in
     ( TODO_do_in_parsing.var ~loc:(w_snd k) (w_fst k)
     , TODO_do_in_parsing.var ~loc:(w_snd v) (w_fst v) )
   in
@@ -740,7 +751,8 @@ and compile_expression : CST.expr -> AST.expr =
   | E_ModPath ma ->
     let ma, loc = r_split ma in
     let module_path =
-      Nseq.to_ne_list @@ Nseq.map (fun x -> TODO_do_in_parsing.mvar ~loc:(w_snd x) (w_fst x))
+      Nseq.to_ne_list
+      @@ Nseq.map (fun x -> TODO_do_in_parsing.mvar ~loc:(w_snd x) (w_fst x))
       @@ Nseq.nsepseq_to_nseq ma.module_path
     in
     let field = self ma.field in
@@ -890,12 +902,16 @@ and compile_declaration : CST.declaration -> AST.declaration =
  fun decl ->
   let self = compile_declaration in
   let compile_type_params
-      : CST.type_params CST.chevrons Region.reg -> AST.Ty_variable.t Simple_utils.Ne_list.t
+      :  CST.type_params CST.chevrons Region.reg
+      -> AST.Ty_variable.t Simple_utils.Ne_list.t
     =
    fun tp ->
-    Nseq.to_ne_list @@ Nseq.map
-      (fun x -> let x = get_var x in TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
-      (Nseq.nsepseq_to_nseq (r_fst tp).inside)
+    Nseq.to_ne_list
+    @@ Nseq.map
+         (fun x ->
+           let x = get_var x in
+           TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
+         (Nseq.nsepseq_to_nseq (r_fst tp).inside)
   in
   match decl with
   | D_Directive d ->
@@ -908,9 +924,12 @@ and compile_declaration : CST.declaration -> AST.declaration =
     let params =
       Option.map
         ~f:(fun (tp : _ CST.par CST.reg) ->
-          Nseq.to_ne_list @@ Nseq.map
-            (fun x -> let x = get_var x in TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
-            (Nseq.nsepseq_to_nseq (r_fst tp).inside))
+          Nseq.to_ne_list
+          @@ Nseq.map
+               (fun x ->
+                 let x = get_var x in
+                 TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x))
+               (Nseq.nsepseq_to_nseq (r_fst tp).inside))
         d.params
     in
     let type_expr = compile_type_expression d.type_expr in
@@ -1013,6 +1032,7 @@ and compile_signature_expr : CST.signature_expr -> AST.sig_expr =
     let v = TODO_do_in_parsing.mvar ~loc s in
     ({ fp = Location.wrap ~loc (S_path (Nseq.to_ne_list (v, []))) } : AST.sig_expr)
 
+
 and compile_sig_item : CST.sig_item -> AST.sig_entry =
  fun si ->
   match si with
@@ -1031,10 +1051,10 @@ and compile_sig_item : CST.sig_item -> AST.sig_entry =
       TODO_do_in_parsing.tvar ~loc:(w_snd x) (w_fst x)
     in
     (match st.type_rhs with
-     | None -> ({ fp = Location.wrap ~loc (S_type_var tname) } : AST.sig_entry)
-     | Some (_kwd_is, te) ->
-       let ty = compile_type_expression te in
-       ({ fp = Location.wrap ~loc (S_type (tname, [], ty)) } : AST.sig_entry))
+    | None -> ({ fp = Location.wrap ~loc (S_type_var tname) } : AST.sig_entry)
+    | Some (_kwd_is, te) ->
+      let ty = compile_type_expression te in
+      ({ fp = Location.wrap ~loc (S_type (tname, [], ty)) } : AST.sig_entry))
   | Sig_Include si ->
     let si, loc = r_split si in
     let se = compile_signature_expr si.signature_expr in
