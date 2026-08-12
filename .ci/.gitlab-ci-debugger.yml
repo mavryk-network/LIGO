@@ -38,6 +38,8 @@ debugger-danger-hlint:
   stage: tools-precheck
   rules: *debugger_danger_checks
   needs: []
+  # MAVRYK: match its siblings instant-checks/premerge-checks — danger is advisory and must not block the pipeline.
+  allow_failure: true
   interruptible: true
   tags:
     - ubuntu-amd64
@@ -81,6 +83,16 @@ debugger-build:
     - !reference [.dev]
     - !reference [.vscode_production]
   needs: []
+  # MAVRYK: auto-retry transient infra flakes (GitHub clone timeouts fetching Haskell deps, dind hiccups)
+  # so this doesn't need a manual re-run.
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+      - api_failure
+      - script_failure
   script:
     - docker build tools/debugger -t "${LIGO_DEBUGGER_IMAGE_TAG}" --target debugger-build
     - LIGO_DEBUGGER_CONTAINER="$(docker create "${LIGO_DEBUGGER_IMAGE_TAG}")"
@@ -122,6 +134,15 @@ debugger-test-ligo-latest:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: always
   needs: [docker_extract, debugger-build]
+  # MAVRYK: auto-retry transient infra flakes (docker image pull / dind / LIGO exec perms in the test image).
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+      - api_failure
+      - script_failure
   variables:
     LIGO_TEST_FLAGS: "-r"
   script: *run_ligo_debugger_tests

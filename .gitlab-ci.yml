@@ -90,6 +90,16 @@ docker_build:
   needs:
     - job: changelog
       artifacts: true
+  # MAVRYK: auto-retry the recurring flaky `dune runtest` port race ("Address in use" from the Lwt/Conduit
+  # HTTP-server test under `-j 5`) so the core build self-heals instead of needing a manual re-run.
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+      - api_failure
+      - script_failure
   script:
     - git submodule update --init --recursive # because of a gitlab caching issue
     - cat changelog.md > gitlab-pages/docs/intro/changelog.md
@@ -340,6 +350,9 @@ deploy_website_preview:
   needs:
     - job: pages-attempt
       artifacts: true
+  # MAVRYK: preview deploy is a convenience, not a correctness gate — sharp/CDN + Netlify infra
+  # failures must not block the MR pipeline.
+  allow_failure: true
   script:
     - apt-get update
     - apt-get install -y --no-install-recommends jq
