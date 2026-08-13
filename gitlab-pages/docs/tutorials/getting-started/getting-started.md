@@ -553,7 +553,7 @@ The Basenet test network is just like the Mavryk mainnet, so you can use it to t
    - For MacOS, use `brew`:
 
    ```bash
-   brew tap serokell/mavryk-packaging-stable https://github.com/serokell/mavryk-packaging-stable.git
+   brew tap mavryk-network/mavryk-packaging-stable
    brew install mavryk-client
    ```
 

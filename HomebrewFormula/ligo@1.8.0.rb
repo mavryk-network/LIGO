@@ -1,4 +1,4 @@
-class Ligo < Formula
+class LigoAT180 < Formula
   desc "Friendly Smart Contract Language for Mavryk"
   homepage "https://ligo.mavryk.org/"
   license "MIT"
@@ -10,15 +10,8 @@ class Ligo < Formula
   version "1.8.0"
   head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
-
-  # MAVRYK: 1.8.0 builds from source — no bottle block on purpose. The previous bottles lived in
-  # ligolang UPSTREAM's registry (project 12294987) and do NOT contain PascaLIGO. To ship fast installs,
-  # build 1.8.0 bottles from THIS source, upload them to the mavryk-network/ligo package registry
-  # (project 51776731 — none exists yet), then re-add:
-  #   bottle do
-  #     root_url "https://gitlab.com/api/v4/projects/51776731/packages/generic/ligo_bottle/current"
-  #     sha256 cellar: :any, arm64_sonoma: "<shasum -a 256 of the bottle>"
-  #   end
+  # MAVRYK: builds from source — no bottle block. See HomebrewFormula/ligo.rb for how to add
+  # Mavryk-hosted bottles (project 51776731) once they are built.
 
   build_dependencies = %w[opam rust hidapi pkg-config gnu-sed cmake gcc]
   build_dependencies.each do |dependency|
