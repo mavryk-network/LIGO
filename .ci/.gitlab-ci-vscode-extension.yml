@@ -4,7 +4,10 @@ include:
   - '/.ci/.gitlab-ci-tools-common.yml'
 
 variables:
-  MAVKIT_VERSION: "mavkit-v20.4"
+  # MAVRYK: mavryk-packaging dropped the "mavkit-" tag prefix, and the "-1" release (v20.4-1) ships no
+  # mavkit-client asset — the old "mavkit-v20.4" → tag "mavkit-v20.4-1" 404s. v20.3 is the latest release
+  # that publishes mavkit-client; paired with the Dockerfile using ${MAVKIT_VERSION} directly (no "-1").
+  MAVKIT_VERSION: "v20.3"
 
 vscode-extension-test:
   extends: .docker-image
@@ -15,6 +18,15 @@ vscode-extension-test:
     - !reference [.vscode_extension_mr_changes]
     - !reference [.dev]
   needs: [docker_extract, debugger-build]
+  # MAVRYK: auto-retry transient infra flakes during image build (apt mirror resets, VSCode/chromedriver downloads).
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+      - api_failure
+      - script_failure
   script:
     - docker build --build-arg MAVKIT_VERSION="$MAVKIT_VERSION" -f tools/vscode/Dockerfile -t lsp-vscode-test:$CI_JOB_ID .
     - docker run --rm --init --user vscode lsp-vscode-test:$CI_JOB_ID xvfb-run bash -c 'yarn && yarn run package && yarn run test'
@@ -28,6 +40,15 @@ vscode-extension-extest:
     - ubuntu-amd64
   rules: *vscode_extension_mr_dev
   needs: [docker_extract, debugger-build]
+  # MAVRYK: auto-retry transient infra flakes during image build (apt mirror resets, VSCode/chromedriver downloads).
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+      - api_failure
+      - script_failure
   script:
     - docker build --build-arg MAVKIT_VERSION="$MAVKIT_VERSION" -f tools/vscode/Dockerfile -t lsp-vscode-test:$CI_JOB_ID .
     - docker run --rm --init --user vscode lsp-vscode-test:$CI_JOB_ID xvfb-run bash -c 'yarn && yarn run package && yarn run extest'

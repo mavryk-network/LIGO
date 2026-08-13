@@ -19,8 +19,9 @@ RUN ln -s /vscode/test-resources/VSCode-linux-x64 /vscode/.vscode-test/vscode-li
 RUN apt-get -y install xvfb xclip
 
 
-ARG MAVKIT_VERSION="v16.1"
-RUN wget -q https://github.com/mavryk-network/mavryk-packaging/releases/download/${MAVKIT_VERSION}-1/mavkit-client -O /usr/bin/mavkit-client
+ARG MAVKIT_VERSION="v20.3"
+# MAVRYK: mavryk-packaging tags are now `vX.Y` (no "mavkit-" prefix, no "-1" suffix); v20.3 is the latest that ships a mavkit-client asset.
+RUN wget -q https://github.com/mavryk-network/mavryk-packaging/releases/download/${MAVKIT_VERSION}/mavkit-client -O /usr/bin/mavkit-client
 RUN chmod +x /usr/bin/mavkit-client
 
 # Some runtime dependency for ligo
