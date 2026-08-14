@@ -1,1 +1,0 @@
-let source : address = Mavryk.get_source ()

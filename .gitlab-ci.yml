@@ -29,8 +29,10 @@ include:
   # CI jobs for projects from 'tools'
   - '/.ci/.gitlab-ci-vscode-extension.yml'
   - '/.ci/.gitlab-ci-debugger.yml'
-  # CI manage notification
-  - '/.ci/.gitlab-ci-notify.yml'
+  # MAVRYK: notify include removed — its only job (notify-christian-on-frontend-change) was a Slack
+  # ping to a ligolang teammate, and Mavryk doesn't use Slack. .gitlab-ci-notify.yml is now orphaned
+  # and can be deleted.
+  # - '/.ci/.gitlab-ci-notify.yml'
 .submodule-clone:
   before_script:
     - git submodule sync --recursive
@@ -225,7 +227,8 @@ docker_push_ligo:
     - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
     - docker load -i=./ligo.tar.gz
     - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
-    - export LIGO_REGISTRY_FULL_NAME="mavryk-network/ligo:$LIGO_TAG"
+    # MAVRYK: publish to the mavrykdynamics DockerHub org (not the GitLab project path).
+    - export LIGO_REGISTRY_FULL_NAME="mavrykdynamics/ligo:$LIGO_TAG"
     - docker tag "${LIGO_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
     - docker push "${LIGO_REGISTRY_FULL_NAME}"
 
@@ -250,7 +253,8 @@ docker_push_ligo_ci:
     - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
     - docker load -i=./ligo_ci.tar.gz
     - if test "$CI_COMMIT_REF_NAME" = "dev"; then export LIGO_TAG=next; else if echo "$CI_COMMIT_TAG" | grep -E "[0-9]+\.[0-9]+\.[0-9]+"; then export LIGO_TAG="$CI_COMMIT_TAG"; else export LIGO_TAG=next-attempt; fi; fi
-    - export LIGO_REGISTRY_FULL_NAME="mavryk-network/ligo_ci:$LIGO_TAG"
+    # MAVRYK: publish to the mavrykdynamics DockerHub org (not the GitLab project path).
+    - export LIGO_REGISTRY_FULL_NAME="mavrykdynamics/ligo_ci:$LIGO_TAG"
     - docker tag "${LIGO_CI_IMAGE_TAG}" "${LIGO_REGISTRY_FULL_NAME}"
     - docker push "${LIGO_REGISTRY_FULL_NAME}"
   after_script:

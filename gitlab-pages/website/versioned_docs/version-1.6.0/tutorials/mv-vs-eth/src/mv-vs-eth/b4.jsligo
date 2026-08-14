@@ -1,5 +1,0 @@
-type int_option = ["Number", int] | ["Null"];
-
-let x = Number(5);
-
-let y = Null ();
