@@ -109,3 +109,54 @@ type in a namespace, we need to constrain the namesapce with an
 [*interface*](../signatures/declaring.md).
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+We can access the components of a module by means of the selection
+operator "`.`", as with records.
+
+Let us suppose that we keep an amount in euros using the previously
+defined module `Euro`. Then, we can write a `tip` function outside
+`Euro` that increments a given amount each time it is called.
+
+```pascaligo group=Euro
+module Euro is {
+  type t is nat
+  function add (const a : t; const b : t) : t is a + b
+  const one : t = 1n
+  const two : t = 2n
+}
+
+type storage is Euro.t
+
+function tip (const s : storage) : storage is
+  Euro.add (s, Euro.one)
+```
+
+In principle, we could change the implementation of `Euro`, without
+having to change the `storage` type or the function `tip`. For
+example, if we decide later that we should support manipulating
+negative values, we could change `Euro` as follows:
+
+```pascaligo group=module_accessing
+module Euro is {
+  type t is int
+  function add (const a : t; const b : t) : t is a + b
+  const one : t = 1
+  const two : t = 2
+}
+```
+
+The code of `tip` still works, and no change is needed. Abstraction
+accomplished!
+
+Note that code using the module `Euro` might still break the
+abstraction if it directly uses the underlying representation of
+`Euro.t`. Client code should always try to respect the interface
+provided by the module, and not make assumptions on its current
+underlying representation. For example, `Euro.t` is a transparent
+alias of `nat` (or `int`). In order to hide the representation of a
+type in a module, we need to constrain the module with a module type,
+or [*signature*](../signatures/declaring.md).
+
+</Syntax>

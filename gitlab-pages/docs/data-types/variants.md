@@ -32,6 +32,16 @@ let tail: coin = Tail();
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=variants
+type coin is Head of unit | Tail of unit
+const head : coin = Head (unit)
+const tail : coin = Tail (unit)
+```
+
+</Syntax>
+
 The names `Head` and `Tail` in the definition of the type `coin` are
 called *data constructors*, or *variants*. In this particular case,
 they carry no information beyond their names, so they are called
@@ -81,6 +91,26 @@ as `Guest([])` or `Guest(unit)`.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=variants
+type id is nat
+
+type user is
+  Admin   of id
+| Manager of id
+| Guest of unit
+
+const bob : user = Admin (1000n)
+const carl : user = Guest (unit)
+```
+
+A constant constructor must still be given an argument of type
+`unit`, so, for example, the `Guest` case is constructed as
+`Guest (unit)`.
+
+</Syntax>
+
 ## Unit
 
 The type `unit` is a predefined type that contains only one value that
@@ -107,6 +137,16 @@ The unique value of type `unit` is `[]`, like an empty tuple.
 
 ```jsligo group=unit
 const x : unit = [];
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The unique value of type `unit` is written `unit`.
+
+```pascaligo group=unit
+const x : unit = unit
 ```
 
 </Syntax>
@@ -154,6 +194,26 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The `option` type is a parametric, predefined variant type that is
+used to express whether there is a value of some type or none. This is
+especially useful when calling a *partial function*, that is, a
+function that is not defined for some inputs. In that case, the value
+of the `option` type would be `None`, otherwise `Some (v)`, where `v`
+is some meaningful value *of any type*. A typical example from
+arithmetics is the division:
+
+```pascaligo group=options
+function div (const a : nat; const b : nat) : option (nat) is
+  if b = 0n then None else Some (a/b)
+```
+
+Note: See the predefined
+[module Option](../reference/option-reference/?lang=pascaligo)
+
+</Syntax>
+
 ### Euclidean Division
 
 <Syntax syntax="cameligo">
@@ -192,6 +252,24 @@ const ediv4: option<[int, nat]> = ediv(37,  5n);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+For cases when you need both the quotient and the remainder, LIGO
+provides the `ediv` operation. `ediv (x, y)` returns `Some (quotient,
+remainder)`, unless `y` is zero, in which case it returns `None`. The
+function `ediv` is overloaded to accept all the combinations (4) of
+natural and integer numbers:
+
+```pascaligo group=options_euclidean
+// All below equal Some (7,2)
+const ediv1 : option (int * nat) = ediv (37,  5)
+const ediv2 : option (int * nat) = ediv (37n, 5)
+const ediv3 : option (nat * nat) = ediv (37n, 5n)
+const ediv4 : option (int * nat) = ediv (37,  5n)
+```
+
+</Syntax>
+
 ### Checking positivity
 
 You can check if a value is a natural number (`nat`) by using a
@@ -212,6 +290,14 @@ let one_is_nat : nat option = is_nat (1)
 
 ```jsligo group=options_positive
 const one_is_nat : option<nat> = is_nat(1);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=options_positive
+const one_is_nat : option (nat) = is_nat (1)
 ```
 
 </Syntax>
@@ -286,6 +372,29 @@ function match_with_block (x : option<int>) : int {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=variant_matching
+type colour is
+  | RGB of int * int * int
+  | Gray of int
+  | Default of unit
+
+function int_of_colour (const c : colour) : int is
+  case c of [
+    RGB (r,g,b) -> 16 + b + g * 6 + r * 36
+  | Gray (i)    -> 232 + i
+  | Default (_u) -> 0
+  ]
+```
+
+> Note: The branches of the `case` must cover all the variants of the
+> type `colour`, and the whole construct must be enclosed in
+> brackets. The nullary constructor `Default` still carries a `unit`
+> argument, hence it is matched as `Default (_u)`.
+
+</Syntax>
+
 Another example is matching on whether an integer is a natural number
 or not:
 
@@ -309,5 +418,53 @@ const is_it_a_nat = (i : int) =>
     when(Some(n)): do {ignore(n); return true; }
   }
 ```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=nat_matching
+function is_it_a_nat (const i : int) : bool is
+  case is_nat (i) of [
+    None -> False
+  | Some (_n) -> True
+  ]
+```
+
+</Syntax>
+
+## Union types
+
+A *union type* is an **anonymous** variant: a type built directly from the union
+of several other types, without naming a data constructor for each case. A value
+of `int | string` is either an `int` or a `string`. Union types unify to an
+ordinary sum type internally.
+
+<Syntax syntax="cameligo">
+
+Union types are not available in CameLIGO — use a named variant type instead.
+
+</Syntax>
+
+<Syntax syntax="jsligo">
+
+```jsligo group=unions
+type int_or_string = int | string;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=unions
+type int_or_string is int | string
+```
+
+Because `|` also separates the cases of a *named* variant type, PascaLIGO tells
+the two apart by the leading token of each case: a variant case starts with an
+**uppercase** constructor (as in `Head of unit | Tail of unit` above), whereas a
+union member is an ordinary **type expression** (`int | string`, lowercase type
+names, literals, records, …). To nest a union inside a variant's argument,
+parenthesise it: `Foo of (int | string)`.
 
 </Syntax>

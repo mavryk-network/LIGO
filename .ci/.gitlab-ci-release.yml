@@ -8,11 +8,17 @@ initialize-ssh:
   stage: pretooling
   tags:
     - ubuntu-amd64
+  # MAVRYK: fork ubuntu-amd64 runners are container executors, so this job needs an explicit image
+  # with git + openssh-client (upstream ran it on a shell runner with the tools pre-installed).
+  # node:18.19.1-bullseye is the same image the sibling ssh-setup jobs already use.
+  image: node:18.19.1-bullseye
   only:
     # prefixed by release /^release/.*/
     - /^release/.*/
     - tags
   script:
+      # MAVRYK: create ~/.ssh before chmod (the sibling ssh-setup jobs do this; without it chmod fails).
+      - mkdir -p ~/.ssh
       - chmod 766 ~/.ssh
       - eval `ssh-agent -s`
       - cat $SSH_PRIVATE_KEY_TOOLKIT  > ~/.ssh/id_rsa
@@ -25,6 +31,8 @@ initialize-git:
   stage: pretooling
   tags:
     - ubuntu-amd64
+  # MAVRYK: needs git on the fork's container runners (upstream shell runners had it pre-installed).
+  image: node:18.19.1-bullseye
   dependencies:
     - initialize-ssh
   only:
@@ -145,6 +153,9 @@ docker-m1:
     - docker image rm -f "${LIGO_IMAGE_TAG}-builder" >/dev/null 2>&1 || true
     - docker image rm -f "${LIGO_IMAGE_TAG}" >/dev/null 2>&1 || true
   rules:
+    # MAVRYK: disabled — GitLab free tier has no SaaS macOS runner (saas-macos-medium-m1). Remove the
+    # `- when: never` line to re-enable once a macOS runner is available.
+    - when: never
     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.[0-9]/ && $CI_PROJECT_PATH == "mavryk-network/ligo"'
       when: always
   artifacts:
@@ -165,7 +176,7 @@ release:
     - docker_extract
     - changelog
     - initialize-git
-    - docker-m1
+    # MAVRYK: docker-m1 (macOS ARM64 build) disabled on free tier — dropped from release deps & assets.
   ## FIXME find a better solution to upload the binary
   artifacts:
     expire_in: 1000 yrs
@@ -173,7 +184,6 @@ release:
       - ligo
       - ligo.deb
       - highlighting
-      - ligo_arm64_unix
     reports:
       dotenv: releaseCiJobId.env
   script:
@@ -183,7 +193,6 @@ release:
           --description "$(cat release-notes.md)" \
           --assets-link '{"name": "Static Linux binary", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/ligo"}' \
           --assets-link '{"name": "deb package", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/ligo.deb"}' \
-          --assets-link '{"name": "ligo ARM64 Unix", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/ligo_arm64_unix"}' \
           --assets-link '{"name": "jsligo configuration", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/highlighting/vscode/jsligo.configuration.json"}' \
           --assets-link '{"name": "jsligo highlighting", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/highlighting/vscode/jsligo.tmLanguage.json"}' \
           --assets-link '{"name": "mligo configuration", "url": "'"$CI_PROJECT_URL"'/-/jobs/'"$CI_JOB_ID"'/artifacts/raw/highlighting/vscode/mligo.configuration.json"}' \
@@ -194,6 +203,12 @@ create_docker_stable_version:
   stage: push
   tags:
     - ubuntu-amd64
+  # MAVRYK: needs docker (dind) on the fork's container runners + a registry login before push.
+  # Mirrors docker_build's image + dind service setup.
+  image: mavrykdynamics/ci-debian:0.0.1
+  services:
+    - name: docker:27.3.1-dind
+      command: ["--mtu=1400"]
   rules:
     - if: '$CI_COMMIT_TAG =~ /[0-9]+\.[0-9]+\.0/'
       when: always
@@ -203,6 +218,11 @@ create_docker_stable_version:
     - job: determine_new_stable_version
       artifacts: true
   script:
+    # MAVRYK: skip gracefully when there's no previous stable version to promote — the fork's
+    # versions.json may have <2 entries, so determine_new_stable_version yields an empty value.
+    - if [ -z "$STABLE_VERSION" ]; then echo "No STABLE_VERSION resolved (versions.json has <2 entries) - skipping stable re-tag."; exit 0; fi
+    # MAVRYK: authenticate to the registry before pull/push (login was missing).
+    - echo ${LIGO_REGISTRY_PASSWORD} | docker login -u ${LIGO_REGISTRY_USER} --password-stdin
     - docker pull mavrykdynamics/ligo:$STABLE_VERSION
     - |
       if [[ $DRY_RUN_RELEASE == "" ]]; then
@@ -351,7 +371,9 @@ bottle-sonoma-m1:
     # Remove cache in case of rebuild of the bottle
     - rm -rf ~/Library/Caches/Homebrew/ligo--git || true
   rules:
-    - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null) 
+    # MAVRYK: disabled — GitLab free tier has no SaaS macOS runner. Remove the `- when: never` line to re-enable.
+    - when: never
+    - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null)
       when: always
     - if: ($CI_COMMIT_BRANCH =~ /^release/ && $DRY_RUN_RELEASE != null)
       when: always
@@ -367,8 +389,12 @@ update-bottle-reference:
   needs:
       # - job: bottle-sonoma-i7
       #   artifacts: true
+      # MAVRYK: bottle-sonoma-m1 disabled on free tier — optional so this job isn't errored out of the
+      # pipeline when the macOS bottle build is absent. (Without a bottle, replace_bottle_reference.sh
+      # has nothing to insert — the whole release/* bottle→homebrew chain needs macOS to be meaningful.)
       - job: bottle-sonoma-m1
         artifacts: true
+        optional: true
       - job: build_release_env_vars
         artifacts: true
       - job: generate-homebrew-version
@@ -541,14 +567,14 @@ publish-nixpkg:
     - "git commit -am \"ligo: ${PRECEDENT_LIGO_VERSION_NIX} -> ${RELEASE_VERSION}\""
     - git push -u origin master:$(../.ci/scripts/nix/generate_nixpkgs_branch_name.sh $RELEASE_VERSION)
     - ../.ci/scripts/nix/generate_pr.sh "ligolang:$(../.ci/scripts/nix/generate_nixpkgs_branch_name.sh $RELEASE_VERSION)" $PRECEDENT_LIGO_VERSION_NIX $RELEASE_VERSION $GITLAB_LIGO_PUBLIC_REPO_TOKEN
-    - MESSAGE="New pull request to update ligo has been generated on https://github.com/NixOS/nixpkgs"
-  # U01MBUD7YG6 = Ulrik who is owner of nixpkgs and can merge PR
-    - "curl -d \"text=${MESSAGE}\" -d 'channel=U01MBUD7YG6' -H \"Authorization: Bearer ${SLACK_LIGO_ALERTER_TOKEN}\" -X POST https://slack.com/api/chat.postMessage --trace-ascii /dev/stdout"
-    - "curl -d \"text=${MESSAGE}\" -d 'channel=U02LTGFM85S' -H \"Authorization: Bearer ${SLACK_LIGO_ALERTER_TOKEN}\" -X POST https://slack.com/api/chat.postMessage --trace-ascii /dev/stdout"
+    # MAVRYK: Slack notifications removed (Mavryk doesn't use Slack). The nixpkgs PR is still opened above.
   needs:
     - job: build_release_env_vars
       artifacts: true
   rules:
+    # MAVRYK: disabled — pushes to ligolang/nixpkgs via ligolangbot, which we can't push to. Remove the
+    # `- when: never` line (and repoint the remote to a Mavryk nixpkgs fork) to re-enable.
+    - when: never
     - if: ($CI_COMMIT_BRANCH =~ /^release/ &&  $TRIGGER_DOC_UPDATE != null )
       when: always 
 

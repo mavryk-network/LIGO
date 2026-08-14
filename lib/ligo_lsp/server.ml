@@ -287,7 +287,8 @@ class lsp_server
         let syntax =
           Option.value_map syntax ~default:"None" ~f:(function
               | CameLIGO -> "CameLIGO"
-              | JsLIGO -> "JsLIGO")
+              | JsLIGO -> "JsLIGO"
+              | PascaLIGO -> "PascaLIGO" (* MAVRYK: PascaLIGO *))
         in
         let { version; name = ide } =
           Option.value ide_info ~default:{ version = None; name = "Unknown" }

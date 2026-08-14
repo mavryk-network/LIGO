@@ -52,6 +52,27 @@ let main (destination_addr : parameter) (_ : storage) =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo
+type parameter is address
+
+type storage is unit
+
+[@entry]
+function main (const destination_addr : parameter; const _s : storage) : list (operation) * storage is
+  block {
+    const maybe_contract = Mavryk.get_contract_opt (destination_addr);
+    const destination_contract = case maybe_contract of [
+      Some (contract) -> contract
+    | None -> failwith ("Contract does not exist")
+    ];
+    const op = Mavryk.transaction (unit, Mavryk.get_amount (), destination_contract)
+  } with (list [op], unit)
+```
+
+</Syntax>
+
 
 It accepts a destination address as the parameter. Then we need to check whether the address points to a contract that accepts a unit. We do this with `Mavryk.get_contract_opt`. This function returns `Some (value)` if the contract exists and the parameter type is correct. Otherwise, it returns `None`. In case it is `None`, we fail with an error, otherwise we use `Mavryk.transaction` to forge the internal transaction to the destination contract.
 
@@ -82,6 +103,31 @@ let main (param : parameter) (callee_addr : storage) =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=proxy
+(* examples/contracts/ligo/Proxy.ligo *)
+
+type parameter is int
+
+type storage is address
+
+function get_contract (const addr : address) is
+  case Mavryk.get_contract_opt (addr) of [
+    Some (contract) -> contract
+  | None -> failwith ("Callee does not exist")
+  ]
+
+[@entry]
+function main (const param : parameter; const callee_addr : storage) : list (operation) * storage is
+  block {
+    const callee = get_contract (callee_addr);
+    const op = Mavryk.transaction (param, 0mumav, callee)
+  } with (list [op], callee_addr)
+```
+
+</Syntax>
+
 To call a contract, we need to add a type annotation `: int contract
 option` for `Mavryk.get_contract_opt`. LIGO knows that
 `Mavryk.get_contract_opt` returns a `contract option` but at the time
@@ -100,6 +146,18 @@ let main (param : int) (storage : int) : operation list * int = [], param + stor
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=simplecounter
+(* examples/contracts/ligo/SimpleCounter.ligo *)
+
+[@entry]
+function main (const param : int; const storage : int) : list (operation) * int is
+  ((nil : list (operation)), param + storage)
+```
+
+</Syntax>
+
 But what if we want to make a transaction to a contract but do not know the full type of its parameter? For example, we may know that some contract accepts `Add 5` as its parameter, but we do not know what other entrypoints are there.
 
 <Syntax syntax="cameligo">
@@ -114,6 +172,30 @@ let nop : operation list = []
 [@entry] let subtract (n : int)  (storage : int)  = nop, storage + n
 [@entry] let multiply (n : int)  (storage : int)  = nop, storage * n
 [@entry] let reset    (_ : unit) (_storage : int) = nop, 0
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=advancedcounter
+(* examples/contracts/ligo/AdvancedCounter.ligo *)
+
+type parameter is
+  Set of int | Add of int | Subtract of int | Multiply of int | Reset of unit
+
+[@entry]
+function main (const param : parameter; const storage : int) : list (operation) * int is
+  block {
+    const nop : list (operation) = nil
+  } with
+    case param of [
+      Set (n) -> (nop, n)
+    | Add (n) -> (nop, storage + n)
+    | Subtract (n) -> (nop, storage - n)
+    | Multiply (n) -> (nop, storage * n)
+    | Reset (_u) -> (nop, 0)
+    ]
 ```
 
 </Syntax>
@@ -158,6 +240,31 @@ let main (param : parameter) (callee_addr : storage) =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=entrypointproxy
+(* contracts/examples/ligo/EntrypointProxy.ligo *)
+
+type parameter is int
+
+type storage is address
+
+function get_add_entrypoint (const addr : address) is
+  case Mavryk.get_entrypoint_opt ("%add", addr) of [
+    Some (contract) -> contract
+  | None -> failwith ("The entrypoint does not exist")
+  ]
+
+[@entry]
+function main (const param : parameter; const callee_addr : storage) : list (operation) * storage is
+  block {
+    const add : contract (int) = get_add_entrypoint (callee_addr);
+    const op = Mavryk.transaction (param, 0mumav, add)
+  } with (list [op], callee_addr)
+```
+
+</Syntax>
+
 
 To get the entrypoint names from parameter constructors, you should make the first letters lowercase and prepend a percent sign: `Add` -> `%add`, `CallThePolice` -> `%callThePolice`. LIGO does this transformation internally when it compiles your code into Michelson.
 
@@ -174,6 +281,15 @@ Internally, Mavryk stores and operates on contracts in Michelson. Currently, Mic
 LIGO automatically converts a complex type `type t = Hello | L | I | G | O` into an annotated left-balanced tree with items sorted alphabetically: `(or (or (or (unit %g) (unit %hello)) (or (unit %i) (unit %l))) (unit %o))`. LIGO applies the same transformation to record types:
 ```cameligo
 type t = {hello : int; l : nat; i : bytes; g : string; o : address}
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+LIGO automatically converts a complex type `type t is Hello of unit | L of unit | I of unit | G of unit | O of unit` into an annotated left-balanced tree with items sorted alphabetically: `(or (or (or (unit %g) (unit %hello)) (or (unit %i) (unit %l))) (unit %o))`. LIGO applies the same transformation to record types:
+```pascaligo
+type t is record [hello : int; l : nat; i : bytes; g : string; o : address]
 ```
 
 </Syntax>
@@ -277,6 +393,30 @@ let iswhitelisted (arg : address * (bool contract)) (s : storage) : operation li
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=accesscontroller
+(* examples/contracts/ligo/AccessController.ligo *)
+
+type storage is record [senders_whitelist : set (address)]
+
+[@entry]
+function call (const op : unit -> operation; const s : storage) : list (operation) * storage is
+  if Set.mem (Mavryk.get_sender (), s.senders_whitelist)
+  then (list [op (unit)], s)
+  else failwith ("Sender is not whitelisted")
+
+[@entry]
+function iswhitelisted (const arg : address * contract (bool); const s : storage) : list (operation) * storage is
+  block {
+    const (addr, callback_contract) = arg;
+    const whitelisted = Set.mem (addr, s.senders_whitelist);
+    const op = Mavryk.transaction (whitelisted, 0mumav, callback_contract)
+  } with (list [op], s)
+```
+
+</Syntax>
+
 
 Now imagine we want to control a contract with the following interface (we omit the full code of the contract for clarity; you can find it in the [examples folder](https://gitlab.com/mavryk-network/ligo/-/tree/dev/gitlab-pages/docs/tutorials/inter-contract-calls/examples)):
 
@@ -308,6 +448,35 @@ let setpaused (paused : bool) (s : storage) : result =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+(* examples/contracts/ligo/PausableToken.ligo *)
+
+type storage is record [ledger : big_map (address, nat); owner : address; paused : bool]
+type result is list (operation) * storage
+
+function do_transfer (const src : address; const dst : address; const amount_ : nat; const storage : storage) : storage is
+  (* ... *)
+
+[@entry]
+function transfer (const arg : address * address * nat; const s : storage) : result is
+  if s.paused
+  then failwith ("The contract is paused")
+  else
+    block {
+      const (src, dst, amount_) = arg
+    } with ((nil : list (operation)), do_transfer (src, dst, amount_, s))
+
+[@entry]
+function setpaused (const paused : bool; const s : storage) : result is
+  if Mavryk.get_sender () =/= s.owner
+  then failwith ("Access denied")
+  else ((nil : list (operation)), s with record [paused = paused])
+```
+
+</Syntax>
+
 
 You may notice that we can abuse the `IsWhitelisted` entrypoint to pause and unpause the token, even if we are not among the whitelisted senders. Try it out:
 
@@ -331,6 +500,20 @@ let op = Mavryk.create_contract
   None
   0mumav
   1
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=solo_create_contract
+const op = Mavryk.create_contract (
+  function (const p : int; const s : int) : list (operation) * int is
+    ((nil : list (operation)), p + s),
+  (None : option (key_hash)),
+  0mumav,
+  1
+)
 ```
 
 </Syntax>
@@ -359,6 +542,30 @@ let create_and_call (storage : address list) =
   let call_op =
     Mavryk.transaction (addr, 41) 0mav (Mavryk.self "%callback") in
   [create_op; call_op], addr :: storage
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+(* examples/contracts/ligo/CreateAndCall.ligo *)
+
+// Here we create two operations: the one that will originate
+// the contract, and an operation to self, that will continue
+// the execution after the contract is originated.
+
+function create_and_call (const storage : list (address)) is
+  block {
+    const (create_op, addr) = Mavryk.create_contract (
+      function (const p : int; const s : int) : list (operation) * int is
+        ((nil : list (operation)), p + s),
+      (None : option (key_hash)),
+      0mav,
+      1
+    );
+    const call_op = Mavryk.transaction ((addr, 41), 0mav, Mavryk.self ("%callback"))
+  } with (list [create_op; call_op], addr # storage)
 ```
 
 </Syntax>

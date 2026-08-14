@@ -76,6 +76,32 @@ const main = (_: string, storage: string) : @return => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `Mavryk.create_contract (e, d, a, s)` returns a contract creation
+operation (origination) for the entrypoint `e` (as a function) with
+optional delegate `d`, initial amount `a` and initial storage `s`,
+together with the address of the created contract. Note that the
+created contract cannot be called immediately afterwards (that is,
+`Mavryk.get_contract_opt` on that address would return `None`), as the
+origination must be performed successfully first, for example by
+calling a proxy contract or itself.
+
+```pascaligo group=operation
+type return is list (operation) * string
+
+[@entry]
+function main (const _p : string; const storage : string) : return is
+  block {
+    function entrypoint (const _n : nat; const st : string) : list (operation) * string is
+      ((nil : list (operation)), st);
+    const (op, _addr) : operation * address =
+      Mavryk.create_contract (entrypoint, (None : option (key_hash)), 300000000mumav, "one");
+  } with (list [op], storage)
+```
+
+</Syntax>
+
 ### Transaction
 
 
@@ -181,6 +207,56 @@ namespace B {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `Mavryk.transaction (param, amount, contract_addr)` evaluates
+in an operation that will send the amount `amount` in mumav to the
+contract at the valid address `contract_addr`, with parameter
+`param`. If the contract is an implicit account, the parameter must be
+`unit`.
+
+The following example shows a transaction sent from one contract to
+another. The former is derived from a module `B` with an entrypoint
+`increment`; the latter is derived from a module `A` with an
+entrypoint `add`. The entrypoint `increment` calls `add` with `1`. We
+assume that the contract associated with module `A` is deployed under
+the address `"KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5"`.
+
+Contract (derived from) `B` needs to provide the parameter of the
+called contract. The convention is to transform the entrypoint being
+called to a variant. Here, `add` in `A` becomes `Add`. The variant
+`Add` carries the value of the parameter of the entrypoint, here `1`
+because we show how to increment the storage (`storage + delta` in
+`A`). The type of the parameter of the contract `A` is obtained by
+`parameter_of A`, and it is the type of `Add (1)`.
+
+```pascaligo group=operation_transaction
+type return is list (operation) * int
+
+module A is {
+  type storage is int
+
+  [@entry]
+  function add (const delta : int; const storage : storage) : return is
+    ((nil : list (operation)), storage + delta)
+}
+
+module B is {
+  type storage is int
+
+  [@entry]
+  function increment (const _param : unit; const storage : storage) : return is
+    block {
+      const contract_addr : contract (parameter_of A) =
+        Mavryk.get_contract (("KT1TxqZ8QtKvLu3V3JH7Gx58n7Co8pgtpQU5" : address));
+      const operation : operation =
+        Mavryk.transaction ((Add (1) : parameter_of A), 0mav, contract_addr);
+    } with (list [operation], storage)
+}
+```
+
+</Syntax>
+
 It is possible for a contract to have multiple entrypoints, which is
 implicitly translated in LIGO to a `parameter` with a variant type as
 shown below. The following contract:
@@ -211,6 +287,22 @@ const sub = (i: int, x: storage) : [list<operation>, storage] =>
 @entry
 const add = (i: int, x: storage) : [list<operation>, storage] =>
   [[], x + i]
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=entrypoints_and_annotations
+type storage is int
+
+[@entry]
+function sub (const i : int; const x : storage) : list (operation) * storage is
+  ((nil : list (operation)), x - i)
+
+[@entry]
+function add (const i : int; const x : storage) : list (operation) * storage is
+  ((nil : list (operation)), x + i)
 ```
 
 </Syntax>
@@ -247,6 +339,26 @@ let main = (p: parameter, x: storage): [list<operation>, storage] =>
     when(Sub(i)): x - i;
     when(Add(i)): x + i
   }];
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+type storage is int
+
+type parameter is
+  | Sub of int
+  | Add of int
+
+[@entry]
+function main (const p : parameter; const x : storage) : list (operation) * storage is
+  ((nil : list (operation)),
+   case p of [
+     Sub (i) -> x - i
+   | Add (i) -> x + i
+   ])
 ```
 
 </Syntax>
@@ -288,6 +400,26 @@ const main = (_p: parameter, s: storage): [list<operation>, storage] => {
       "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe");
   return [[Mavryk.transaction(Sub(2), 2mumav, contract_addr)], s];
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=get_entrypoint
+type storage is int
+type parameter is int
+
+type remote_param is Sub of int
+
+[@entry]
+function main (const _p : parameter; const s : storage) : list (operation) * storage is
+  block {
+    const contract_addr : contract (remote_param) =
+      Mavryk.get_entrypoint (
+        "%sub", // Corresponds to the `Sub` variant of `remote_param`.
+        ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address))
+  } with (list [Mavryk.transaction (Sub (2), 2mumav, contract_addr)], s)
 ```
 
 </Syntax>
@@ -344,6 +476,26 @@ const check = (kh: key_hash) : list<operation> =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `Mavryk.set_delegate (d)` evaluates in an operation that sets
+the delegate of the current smart contract to be `d`, where `d` is an
+optional key hash. If `None`, the delegation is withdrawn. If the
+contract has no delegation, then no change occurs. If `d` is `Some
+(kh)`, where `kh` is the key hash of a registered delegate that is not
+the current delegate of the contract, then this operation sets the
+delegate of the contract to this registered delegate. A failure occurs
+if `kh` is the current delegate of the contract or if `kh` is not a
+registered delegate. However, the instruction in itself does not fail;
+it produces an operation that will fail when applied.
+
+```pascaligo group=set_delegate
+function check (const kh : key_hash) : list (operation) is
+  list [Mavryk.set_delegate (Some (kh))]
+```
+
+</Syntax>
+
 
 ### Event emission
 
@@ -381,5 +533,23 @@ const main = (param: [int, int], storage: unit) : [list<operation>, storage] =>
   [[Mavryk.emit("%foo", param), Mavryk.emit("%bar", param[0])], storage];
 ```
 
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The call `Mavryk.emit (event_tag, event_type)` evaluates in an operation
+that will write an event into the transaction receipt after the
+successful execution of this contract. The event is annotated by the
+string `event_tag` if it is not empty. The argument `event_type` is
+used only to specify the type of data attachment.
+
+```pascaligo group=event_emit
+type storage is unit
+
+[@entry]
+function main (const param : int * int; const _s : storage) : list (operation) * storage is
+  (list [Mavryk.emit ("%foo", param); Mavryk.emit ("%bar", param.0)], Unit)
+```
 
 </Syntax>

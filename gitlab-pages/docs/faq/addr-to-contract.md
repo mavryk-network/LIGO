@@ -37,6 +37,19 @@ const test = do {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=addr2contract
+const test =
+  block {
+    const addr : address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
+    const taddr : typed_address (unit, unit) = Test.cast_address (addr);
+    const contract : contract (unit) = Test.to_contract (taddr);
+  } with contract
+```
+
+</Syntax>
+
 Check out the reference of the `Test` framework for exact signature of the functions [here](../reference/test.md).
 
 <!-- updated use of entry -->

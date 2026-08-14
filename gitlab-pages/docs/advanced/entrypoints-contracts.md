@@ -70,6 +70,31 @@ end
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=incdec
+module IncDec is {
+  type storage is int
+  type result is list (operation) * storage
+
+  // Four entrypoints
+
+  [@entry] function increment (const delta : int; const store : storage) : result is
+    ((nil : list (operation)), store + delta)
+
+  [@entry] function default (const _u : unit; const store : storage) : result is
+    increment (1, store)
+
+  [@entry] function decrement (const delta : int; const store : storage) : result is
+    ((nil : list (operation)), store - delta)
+
+  [@entry] function reset (const _p : unit; const _s : storage) : result is
+    ((nil : list (operation)), 0)
+}
+```
+
+</Syntax>
+
 When the contract is originated, the initial value of the storage is
 provided. When an entry point is later called, only the parameter is
 provided by the user, and the blockchain (or testing framework)
@@ -109,6 +134,15 @@ type result = [list<operation>, storage];
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+type storage is ...  // Any name, any type
+type result is list (operation) * storage
+```
+
+</Syntax>
+
 The contract storage can only be modified by activating an entry point:
 given the state of the storage *on-chain*, an entry point function
 specifies how to create another state for it, depending on the
@@ -136,6 +170,14 @@ ligo run dry-run -m IncDec gitlab-pages/docs/advanced/src/entrypoints-contracts/
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```shell
+ligo run dry-run -m IncDec gitlab-pages/docs/advanced/src/entrypoints-contracts/incdec.ligo 'Increment (5)' '0'
+```
+
+</Syntax>
+
 In the command above, `0` is the initial `storage`, and `5` is the `delta` argument.
 
 ### Calling an on-chain contract
@@ -154,6 +196,14 @@ ligo compile parameter -m IncDec gitlab-pages/docs/advanced/src/entrypoints-cont
 
 ```shell
 ligo compile parameter -m IncDec gitlab-pages/docs/advanced/src/entrypoints-contracts/incdec.jsligo 'Increment(5)'
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile parameter -m IncDec gitlab-pages/docs/advanced/src/entrypoints-contracts/incdec.ligo 'Increment (5)'
 ```
 
 </Syntax>
@@ -310,6 +360,36 @@ const main = (action: parameter, store: storage): result =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=contract_main
+type parameter is
+  Action_A of nat
+| Action_B of string
+
+type storage is record [
+  counter : nat;
+  name    : string
+]
+
+type result is list (operation) * storage
+
+function entry_A (const n : nat; const store : storage) : result is
+  ((nil : list (operation)), store with record [ counter = n ])
+
+function entry_B (const s : string; const store : storage) : result is
+  ((nil : list (operation)), store with record [ name = s ])
+
+[@entry]
+function main (const action : parameter; const store : storage) : result is
+  case action of [
+    Action_A (n) -> entry_A (n, store)
+  | Action_B (s) -> entry_B (s, store)
+  ]
+```
+
+</Syntax>
+
 ### Workaround for the deprecation of the `main` function
 
 In most cases, adding `[@entry]` for CameLIGO or `@entry` for JsLIGO
@@ -366,6 +446,28 @@ ligo compile contract --library . \
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=contract_main_proxy
+#import "gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main.ligo" "C"
+
+module Proxy is {
+
+  [@entry]
+  function proxy (const p : C.parameter; const s : C.storage) : list (operation) * C.storage is
+    C.main (p, s)
+
+}
+```
+
+The contract can then be compiled using the following command:
+
+```shell
+ligo compile contract --library . -m Proxy gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main_proxy.ligo
+```
+
+</Syntax>
+
 Notice that to compile a parameter for this contract, now we need to
 pass the either `-e proxy` or construct a value using the `Proxy`
 constructor:
@@ -402,6 +504,24 @@ ligo compile parameter --library . \
   -m Proxy \
   gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main_proxy.jsligo \
   "Proxy(Action_A(42n))"
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile parameter --library . \
+  -m Proxy -e proxy \
+  gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main_proxy.ligo \
+  "Action_A (42n)"
+```
+
+```shell
+ligo compile parameter --library . \
+  -m Proxy \
+  gitlab-pages/docs/advanced/src/entrypoints-contracts/contract_main_proxy.ligo \
+  "Proxy (Action_A (42n))"
 ```
 
 </Syntax>
@@ -453,6 +573,22 @@ const no_tokens = (action: parameter, store: storage): result => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+type parameter is unit
+type storage is unit
+type result is list (operation) * storage
+
+[@entry]
+function no_tokens (const action : parameter; const store : storage) : result is
+  if Mavryk.get_amount () > 0mav then
+    failwith ("This contract does not accept tokens.")
+  else ((nil : list (operation)), store)
+```
+
+</Syntax>
+
 ### Access Control
 
 This example shows how `Mavryk.get_sender` can be used to deny access to an
@@ -480,6 +616,19 @@ const owner_only = (action: parameter, store: storage): result => {
   if (Mavryk.get_sender() != owner) { return failwith("Access denied."); }
   else { return [[], store]; };
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+const owner : address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe"
+
+[@entry]
+function owner_only (const action : parameter; const store : storage) : result is
+  if Mavryk.get_sender () =/= owner then failwith ("Access denied.")
+  else ((nil : list (operation)), store)
 ```
 
 </Syntax>
@@ -593,6 +742,46 @@ const proxy = (action: parameter, store: storage): result => {
   let op = Mavryk.transaction(Increment(5), 0mav, counter);
   return [[], store];
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+// gitlab-pages/docs/advanced/src/entrypoints-contracts/incdec.ligo
+
+module IncDec is {
+  type storage is int
+  type return is list (operation) * storage
+
+  [@entry] function increment (const delta : int; const store : storage) : return is
+    ((nil : list (operation)), store + delta)
+
+  // And so on, as above
+}
+```
+
+```pascaligo group=d
+// proxy.ligo
+
+type parameter is
+  Increment of int
+| Decrement of int
+| Reset of unit
+
+type storage is unit
+
+type result is list (operation) * storage
+
+const dest : address = "KT19wgxcuXG9VH4Af5Tpm1vqEKdaMFpznXT3"
+
+[@entry]
+function proxy (const action : parameter; const store : storage) : result is
+  block {
+    const counter : contract (parameter) = Mavryk.get_contract_with_error (dest, "not found");
+    const op = Mavryk.transaction (Increment (5), 0mav, counter);
+  } with (list [op], store)
 ```
 
 </Syntax>

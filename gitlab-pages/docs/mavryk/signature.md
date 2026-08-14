@@ -31,6 +31,16 @@ signature;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=signature
+const my_sig : signature =
+   ("edsigthTzJ8X7MPmNeEwybRAvdxS1pupqcM5Mk4uCuyZAe7uEk68YpuGDeViW8wSXMrCi5CwoNgqs8V2w8ayB5dMJzrYCHhD8C7" :
+   signature)
+```
+
+</Syntax>
+
 ### Checking
 
 Sometimes a contract will want to check that a message has been signed
@@ -58,6 +68,15 @@ let check_signature (pk, signed, msg : key * signature * bytes) : bool =
 const check_signature =
   (pk: key, signed: signature, msg: bytes) =>
   Crypto.check(pk, signed, msg);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=signature
+function check_signature (const pk : key; const signed : signature; const msg : bytes) : bool is
+  Crypto.check (pk, signed, msg)
 ```
 
 </Syntax>

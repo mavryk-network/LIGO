@@ -28,6 +28,17 @@ Note: See predefined [namespace String](../reference/string-reference/?lang=jsli
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=strings
+const a : string = "Hello Alice"
+```
+
+Note: See the predefined
+[module String](../reference/string-reference/?lang=pascaligo)
+
+</Syntax>
+
 ### Casting
 
 Strings can be used in contexts where a boolean is expected: an empty
@@ -47,6 +58,15 @@ let zero = if "foo" then 0 else 1
 ```jsligo group=strings
 const one  = "" ? 0 : 1;
 const zero = "foo" ? 0 : 1;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=strings
+const one  = if "" then 0 else 1
+const zero = if "foo" then 0 else 1
 ```
 
 </Syntax>
@@ -83,6 +103,22 @@ Note: See predefined [namespace String](../reference/string-reference/?lang=jsli
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Strings can be concatenated using the `^` operator, just like in
+CameLIGO:
+
+```pascaligo group=concatenating
+const name = "Alice"
+const greeting = "Hello"
+const full_greeting = greeting ^ " " ^ name
+```
+
+Note: See the predefined
+[module String](../reference/string-reference/?lang=pascaligo)
+
+</Syntax>
+
 ## Sizing
 
 The length of a string can be obtain by calling the predefined
@@ -106,6 +142,17 @@ const length : nat = String.size("Alice"); // length == 5n
 ```
 
 Note: See predefined [namespace String](../reference/string-reference/?lang=jsligo)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=length
+const length : nat = String.size ("Alice") // length = 5n
+```
+
+Note: See the predefined
+[module String](../reference/string-reference/?lang=pascaligo)
 
 </Syntax>
 
@@ -137,6 +184,20 @@ const slice = String.sub (0n, 1n, name); // slice == "A"
 ```
 
 Note: See predefined [namespace String](../reference/string-reference/?lang=jsligo)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The offset and length of the slice are natural numbers:
+
+```pascaligo group=slicing
+const name  = "Alice"
+const slice = String.sub (0n, 1n, name)  // slice = "A"
+```
+
+Note: See the predefined
+[module String](../reference/string-reference/?lang=pascaligo)
 
 </Syntax>
 
@@ -173,6 +234,20 @@ const s : string = `\n` // String made of two characters
 ```
 
 Note: See predefined [namespace String](../reference/string-reference/?lang=jsligo)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+Verbatim strings are given between the delimiters `{|` and `|}`,
+instead of double quotes:
+
+```pascaligo group=verbatim
+const s : string = {|\n|} // String made of two characters
+```
+
+Note: See the predefined
+[module String](../reference/string-reference/?lang=pascaligo)
 
 </Syntax>
 

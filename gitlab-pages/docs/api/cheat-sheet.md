@@ -1008,6 +1008,535 @@ Not available in JsLIGO, use CameLIGO.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+<div className="codeTable">
+<div className="primitive">
+Contract, view and test
+</div>
+<div className="example">
+
+```pascaligo group=simple_contract_with_view_and_test
+module C is {
+  type storage is int
+
+  [@entry] function increment (const action : int; const store : storage) : list (operation) * storage is
+    ((nil : list (operation)), store + action)
+
+  [@entry] function decrement (const action : int; const store : storage) : list (operation) * storage is
+    ((nil : list (operation)), store - action)
+
+  [@view] function get_storage (const must_be_positive : bool; const storage : int) : int is
+    if must_be_positive and storage < 0 then
+      failwith ("Negative value in storage")
+    else
+      storage
+}
+
+const test_it = block {
+  const initial_storage = 42;
+  const orig = Test.originate (contract_of C, initial_storage, 0mav);
+  const p : parameter_of C = Increment (1);
+  const _r = Test.transfer_exn (orig.addr, p, 1mumav);
+} with assert (Test.get_storage (orig.addr) = initial_storage + 1)
+```
+
+</div>
+<div className="primitive">Strings</div>
+<div className="example">
+
+```pascaligo
+const name : string = "Mavryk"
+```
+
+</div>
+<div className="primitive">
+Characters
+</div>
+<div className="example">
+
+```pascaligo
+const t : string = "t"
+```
+
+</div>
+<div className="primitive">
+Integers
+</div>
+<div className="example">
+
+```pascaligo
+const i : int = 42
+```
+
+</div>
+<div className="primitive">
+Natural numbers
+</div>
+<div className="example">
+
+```pascaligo
+const n : nat = 7n
+```
+
+</div>
+<div className="primitive">
+Unit
+</div>
+<div className="example">
+
+```pascaligo
+const u : unit = unit
+```
+
+</div>
+<div className="primitive">
+Boolean
+</div>
+<div className="example">
+
+```pascaligo
+const has_drivers_license : bool = False
+const adult : bool = True
+```
+
+</div>
+<div className="primitive">
+Boolean Logic
+</div>
+<div className="example">
+
+```pascaligo
+const booleanLogic : bool =
+    (not True) =
+    False =
+    (False and True) =
+    (False or False)
+```
+
+</div>
+<div className="primitive">
+Mumav (micro mav)
+</div>
+<div className="example">
+
+```pascaligo
+const mav_amount : mav = 42mav
+const mav_amount2 : mav = mav_amount + 7mumav
+```
+
+</div>
+<div className="primitive">
+Address
+</div>
+<div className="example">
+
+```pascaligo
+const mv1address : address =
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
+const kt1address : address =
+  ("KT1JepfBfMSqkQyf9B1ndvURghGsSB8YCLMD" : address)
+```
+
+</div>
+<div className="primitive">
+String
+</div>
+<div className="example">
+
+```pascaligo
+const my_str : string = "Hello World!"
+```
+
+</div>
+<div className="primitive">
+Verbatim string
+</div>
+<div className="example">
+
+```pascaligo
+const verbatim_str : string = {|verbatim string|}
+```
+
+</div>
+<div className="primitive">
+Addition
+</div>
+<div className="example">
+
+```pascaligo
+const add_int : int = 3 + 4
+const add_nat : nat = 3n + 4n
+```
+
+</div>
+<div className="primitive">
+Multiplication & Division
+</div>
+<div className="example">
+
+```pascaligo
+const mul_int : int = 3 * 4
+const mul_nat : nat = 3n * 4n
+
+const div_int : int = 10 / 5
+const div_nat : nat = 10n / 5n
+```
+
+</div>
+<div className="primitive">
+Modulo
+</div>
+<div className="example">
+
+```pascaligo
+const mod_nat : nat = 10 mod 3
+```
+
+</div>
+<div className="primitive">
+Tuples
+</div>
+<div className="example">
+
+```pascaligo
+type name is string * string
+
+const winner : name = ("John", "Doe")
+
+const firstName : string = winner.0
+const lastName : string = winner.1
+```
+
+</div>
+<div className="primitive">
+Types
+</div>
+<div className="example">
+
+```pascaligo
+type age is int
+type name is string
+```
+
+</div>
+<div className="primitive">
+Include (prefer import)
+</div>
+<div className="example">
+
+```pascaligo skip
+#include "library.ligo"
+```
+
+</div>
+<div className="primitive">
+Import (better)
+</div>
+<div className="example">
+
+```pascaligo skip
+#import "library.ligo" "MyLibrary"
+const foo = MyLibrary.bar
+```
+
+</div>
+<div className="primitive">
+Functions
+</div>
+<div className="example">
+
+```pascaligo
+function add (const a : int; const b : int) : int is
+  a + b
+```
+
+</div>
+
+<div className="primitive">
+If Statement
+</div>
+<div className="example">
+
+```pascaligo
+function can_drive (const age : nat) : string is
+  if age >= 16n then "yes" else "no"
+```
+
+</div>
+<div className="primitive">
+Options
+</div>
+<div className="example">
+
+```pascaligo
+type middle_name is option (string)
+const a_middle_name : middle_name = Some ("Foo")
+const no_middle_name : middle_name = None
+```
+
+</div>
+<div className="primitive">
+Variable Binding
+</div>
+<div className="example">
+
+```pascaligo
+const age : int = 5
+```
+
+</div>
+<div className="primitive">
+Type Annotations
+</div>
+<div className="example">
+
+```pascaligo
+const someAddress : address =
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
+```
+
+</div>
+<div className="primitive">
+Variants
+</div>
+<div className="example">
+
+```pascaligo group=variants
+type action is
+  Increment of int
+| Decrement of int
+```
+
+</div>
+<div className="primitive">
+Variant *(pattern)* matching
+</div>
+<div className="example">
+
+```pascaligo group=variants
+const a : action = Increment (5)
+
+const result : int =
+  case a of [
+    Increment (n) -> n + 1
+  | Decrement (n) -> n - 1
+  ]
+```
+
+</div>
+<div className="primitive">
+Records
+</div>
+<div className="example">
+
+```pascaligo
+type person is record [
+  age  : int;
+  name : string
+]
+
+const john : person = record [
+  age  = 18;
+  name = "john doe"
+]
+
+const name : string = john.name
+```
+
+</div>
+<div className="primitive">
+Maps
+</div>
+<div className="example">
+
+```pascaligo
+type prices is map (nat, mav)
+
+const prices : prices =
+  Map.literal (list [
+    (10n, 60mumav);
+    (50n, 30mumav);
+    (100n, 10mumav)
+  ])
+
+const price : option (mav) = Map.find_opt (50n, prices)
+
+const prices : prices = Map.update (200n, Some (5mumav), prices)
+```
+
+</div>
+<div className="primitive">
+Contracts & Accounts
+</div>
+<div className="example">
+
+```pascaligo group=mavryk_specific
+const destinationAddress : address =
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
+
+const dest_contract : contract (unit) =
+  case (Mavryk.get_contract_opt (Mavryk.get_sender ()) : option (contract (unit))) of [
+    Some (c) -> c
+  | None -> (failwith ("no contract") : contract (unit))
+  ]
+```
+
+</div>
+<div className="primitive">
+Transactions
+</div>
+<div className="example">
+
+```pascaligo group=mavryk_specific
+
+const payment : operation =
+  Mavryk.transaction (unit, 100mumav, dest_contract)
+
+```
+
+</div>
+<div className="primitive">
+Exception/Failure
+</div>
+<div className="example">
+
+```pascaligo
+function fail (const u : unit) : unit is
+  failwith ("a failure message")
+```
+
+</div>
+<div className="primitive">
+Comb layout (default)
+</div>
+<div className="example">
+
+```pascaligo
+type animal is
+[@layout comb]
+| Elephant of unit
+| Dog of unit
+| Cat of unit
+```
+
+</div>
+<div className="primitive">
+Tree layout
+</div>
+<div className="example">
+
+```pascaligo
+type animal is
+[@layout tree]
+| Elephant of unit
+| Dog of unit
+| Cat of unit
+```
+
+</div>
+<div className="primitive">
+Module definition (auto-inferred type)
+</div>
+<div className="example">
+
+```pascaligo
+module FA0_inferred is {
+  type t is unit
+  [@entry] function transfer (const _p : unit; const _s : t) : list (operation) * t is
+    ((nil : list (operation)), unit)
+}
+```
+
+</div>
+<div className="primitive">
+Module Type
+</div>
+<div className="example">
+
+```pascaligo
+module type FA0_SIG is sig
+  type t
+  [@entry] const transfer : unit -> t -> list (operation) * t
+end
+```
+
+</div>
+<div className="primitive">
+Extending Module Type
+</div>
+<div className="example">
+
+```pascaligo
+module type FA0_SIG is sig
+  type t
+  [@entry] const transfer : unit -> t -> list (operation) * t
+end
+
+module type FA0Ext_SIG is sig
+  include FA0_SIG
+  [@entry] const transfer2 : unit -> t -> list (operation) * t
+end
+```
+
+</div>
+<div className="primitive">
+Module definition
+</div>
+<div className="example">
+
+```pascaligo
+module type FA0_SIG is sig
+  type t
+  [@entry] const transfer : unit -> t -> list (operation) * t
+end
+
+module FA0 : FA0_SIG is {
+  type t is unit
+  [@entry] function transfer (const _p : unit; const _s : t) : list (operation) * t is
+    ((nil : list (operation)), unit)
+}
+```
+
+</div>
+<div className="primitive">
+Extending module definition
+</div>
+<div className="example">
+
+PascaLIGO has no `include` for module *values* (only for module
+*types*), so a module is extended by delegating to the qualified
+functions of the module it extends, instead of inlining them:
+
+```pascaligo
+module type FA0_SIG is sig
+  type t
+  [@entry] const transfer : unit -> t -> list (operation) * t
+end
+
+module type FA0Ext_SIG is sig
+  include FA0_SIG
+  [@entry] const transfer2 : unit -> t -> list (operation) * t
+end
+
+module FA0 : FA0_SIG is {
+  type t is unit
+  [@entry] function transfer (const _p : unit; const _s : t) : list (operation) * t is
+    ((nil : list (operation)), unit)
+}
+
+module FA0Ext : FA0Ext_SIG is {
+  type t is FA0.t
+  [@entry] function transfer (const a : unit; const b : t) : list (operation) * t is FA0.transfer (a, b)
+  [@entry] function transfer2 (const a : unit; const b : t) : list (operation) * t is FA0.transfer (a, b)
+}
+```
+
+</div>
+</div>
+
+</Syntax>
+
 </div>
 
 <!-- updated use of entry -->

@@ -42,6 +42,18 @@ e.g.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+  type my_storage is
+    record [
+     storage : int;
+     dynamic_entrypoints
+    ]
+```
+
+</Syntax>
+
 
 
 
@@ -77,6 +89,22 @@ const one = ([], _i : int) : [list<operation>, int] => [[], 1]
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+(* define at least one entry *)
+[@entry]
+function nop (const _u : unit; const s : int) : list (operation) * int is
+  ((nil : list (operation)), s)
+
+(* define a dynamic entrypoint *)
+[@dyn_entry]
+function one (const _u : unit; const _i : int) : list (operation) * int is
+  ((nil : list (operation)), 1)
+```
+
+</Syntax>
+
 
 
 The dynamic entry storage type will typically coincide with the contract storage type but can be different
@@ -95,6 +123,16 @@ let one_with_different_storage () (_: nat) : operation list * nat = [], 1n
 ```jsligo skip
 @dyn_entry
 const one_with_different_storage = ([], _n : nat) : [list<operation>, nat] => [[], 1n]
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+[@dyn_entry]
+function one_with_different_storage (const _u : unit; const _n : nat) : list (operation) * nat is
+  ((nil : list (operation)), 1n)
 ```
 
 </Syntax>
@@ -123,6 +161,15 @@ const opted_out = (_t: ticket<int>, _i: int) : [list<operation>, int] => (Extern
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+[@dyn_entry]
+const opted_out : ticket (int) -> int -> list (operation) * int = [%external ("OPT_OUT_ENTRY")]
+```
+
+</Syntax>
+
 
 
 ## Set and call dynamic entrypoints
@@ -137,6 +184,11 @@ LIGO uses an abstract type `('a,'b) dynamic_entrypoint` to denote such keys.
 <Syntax syntax="jsligo">
 
 LIGO uses an abstract type `dynamic_entrypoint<a, b>` to denote such keys.
+
+</Syntax>
+<Syntax syntax="pascaligo">
+
+LIGO uses an abstract type `dynamic_entrypoint ('a, 'b)` to denote such keys.
 
 </Syntax>
 
@@ -154,6 +206,14 @@ let just_a_key : (unit,int) dynamic_entrypoint = one
 
 ```jsligo skip
 let just_a_key : dynamic_entrypoint<unit, int> = one
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+const just_a_key : dynamic_entrypoint (unit, int) = one
 ```
 
 </Syntax>
@@ -177,6 +237,15 @@ let foo = one () 42
 ```jsligo skip
 (* this would not type because one is not a function *)
 let foo = one([], 42)
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+(* this would not type because one is not a function *)
+const foo = one (unit, 42)
 ```
 
 </Syntax>
@@ -224,6 +293,22 @@ const set_bytes : <P, S>(x1: dynamic_entrypoint<P, S>, x2: option<bytes>, x3: dy
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+(* module Dynamic_entry *)
+const set :
+  dynamic_entrypoint ('p, 's) * option (entrypoint ('p, 's)) * dynamic_entrypoints -> dynamic_entrypoints
+
+const get :
+  dynamic_entrypoint ('p, 's) * dynamic_entrypoints -> option (entrypoint ('p, 's))
+
+const set_bytes :
+  dynamic_entrypoint ('p, 's) * option (bytes) * dynamic_entrypoints -> dynamic_entrypoints
+```
+
+</Syntax>
+
 
 
 ### Set an entrypoint
@@ -251,6 +336,19 @@ const set_one = (one_v2 : entrypoint<unit, int>, s : storage) : [list<operation>
     Dynamic_entrypoints.set(one, Some(one_v2), s.dynamic_entrypoints);
   return [[], {...s, dynamic_entrypoints}]
 }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+[@entry]
+function set_one (const one_v2 : entrypoint (unit, int); const s : storage) : list (operation) * storage is
+  block {
+    const dynamic_entrypoints =
+      Dynamic_entrypoints.set (one, Some (one_v2), s.dynamic_entrypoints)
+  } with ((nil : list (operation)), s with record [ dynamic_entrypoints = dynamic_entrypoints ])
 ```
 
 </Syntax>
@@ -293,6 +391,22 @@ const call_one = ([], s : storage) : [list<operation>, storage] =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+[@entry]
+function call_one (const _u : unit; const s : storage) : list (operation) * storage is
+  case Dynamic_entrypoints.get (one, s.dynamic_entrypoints) of [
+    Some (f) ->
+      block {
+        const (op, storage) = f (unit, s.storage)
+      } with (op, s with record [ storage = storage ])
+  | None -> (failwith (-1) : list (operation) * storage)
+  ]
+```
+
+</Syntax>
+
 
 
 ## Misc
@@ -318,6 +432,19 @@ When using `compile storage` on a contract holding dynamic entrypoints, you are 
 
 ```zsh
 > ligo compile storage dynamic_entrypoints.jsligo "42"
+    (Pair 42
+          { Elt 0
+                0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0001053d036d034200000000 ;
+            Elt 1
+                0x05020000002f03200931000000230765035b035b096500000008055f036d035b035b000000000200000006053d036d034200000000 })
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```zsh
+> ligo compile storage dynamic_entrypoints.ligo "42"
     (Pair 42
           { Elt 0
                 0x050200000029032009310000001d035b0765055f036d035b020000000e03200743035b0001053d036d034200000000 ;
@@ -368,6 +495,27 @@ const test_dyn = do {
   assert ((Test.get_storage(addr)).storage == 2);
   return []
 }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+const test_dyn =
+  block {
+    const init_storage = Test.storage_with_dynamic_entrypoints (contract_of C, 42);
+    const orig = Test.originate (contract_of C, init_storage, 0mumav);
+    (* Call initial one *)
+    const _r1 = Test.transfer_to_contract (Test.to_contract (orig.addr), Call_one (unit), 1mumav);
+    const _c1 = assert ((Test.get_storage (orig.addr)).storage = 1);
+    (* Change initial one and call it *)
+    const f = function (const _u : unit; const i : int) : list (operation) * int is
+      ((nil : list (operation)), i + 1);
+    const _r2 = Test.transfer_to_contract (Test.to_contract (orig.addr), Set_one (f), 1mumav);
+    const _r3 = Test.transfer_to_contract (Test.to_contract (orig.addr), Call_one (unit), 1mumav);
+    const _c2 = assert ((Test.get_storage (orig.addr)).storage = 2);
+  } with unit
 ```
 
 </Syntax>

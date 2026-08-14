@@ -1,5 +1,12 @@
 FROM node:18-bullseye
 
+# MAVRYK: harden the image build against the flaky deb.debian.org mirror + transient network resets
+# ("Connection reset by peer" from the CI runner). Make apt retry each download (it re-resolves the CDN,
+# so a bad edge node is skipped) and make wget retry too, so a transient package/asset fetch doesn't fail
+# the whole build. Pairs with the GitLab job-level `retry:` on the vscode-extension-* jobs.
+RUN printf 'Acquire::Retries "8";\nAcquire::http::Timeout "60";\nAcquire::https::Timeout "60";\n' > /etc/apt/apt.conf.d/80-mavryk-retries \
+ && printf 'tries = 5\nretry_connrefused = on\nwaitretry = 5\ntimeout = 60\n' > /etc/wgetrc
+
 # Install vscode runtime dependencies that will later be used by vscode downloaded separately.
 # Extest doesn't work with vscode installed this way for some reason >:(
 
@@ -19,8 +26,9 @@ RUN ln -s /vscode/test-resources/VSCode-linux-x64 /vscode/.vscode-test/vscode-li
 RUN apt-get -y install xvfb xclip
 
 
-ARG MAVKIT_VERSION="v16.1"
-RUN wget -q https://github.com/mavryk-network/mavryk-packaging/releases/download/${MAVKIT_VERSION}-1/mavkit-client -O /usr/bin/mavkit-client
+ARG MAVKIT_VERSION="v20.3"
+# MAVRYK: mavryk-packaging tags are now `vX.Y` (no "mavkit-" prefix, no "-1" suffix); v20.3 is the latest that ships a mavkit-client asset.
+RUN wget -q https://github.com/mavryk-network/mavryk-packaging/releases/download/${MAVKIT_VERSION}/mavkit-client -O /usr/bin/mavkit-client
 RUN chmod +x /usr/bin/mavkit-client
 
 # Some runtime dependency for ligo

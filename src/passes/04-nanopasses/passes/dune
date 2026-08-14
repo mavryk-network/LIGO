@@ -41,6 +41,7 @@
   constructor_application
   sum_type_helper_generator
   standalone_constructor_removal
+  special_unit_constructor
   pattern_constructor_application
   pattern_heuristic
   object_to_record

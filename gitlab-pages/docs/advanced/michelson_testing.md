@@ -59,6 +59,21 @@ const append = (s : string, store: storage): result =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=mockup_testme
+(* This is mockup_testme.ligo *)
+type storage is string
+
+type result is list (operation) * storage
+
+[@entry]
+function append (const s : string; const store : storage) : result is
+  ((nil : list (operation)), store ^ s)
+```
+
+</Syntax>
+
 To obtain Michelson code from it, we run the LIGO compiler like so:
 
 <Syntax syntax="cameligo">
@@ -85,6 +100,18 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.ligo
+# Outputs:
+# { parameter string ;
+#   storage string ;
+#   code { UNPAIR ; SWAP ; CONCAT ; NIL operation ; PAIR } }
+```
+
+</Syntax>
+
 
 
 Instead of outputting the resulted compiled code in the screen, we can
@@ -102,6 +129,14 @@ ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_te
 
 ```shell
 ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.jsligo --output-file mockup_testme.mv
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile contract gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.ligo --output-file mockup_testme.mv
 ```
 
 </Syntax>
@@ -179,6 +214,16 @@ Then, we execute a call to our contract with parameter `Append
 
 ```shell
 ligo compile parameter gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.mligo "Append (\"bar\")"
+# Outputs:
+# "bar"
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile parameter gitlab-pages/docs/advanced/src/michelson_testing/mockup_testme.ligo "Append (\"bar\")"
 # Outputs:
 # "bar"
 ```

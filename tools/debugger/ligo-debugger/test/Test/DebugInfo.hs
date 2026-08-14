@@ -3,6 +3,7 @@ module Test.DebugInfo
   ( test_SourceMapper
   , test_Errors
   , test_Function_call_locations
+  , test_PascaligoDecode
   ) where
 
 import Control.Lens (_Empty, hasn't)
@@ -68,6 +69,15 @@ infixr 0 ?-
 -- | LIGO uses them to insert metadata between actual instructions
 dummyInstr :: T.Instr a a
 dummyInstr = T.Nested T.Nop
+
+-- MAVRYK: PascaLIGO. Runtime smoke — decode a .ligo contract's CST through PascaLigoCST.hs.
+test_PascaligoDecode :: TestTree
+test_PascaligoDecode = testGroup "PascaLIGO CST decoding"
+  [ testCase "pascaligo-decode-smoke.ligo decodes to a non-empty AST" do
+      let file = contractsDir </> "pascaligo-decode-smoke.ligo"
+      parsed <- parseContracts [file]
+      assertBool "expected a decoded AST" (not $ null parsed)
+  ]
 
 test_SourceMapper :: TestTree
 test_SourceMapper = testGroup "Reading source mapper"

@@ -39,6 +39,20 @@ function add (a: int, b:int) : int {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+To declare a variable, use the keyword `var` (constants use `const`). Both the initial
+assignment and subsequent reassignments use `:=`, as in this example:
+
+```pascaligo group=mutating
+function add (const a : int; const b : int) : int is block {
+  var c : int := a + b;  // Mutable c is assigned a + b
+  c := c + 1             // Reassignment of incremented c
+} with c                 // c = a + b + 1
+```
+
+</Syntax>
+
 ### Silent variables
 
 The compiler warns you when you declare a variable but do not use it.
@@ -60,6 +74,15 @@ If the entrypoint code doesn't access one or both of these arguments, prefix the
 ```jsligo group=silent_variables
 @entry
 const reset = (_param : unit, _storage : int) : [list<operation>, int] => [[], 0];
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=silent_variables
+[@entry] function reset (const _param : unit; const _storage : int) : list (operation) * int is
+  ((nil : list (operation)), 0)
 ```
 
 </Syntax>
@@ -113,6 +136,25 @@ const d = do {
     return x;
   }
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+To declare a constant, use the keyword `const`, as in this example:
+
+```pascaligo group=constants
+const a : int = 1
+const b : int = a  // Type ascription (a.k.a. annotation)
+```
+
+If you assign a new value to a constant of the same name, LIGO creates a new constant in a new scope.
+This is also called *shadowing*.
+
+```pascaligo group=constants
+const x : int = 1
+const x : int = 2 // No error: this x shadows the previous one.
 ```
 
 </Syntax>

@@ -9,6 +9,11 @@ import Syntax from '@theme/Syntax';
 This feature is not available in CameLIGO."
 </Syntax>
 
+<Syntax syntax="pascaligo">
+This feature is not available in PascaLIGO. Use [pattern matching](../data-types/variants#matching)
+with the `case` construct instead.
+</Syntax>
+
 <Syntax syntax="jsligo">
 
 TypeScript developers are familiar with the `switch` statement. By

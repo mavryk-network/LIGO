@@ -64,10 +64,16 @@ val originate : &#39;p &#39;s.(&#39;p, &#39;s) module&#95;contract -&gt; &#39;s 
 <SyntaxTitle syntax="jsligo">
 let originate: &lt;p, s&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; origination&#95;result&lt;p, s&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const originate : module&#95;contract (p, s) -&gt; s -&gt; mav -&gt; origination&#95;result (p, s)
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 val failwith : &#39;a &#39;b.&#39;a -&gt; &#39;b
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let failwith: &lt;a, b&gt;(&#95;: a) =&gt; b
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const failwith : a -&gt; b
 </SyntaxTitle>

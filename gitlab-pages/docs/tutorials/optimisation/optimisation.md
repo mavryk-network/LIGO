@@ -180,6 +180,17 @@ let main (parameter, storage : int * int) : operation list * int =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function sum (const x : int; const y : int) : int is x + y
+
+function main (const parameter : int; const storage : int) : list (operation) * int is
+  ((nil : list (operation)), sum (parameter, storage))
+```
+
+</Syntax>
+
 
 There are two major ways to represent functions (like `sum`) in Michelson. The first way is to first push the function `f` to the stack, and then execute it with the argument `(parameter, storage)`:
 
@@ -213,6 +224,17 @@ Other declarations can be inlined as well. In this contract, the compiler may ge
 let n = 4
 
 let main (_, _ : unit * int) : operation list * int = [], n * n
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+const n : int = 4
+
+function main (const _p : unit; const _s : int) : list (operation) * int is
+  ((nil : list (operation)), n * n)
 ```
 
 </Syntax>
@@ -261,11 +283,44 @@ let large_entry_point (n : int) (store :  storage) : operation list * storage =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+It turns out we can do better. Mavryk has a lazy container – big map. The contents of big map are read, deserialised and type-checked during the call to `Big_map.find_opt`, and not at the beginning of the transaction. We can use this container to store the code of our heavy entrypoints: we need to add a `(bool, entrypoint_lambda) big_map` to the storage record, and then use `Big_map.find_opt` to fetch the code of the entrypoint from storage. (Note: in theory, we could use `(unit, entrypoint_lambda) big_map`, but, unfortunately, `unit` type is not comparable, so we cannot use it as a big map index).
+
+Here is how it looks like:
+```pascaligo
+type storage is record [ large_entrypoint : big_map (bool, int -> int); result : int ]
+
+function load_large_ep (const store : storage) : int -> int is
+  case Big_map.find_opt (True, store.large_entrypoint) of [
+    Some (ep) -> ep
+  | None -> (failwith ("Internal error") : int -> int)
+  ]
+
+[@entry] function large_entry_point (const n : int; const store : storage) : list (operation) * storage is
+  ((nil : list (operation)), store with record [ result = (load_large_ep (store)) (n) ])
+
+(* Other entrypoints ... *)
+```
+
+</Syntax>
+
 We can now put the code of this large entrypoint to storage upon the
 contract origination. If we do not provide any means to change the
 stored lambda, the immutability of the contract will not be affected.
 
 <Syntax syntax="cameligo">
+
+This pattern is also useful if you have long code blocks that repeat
+across some subset of entrypoints. For example, if you develop a
+custom token, you may need different flavors of transfers with a
+common pre-transfer check. In this case, you can add a lambda
+`preTransferCheck : (transfer_params -> bool)` to the storage and call
+it upon transfer.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
 
 This pattern is also useful if you have long code blocks that repeat
 across some subset of entrypoints. For example, if you develop a

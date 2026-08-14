@@ -24,3 +24,12 @@ const contains_3: bool = Big_set.mem(3, my_big_set); // == true
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_set_membership
+const my_big_set : big_set (int) = Big_set.literal (list [3; 2; 2; 1])
+const contains_3 : bool = Big_set.mem (3, my_big_set) // = True
+```
+
+</Syntax>

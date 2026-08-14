@@ -1,1 +1,0 @@
-let check () = Mavryk.self("%default")

@@ -35,6 +35,16 @@ const zero_too = 0x00;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=bytes
+const a : bytes = 0x70FF
+const zero : bytes = 0x
+const zero_too = 0x00
+```
+
+</Syntax>
+
 Clearly, this means that literal bytes are always comprised of an even
 number of hexadecimal digits (because one hexadecimal digit requires
 up to four bits in binary, and eight are needed to make up a byte).
@@ -72,6 +82,19 @@ const i: int = int(0x7B); // i == 123
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=bytes
+const b : bytes = bytes (123n)   // 7B in hexadecimal
+const c : bytes = bytes (123)
+const d : bytes = bytes (-123) // Two's complement
+
+const n : nat = nat (0x7B) // n = 123n
+const i : int = int (0x7B) // i = 123
+```
+
+</Syntax>
+
 > Note: See
 > [Two's complement](https://en.wikipedia.org/wiki/Two's_complement).
 
@@ -100,6 +123,14 @@ let from_ascii : bytes = [%bytes "foo"]
 
 ```jsligo group=bytes
 const from_ascii: bytes = bytes`foo`; // Not a call
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=bytes
+const from_ascii : bytes = [%bytes "foo"]
 ```
 
 </Syntax>
@@ -137,6 +168,22 @@ const raw: bytes = ("666f6f" as bytes);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=bytes
+// raw = from_ascii
+const raw : bytes = ("666f6f" : bytes)
+```
+
+> Note that both the `[%bytes ...]` and `(... : bytes)` syntaxes apply
+> only to *string literals*, not general expressions of type
+> `string`. In other words, the contents of the strings must be
+> available in-place at compile-time. (This actually reveals that
+> `("666f6f" : bytes)` is not really a cast, as casts are
+> non-operations.)
+
+</Syntax>
+
 ## Concatenating
 
 Two or more bytes can be concatenated.
@@ -155,6 +202,15 @@ let three : bytes = Bytes.concats [0x70; 0xAA; 0xFF]
 ```jsligo group=concatenating
 const two: bytes = Bytes.concat(0x70, 0xAA);
 const three: bytes = Bytes.concats([0x70, 0xAA, 0xFF]);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=concatenating
+const two : bytes = Bytes.concat (0x70, 0xAA)
+const three : bytes = Bytes.concats (list [0x70; 0xAA; 0xFF])
 ```
 
 </Syntax>
@@ -180,6 +236,14 @@ const len: nat = Bytes.length(0x0AFF); // len == 2n
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=sizing
+const len : nat = Bytes.length (0x0AFF) // len = 2n
+```
+
+</Syntax>
+
 ## Slicing
 
 Bytes can be extracted using the predefined function `Bytes.sub`. The
@@ -201,6 +265,15 @@ let slice = Bytes.sub 1n 2n large // sub = 0x3456
 ```jsligo group=slicing
 const large = 0x12345678;
 const slice = Bytes.sub(1n, 2n, large); // sub == 0x3456
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=slicing
+const large : bytes = 0x12345678
+const slice : bytes = Bytes.sub (1n, 2n, large) // sub = 0x3456
 ```
 
 </Syntax>
@@ -251,6 +324,27 @@ const shift_right: bytes = 0x0006 >> 1n; // 0x0003
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=bitwise
+// Bitwise "and"
+const b_and : bytes = Bitwise.@and (0x0005, 0x0106) // 0x0004
+
+// Bitwise "or"
+const b_or : bytes = Bitwise.@or (0x0005, 0x0106) // 0x0107
+
+// Bitwise "xor"
+const xor : bytes = Bitwise.xor (0x0005, 0x0106) // 0x0103
+
+// Bitwise "shift left"
+const shift_left : bytes = Bitwise.shift_left (0x06, 8n) // 0x0600
+
+// Bitwise "shift right"
+const shift_right : bytes = Bitwise.shift_right (0x0006, 1n) // 0x0003
+```
+
+</Syntax>
+
 ## Packing and unpacking
 
 As Michelson provides the instructions `PACK` and `UNPACK` for data
@@ -287,6 +381,17 @@ const id_string = (p: string) : option<string> => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=packing
+function id_string (const p : string) : option (string) is
+  block {
+    const packed : bytes = Bytes.pack (p)
+  } with (Bytes.unpack (packed) : option (string))
+```
+
+</Syntax>
+
 ## Cryptography
 
 One common use of bytes, beyond packing and unpacking, is
@@ -314,6 +419,18 @@ const sha256: bytes => bytes;
 const sha512: bytes => bytes;
 const sha3: bytes => bytes;
 const keccak: bytes => bytes;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+const blake2b : bytes -> bytes
+const sha256 : bytes -> bytes
+const sha512 : bytes -> bytes
+const sha3 : bytes -> bytes
+const keccak : bytes -> bytes
 ```
 
 </Syntax>

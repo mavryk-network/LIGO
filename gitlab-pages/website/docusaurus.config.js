@@ -37,6 +37,14 @@ const config = {
           path: "../docs",
           sidebarPath: require.resolve("./sidebars.js"),
           sidebarCollapsed: true,
+          // MAVRYK: serve the live docs/ as the sole version, labelled 1.8.0 (PascaLIGO restoration).
+          // The stale frozen 1.6.0 snapshot has been retired (versions.json emptied to []). The
+          // orphaned versioned_docs/version-1.6.0 tree can be deleted; to version again later run
+          // `yarn docusaurus docs:version <x.y.z>`.
+          lastVersion: "current",
+          versions: {
+            current: { label: "1.8.0", path: "" },
+          },
         },
         blog: {
           showReadingTime: true,
@@ -188,13 +196,17 @@ const config = {
         singleTheme: singleTheme,
       },
       algolia: {
+        // MAVRYK: PascaLIGO. Point DocSearch at the Mavryk-owned Algolia app + a freshly-crawled
+        // index of ligo.mavryk.org. Was the upstream ligolang.org app (M23OB8S3C8 / "ligolang"),
+        // whose records don't match this site's contextual facets -> "No results" for every query.
+        // Populate the index with: docker run … algolia/docsearch-scraper (see docsearch.config.json).
         // The application ID provided by Algolia
-        appId: "M23OB8S3C8",
+        appId: "61J4IJW6A0",
 
-        // Public API key: it is safe to commit it
-        apiKey: "bca633f86972382356a13c68b81de25f",
+        // Public API key (search-only): it is safe to commit it
+        apiKey: "d15a0a74fc99e1739ba9a4e8476f07c1",
 
-        indexName: "ligolang",
+        indexName: "ligo-mavryk",
 
         // Optional: see doc section below
         contextualSearch: true,

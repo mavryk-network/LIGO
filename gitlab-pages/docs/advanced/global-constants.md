@@ -66,6 +66,18 @@ let main = (_p : unit, s : int) : [list<operation>, int] =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=global_call
+const c : int -> int = Mavryk.constant ("expruCKsgmUZjC7k8NRcwbcGbFSuLHv5rUyApNd972MwArLuxEZQm2")
+
+[@entry]
+function main (const _p : unit; const s : int) : list (operation) * int is
+  ((nil : list (operation)), c (s))
+```
+
+</Syntax>
+
 Note that the constant's type needs to be annotated.
 
 When we compile a contract, we need to tell LIGO (and Michelson
@@ -85,6 +97,14 @@ ligo compile contract ./gitlab-pages/docs/advanced/src/global-constants/global_c
 
 ```shell
 ligo compile contract ./gitlab-pages/docs/advanced/src/global-constants/global_call.jsligo --constants "{ PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }"
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile contract ./gitlab-pages/docs/advanced/src/global-constants/global_call.ligo --constants "{ PUSH int 2 ; PUSH int 3 ; DIG 2 ; MUL ; ADD }"
 ```
 
 </Syntax>
@@ -154,6 +174,19 @@ const main = (p: string, s: int) : [list<operation>, int] =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=global_const
+function helper (const (s, x) : string * int) : int is
+  String.length (s) + x * 3 + 2
+
+[@entry]
+function main (const p : string; const s : int) : list (operation) * int is
+  ((nil : list (operation)), helper ((p, s)))
+```
+
+</Syntax>
+
 We want to turn the function `helper` into a global constant. The first
 step is to ask LIGO to compile the constant:
 
@@ -209,6 +242,32 @@ ligo compile constant jsligo "helper" --init-file ./gitlab-pages/docs/advanced/s
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile constant pascaligo "helper" --init-file ./gitlab-pages/docs/advanced/src/global-constants/global_const.ligo
+# Outputs:
+# Michelson constant as JSON string:
+# "{ UNPAIR ;\n  PUSH int 2 ;\n  PUSH int 3 ;\n  DIG 3 ;\n  MUL ;\n  DIG 2 ;\n  SIZE ;\n  ADD ;\n  ADD }"
+# This string can be passed in `--constants` argument when compiling a contract.
+# 
+# Remember to register it in the network, e.g.:
+# > mavryk-client register global constant "{ UNPAIR ;
+#   PUSH int 2 ;
+#   PUSH int 3 ;
+#   DIG 3 ;
+#   MUL ;
+#   DIG 2 ;
+#   SIZE ;
+#   ADD ;
+#   ADD }" from bootstrap1
+# 
+# Constant hash:
+# exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf
+```
+
+</Syntax>
+
 As we can see, the constant hash is:
 
 <Syntax syntax="cameligo">
@@ -220,6 +279,14 @@ exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf
 </Syntax>
 
 <Syntax syntax="jsligo">
+
+```
+exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
 
 ```
 exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf
@@ -246,6 +313,14 @@ references to `helper` by
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```
+(Mavryk.constant ("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf") : string * int -> int)
+```
+
+</Syntax>
+
 The new version of `global_call` looks as follows:
 
 <Syntax syntax="cameligo">
@@ -264,6 +339,16 @@ let main (p : string) (s : int) : operation list * int =
 @entry
 const main = (p: string, s: int) : [list<operation>, int] =>
   [ [], Mavryk.constant("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf")([p, s]) ];
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=global_call_2
+[@entry]
+function main (const p : string; const s : int) : list (operation) * int is
+  ((nil : list (operation)), ((Mavryk.constant ("exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf") : string * int -> int))((p, s)))
 ```
 
 </Syntax>
@@ -292,6 +377,16 @@ consisting of the string returned by `compile constant`:
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+<!-- NOTE: this snippet is not automatically extracted to consts_pascaligo.json, please update the file when modifying this snippet -->
+
+```
+["{ UNPAIR ;\n  PUSH int 2 ;\n  PUSH int 3 ;\n  DIG 3 ;\n  MUL ;\n  DIG 2 ;\n  SIZE ;\n  ADD ;\n  ADD }"]
+```
+
+</Syntax>
+
 We can compile the code using the `compile contract` sub-command,
 passing the file with constants in the flag `--file-constants`:
 
@@ -313,6 +408,20 @@ ligo compile contract ./gitlab-pages/docs/advanced/src/global-constants/global_c
 
 ```shell
 ligo compile contract ./gitlab-pages/docs/advanced/src/global-constants/global_call_2.jsligo --file-constants ./gitlab-pages/docs/advanced/src/global-constants/consts_jsligo.json
+# Outputs:
+# { parameter string ;
+#   storage int ;
+#   code { constant "exprv547Y7U5wKLbQGmkDU9Coh5tKPzvEJjyUed7px9yGt9nrkELXf" ;
+#          NIL operation ;
+#          PAIR } }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile contract ./gitlab-pages/docs/advanced/src/global-constants/global_call_2.ligo --file-constants ./gitlab-pages/docs/advanced/src/global-constants/consts_pascaligo.json
 # Outputs:
 # { parameter string ;
 #   storage int ;
@@ -390,6 +499,33 @@ const _test = () => {
 };
 
 const test = _test();
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=test_global
+module C is {
+  type storage is int
+  type parameter is unit
+
+  function f (const x : int) : int is x * 3 + 2
+
+  const ct : string = Test.register_constant (Test.eval (f))
+
+  [@entry]
+  function main (const _p : parameter; const store : storage) : list (operation) * storage is
+    block {
+      const cf : int -> int = Mavryk.constant (ct)
+    } with ((nil : list (operation)), cf (store))
+}
+
+const test_it = block {
+  const orig = Test.originate (contract_of C, 1, 0mumav);
+  const _r = Test.transfer_exn (orig.addr, Main (unit), 0mumav);
+  const s = Test.get_storage (orig.addr);
+} with assert (s = 5)
 ```
 
 </Syntax>

@@ -51,3 +51,24 @@ same file (this might be a bit counter-intuitive, but this is the
 convention).
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+PascaLIGO supports module aliases, that is, modules that work as
+synonyms of other (previously defined) modules. This feature can be
+useful if we implement a module using a previously defined one, but in
+the future, we might need to change it. For example, until 2025, the
+Bulgarian Lev is pegged to the euro currency:
+
+```pascaligo group=Lev
+module Euro is {
+  type t is nat
+  function add (const a : t; const b : t) : t is a + b
+  const one : t = 1n
+  const two : t = 2n
+}
+
+module Bulgarian_Lev is Euro
+```
+
+</Syntax>

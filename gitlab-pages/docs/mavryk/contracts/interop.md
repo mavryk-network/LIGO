@@ -97,6 +97,21 @@ type animal =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+You can use the attribute `[@layout comb]` to make this choice
+explicitly:
+
+```pascaligo
+type animal is
+[@layout comb]
+| Elephant of unit
+| Dog of unit
+| Cat of unit
+```
+
+</Syntax>
+
 <Syntax syntax="cameligo">
 
 The attribute `[@layout comb]` can also be used on record types:
@@ -128,6 +143,21 @@ type artist =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The attribute `[@layout comb]` can also be used on record types:
+
+```pascaligo
+type artist is
+  [@layout comb] record [
+  genre : string;
+  since : timestamp;
+  name : string
+]
+```
+
+</Syntax>
+
 The next section discusses an alternative layout, which used to be the
 default one until LIGO version 1.0.
 
@@ -148,6 +178,14 @@ type animal = Elephant | Dog | Cat
 
 ```jsligo group=orig
 type animal = | ["Elephant"] | ["Dog"] | ["Cat"];
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=orig
+type animal is Elephant of unit | Dog of unit | Cat of unit
 ```
 
 </Syntax>
@@ -188,6 +226,17 @@ type animal =
 | @annot("memory") ["Elephant"]
 | @annot("face") ["Dog"]
 | @annot("fish") ["Cat"]
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=annot
+type animal is
+| [@annot memory] Elephant of unit
+| [@annot face] Dog of unit
+| [@annot fish] Cat of unit
 ```
 
 </Syntax>
@@ -240,6 +289,25 @@ interoperability features, which we will we discuss next.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The attribute `[@annot <name>]` can also be used on record field
+annotations:
+
+```pascaligo group=annot
+type artist is record [
+  [@annot style] genre : string;
+  [@annot from] since : timestamp;
+  [@annot performer] name : string
+]
+```
+
+If the `[@layout comb]` and `[@annot <name>]` attributes are not
+adequate enough for your use-case, LIGO has more advanced advanced
+interoperability features, which we will we discuss next.
+
+</Syntax>
+
 ## Advanced interoperability with Michelson
 
 To interoperate with existing Michelson code or to be compatible with
@@ -287,6 +355,17 @@ type z_or = michelson_or<[unit, "z", y_or, "other"]>;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo
+type w_and_v is michelson_pair (int, "w", nat, "v")
+type x_and is michelson_pair (string, "x", w_and_v, "other")
+type y_or is michelson_or (unit, "y", x_and, "other")
+type z_or is michelson_or (unit, "z", y_or, "other")
+```
+
+</Syntax>
+
 If you do not want to inject a Michelson annotation, the you simply
 provide an empty string.
 
@@ -325,6 +404,21 @@ let y : z_or = M_right(y_1);
 let x_pair = ["foo", [2, 3n]];
 let x_1 : y_or = M_right (x_pair);
 let x : z_or = M_right (y_1);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+const z : z_or = (M_left (unit) : z_or)
+
+const y_1 : y_or = (M_left (unit) : y_or)
+const y : z_or = (M_right (y_1) : z_or)
+
+const x_pair : x_and = ("foo", (2, 3n))
+const x_1 : y_or = (M_right (x_pair) : y_or)
+const x : z_or = (M_right (y_1) : z_or)
 ```
 
 </Syntax>
@@ -445,6 +539,65 @@ const make_abstract_record =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=helper_functions
+type z_to_v is
+  Z of unit
+| Y of unit
+| X of unit
+| W of unit
+| V of unit
+
+type w_or_v is michelson_or (unit, "w", unit, "v")
+type x_or is michelson_or (unit, "x", w_or_v, "other")
+type y_or is michelson_or (unit, "y", x_or, "other")
+type z_or is michelson_or (unit, "z", y_or, "other")
+
+type test is record [
+  z : string;
+  y : int;
+  x : string;
+  w : bool;
+  v : int
+]
+
+function make_concrete_sum (const r : z_to_v) : z_or is
+  case r of [
+    Z (_u) -> (M_left (unit) : z_or)
+  | Y (_u) -> (M_right (M_left (unit)) : z_or)
+  | X (_u) -> (M_right (M_right (M_left (unit))) : z_or)
+  | W (_u) -> (M_right (M_right (M_right (M_left (unit)))) : z_or)
+  | V (_u) -> (M_right (M_right (M_right (M_right (unit)))) : z_or)
+  ]
+
+function make_concrete_record (const r : test) : string * int * string * bool * int is
+  (r.z, r.y, r.x, r.w, r.v)
+
+function make_abstract_sum (const zv : z_or) : z_to_v is
+  case zv of [
+    M_left (_n) -> Z (unit)
+  | M_right (yv) ->
+      case yv of [
+        M_left (_n) -> Y (unit)
+      | M_right (xv) ->
+          case xv of [
+            M_left (_n) -> X (unit)
+          | M_right (wv) ->
+              case wv of [
+                M_left (_n) -> W (unit)
+              | M_right (_n) -> V (unit)
+              ]
+          ]
+      ]
+  ]
+
+function make_abstract_record (const z : string; const y : int; const x : string; const w : bool; const v : int) : test is
+  record [ z = z; y = y; x = x; w = w; v = v ]
+```
+
+</Syntax>
+
 
 ## Entrypoints and annotations
 
@@ -478,6 +631,20 @@ const left = (i: int, x: storage) : [list<operation>, storage] =>
 @entry
 const right = (i: int, x: storage) : [list<operation>, storage] =>
   [[], x + i]
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=entrypoints_and_annotations
+type storage is int
+
+[@entry] function left (const i : int; const x : storage) : list (operation) * storage is
+  ((nil : list (operation)), x - i)
+
+[@entry] function right (const i : int; const x : storage) : list (operation) * storage is
+  ((nil : list (operation)), x + i)
 ```
 
 </Syntax>
@@ -520,6 +687,26 @@ let main = (p: parameter, x: storage): [list<operation>, storage] =>
    }
   ];
 
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+type storage is int
+
+type parameter is
+ | Left of int
+ | Right of int
+
+[@entry]
+function main (const p : parameter; const x : storage) : list (operation) * storage is
+  ((nil : list (operation)),
+   case p of [
+     Left (i) -> x - i
+   | Right (i) -> x + i
+   ])
 ```
 
 </Syntax>
@@ -567,6 +754,28 @@ const main = (p: parameter, s: storage): [list<operation>, storage] => {
     [Mavryk.transaction(Left(2), 2mumav, contract)],
     s];
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=get_entrypoint_opt
+type storage is int
+
+type parameter is int
+
+type x is Left of int
+
+[@entry]
+function main (const p : parameter; const s : storage) : list (operation) * storage is
+  block {
+    const contract : contract (x) =
+      case Mavryk.get_entrypoint_opt ("%left", ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)) of [
+        Some (c) -> c
+      | None -> (failwith ("contract does not match") : contract (x))
+      ]
+  } with (list [Mavryk.transaction (Left (2), 2mumav, contract)], s)
 ```
 
 </Syntax>

@@ -36,3 +36,24 @@ The decorator is `@view` and placed just before a function, like the
 `@entry` decorator, for example.
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+The attribute is `[@view]` and placed just before a function, like the
+`[@entry]` attribute, for example.
+
+```pascaligo group=view
+type storage is int
+
+[@view]
+function add (const param : int; const s : storage) : int is param + s
+
+[@view]
+function get_storage (const _p : int; const s : storage) : int is s
+
+[@entry]
+function main (const _u : unit; const s : storage) : list (operation) * storage is
+  ((nil : list (operation)), s)
+```
+
+</Syntax>

@@ -8,7 +8,10 @@ module Loc = Simple_utils.Location
 module Region = Simple_utils.Region
 
 type syntax_node =
-  (Cst_cameligo.Fold.some_node, Cst_jsligo.Fold.some_node) Dialect_cst.dialect
+  ( Cst_cameligo.Fold.some_node
+  , Cst_jsligo.Fold.some_node
+  , Cst_pascaligo.Fold.some_node (* MAVRYK: PascaLIGO *) )
+  Dialect_cst.dialect
 
 (** Checks that the given CST node is located inside the given range. *)
 let is_node_in_range (selection_range : Range.t)
@@ -29,6 +32,14 @@ let is_node_in_range (selection_range : Range.t)
           | _ -> None)
     ; jsligo =
         (let open Cst_jsligo.Fold in
+        fun (Some_node (value, sing)) ->
+          match sing, value with
+          | S_reg _, reg -> Some (get_fold_control reg.region)
+          | S_wrap _, wrap -> Some (get_fold_control wrap#region)
+          | _ -> None)
+    ; (* MAVRYK: PascaLIGO *)
+      pascaligo =
+        (let open Cst_pascaligo.Fold in
         fun (Some_node (value, sing)) ->
           match sing, value with
           | S_reg _, reg -> Some (get_fold_control reg.region)
@@ -363,6 +374,13 @@ let provide_inlay_hint_info
       ~parse_error_ranges
       selection_range
       cst
+  (* MAVRYK: PascaLIGO. Inlay hints deferred; provide an empty info. *)
+  | PascaLIGO _cst ->
+    { fun_defs = Location.Map.empty
+    ; ban_defs = []
+    ; need_par_defs = Range_set.empty
+    ; banned_in_core = []
+    }
 
 (** In most cases we want to display hints right next to the definition.
     However, for function definitions it's not true.

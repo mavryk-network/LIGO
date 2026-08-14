@@ -92,3 +92,25 @@ mandatory, and how we added `twenty`, even it is not found in any of
 the inherited signatures.
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+Like modules, signatures can be extended by including another.
+
+```pascaligo group=sig_including
+module type Euro_SIG is sig
+  type t
+  const add : t * t -> t
+  const one : t
+  const two : t
+end
+
+module type NewEuro_SIG is sig
+  include Euro_SIG
+  const ten : t
+end
+```
+
+Note how the type `t` remains abstract in `NewEuro_SIG`.
+
+</Syntax>

@@ -96,7 +96,7 @@ let to_typescript_path (path : string) : string option =
   let base_name, ext_opt = Filename.split_extension absolute_path in
   match%bind Syntax.of_ext_opt ext_opt with
   | JsLIGO -> return base_name
-  | CameLIGO -> None
+  | CameLIGO | PascaLIGO -> None (* MAVRYK: PascaLIGO *)
 
 
 let comments_to_doc : string list -> document option = function

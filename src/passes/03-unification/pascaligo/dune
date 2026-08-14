@@ -1,0 +1,12 @@
+(library
+ (name unification_pascaligo)
+ (public_name ligo.unification.pascaligo)
+ (libraries
+  unification_shared
+  simple-utils
+  ligo.mavryk-utils
+  cst
+  parsing
+  ast_unified
+  predefined
+  core_kernel.nonempty_list))

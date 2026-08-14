@@ -40,3 +40,21 @@ const size = <elt>(list: List.t<elt>) : nat => List.length(list);
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+The attribute `[@inline]` on a function definition informs the
+compiler that we that the code of said function must be inlined
+wherever it is called. This enables some optimisations, possibly at
+the expense of a larger compiled code. Benchmarks and profiling help
+decide whether a function should be inlined or not.
+
+Inlining also make it cheap to create aliases of functions. For
+example:
+
+```pascaligo group=inline
+[@inline]
+function size <elt> (const l : List.t (elt)) : nat is List.length (l)
+```
+
+</Syntax>

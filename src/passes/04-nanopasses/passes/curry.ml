@@ -119,14 +119,39 @@ let fun_return_types parameters ret_type : (_ Types.Param.t * ty_expr option) li
   the parameter will be bound to [body] using a let in construction. *)
 let compile_curry ~raise ~loc recursive_opt parameters ret_type body =
   let push_within, body' = map_nested_type_abstraction_result body in
-  let nested_lambda_data =
+  (* MAVRYK: PascaLIGO. 0.60 PascaLIGO functions are uncurried, so a reassigned
+     `var` parameter lives in one flat scope. The currying fold below nests each
+     parameter inside the lambdas of the parameters that follow it, so a `var`
+     (Mutable) parameter that is not the last would be captured by those inner
+     lambdas — which the typechecker rejects ("invalid capture of mutable
+     variable"). Restore the 0.60 semantics: bind every Mutable parameter to a
+     fresh *immutable* lambda argument and re-introduce the original name as an
+     innermost `let mut`, so it is never captured. The redundant copy is
+     optimised away (Michelson-neutral for functions that already compiled). *)
+  let nested_lambda_data, mut_rebinds =
     let param_data = fun_return_types parameters ret_type in
     List.map param_data ~f:(fun ({ param_kind; pattern }, ret_type) ->
         let param_type, v_opt = get_var_or_ty_pattern pattern in
         match v_opt with
         | Some v ->
-          let binder = Param.make ~mut_flag:(mut_flag param_kind) v param_type in
-          binder, ret_type, None
+          (match mut_flag param_kind with
+          | Param.Mutable ->
+            let fresh = Variable.fresh ~loc:Location.generated () in
+            let rebind inner =
+              make_e
+                ~loc
+                (E_let_mut_in
+                   { is_rec = false
+                   ; type_params = None
+                   ; lhs = Nonempty_list.[ p_var ~loc v ]
+                   ; rhs_type = None
+                   ; rhs = e_variable ~loc:Location.generated fresh
+                   ; body = inner
+                   })
+            in
+            (Param.make ~mut_flag:Immutable fresh param_type, ret_type, None), Some rebind
+          | Param.Immutable ->
+            (Param.make ~mut_flag:Immutable v param_type, ret_type, None), None)
         | None ->
           let fresh_binder = Variable.fresh ~loc:Location.generated () in
           (* REMITODO : inspect param_kind to know if e_simple_let_in or e_let_mut_in *)
@@ -139,7 +164,12 @@ let compile_curry ~raise ~loc recursive_opt parameters ret_type body =
               }
           in
           let binder = Param.make ~mut_flag:Immutable fresh_binder param_type in
-          binder, ret_type, Some prelude)
+          (binder, ret_type, Some prelude), None)
+    |> List.unzip
+  in
+  (* Wrap the innermost body with the mutable-parameter rebinds (see above). *)
+  let body' =
+    List.fold (List.filter_opt mut_rebinds) ~init:body' ~f:(fun acc f -> f acc)
   in
   let mk_lambda (binder, ret_type, prelude_opt) acc =
     let result = Option.value_map prelude_opt ~default:acc ~f:(fun f -> f acc) in

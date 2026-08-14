@@ -10,5 +10,7 @@
  (deps
   (alias simple/cameligo/runtest)
   (alias simple/jsligo/runtest)
+  (alias simple/pascaligo/runtest)
   (alias fuzzing/cameligo/runtest)
-  (alias fuzzing/jsligo/runtest)))
+  (alias fuzzing/jsligo/runtest)
+  (alias fuzzing/pascaligo/runtest)))

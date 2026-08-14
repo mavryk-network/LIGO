@@ -42,6 +42,21 @@ entrypoint, the call results in an type checking error.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `Mavryk.self (entrypoint)` is the address of the current smart
+contract, that is, the smart contract containing the call. For the
+address of the smart contract actually *executing* the call, because
+it is embedded in a lambda sent to another smart contract, use
+`Mavryk.get_self_address` instead. The string `entrypoint` is the name
+of a valid entrypoint such that `entrypoint` is not `"%default"`, or
+the empty string denoting the `"%default"` entrypoint (which is the
+root of the smart contract parameter if no `"%default"` entrypoint is
+explicitly defined). If the contract does not have the specified
+entrypoint, the call results in an type checking error.
+
+</Syntax>
+
 Naming convention: if you are using entrypoints, use `"%bar"` to
 denote the constructor `"Bar"` of the parameter, in turn corresponding
 to the entrypoint function `bar`. If you are not using entrypoints:
@@ -59,6 +74,14 @@ let check () = Mavryk.self("%default")
 
 ```jsligo group=self
 let check = () => Mavryk.self("%default");
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=self
+function check (const _u : unit) : contract (unit) is Mavryk.self ("%default")
 ```
 
 </Syntax>
@@ -88,6 +111,14 @@ const current_addr : address = Mavryk.get_self_address();
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=address
+const current_addr : address = Mavryk.get_self_address ()
+```
+
+</Syntax>
+
 ### Sender
 
 The *sender* is the address of the contract (that is, a smart contract
@@ -111,6 +142,14 @@ const sender: address = Mavryk.get_sender();
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=sender
+const sender : address = Mavryk.get_sender ()
+```
+
+</Syntax>
+
 ### Source
 
 The *source* is the address of the implicit account that initiated the
@@ -129,6 +168,14 @@ let source : address = Mavryk.get_source ()
 
 ```jsligo group=source
 const source: address = Mavryk.get_source();
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=source
+const source : address = Mavryk.get_source ()
 ```
 
 </Syntax>

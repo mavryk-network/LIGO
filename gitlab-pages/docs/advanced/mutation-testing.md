@@ -32,6 +32,14 @@ const twice = (x: int) => x + x;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=twice
+function twice (const x : int) : int is x + x
+```
+
+</Syntax>
+
 Assume that we want to make sure that this function works as expected,
 because it will be used as part of a major development. We could write
 the following tests:
@@ -62,6 +70,21 @@ const simple_tests = (f : ((input: int) => int)) : unit => {
 };
 
 const test = simple_tests(twice);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=twice
+function simple_tests (const f : int -> int) : unit is block {
+  // Test 1
+  const _t1 = assert (Test.michelson_equal (Test.run (f, 0), Test.eval (0)));
+  // Test 2
+  const _t2 = assert (Test.michelson_equal (Test.run (f, 2), Test.eval (4)))
+} with unit
+
+const test = simple_tests (twice)
 ```
 
 </Syntax>
@@ -114,6 +137,14 @@ const twice = (x: int): int => x * x;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=frontpage
+function twice (const x : int) : int is x * x
+```
+
+</Syntax>
+
 And, in fact, when we run `simple_tests` on this faulty
 implementation, we will see that it also passes the tests.
 
@@ -145,6 +176,15 @@ val Test.mutation_test : 'a -> ('a -> 'b) -> ('b * mutation) option
 
 ```jsligo skip
 val Test.mutation_test : (value: 'a, tester: ('a -> 'b)) => option <['b, mutation]>
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+(* Test.mutation_test *)
+const mutation_test : 'a * ('a -> 'b) -> option ('b * mutation) = Test.mutation_test
 ```
 
 </Syntax>
@@ -188,6 +228,21 @@ const test_mutation =
       Test.println("Some mutation also passes the tests! ^^")
     }
   };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+const test_mutation =
+  case Test.mutation_test (twice, simple_tests) of [
+    None -> unit
+  | Some (_, mutation) ->
+      block {
+        const _l = Test.log (mutation)
+      } with Test.println ("Some mutation also passes the tests! ^^")
+  ]
 ```
 
 </Syntax>
@@ -274,6 +329,21 @@ const simple_tests = (f : ((input: int) => int)) : unit => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+function simple_tests (const f : int -> int) : unit is block {
+  // Test 1
+  const _t1 = assert (Test.michelson_equal (Test.run (f, 0), Test.eval (0)));
+  // Test 2
+  const _t2 = assert (Test.michelson_equal (Test.run (f, 2), Test.eval (4)));
+  // Test 3
+  const _t3 = assert (Test.michelson_equal (Test.run (f, 1), Test.eval (2)))
+} with unit
+```
+
+</Syntax>
+
 this verifies that when input `1` is given, output `2` is returned.
 Running the mutation testing again after this adjustment, no mutation
 (among those tried) will pass the tests, giving extra confidence in
@@ -339,6 +409,23 @@ export namespace C {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=mutation-contract
+// This is mutation-contract.ligo
+module C is {
+  type storage is int
+
+  // Two entrypoints
+  [@entry] function add (const delta : int; const store : storage) : list (operation) * storage is
+    ((nil : list (operation)), store + delta)
+  [@entry] function sub (const delta : int; const store : storage) : list (operation) * storage is
+    ((nil : list (operation)), store - delta)
+}
+```
+
+</Syntax>
+
 Doing mutation testing on a contract with multiple entrypoints can
 help in finding out entrypoints that are not covered by the tests.
 
@@ -392,6 +479,29 @@ const test_original = (() => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=mutation-contract-test
+// This is mutation-contract-test.ligo
+
+#import "gitlab-pages/docs/advanced/src/mutation-testing/mutation-contract.ligo" "MutationContract"
+
+type storage is MutationContract.C.storage
+type param is parameter_of MutationContract.C
+const initial_storage = 7
+
+function tester (const taddr : typed_address (param, storage); const _c : michelson_contract (param, storage); const _i : int) : unit is
+  block {
+    const _t = Test.transfer_exn (taddr, Add (7), 1mumav)
+  } with assert (Test.get_storage (taddr) = initial_storage + 7)
+
+const test_original = block {
+  const orig = Test.originate (contract_of MutationContract.C, initial_storage, 0mav)
+} with tester (orig.addr, orig.code, orig.size)
+```
+
+</Syntax>
+
 For performing mutation testing as before, we write the following test:
 
 <Syntax syntax="cameligo">
@@ -424,6 +534,24 @@ const test_mutation =
       let _p = Test.println("A mutation of the contract still passes the tests!");
     }
   };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+const test_mutation =
+  case Test.originate_module_and_mutate (contract_of MutationContract.C, initial_storage, 0mav, tester) of [
+    None -> unit
+  | Some (_, mutation) ->
+      block {
+        // In a real program, one would write `failwith "A mutation passes"`
+        // Since we want to demonstrate the issue without an actual error
+        // a milder println is used in this document.
+        const _l = Test.log (mutation)
+      } with Test.println ("A mutation of the contract still passes the tests!")
+  ]
 ```
 
 </Syntax>
@@ -507,6 +635,19 @@ const tester_add_and_sub = (taddr : typed_address<param, storage>, _c : michelso
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=mutation-contract-test
+function tester_add_and_sub (const taddr : typed_address (param, storage); const _c : michelson_contract (param, storage); const _i : int) : unit is
+  block {
+    const _t1 = Test.transfer_exn (taddr, Add (7), 1mumav);
+    const _a = assert (Test.get_storage (taddr) = initial_storage + 7);
+    const _t2 = Test.transfer_exn (taddr, Sub (3), 1mumav)
+  } with assert (Test.get_storage (taddr) = initial_storage + 4)
+```
+
+</Syntax>
+
 Running the updated test, we see that this time no mutation on `sub`
 will give the same result.
 
@@ -531,6 +672,20 @@ Test.originate_and_mutate_all : (('param, 'storage) module_contract) -> 'storage
 ```jsligo skip
 Test.mutation_test_all : (value: 'a, tester: ('a -> 'b)) => list <['b, mutation]>;
 Test.originate_and_mutate_all : (contract: module_contract<'p, 's>, init: 's, balance: mav, (tester: (originated_address: typed_address<'p, 's>, code: michelson_contract<'p, 's>, size: int) => 'b)) => list<['b, mutation]>
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+(* Test.mutation_test_all *)
+const mutation_test_all : 'a * ('a -> 'b) -> list ('b * mutation) = Test.mutation_test_all
+(* Test.originate_and_mutate_all *)
+const originate_and_mutate_all :
+  module_contract ('p, 's) * 's * mav *
+  (typed_address ('p, 's) -> michelson_contract ('p, 's) -> int -> 'b) ->
+  list ('b * mutation) = Test.originate_and_mutate_all
 ```
 
 </Syntax>
@@ -574,6 +729,25 @@ const test_mutation_all =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+const test_mutation_all =
+  case Test.originate_and_mutate_all (contract_of MutationContract.C, initial_storage, 0mav, tester_add_and_sub) of [
+    nil -> unit
+  | ms -> block {
+      for m in list ms {
+        const (_, mutation) = m;
+        const path = Test.save_mutation (".", mutation);
+        const _l = Test.log ("saved at:");
+        const _p = Test.log (path)
+      }
+    } with Test.println ("Some mutations also pass the tests!")
+  ]
+```
+
+</Syntax>
+
 In this case, the list of mutants is processed by saving each mutant
 to a file with the help of:
 
@@ -589,6 +763,15 @@ Test.save_mutation : string -> mutation -> string option
 
 ```jsligo skip
 Test.save_mutation : (path: string, mutation: mutation) => option <string>
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+(* Test.save_mutation *)
+const save_mutation : string * mutation -> option (string) = Test.save_mutation
 ```
 
 </Syntax>
@@ -650,6 +833,33 @@ const add = (delta : int, store : storage) : result => {
 const sub = (delta : int, store : storage) : result => {
   return [[], store - delta];
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+In some cases, it might be a good idea to prevent mutation in certain
+places. A good example of this can be an assertion that is checking
+some invariant. To prevent such mutations, the attribute
+`@no_mutation` can be used:
+
+```pascaligo test-ligo group=no_mutation
+// This is mutation-contract.ligo
+type storage is int
+
+type result is list (operation) * storage
+
+// Two entrypoints
+[@entry]
+function add (const delta : int; const store : storage) : result is
+  block {
+    [@no_mutation] const _u = assert (0 = 0)
+  } with ((nil : list (operation)), store + delta)
+
+[@entry] [@no_mutation]
+function sub (const delta : int; const store : storage) : result is
+  ((nil : list (operation)), store - delta)
 ```
 
 </Syntax>

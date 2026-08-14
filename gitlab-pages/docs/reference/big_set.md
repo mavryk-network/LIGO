@@ -16,6 +16,9 @@ type &#39;elt t = (&#39;elt, unit) big&#95;map
 <SyntaxTitle syntax="jsligo">
 type t&lt;elt&gt; = big&#95;map&lt;elt, unit&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type t (elt) is big&#95;map (elt, unit)
+</SyntaxTitle>
 <Syntax syntax="cameligo">
 
 The type of the big sets is based on `big_map`.
@@ -28,12 +31,21 @@ The type of the big sets is based on `big_map`.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The type of the big sets is based on `big_map`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val empty : &#39;elt.&#39;elt t
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let empty: &lt;elt&gt;t&lt;elt&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const empty : t (elt)
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -43,12 +55,23 @@ The value `empty` denotes the empty big set. In some contexts,
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The value `empty` denotes the empty big set. In some contexts,
+    it is useful to annotate it with its type, for example:
+    `(empty : Big_set.t (int))`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val update : &#39;elt.&#39;elt -&gt; bool -&gt; &#39;elt t -&gt; &#39;elt t
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let update: &lt;elt&gt;(&#95;: elt) =&gt; (&#95;: bool) =&gt; (&#95;: t&lt;elt&gt;) =&gt; t&lt;elt&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const update : elt -&gt; bool -&gt; t (elt) -&gt; t (elt)
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -67,12 +90,24 @@ The call `update(elt, true, set)` is a copy of the big set `set`
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `update (elt, true, set)` is a copy of the big set `set`
+    containing the element `elt`. The call `update (elt, false, set)`
+    is a copy of the big set `set` where the element `elt` is
+    absent.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val add : &#39;elt.&#39;elt -&gt; &#39;elt t -&gt; &#39;elt t
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let add: &lt;elt&gt;(&#95;: elt) =&gt; (&#95;: t&lt;elt&gt;) =&gt; t&lt;elt&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const add : elt -&gt; t (elt) -&gt; t (elt)
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -88,12 +123,22 @@ The call `add(elt, set)` is a big set containing all the elements
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `add (elt, set)` is a big set containing all the elements
+    of the big set `set`, plus the element `elt`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val remove : &#39;elt.&#39;elt -&gt; &#39;elt t -&gt; &#39;elt t
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let remove: &lt;elt&gt;(&#95;: elt) =&gt; (&#95;: t&lt;elt&gt;) =&gt; t&lt;elt&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const remove : elt -&gt; t (elt) -&gt; t (elt)
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -109,12 +154,22 @@ The call `remove(elt, set)` is a copy of the set `set` without the
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `remove (elt, set)` is a copy of the set `set` without the
+    element `elt`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val literal : &#39;elt.&#39;elt list -&gt; &#39;elt t
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let literal: &lt;elt&gt;(&#95;: list&lt;elt&gt;) =&gt; t&lt;elt&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const literal : list (elt) -&gt; t (elt)
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -132,12 +187,23 @@ The call `literal([e1, ..., en])` is a big set containing
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `literal (list [e1; ...; en])` is a big set containing
+    exactly the elements in the list. Note: The list must be literal,
+    not an expression (compile-time list of values).
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val of&#95;list : &#39;elt.&#39;elt list -&gt; &#39;elt t
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let of&#95;list: &lt;elt&gt;(&#95;: list&lt;elt&gt;) =&gt; t&lt;elt&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const of&#95;list : list (elt) -&gt; t (elt)
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -157,12 +223,24 @@ The call `of_list(elements)` is a big set containing exactly the
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `of_list (elements)` is a big set containing exactly the
+    elements in the list `elements`. Note: Use `literal` instead if
+    using a literal list. Note: Use `literal` instead if using a
+    literal list.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val mem : &#39;elt.&#39;elt -&gt; &#39;elt t -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let mem: &lt;elt&gt;(&#95;: elt) =&gt; (&#95;: t&lt;elt&gt;) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const mem : elt -&gt; t (elt) -&gt; bool
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -174,6 +252,13 @@ The call `mem elt set` is `true` if, and only if, the element
 <Syntax syntax="jsligo">
 
 The call `mem(elt, set)` is `true` if, and only if, the element
+    `elt` belongs to the big set `set`.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The call `mem (elt, set)` is `true` if, and only if, the element
     `elt` belongs to the big set `set`.
 
 </Syntax>

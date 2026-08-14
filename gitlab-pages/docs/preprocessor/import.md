@@ -81,3 +81,39 @@ const tip = (s : storage) : storage =>
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+Modules get more handy when they can be made from a file, separate
+from our own program, like a library: when we *import* a module from
+such a file, we automatically obtain a module encapsulating all the
+definitions in it. This will become very handy for organising large
+contracts, as we can divide it into different files, and the module
+system keeps the naming space clean (no need for name mangling).
+
+Generally, we will take a set of definitions that can be naturally
+grouped by functionality, and put them together in a separate
+file. For example, we can create a file `euro.ligo`:
+
+```pascaligo group=module_imports
+type t is nat
+
+function add (const a : t; const b : t) : t is a + b
+
+const one : t = 1n
+const two : t = 2n
+```
+
+In another file, we can import `euro.ligo` as a module, and use its
+definitions. For example, we can create a `main.ligo` that imports
+all definitions from `euro.ligo` as the module `Euro`:
+
+```pascaligo group=main_importer
+#import "gitlab-pages/docs/modules/src/euro.ligo" "Euro"
+
+type storage is Euro.t
+
+function tip (const s : storage) : storage is Euro.add (s, Euro.one)
+```
+
+</Syntax>

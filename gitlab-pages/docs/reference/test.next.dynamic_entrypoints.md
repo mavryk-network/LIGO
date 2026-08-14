@@ -22,3 +22,12 @@ val storage :
 <SyntaxTitle syntax="jsligo">
 let storage: &lt;p, s, s2&gt;(&#95;: module&#95;contract&lt;p, s&gt;, s: s2) =&gt; &#123; dynamic&#95;entrypoints: dynamic&#95;entrypoints; storage: s2 &#125;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const storage :
+  module&#95;contract (p, s) -&gt;
+  s2 -&gt;
+  record [
+   dynamic&#95;entrypoints : dynamic&#95;entrypoints;
+   storage : s2
+  ]
+</SyntaxTitle>

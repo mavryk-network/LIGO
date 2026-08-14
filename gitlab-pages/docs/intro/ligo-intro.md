@@ -42,6 +42,22 @@ Even if LIGO currently offers **two syntaxes**, you'll need to **choose only one
   let store_hello (delta : int) (store : storage) : operation list * storage = [], "Hello"
 ```
 
+  - **PascaLIGO** is designed for developers with a background in
+    imperative and procedural languages, in particular
+    [Pascal](https://en.wikipedia.org/wiki/Pascal_(programming_language)). A
+    block-structured syntax with familiar constructs like `function`, `var`
+    and `begin`/`end` makes it approachable if you already know Ada,
+    Modula-2, or Pascal itself.
+
+
+```pascaligo
+  type storage is string
+
+  [@entry]
+  function store_hello (const delta : int; const store : storage) : list (operation) * storage is
+    ((nil : list (operation)), "Hello")
+```
+
 A significant advantage of the multi-syntax feature is to share knowledge, toolings, and [modules](https://ligo.mavryk.org/docs/language-basics/modules) (like [libraries](https://ligo.mavryk.org/docs/advanced/package-management) onto [registry](https://packages.ligo.mavryk.org/packages)) in a larger community.
 
 ### LIGO, designed to be cost-effective

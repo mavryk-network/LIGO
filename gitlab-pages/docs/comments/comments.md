@@ -39,6 +39,23 @@ comments are valid.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+PascaLIGO features block comments delimited the same way as those of
+OCaml, and they can likewise be nested:
+
+```pascaligo group=comments
+(* This is a block comment
+   (* and one "nested" *)*)
+```
+
+The contents of comments are scanned, and therefore strings and
+comments in comments, like `"nested"` and `(* and one "nested" *)`,
+need to be valid (properly closed). This enables commenting out a
+random piece of contract that may already contain comments. The
+downside is that you can only comment code or text whose strings and
+comments are valid.
+</Syntax>
+
 LIGO also offers *single line comments* à la JavaScript:
 
 <Syntax syntax="cameligo">
@@ -52,6 +69,13 @@ let x = 10 // This is a single line comment
 
 ```jsligo group=comments
 const x = 10; // This is a single line comment
+```
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=comments
+const x : int = 10 // This is a single line comment
 ```
 </Syntax>
 

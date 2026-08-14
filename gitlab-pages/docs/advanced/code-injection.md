@@ -38,6 +38,15 @@ const michelson_add = n =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function michelson_add (const n : nat * nat) : nat is
+  ([%Michelson ({| { UNPAIR ; ADD } |} : nat * nat -> nat)]) (n)
+```
+
+</Syntax>
+
 Note that the type annotation is required, because the embedded Michelson code
 is not type checked by LIGO. This assumes that the given type is correct.
 
@@ -69,6 +78,16 @@ ligo compile expression cameligo "[%Michelson ({| { PUSH nat 42; DROP ; PUSH nat
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile expression pascaligo "[%Michelson ({| { PUSH nat 42; DROP ; PUSH nat 1; ADD } |} : nat -> nat)]"
+# Outputs:
+# { PUSH nat 42 ; DROP ; PUSH nat 1 ; ADD }
+```
+
+</Syntax>
+
 As we can see, the embedded Michelson code was not modified. However,
 if the resulting function is applied, then the embedded Michelson code
 could be modified/optimised by the compiler. To exemplify this
@@ -80,6 +99,16 @@ removed by LIGO because they have no effect on the final result.
 
 ```shell
 ligo compile expression cameligo "fun n -> [%Michelson ({| { PUSH nat 42; DROP ; PUSH nat 1; ADD } |} : nat -> nat)] n"
+# Outputs:
+# { PUSH nat 1 ; ADD }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile expression pascaligo "function (const n : nat) : nat is ([%Michelson ({| { PUSH nat 42; DROP ; PUSH nat 1; ADD } |} : nat -> nat)]) (n)"
 # Outputs:
 # { PUSH nat 1 ; ADD }
 ```
@@ -139,6 +168,26 @@ function main (action: parameter, store: storage) : [list<operation>, storage] {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=never
+type parameter is
+  Increment of int
+| Extend of never
+
+type storage is int
+
+[@entry]
+function main (const action : parameter; const store : storage) : list (operation) * storage is
+  ((nil : list (operation)),
+   case action of [
+     Increment (n) -> store + n
+   | Extend (k) -> ([%Michelson ({| { NEVER } |} : never -> int)]) (k)
+   ])
+```
+
+</Syntax>
+
 Assuming we have saved those contents in a file with name `never`, we
 can compile it using the following command:
 
@@ -146,6 +195,14 @@ can compile it using the following command:
 
 ```shell
 ligo compile contract --protocol atlas --disable-michelson-typechecking gitlab-pages/docs/advanced/src/code-injection/never.mligo
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo compile contract --protocol atlas --disable-michelson-typechecking gitlab-pages/docs/advanced/src/code-injection/never.ligo
 ```
 
 </Syntax>

@@ -34,6 +34,14 @@ const today: timestamp = Mavryk.get_now();
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a
+const today : timestamp = Mavryk.get_now ()
+```
+
+</Syntax>
+
 
 > When running code, the LIGO CLI option `--now`
 > allows you to control what `Mavryk.get_now` returns.
@@ -70,6 +78,18 @@ const one_day_later: timestamp = some_date + one_day;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b
+const today : timestamp = Mavryk.get_now ()
+const one_day : int = 86_400
+const in_24_hrs : timestamp = today + one_day
+const some_date : timestamp = ("2000-01-01t10:10:10Z" : timestamp)
+const one_day_later : timestamp = some_date + one_day
+```
+
+</Syntax>
+
 
 #### 24 hours Ago
 
@@ -90,6 +110,16 @@ let in_24_hrs : timestamp = today - one_day
 const today: timestamp = Mavryk.get_now();
 const one_day: int = 86400;
 const in_24_hrs: timestamp = today - one_day;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+const today : timestamp = Mavryk.get_now ()
+const one_day : int = 86400
+const in_24_hrs : timestamp = today - one_day
 ```
 
 </Syntax>
@@ -118,6 +148,16 @@ const secs_until_some_date: int = some_date - today;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=g
+const today : timestamp = Mavryk.get_now ()
+const some_date : timestamp = ("2035-01-01t10:10:10Z" : timestamp)
+const secs_until_some_date : int = some_date - today
+```
+
+</Syntax>
+
 Notice that the result of such subtraction is an `int`, which describes the difference in seconds between the two timestamps.
 
 ### Comparing Timestamps
@@ -138,6 +178,14 @@ let not_tomorrow : bool = (Mavryk.get_now () = in_24_hrs)
 
 ```jsligo group=c
 const not_tomorrow: bool = (Mavryk.get_now() == in_24_hrs);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+const not_tomorrow : bool = (Mavryk.get_now () = in_24_hrs)
 ```
 
 </Syntax>
@@ -164,6 +212,15 @@ let my_account : address =
 
 ```jsligo group=d
 const my_account: address = "mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe";
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=d
+const my_account : address =
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
 ```
 
 </Syntax>
@@ -197,6 +254,16 @@ signature;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=e
+const my_sig : signature =
+   ("edsigthTzJ8X7MPmNeEwybRAvdxS1pupqcM5Mk4uCuyZAe7uEk68YpuGDeViW8wSXMrCi5CwoNgqs8V2w8ayB5dMJzrYCHhD8C7" :
+   signature)
+```
+
+</Syntax>
+
 
 ## Keys
 
@@ -218,6 +285,14 @@ let my_key : key = "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav"
 
 ```jsligo group=f
 const my_key : key = "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav";
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=f
+const my_key : key = "edpkuBknW28nW72KG6RoHtYW7p12T6GKc7nAbwYX5m8Wd9sDVC9yav"
 ```
 
 </Syntax>

@@ -267,6 +267,8 @@ let build_file_graph : File_graph.t option Handler.t =
             @@ function
             | CameLIGO cst -> return @@ Directive.extract_directives_cameligo cst
             | JsLIGO cst -> return @@ Directive.extract_directives_jsligo cst
+            (* MAVRYK: PascaLIGO. Directive-graph extraction deferred. *)
+            | PascaLIGO _cst -> return []
           in
           (* Collect all links from [#include] and [#import] directives and remove as many
              indirections as possible, so duplicates won't exist in the file graph and

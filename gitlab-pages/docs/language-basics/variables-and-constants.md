@@ -75,6 +75,21 @@ ligo run evaluate-expr gitlab-pages/docs/language-basics/src/variables-and-const
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=const
+const age : int = 25
+```
+
+You can evaluate the constant definition above using the following CLI
+command:
+```shell
+ligo run evaluate-expr gitlab-pages/docs/language-basics/src/variables-and-constants/const.ligo age
+# Outputs: 25
+```
+
+</Syntax>
+
 
 ## Variables
 
@@ -127,6 +142,34 @@ ligo run evaluate-expr gitlab-pages/docs/language-basics/src/variables-and-const
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Unlike the functional syntaxes, PascaLIGO features genuine *mutable
+variables*, declared with `var` and updated with the assignment
+operator `:=` inside a `block`.
+
+> ⚠️ Please be wary that mutation only works within the function scope
+> itself, values outside of the function scope will not be
+> affected. In other words, when a function is called, its arguments
+> are copied, *as well as the environment*. Any side-effect to that
+> environment is therefore lost when the function returns.
+
+```pascaligo group=add
+function add (const a : int; const b : int) : int is block {
+  var c : int := a;
+  c := c + b
+} with c
+```
+
+You can run the `add` function defined above using the LIGO compiler
+like this:
+```shell
+ligo run evaluate-expr gitlab-pages/docs/language-basics/src/variables-and-constants/add.ligo 'add (1, 1)'
+# Outputs: 2
+```
+
+</Syntax>
+
 ## Escaped Identifiers
 
 Both variables and constants are, at the level of the lexicon,
@@ -153,6 +196,14 @@ let @Unique_name = true
 
 ```jsligo group=a
 const @Unique_name = true
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a
+const @Unique_name = True
 ```
 
 </Syntax>

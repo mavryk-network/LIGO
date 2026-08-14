@@ -32,6 +32,8 @@ let insert_module_path
       match input_d.cst with
       | CameLIGO cst -> get_linearized_path (module C_CameLIGO) { input_d with cst }
       | JsLIGO cst -> get_linearized_path (module C_JsLIGO) { input_d with cst }
+      (* MAVRYK: PascaLIGO. Module-path linearization for hover deferred. *)
+      | PascaLIGO _cst -> None
     with
     | Projection (_struct_pos, _proj_fields_before_cursor) -> None
     | Module (_def_scope, module_names_before_cursor) ->

@@ -67,6 +67,32 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+type word       is string
+type definition is list (string)
+type dictionary is map (word, definition)
+
+const empty_dict : dictionary = Map.empty
+
+const dictionary : dictionary =
+  Map.literal (list [
+    ("one", list ["The number 1."; "A member of a group."]);
+    ("two", list ["The number 2"])])
+```
+
+The `Map.literal` predefined function builds a map from a list of
+key-value pairs, `(<key>, <value>)`, wrapped with the `list` keyword.
+Note also the "`;`" to separate individual map bindings. Note that
+`("<string value>" : address)` means that we type-cast a string into
+an address.
+
+Note: See the predefined
+[module Map](../reference/map-reference)
+
+</Syntax>
+
 > Note: Map keys are internally sorted by increasing values, so the
 > type of the keys be *comparable*, that is, they obey a total order
 > (any two keys can be compared).
@@ -101,6 +127,18 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_size
+const my_map : map (int, string) =
+  Map.literal (list [(1,"one"); (2,"two")])
+const size : nat = Map.size (my_map) // = 2
+```
+Note: See the predefined
+[module Map](../reference/map-reference)
+
+</Syntax>
+
 ## Searching
 
 The predicate `Map.mem` tests for membership in a given map, given a
@@ -126,6 +164,16 @@ const contains_2: bool = Map.mem(2, my_map); // == true
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_searching
+const my_map : map (int, string) =
+  Map.literal (list [(1,"one"); (2,"two")])
+const contains_2 : bool = Map.mem (2, my_map) // = true
+```
+
+</Syntax>
+
 In practice, however, we would like to get the value associated to the
 key we searched. This is achieved by means of `Map.find_opt`.
 
@@ -141,6 +189,14 @@ let v : string option = Map.find_opt 2 my_map
 
 ```jsligo group=map_searching
 const v : option<string> = Map.find_opt(2, my_map);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_searching
+const v : option (string) = Map.find_opt (2, my_map)
 ```
 
 </Syntax>
@@ -173,6 +229,18 @@ let force_access = (key, map) => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_searching
+function force_access (const key : int; const m : map (int, string)) : string is
+  case Map.find_opt (key, m) of [
+    Some (value) -> value
+  | None -> failwith ("No value.")
+  ]
+```
+
+</Syntax>
+
 In fact, the predefined function `Map.find` does exactly that, except
 that the exception raised by `failwith` carries the default string
 `"MAP FIND"`.
@@ -188,6 +256,13 @@ Note: See the predefined
 
 Note: See the predefined
 [namespace Map](../reference/map-reference)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+Note: See the predefined
+[module Map](../reference/map-reference)
 
 </Syntax>
 
@@ -223,6 +298,19 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_adding
+const my_map : map (int, string) = Map.literal (list [(1,"one"); (2,"two")])
+const new_map = Map.add (3, "three", my_map)
+const contains_3 = Map.mem (3, new_map) // = true
+```
+
+Note: See the predefined
+[module Map](../reference/map-reference)
+
+</Syntax>
+
 ## Removing
 
 The function `Map.remove` creates a map containing the elements of a
@@ -252,6 +340,19 @@ const contains_3 = Map.mem(2, new_map); // == false
 
 Note: See the predefined
 [namespace Map](../reference/map-reference)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_removing
+const my_map : map (int, string) = Map.literal (list [(1,"one"); (2,"two")])
+const new_map = Map.remove (2, my_map)
+const contains_3 = Map.mem (2, new_map) // = false
+```
+
+Note: See the predefined
+[module Map](../reference/map-reference)
 
 </Syntax>
 
@@ -288,6 +389,18 @@ const contains_2 = Map.mem (2, map_without_2); // == false
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_updating
+const my_map : map (int, string) = Map.literal (list [(1,"one"); (2,"two")])
+const map_with_3 = Map.update (3, Some ("three"), my_map)
+const contains_3 = Map.mem (3, map_with_3) // = true
+const map_without_2 = Map.update (2, (None : option (string)), my_map)
+const contains_2 = Map.mem (2, map_without_2) // = false
+```
+
+</Syntax>
+
 When we want to update a map, but also obtain the value of the updated
 binding, we can use `Map.get_and_update`.
 
@@ -312,6 +425,18 @@ const [three, map_without_3] = Map.get_and_update(3, None(), map_with_3);
 
 Note: See the predefined
 [namespace Map](../reference/map-reference)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_updating
+// three = Some ("three")
+const (three, map_without_3) = Map.get_and_update (3, (None : option (string)), map_with_3)
+```
+
+Note: See the predefined
+[module Map](../reference/map-reference)
 
 </Syntax>
 
@@ -374,6 +499,27 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_folding
+type player is string
+type abscissa is int
+type ordinate is int
+type move is abscissa * ordinate
+type game is map (player, move)
+
+function horizontal_offset (const g : game) : int is
+  block {
+    function folded (const p : int * (player * move)) : int is
+      p.0 + p.1.1.0
+  } with Map.fold (folded, g, 0)
+```
+
+Note: See the predefined
+[module Map](../reference/map-reference)
+
+</Syntax>
+
 ## Mapping
 
 We may want to change all the values of a given map by applying to
@@ -409,6 +555,20 @@ const plus_one = Map.map(([k,v]) => k + v, my_map);
 
 Note: See the predefined
 [namespace Map](../reference/map-reference)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_mapping
+const my_map : map (int, int) = Map.literal (list [(0,0); (1,1); (2,2)])
+// plus_one = Map.literal (list [(0,0); (1,2); (2,4)])
+function combine (const kv : int * int) : int is kv.0 + kv.1
+const plus_one = Map.map (combine, my_map)
+```
+
+Note: See the predefined
+[module Map](../reference/map-reference)
 
 </Syntax>
 
@@ -451,6 +611,20 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_iterating
+function assert_all_greater_than_3 (const m : map (int, int)) : unit is
+  block {
+    function check (const kv : int * int) : unit is assert (kv.1 > 3)
+  } with Map.iter (check, m) // The key is discarded
+```
+
+Note: See the predefined
+[module Map](../reference/map-reference)
+
+</Syntax>
+
 ## Looping
 
 <Syntax syntax="cameligo">
@@ -482,5 +656,31 @@ function sum_val (m: map<int,int>) {
 
 Note: See the predefined
 [namespace Map](../reference/map-reference)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+One can iterate through all the bindings of a map, in increasing order
+of the keys, thanks to a loop of the form
+`for <key> -> <value> in map <map_expr> <block>`. It means that the
+`<block>` of statements will be computed once for each `<key>`/`<value>`
+pair ranging over the bindings of the map `<map_expr>`, in increasing
+order.
+
+Here is an example where the values in a map are summed up.
+
+```pascaligo group=map_looping
+function sum_val (const m : map (int, int)) : int is
+  block {
+    var sum : int := 0;
+    for _key -> val in map m {
+      sum := sum + val  // The key is discarded.
+    }
+  } with sum
+```
+
+Note: See the predefined
+[module Map](../reference/map-reference)
 
 </Syntax>

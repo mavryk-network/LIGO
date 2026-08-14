@@ -1,4 +1,0 @@
-const id_string = (p: string) : option<string> => {
-  let packed = Bytes.pack(p);
-  return Bytes.unpack(packed);
-};

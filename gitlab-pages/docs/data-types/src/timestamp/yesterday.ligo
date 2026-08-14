@@ -1,0 +1,3 @@
+const today : timestamp = Mavryk.get_now ()
+const one_day : int = 86400
+const in_24_hrs : timestamp = today - one_day

@@ -57,6 +57,26 @@ without the decorator `@inline`. We obtain the following results
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+To force inlining you can use the `[@inline]` attribute.
+
+```pascaligo group=inlining
+[@inline]
+function fst (const p : nat * nat) : nat is p.0
+
+[@entry]
+function main (const p : nat * nat; const s : nat * nat) : list (operation) * (nat * nat) is
+  ((nil : list (operation)), (fst ((p.0, p.1)), fst ((s.1, s.0))))
+```
+
+To measure the difference between inlining and without inlining, let
+us assume that the above code is inside the file `inline.ligo` and
+run the command: `ligo info measure-contract inline.ligo` with and
+without the attribute `[@inline]`. We obtain the following results
+
+</Syntax>
+
 <table>
     <tr>
         <td>With inlining</td><td>46 bytes</td>

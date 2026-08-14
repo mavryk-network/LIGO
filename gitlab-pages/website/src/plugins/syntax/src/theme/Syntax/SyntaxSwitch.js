@@ -3,6 +3,9 @@ import React, { useCallback } from "react";
 
 import styles from "./styles.module.css";
 
+// MAVRYK: PascaLIGO. Restored the 3-way syntax selector (JsLIGO / CameLIGO / PascaLIGO).
+// The previous binary toggle could only ever represent two syntaxes; a <select> scales to
+// three. The `.syntaxSwitch` styles it consumes already live in styles.module.css (0.60-era).
 function SyntaxSwitch(props) {
   const history = useHistory();
 
@@ -15,35 +18,21 @@ function SyntaxSwitch(props) {
       localStorage.setItem("syntax", value);
       props.onSyntaxChange(value);
     },
-    [props.syntax]
+    [props]
   );
 
   return (
     <form>
-      <div className={styles["switch__container"]}>
-        <label
-          className={styles["switch__options-jsligo"]}
-          onClick={() => onSyntaxChange("jsligo")}
-        >
-          JsLIGO
-        </label>
-        <button
-          type="button"
-          role="switch"
-          className={styles.switch__button}
-          aria-label={`prefer ${props.syntax}`}
-          aria-checked={props.syntax === "cameligo"}
-          onClick={() => onSyntaxChange(props.syntax === "jsligo" ? "cameligo" : "jsligo")}
-        >
-          <span className={styles["switch__button-circle"]}></span>
-        </button>
-        <label
-          className={styles["switch__options-cameligo"]}
-          onClick={() => onSyntaxChange("cameligo")}
-        >
-          CameLIGO
-        </label>
-      </div>
+      <select
+        className={styles.syntaxSwitch}
+        value={props.syntax}
+        aria-label={`preferred syntax: ${props.syntax}`}
+        onChange={(e) => onSyntaxChange(e.target.value)}
+      >
+        <option value="jsligo">JsLIGO</option>
+        <option value="cameligo">CameLIGO</option>
+        <option value="pascaligo">PascaLIGO</option>
+      </select>
     </form>
   );
 }

@@ -14,6 +14,9 @@ val create : bytes -&gt; nat -&gt; (chest * chest&#95;key)
 <SyntaxTitle syntax="jsligo">
 let create: (&#95;: bytes) =&gt; (&#95;: nat) =&gt; [chest, chest&#95;key]
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const create : bytes -&gt; nat -&gt; (chest * chest&#95;key)
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 val create&#95;key : chest -&gt; nat -&gt; chest&#95;key
@@ -21,12 +24,18 @@ val create&#95;key : chest -&gt; nat -&gt; chest&#95;key
 <SyntaxTitle syntax="jsligo">
 let create&#95;key: (&#95;: chest) =&gt; (&#95;: nat) =&gt; chest&#95;key
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const create&#95;key : chest -&gt; nat -&gt; chest&#95;key
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 val verify : chest -&gt; chest&#95;key -&gt; nat -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let verify: (&#95;: chest) =&gt; (&#95;: chest&#95;key) =&gt; (&#95;: nat) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const verify : chest -&gt; chest&#95;key -&gt; nat -&gt; bool
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -38,6 +47,13 @@ The call `verify chest chest_key n` verifies a matching
 <Syntax syntax="jsligo">
 
 The call `verify(chest, chest_key, n)` verifies a matching
+        between `chest` and `chest_key` (taking into account `n`).
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The call `verify (chest, chest_key, n)` verifies a matching
         between `chest` and `chest_key` (taking into account `n`).
 
 </Syntax>

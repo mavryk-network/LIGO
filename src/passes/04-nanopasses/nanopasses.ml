@@ -96,6 +96,8 @@ let passes ~(flags : flags) : (module T) list list =
     ; entry (module T_arg) ~flag:always ~arg:()
     ; entry (module Constructor_application) ~flag:always ~arg:()
     ; entry (module Standalone_constructor_removal) ~flag:always ~arg:()
+      (* MAVRYK: PascaLIGO. Turns the PascaLIGO [Unit] constructor into [Literal_unit]. *)
+    ; entry (module Special_unit_constructor) ~flag:always ~arg:()
     ; entry (module Type_abstraction_declaration) ~flag:always ~arg:()
     ; entry (module Sum_type_helper_generator) ~flag:always ~arg:()
     ; entry (module Named_fun) ~flag:named_fun ~arg:()

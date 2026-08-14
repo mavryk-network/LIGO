@@ -14,11 +14,17 @@ type string
 <SyntaxTitle syntax="jsligo">
 type string
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type string
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 type bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type bytes
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type bytes
 </SyntaxTitle>
 
@@ -26,6 +32,9 @@ type bytes
 type int
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type int
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type int
 </SyntaxTitle>
 
@@ -33,6 +42,9 @@ type int
 type nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type nat
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type nat
 </SyntaxTitle>
 
@@ -40,6 +52,9 @@ type nat
 type unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type unit
 </SyntaxTitle>
 
@@ -47,6 +62,9 @@ type unit
 type operation
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type operation
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type operation
 </SyntaxTitle>
 
@@ -54,6 +72,9 @@ type operation
 type mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type mav
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type mav
 </SyntaxTitle>
 
@@ -61,6 +82,9 @@ type mav
 type address
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type address
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type address
 </SyntaxTitle>
 
@@ -68,6 +92,9 @@ type address
 type signature
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type signature
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type signature
 </SyntaxTitle>
 
@@ -75,6 +102,9 @@ type signature
 type key
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type key
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type key
 </SyntaxTitle>
 
@@ -82,6 +112,9 @@ type key
 type key&#95;hash
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type key&#95;hash
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type key&#95;hash
 </SyntaxTitle>
 
@@ -89,6 +122,9 @@ type key&#95;hash
 type timestamp
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type timestamp
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type timestamp
 </SyntaxTitle>
 
@@ -96,6 +132,9 @@ type timestamp
 type list
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type list
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type list
 </SyntaxTitle>
 
@@ -103,6 +142,9 @@ type list
 type big&#95;map
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type big&#95;map
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type big&#95;map
 </SyntaxTitle>
 
@@ -110,6 +152,9 @@ type big&#95;map
 type map
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type map
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type map
 </SyntaxTitle>
 
@@ -117,6 +162,9 @@ type map
 type set
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type set
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type set
 </SyntaxTitle>
 
@@ -124,6 +172,9 @@ type set
 type contract
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type contract
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type contract
 </SyntaxTitle>
 
@@ -131,6 +182,9 @@ type contract
 type michelson&#95;or
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type michelson&#95;or
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type michelson&#95;or
 </SyntaxTitle>
 
@@ -138,6 +192,9 @@ type michelson&#95;or
 type michelson&#95;pair
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type michelson&#95;pair
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type michelson&#95;pair
 </SyntaxTitle>
 
@@ -145,6 +202,9 @@ type michelson&#95;pair
 type chain&#95;id
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type chain&#95;id
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type chain&#95;id
 </SyntaxTitle>
 
@@ -152,6 +212,9 @@ type chain&#95;id
 type baker&#95;hash
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type baker&#95;hash
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type baker&#95;hash
 </SyntaxTitle>
 
@@ -159,6 +222,9 @@ type baker&#95;hash
 type pvss&#95;key
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type pvss&#95;key
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type pvss&#95;key
 </SyntaxTitle>
 
@@ -166,6 +232,9 @@ type pvss&#95;key
 type sapling&#95;state
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type sapling&#95;state
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type sapling&#95;state
 </SyntaxTitle>
 
@@ -173,6 +242,9 @@ type sapling&#95;state
 type sapling&#95;transaction
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type sapling&#95;transaction
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type sapling&#95;transaction
 </SyntaxTitle>
 
@@ -180,6 +252,9 @@ type sapling&#95;transaction
 type baker&#95;operation
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type baker&#95;operation
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type baker&#95;operation
 </SyntaxTitle>
 
@@ -187,6 +262,9 @@ type baker&#95;operation
 type bls12&#95;381&#95;g1
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type bls12&#95;381&#95;g1
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type bls12&#95;381&#95;g1
 </SyntaxTitle>
 
@@ -194,6 +272,9 @@ type bls12&#95;381&#95;g1
 type bls12&#95;381&#95;g2
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type bls12&#95;381&#95;g2
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type bls12&#95;381&#95;g2
 </SyntaxTitle>
 
@@ -201,6 +282,9 @@ type bls12&#95;381&#95;g2
 type bls12&#95;381&#95;fr
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type bls12&#95;381&#95;fr
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type bls12&#95;381&#95;fr
 </SyntaxTitle>
 
@@ -208,6 +292,9 @@ type bls12&#95;381&#95;fr
 type never
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type never
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type never
 </SyntaxTitle>
 
@@ -215,6 +302,9 @@ type never
 type ticket
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type ticket
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type ticket
 </SyntaxTitle>
 
@@ -222,6 +312,9 @@ type ticket
 type chest
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type chest
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type chest
 </SyntaxTitle>
 
@@ -229,6 +322,9 @@ type chest
 type chest&#95;key
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type chest&#95;key
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type chest&#95;key
 </SyntaxTitle>
 
@@ -236,6 +332,9 @@ type chest&#95;key
 type external&#95;ediv
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type external&#95;ediv
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type external&#95;ediv
 </SyntaxTitle>
 
@@ -243,6 +342,9 @@ type external&#95;ediv
 type external&#95;and
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type external&#95;and
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type external&#95;and
 </SyntaxTitle>
 
@@ -250,6 +352,9 @@ type external&#95;and
 type external&#95;or
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type external&#95;or
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type external&#95;or
 </SyntaxTitle>
 
@@ -257,6 +362,9 @@ type external&#95;or
 type external&#95;xor
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type external&#95;xor
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type external&#95;xor
 </SyntaxTitle>
 
@@ -264,6 +372,9 @@ type external&#95;xor
 type external&#95;lsl
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type external&#95;lsl
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type external&#95;lsl
 </SyntaxTitle>
 
@@ -271,6 +382,9 @@ type external&#95;lsl
 type external&#95;lsr
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type external&#95;lsr
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type external&#95;lsr
 </SyntaxTitle>
 
@@ -278,6 +392,9 @@ type external&#95;lsr
 type external&#95;bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type external&#95;bytes
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type external&#95;bytes
 </SyntaxTitle>
 
@@ -287,6 +404,9 @@ type (&#39;param, &#39;storage) entrypoint = &#39;param -&gt; &#39;storage -&gt;
 <SyntaxTitle syntax="jsligo">
 type entrypoint&lt;param, storage&gt; = (&#95;: param) =&gt; (&#95;: storage) =&gt; [list&lt;operation&gt;, storage]
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type (&#39;param, &#39;storage) entrypoint = &#39;param -&gt; &#39;storage -&gt; (operation list * &#39;storage)
+</SyntaxTitle>
 Type of entrypoints
 
 
@@ -294,6 +414,9 @@ Type of entrypoints
 type bool = bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type bool = bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type bool = bool
 </SyntaxTitle>
 <Syntax syntax="cameligo">
@@ -311,12 +434,23 @@ Type of the booleans. Note: Values `true` and `false` are
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Type of the booleans. Note: Values `true` and `false` are
+  predefined constants such that `true` equals `True` and `false`
+  equals `False`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 type &#39;a option = &#39;a option
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type option&lt;a&gt; = option&lt;a&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type &#39;a option = &#39;a option
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -336,12 +470,24 @@ Type of optional values. They are useful, for example, when a
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Type of optional values. They are useful, for example, when a
+  function can fail, but the caller wants to be able to handle the
+  failure, which is then denoted by the result `None`. Note:
+  Assertions and `failwith` do not allow handling.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val unit : unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let unit: unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const unit : unit
 </SyntaxTitle>
 Unit type. It is useful for typing side-effects, for example
   failures, some iterators and implicit accounts.
@@ -352,6 +498,9 @@ val ignore : &#39;a.&#39;a -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let ignore: &lt;a&gt;(&#95;: a) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const ignore : a -&gt; unit
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -369,12 +518,23 @@ The call `ignore(v)` evaluates `v` and ignores its value, returning
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `ignore (v)` evaluates `v` and ignores its value, returning
+  instead the unit value. This is useful when the argument of `ignore`
+  performs side-effects.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val curry : &#39;a &#39;b &#39;c.((&#39;a * &#39;b) -&gt; &#39;c) -&gt; &#39;a -&gt; &#39;b -&gt; &#39;c
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let curry: &lt;a, b, c&gt;(&#95;: (&#95;: [a, b]) =&gt; c) =&gt; (&#95;: a) =&gt; (&#95;: b) =&gt; c
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const curry : ((a * b) -&gt; c) -&gt; a -&gt; b -&gt; c
 </SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Tuple2.curry` is encouraged for a smoother migration.
 
@@ -390,12 +550,21 @@ The call `curry(f,x,y)` has the same value as `f(x,y)`.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `curry (f, x, y)` has the same value as `f (x,y)`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val uncurry : &#39;a &#39;b &#39;c.(&#39;a -&gt; &#39;b -&gt; &#39;c) -&gt; (&#39;a * &#39;b) -&gt; &#39;c
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let uncurry: &lt;a, b, c&gt;(&#95;: (&#95;: a) =&gt; (&#95;: b) =&gt; c) =&gt; (&#95;: [a, b]) =&gt; c
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const uncurry : (a -&gt; b -&gt; c) -&gt; (a * b) -&gt; c
 </SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Tuple2.uncurry` is encouraged for a smoother migration.
 
@@ -411,12 +580,21 @@ The call `uncurry(f,[x,y])` has the same value as `f(x)(y)`.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `uncurry (f, (x,y))` has the same value as `f x y`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val fst : &#39;a &#39;b.(&#39;a * &#39;b) -&gt; &#39;a
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let fst: &lt;a, b&gt;(&#95;: [a, b]) =&gt; a
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const fst : (a * b) -&gt; a
 </SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Tuple2.get1` is encouraged for a smoother migration.
 
@@ -429,6 +607,9 @@ val snd : &#39;a &#39;b.(&#39;a * &#39;b) -&gt; &#39;b
 <SyntaxTitle syntax="jsligo">
 let snd: &lt;a, b&gt;(&#95;: [a, b]) =&gt; b
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const snd : (a * b) -&gt; b
+</SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Tuple2.get2` is encouraged for a smoother migration.
 
 Projecting the second component of a pair.
@@ -439,6 +620,9 @@ val failwith : &#39;err &#39;a.&#39;err -&gt; &#39;a
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let failwith: &lt;err, a&gt;(&#95;: err) =&gt; a
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const failwith : err -&gt; a
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -456,12 +640,23 @@ The call `failwith(e)` terminates the execution with the value `e`,
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `failwith (e)` terminates the execution with the value `e`,
+  standing for an error. Note: Using a string for an error message can
+  be costly in terms of size.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val bytes : &#39;a.&#39;a -&gt; &#39;a external&#95;bytes
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let bytes: &lt;a&gt;(&#95;: a) =&gt; external&#95;bytes&lt;a&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const bytes : a -&gt; external&#95;bytes (a)
 </SyntaxTitle>
 The function `bytes` encodes an integer or a natural number to
   bytes using the big-endian encoding. For integers, negative numbers
@@ -473,6 +668,9 @@ val assert&#95;with&#95;error : bool -&gt; string -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;with&#95;error: (&#95;: bool) =&gt; (&#95;: string) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;with&#95;error : bool -&gt; string -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Assert.Error.assert` is encouraged for a smoother migration.
 
@@ -492,12 +690,23 @@ The call `assert_with_error(cond, error)` terminates the execution
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_with_error (cond, error)` terminates the execution
+  with the string `error` (that is, an error message) if, and only if,
+  the boolean condition `cond` is false.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert : bool -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert: (&#95;: bool) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert : bool -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Assert.assert` is encouraged for a smoother migration.
 
@@ -517,12 +726,23 @@ The call `assert(cond)` terminates the execution with the string
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert (cond)` terminates the execution with the string
+  `"failed assertion"` if, and only if, the boolean condition `cond`
+  is false.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert&#95;some&#95;with&#95;error : &#39;a.&#39;a option -&gt; string -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;some&#95;with&#95;error: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; (&#95;: string) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;some&#95;with&#95;error : option (a) -&gt; string -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Assert.Error.some` is encouraged for a smoother migration.
 
@@ -542,12 +762,23 @@ The call `assert_some_with_error(opt, err)` terminates the execution
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_some_with_error (opt, err)` terminates the execution
+  with the string `err` (that is, an error message) if, and only if,
+  `opt` is `None`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert&#95;some : &#39;a.&#39;a option -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;some: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;some : option (a) -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Assert.some` is encouraged for a smoother migration.
 
@@ -565,12 +796,22 @@ The call `assert_some(opt)` terminates the execution with the
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_some (opt)` terminates the execution with the
+  string `"failed assert some"` if, and only if, `opt` is `None`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert&#95;none&#95;with&#95;error : &#39;a.&#39;a option -&gt; string -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;none&#95;with&#95;error: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; (&#95;: string) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;none&#95;with&#95;error : option (a) -&gt; string -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Assert.Error.none` is encouraged for a smoother migration.
 
@@ -590,12 +831,23 @@ The call `assert_none_with_error(opt, err)` terminates the execution
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_none_with_error (opt, err)` terminates the execution
+  with the string `err` (that is, an error message) if, and only if,
+  `opt` is an optional value different from `None`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert&#95;none : &#39;a.&#39;a option -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;none: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;none : option (a) -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, this function will be deprecated, and using `Assert.none` is encouraged for a smoother migration.
 
@@ -613,12 +865,22 @@ The call `assert_none(opt)` terminates the execution with the string
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_none (opt)` terminates the execution with the string
+  `"failed assert none"` if, and only if, `opt` is not `None`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val abs : int -&gt; nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let abs: (&#95;: int) =&gt; nat
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const abs : int -&gt; nat
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -632,12 +894,21 @@ The call `abs(i)` is the absolute value of `i`.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `abs (i)` is the absolute value of `i`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val is&#95;nat : int -&gt; nat option
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let is&#95;nat: (&#95;: int) =&gt; option&lt;nat&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const is&#95;nat : int -&gt; option (nat)
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -653,12 +924,22 @@ The call `is_nat(i)` is `Some(n)`, where `n` is the absolute
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `is_nat (i)` is `Some n`, where `n` is the absolute
+  value of `i`, if, and only if, `i` is positive or zero.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val int : &#39;a.&#39;a -&gt; int
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let int: &lt;a&gt;(&#95;: a) =&gt; int
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const int : a -&gt; int
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -686,12 +967,28 @@ The call `int(v)` casts the value `v` to an integer.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `int (v)` casts the value `v` to an integer.
+
+  For natural numbers, the function `int` is the identity cast from
+  `nat` to `int`. For BLS12-381 field elements, the returned value is
+  always between 0 (inclusive) and the order of the BLS12-381 field
+  (exclusive). For bytes, the function `int` decodes the bytes using
+  the big-endian encoding, where negative numbers are considered in
+  two's complement representation.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val nat : bytes -&gt; nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let nat: (&#95;: bytes) =&gt; nat
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const nat : bytes -&gt; nat
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -705,12 +1002,21 @@ The call `nat(b)` casts the bytes `b` into a natural number.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `nat (b)` casts the bytes `b` into a natural number.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val ediv : &#39;a &#39;b.&#39;a -&gt; &#39;b -&gt; (&#39;a, &#39;b) external&#95;ediv
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let ediv: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: b) =&gt; external&#95;ediv&lt;a, b&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const ediv : a -&gt; b -&gt; external&#95;ediv (a, b)
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -740,12 +1046,29 @@ The call `ediv(z1, z2)`, where `z1` and `z2` are either of type
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `ediv (z1, z2)`, where `z1` and `z2` are either of type
+    `int` or `nat`, returns `None` if `z2` is zero; otherwise, it
+    returns the pair `(q,r)`, where `q` is the quotient and `r` the
+    positive remainder, as is the convention of the mathematical
+    Euclidian division. The function `ediv` is also overloaded to work
+    on values of type `mav`. When `z1` and `z2` are of type `mav` and
+    `z2` is nonzero, we get a `nat` quotient and a `mav`
+    remainder. When `z1` is a `mav` and `z2` is a nonzero `nat`, the
+    calls yields a quotient and a remainder both of type `mav`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 type &#39;elt big&#95;set = &#39;elt Big&#95;set.t
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type big&#95;set&lt;elt&gt; = Big&#95;set.t&lt;elt&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type &#39;elt big&#95;set = &#39;elt Big&#95;set.t
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -759,12 +1082,21 @@ The type of the big sets is based on `big_map`.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The type of the big sets is based on `big_map`.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 type dynamic&#95;entrypoints = (nat, bytes) big&#95;map
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type dynamic&#95;entrypoints = big&#95;map&lt;nat, bytes&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type dynamic&#95;entrypoints = (nat, bytes) big&#95;map
 </SyntaxTitle>
 Dynamic entrypoints
 
@@ -787,6 +1119,9 @@ type dynamic&#95;entrypoint
 <SyntaxTitle syntax="jsligo">
 type dynamic&#95;entrypoint
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type dynamic&#95;entrypoint
+</SyntaxTitle>
 A value of type `dynamic_entrypoint` denotes a typed key in an
   dynamic entrypoint
 
@@ -797,11 +1132,17 @@ type michelson&#95;program
 <SyntaxTitle syntax="jsligo">
 type michelson&#95;program
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type michelson&#95;program
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 type typed&#95;address
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type typed&#95;address
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type typed&#95;address
 </SyntaxTitle>
 
@@ -809,6 +1150,9 @@ type typed&#95;address
 type mutation
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type mutation
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type mutation
 </SyntaxTitle>
 
@@ -816,6 +1160,9 @@ type mutation
 type michelson&#95;contract
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type michelson&#95;contract
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type michelson&#95;contract
 </SyntaxTitle>
 
@@ -823,6 +1170,9 @@ type michelson&#95;contract
 type pbt&#95;gen
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type pbt&#95;gen
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type pbt&#95;gen
 </SyntaxTitle>
 
@@ -830,6 +1180,9 @@ type pbt&#95;gen
 type int64
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type int64
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type int64
 </SyntaxTitle>
 
@@ -837,6 +1190,9 @@ type int64
 type views
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
+type views
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
 type views
 </SyntaxTitle>
 
@@ -849,6 +1205,12 @@ type test&#95;exec&#95;error&#95;balance&#95;too&#95;low = &#123;
 <SyntaxTitle syntax="jsligo">
 type test&#95;exec&#95;error&#95;balance&#95;too&#95;low = &#123; contract&#95;balance: mav; contract&#95;too&#95;low: address; spend&#95;request: mav &#125;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type test&#95;exec&#95;error&#95;balance&#95;too&#95;low = &#123;
+ contract&#95;balance : mav;
+ contract&#95;too&#95;low : address;
+ spend&#95;request : mav&#125;
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 type test&#95;exec&#95;error = | Balance&#95;too&#95;low of test&#95;exec&#95;error&#95;balance&#95;too&#95;low
@@ -858,6 +1220,11 @@ type test&#95;exec&#95;error = | Balance&#95;too&#95;low of test&#95;exec&#95;er
 <SyntaxTitle syntax="jsligo">
 type test&#95;exec&#95;error = [&quot;Balance&#95;too&#95;low&quot;, test&#95;exec&#95;error&#95;balance&#95;too&#95;low] | [&quot;Other&quot;, string] | [&quot;Rejected&quot;, michelson&#95;program, address]
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type test&#95;exec&#95;error = | Balance&#95;too&#95;low of test&#95;exec&#95;error&#95;balance&#95;too&#95;low
+| Other of string
+| Rejected of (michelson&#95;program * address)
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 type test&#95;exec&#95;result = | Fail of test&#95;exec&#95;error
@@ -865,6 +1232,10 @@ type test&#95;exec&#95;result = | Fail of test&#95;exec&#95;error
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type test&#95;exec&#95;result = [&quot;Fail&quot;, test&#95;exec&#95;error] | [&quot;Success&quot;, nat]
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type test&#95;exec&#95;result = | Fail of test&#95;exec&#95;error
+| Success of nat
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
@@ -875,12 +1246,20 @@ type test&#95;baker&#95;policy = | By&#95;account of address
 <SyntaxTitle syntax="jsligo">
 type test&#95;baker&#95;policy = [&quot;By&#95;account&quot;, address] | [&quot;By&#95;round&quot;, int] | [&quot;Excluding&quot;, list&lt;address&gt;]
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type test&#95;baker&#95;policy = | By&#95;account of address
+| By&#95;round of int
+| Excluding of address list
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 type &#39;a pbt&#95;test = &#39;a pbt&#95;gen * &#39;a -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type pbt&#95;test&lt;a&gt; = [pbt&#95;gen&lt;a&gt;, (&#95;: a) =&gt; bool]
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type &#39;a pbt&#95;test = &#39;a pbt&#95;gen * &#39;a -&gt; bool
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
@@ -889,6 +1268,10 @@ type &#39;a pbt&#95;result = | Fail of &#39;a
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type pbt&#95;result&lt;a&gt; = [&quot;Fail&quot;, a] | [&quot;Success&quot;]
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type &#39;a pbt&#95;result = | Fail of &#39;a
+| Success
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
@@ -901,12 +1284,22 @@ type &#39;s unforged&#95;ticket = &#123;
 <SyntaxTitle syntax="jsligo">
 type unforged&#95;ticket&lt;s&gt; = &#123; amount: nat; ticketer: address; value: s &#125;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type &#39;s unforged&#95;ticket = &#123;
+ amount : nat;
+ ticketer : address;
+ value : &#39;s
+&#125;
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 type (&#39;param, &#39;storage) module&#95;contract = (&#39;param * &#39;storage) -&gt; (operation list * &#39;storage) * &#39;storage views * dynamic&#95;entrypoints option
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type module&#95;contract&lt;param, storage&gt; = [(&#95;: [param, storage]) =&gt; [list&lt;operation&gt;, storage], views&lt;storage&gt;, option&lt;dynamic&#95;entrypoints&gt;]
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type (&#39;param, &#39;storage) module&#95;contract = (&#39;param * &#39;storage) -&gt; (operation list * &#39;storage) * &#39;storage views * dynamic&#95;entrypoints option
 </SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
@@ -919,10 +1312,20 @@ type (&#39;param, &#39;storage) origination&#95;result = &#123;
 <SyntaxTitle syntax="jsligo">
 type origination&#95;result&lt;param, storage&gt; = &#123; addr: typed&#95;address&lt;param, storage&gt;; code: michelson&#95;contract&lt;param, storage&gt;; size: int &#125;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type (&#39;param, &#39;storage) origination&#95;result = &#123;
+ addr : (&#39;param, &#39;storage) typed&#95;address;
+ code : (&#39;param, &#39;storage) michelson&#95;contract;
+ size : int
+&#125;
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 type implicit&#95;address = (unit, unit) typed&#95;address
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 type implicit&#95;address = typed&#95;address&lt;unit, unit&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type implicit&#95;address = (unit, unit) typed&#95;address
 </SyntaxTitle>

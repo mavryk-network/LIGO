@@ -10,8 +10,6 @@ type all =
   | `Main_invalid_dialect_name of string
   | `Main_invalid_extension of string
   | `Main_invalid_protocol_version of string list * string
-  | `Main_deprecated_pascaligo_filename of string
-  | `Main_deprecated_pascaligo_syntax of unit
   | `Main_deprecated_views_cli of string
   | `Main_transpilation_unsupported_syntaxes of string * string
   | `Main_transpilation_unspecified_dest_syntax

@@ -1,0 +1,11 @@
+const a : int = 10 / 3
+const b : nat = 10n / 3n
+const c : nat = 10mumav / 3mumav
+const a : int = 120
+const b : int = 9
+const rem1 : nat = a mod b  // 3
+const c : nat = 120n
+const rem2 : nat = c mod b  // 3
+const d : nat = 9n
+const rem3 : nat = c mod d  // 3
+const rem4 : nat = a mod d  // 3

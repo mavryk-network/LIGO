@@ -30,6 +30,7 @@ let get_comment syntax =
     match syntax with
     | Syntax_types.CameLIGO -> Preprocessing_cameligo.Config.block
     | Syntax_types.JsLIGO -> Preprocessing_jsligo.Config.block
+    | Syntax_types.PascaLIGO -> Preprocessing_pascaligo.Config.block (* MAVRYK: PascaLIGO *)
   in
   match block with
   | Some x -> x#opening, x#closing
@@ -77,6 +78,20 @@ let jsligo_module =
   ; open_ = "{"
   ; close = "}"
   ; semicolon_at_the_end = true
+  }
+
+(* MAVRYK: PascaLIGO. Module syntax: `module M is { … }`, `module M : S is …`,
+   `module type N is sig … end`. *)
+let pascaligo_module =
+  { module_keyword = "module"
+  ; signature_keyword = "module type"
+  ; import_keyword = "module"
+  ; module_annotation_sign = ":"
+  ; signature_annotation_sign = Some "is"
+  ; sign_on_import = "is"
+  ; open_ = "{"
+  ; close = "}"
+  ; semicolon_at_the_end = false
   }
 
 let print_module_with_description
@@ -151,6 +166,8 @@ let print_module
   = function
   | CameLIGO -> print_module_with_description CameLIGO cameligo_module
   | JsLIGO -> print_module_with_description JsLIGO jsligo_module
+  (* MAVRYK: PascaLIGO *)
+  | PascaLIGO -> print_module_with_description PascaLIGO pascaligo_module
 
 (* Functions made for debugging *)
 

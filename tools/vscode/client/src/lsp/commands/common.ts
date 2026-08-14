@@ -32,6 +32,9 @@ function extToDialect(ext: string) {
   switch (ext) {
     case '.mligo': return 'cameligo'
     case '.jsligo': return 'jsligo'
+    // MAVRYK: PascaLIGO
+    case '.ligo': return 'pascaligo'
+    case '.pligo': return 'pascaligo'
     default:
       throw new ex.UnknownLigoDialectExtensionException(ext)
   }

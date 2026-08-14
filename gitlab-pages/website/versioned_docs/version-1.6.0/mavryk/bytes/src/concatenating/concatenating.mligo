@@ -1,2 +1,0 @@
-let two : bytes = Bytes.concat 0x70 0xAA
-let three : bytes = Bytes.concats [0x70; 0xAA; 0xFF]

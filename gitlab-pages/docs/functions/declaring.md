@@ -142,3 +142,68 @@ function convoluted_doubling (x) {
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+Function declarations are introduced by the `function` keyword, followed
+by the function name and a parenthesised list of parameters. Unlike
+CameLIGO, PascaLIGO parameters are not curried by default: they are all
+given in the same parameter list, separated by semicolons, and each is
+prefixed by `const` (or `var`) and annotated with its type. For example:
+
+```pascaligo group=fun_decl
+function add (const x : int; const y : int) : int is x + y
+function int_add (const x : int; const y : int) : int is x + y
+```
+
+Both `add` and `int_add` take their two parameters at once: you cannot
+call them with a single argument to get a function back. To obtain
+[currying](https://en.wikipedia.org/wiki/Currying) and
+[partial application](https://en.wikipedia.org/wiki/Partial_application)
+in PascaLIGO, a function must explicitly return another function:
+
+```pascaligo group=curry
+function add (const x : int; const y : int) : int is x + y  // Uncurried
+
+function add_curry (const x : int) : int -> int is
+  function (const y : int) : int is x + y  // Curried
+
+const increment : int -> int = add_curry (1)  // Partial application
+const one : int = increment (0)
+```
+
+Here `add` takes both arguments together, whereas `add_curry` returns a
+function of type `int -> int`, so the type of `add_curry` itself is
+`int -> (int -> int)`. Calling `add_curry (1)` applies it to its first
+(and only) argument and returns a function, here bound to `increment`,
+whose type is `int -> int`.
+
+By default, LIGO will warn about unused arguments inside
+functions. In case we do not use an argument, we can use the wildcard
+`_` to prevent warnings. Either use `_` instead of the argument
+identifier:
+
+```pascaligo
+function drop (const x : int; const _ : int) : int is x
+```
+
+or use an identifier starting with wildcard:
+
+```pascaligo
+function drop (const x : int; const _y : int) : int is x  // _y silently ignored
+```
+
+Functions can capture variables in their bodies that are defined
+outside, as shown above with the function `add_curry`, which captures
+`x`. We could have the same phenomenon with a function nested inside
+another, using a `block`, instead of two functions at the same scope
+level:
+
+```pascaligo
+function convoluted_doubling (const x : int) : int is
+  block {
+    function add_x (const y : int) : int is x + y  // x is bound by convoluted_doubling
+  } with add_x (x)
+```
+
+</Syntax>

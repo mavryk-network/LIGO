@@ -9,7 +9,10 @@ module JsLIGO_pretty = Parsing.Jsligo.Pretty
 (* TODO: format definitions from local modules, format subexpressions *)
 
 type declaration =
-  (Cst_cameligo.CST.declaration, Cst_jsligo.CST.statement) Dialect_cst.dialect
+  ( Cst_cameligo.CST.declaration
+  , Cst_jsligo.CST.statement
+  , Cst_pascaligo.CST.declaration (* MAVRYK: PascaLIGO *) )
+  Dialect_cst.dialect
 
 (** Returns the declaration range of the given declaration. *)
 let decl_range : declaration -> Range.t =
@@ -17,6 +20,7 @@ let decl_range : declaration -> Range.t =
   <@ Dialect_cst.from_dialect
        { cameligo = Cst_cameligo.CST.declaration_to_region
        ; jsligo = Cst_jsligo.CST.statement_to_region
+       ; pascaligo = Cst_pascaligo.CST.region_of_S_Decl (* MAVRYK: PascaLIGO *)
        }
 
 (** Collects all top-level declarations from the provided CST (does not visit inner
@@ -32,6 +36,13 @@ let decls_of_cst : Dialect_cst.t -> declaration Nonempty_list.t =
             Nonempty_list.map
               ~f:(fun (x, _) -> Dialect_cst.JsLIGO x)
               cst.statements (* Type inference is not working here *))
+    ; (* MAVRYK: PascaLIGO *)
+      pascaligo =
+        Cst_pascaligo.CST.(
+          fun cst ->
+            Nonempty_list.map
+              ~f:(fun x -> Dialect_cst.PascaLIGO x)
+              (Nonempty_list.of_list_exn (nseq_to_list cst.decl)))
     }
 
 (** Prints the provided declaration in the given syntax. *)
@@ -41,6 +52,8 @@ let print_decl : Pretty.pp_mode -> declaration -> string =
     pp_mode
     { cameligo = uncurry CameLIGO_pretty.print_declaration
     ; jsligo = uncurry JsLIGO_pretty.print_statement
+    ; (* MAVRYK: PascaLIGO *)
+      pascaligo = uncurry Parsing.Pascaligo.Pretty.print_declaration
     }
 
 (* [print_decl] produce a newline at the end of doc, which leads to a trailing newline

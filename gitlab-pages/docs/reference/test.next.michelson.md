@@ -17,6 +17,9 @@ val run : &#39;a &#39;b.(&#39;a -&gt; &#39;b) -&gt; &#39;a -&gt; michelson&#95;p
 <SyntaxTitle syntax="jsligo">
 let run: &lt;a, b&gt;(&#95;: (&#95;: a) =&gt; b) =&gt; (&#95;: a) =&gt; michelson&#95;program
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const run : (a -&gt; b) -&gt; a -&gt; michelson&#95;program
+</SyntaxTitle>
 Run a function on an input, all in Michelson. More concretely:
         a) compiles the function argument to Michelson `f_mich`; b)
         compiles the value argument (which was evaluated already) to
@@ -30,6 +33,9 @@ val eval : &#39;a.&#39;a -&gt; michelson&#95;program
 <SyntaxTitle syntax="jsligo">
 let eval: &lt;a&gt;(&#95;: a) =&gt; michelson&#95;program
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const eval : a -&gt; michelson&#95;program
+</SyntaxTitle>
 Compile a LIGO value to Michelson. Currently it is a
         renaming of `compile_value`.
 
@@ -39,6 +45,9 @@ val decompile : &#39;a.michelson&#95;program -&gt; &#39;a
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let decompile: &lt;a&gt;(&#95;: michelson&#95;program) =&gt; a
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const decompile : michelson&#95;program -&gt; a
 </SyntaxTitle>
 Decompile a Michelson value to LIGO, following the
         (mandatory) type annotation. Note: This operation can fail at
@@ -51,5 +60,8 @@ val parse : string -&gt; michelson&#95;program
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let parse: (&#95;: string) =&gt; michelson&#95;program
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const parse : string -&gt; michelson&#95;program
 </SyntaxTitle>
 Parses Michelson (as string) into a `michelson_program`.

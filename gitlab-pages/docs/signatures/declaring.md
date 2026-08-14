@@ -80,3 +80,41 @@ Note how namespace definitions *must* instantiate any abstract type in
 their interface: here `Euro.t`.
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+Until now, we dealt with implicit module types, also know as
+*signatures*. Having explicitly declared module types enables
+abstraction and reusability by inclusion of signatures. Signatures are
+introduced by the keywords `module type` and the signature expression
+is in between `sig` and `end`:
+
+```pascaligo group=sig_declaring
+module type Euro_SIG is sig
+  type t
+  const add : t -> t -> t
+  const one : t
+  const two : t
+end
+```
+
+The rationale for using module types is the same as using explicit
+type annotation for values: to make sure our values comply with their
+intended use. (We will see other reasons in the next sections.) When
+the declaration of a module is explicitly constrained by a signature,
+its contents must match *exactly* that of the signature (that is,
+nothing less, nothing more), also known as *filtering semantics*:
+
+```pascaligo group=sig_declaring
+module Euro : Euro_SIG is {
+  type t is nat // No more abstract
+  function add (const a : t; const b : t) : t is a + b
+  const one : t = 1n
+  const two : t = 2n
+}
+```
+
+Note how module definitions *must* instantiate any abstract type in
+their signature: here `Euro.t`.
+
+</Syntax>

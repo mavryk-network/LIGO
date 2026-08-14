@@ -95,3 +95,45 @@ const test_initial_storage = () : unit => {
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+For technical reasons, contracts are not modules, and modules are not
+contracts. In order to use a module as a contract, it needs to hold
+functions with the type of an entrypoint, these need to be attributed
+as `[@entry]`.
+
+When declaring the entry points of a contract using `[@entry]`, LIGO generates two hidden values in the module:
+
+* an implicit `main` function, which can be obtained using the keyword `contract_of(C)`, where `C` is the module containing the entry points, and
+* the input type for that `main` function, which can be obtained using the keyword `parameter_of C`.
+
+In the example below, `contract_of(C)` returns the implicitly-declared `main` function that calls the `increment`, `decrement`, or `reset` entry points depending on the argument given, and `parameter_of C` is the variant type generated from the entry points of `C`.
+
+It is built-in (and a keyword) because it takes a module as parameter, and the type system of LIGO has also a predefined type for its return value, but not the full type.
+
+```pascaligo group=contract_of
+type storage is int
+type return is list (operation) * storage
+
+module C is {
+  [@entry] function decrement (const param : int; const storage : storage) : return is
+    ((nil : list (operation)), storage - param)
+
+  [@entry] function increment (const param : int; const storage : storage) : return is
+    ((nil : list (operation)), storage + param)
+
+  [@entry] function reset (const _u : unit; const _s : storage) : return is
+    ((nil : list (operation)), 0)
+}
+
+const test_initial_storage =
+  block {
+    const init_storage = 42;
+    const fee = 0mumav;
+    const orig = Test.Next.originate (contract_of C, init_storage, fee);
+    const new_storage = Test.Next.Typed_address.get_storage (orig.taddr);
+  } with assert (new_storage = init_storage)
+```
+
+</Syntax>

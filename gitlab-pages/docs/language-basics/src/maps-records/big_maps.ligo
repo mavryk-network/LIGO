@@ -1,0 +1,13 @@
+type move is int * int
+type register is big_map (address, move)
+const empty : register = Big_map.empty
+const moves : register =
+  Big_map.literal (list [
+    (("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), (1,2));
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))])
+const my_balance : option (move) =
+  Big_map.find_opt (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), moves)
+const updated_map : register =
+  Big_map.update (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), Some (4,9), moves)
+const updated_map : register =
+  Big_map.remove (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), moves)

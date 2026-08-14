@@ -19,6 +19,7 @@ import Language.LIGO.AST.Skeleton (Lang (..))
 data ElimExt a = ElimExt
   { eeCaml :: a -- ^ action on @CameLIGO@.
   , eeJs   :: a -- ^ action on @JsLIGO@.
+  , eePascal :: a -- ^ action on @PascaLIGO@.  -- MAVRYK: PascaLIGO
   }
 
 -- | An exception which is thrown when a given file has
@@ -37,6 +38,7 @@ getExt path =
   case takeExtension path of
     ".mligo"  -> return Caml
     ".jsligo" -> return Js
+    ".ligo"   -> return Pascal -- MAVRYK: PascaLIGO
     ext       -> throwError $ UnsupportedExtension ext
 
 -- | Determines if the file has a known LIGO extension.
@@ -50,7 +52,8 @@ onExt ee path =
   getExt path <&> \case
     Caml -> eeCaml   ee
     Js   -> eeJs     ee
+    Pascal -> eePascal ee -- MAVRYK: PascaLIGO
 
 -- | A list of supported LIGO file extensions.
 supportedExtensions :: [FilePath]
-supportedExtensions = [".mligo", ".jsligo"]
+supportedExtensions = [".mligo", ".jsligo", ".ligo"] -- MAVRYK: PascaLIGO

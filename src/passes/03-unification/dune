@@ -8,4 +8,5 @@
   syntax_types
   unification_cameligo
   unification_jsligo
+  unification_pascaligo
   ast_unified))

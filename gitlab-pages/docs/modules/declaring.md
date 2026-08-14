@@ -95,3 +95,48 @@ by the keyword `export`: this enables access to them from outside the
 namespace.
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+Modules are a programming language construction that allows us to
+package related definitions together. A canonical example of a module
+is a data type and associated operations over it (e.g. stacks or
+queues). The rest of the program can access these definitions in a
+regular way, providing maintainability, reusability and safety.
+
+By contrast, a record cannot package type definitions together with
+values: modules can, but records are values and modules are not values:
+this is where design comes into play: do we want to create a kind of
+library, which we use for other tasks, or do we want to compute? If
+the former, we would probably use a module; if the latter, a record.
+
+For a concrete example, we could create a module that packages a type
+that represents amounts in a particular currency together with
+functions that manipulate these amounts: constants, addition,
+subtraction, etc.
+
+Modules are introduced by the keyword `module`, followed by the
+keyword `is`, and type and value definitions are grouped within a
+block opened by `{` and closed by `}`. Module names must start with a
+capital letter.
+
+For example, the following code defines a module `Euro` that packages
+together a type, called `t`, together with an operation `add` that
+sums two values of the given currency, as well as coins for one and
+two euros.
+
+```pascaligo group=Euro
+module Euro is {
+  type t is nat
+  function add (const a : t; const b : t) : t is a + b
+  const one : t = 1n
+  const two : t = 2n
+}
+```
+
+By default all the definitions in a module are "exported", that is,
+they are accessible from outside the module. (We will see how to
+restrict the access by means of
+[module types](../signatures/declaring.md).)
+
+</Syntax>

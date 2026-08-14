@@ -1,0 +1,1 @@
+type int_or_string = int | string;

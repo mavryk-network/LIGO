@@ -33,6 +33,14 @@ const today: timestamp = Mavryk.get_now();
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=now
+const today : timestamp = Mavryk.get_now ()
+```
+
+</Syntax>
+
 
 > When testing your code, the LIGO CLI option `--now` allows you to
 > control what `Mavryk.get_now` returns.
@@ -68,6 +76,18 @@ const one_day_later: timestamp = some_date + one_day;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=tomorrow
+const today : timestamp = Mavryk.get_now ()
+const one_day : int = 86_400
+const in_24_hrs : timestamp = today + one_day
+const some_date : timestamp = ("2000-01-01t10:10:10Z" : timestamp)
+const one_day_later : timestamp = some_date + one_day
+```
+
+</Syntax>
+
 
 ### Decrementing
 
@@ -87,6 +107,16 @@ let in_24_hrs : timestamp = today - one_day
 const today: timestamp = Mavryk.get_now();
 const one_day: int = 86400;
 const in_24_hrs: timestamp = today - one_day;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=yesterday
+const today : timestamp = Mavryk.get_now ()
+const one_day : int = 86400
+const in_24_hrs : timestamp = today - one_day
 ```
 
 </Syntax>
@@ -116,6 +146,16 @@ const secs_until_some_date: int = some_date - today;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=subtracting
+const today : timestamp = Mavryk.get_now ()
+const some_date : timestamp = ("2035-01-01t10:10:10Z" : timestamp)
+const secs_until_some_date : int = some_date - today
+```
+
+</Syntax>
+
 Notice that the result of such subtraction is an `int`, which describes the difference in seconds between the two timestamps.
 
 ## Comparing
@@ -141,6 +181,17 @@ const today: timestamp = Mavryk.get_now();
 const one_day: int = 86400;
 const in_24_hrs: timestamp = today - one_day;
 const not_tomorrow: bool = (Mavryk.get_now() == in_24_hrs);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=comparing
+const today : timestamp = Mavryk.get_now ()
+const one_day : int = 86400
+const in_24_hrs : timestamp = today - one_day
+const not_tomorrow : bool = (Mavryk.get_now () = in_24_hrs)
 ```
 
 </Syntax>

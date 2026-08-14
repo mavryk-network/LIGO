@@ -62,7 +62,14 @@ let syntax_title_ : Syntax_types.t -> document -> document =
 
 
 let syntax_title (f : Syntax_types.t -> document) : document =
-  syntax_title_ CameLIGO (f CameLIGO) ^^ hardline ^^ syntax_title_ JsLIGO (f JsLIGO)
+  (* MAVRYK: PascaLIGO. Emit a PascaLIGO <SyntaxTitle> too (the type-printer [p] already renders
+     PascaLIGO via [decompile_type_case ~syntax:PascaLIGO]); without this the generated stdlib
+     reference pages had CameLIGO+JsLIGO only. *)
+  syntax_title_ CameLIGO (f CameLIGO)
+  ^^ hardline
+  ^^ syntax_title_ JsLIGO (f JsLIGO)
+  ^^ hardline
+  ^^ syntax_title_ PascaLIGO (f PascaLIGO)
 
 
 let syntax_ : Syntax_types.t -> document -> document =
@@ -131,6 +138,10 @@ let vdef_doc
       match syntax with
       | JsLIGO -> !^"let" ^//^ !^name ^^ colon
       | CameLIGO -> !^"val" ^//^ !^name ^//^ colon
+      | PascaLIGO ->
+        !^"const"
+        ^//^ !^name
+        ^//^ colon (* MAVRYK: PascaLIGO. PascaLIGO uses [const], not [val]. *)
     in
     Docs_utils.decompile_type_case ~raise ~escape_html_characters:true ~syntax ~prefix t
   in
