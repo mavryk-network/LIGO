@@ -10,8 +10,12 @@ class LigoAT180 < Formula
   version "1.8.0"
   head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
-  # MAVRYK: builds from source — no bottle block. See HomebrewFormula/ligo.rb for how to add
-  # Mavryk-hosted bottles (project 51776731) once they are built.
+  # MAVRYK: 1.8.0 bottles hosted on the mavryk-network/ligo registry (project 51776731). Only
+  # arm64_tahoe published so far; other platforms build from source until their bottle is added.
+  bottle do
+    root_url "https://gitlab.com/api/v4/projects/51776731/packages/generic/ligo_bottle/current"
+    sha256 cellar: :any, arm64_tahoe: "26bfae1944fd039542fd17eb27a190e706704f34bc6b77d700df84c9da87e2ea"
+  end
 
   build_dependencies = %w[opam rust hidapi pkg-config gnu-sed cmake gcc]
   build_dependencies.each do |dependency|

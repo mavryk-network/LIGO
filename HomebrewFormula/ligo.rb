@@ -11,14 +11,14 @@ class Ligo < Formula
   head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
 
-  # MAVRYK: 1.8.0 builds from source — no bottle block on purpose. The previous bottles lived in
-  # ligolang UPSTREAM's registry (project 12294987) and do NOT contain PascaLIGO. To ship fast installs,
-  # build 1.8.0 bottles from THIS source, upload them to the mavryk-network/ligo package registry
-  # (project 51776731 — none exists yet), then re-add:
-  #   bottle do
-  #     root_url "https://gitlab.com/api/v4/projects/51776731/packages/generic/ligo_bottle/current"
-  #     sha256 cellar: :any, arm64_sonoma: "<shasum -a 256 of the bottle>"
-  #   end
+  # MAVRYK: 1.8.0 bottles are Mavryk-built (with PascaLIGO) and hosted on the mavryk-network/ligo
+  # package registry (project 51776731) — NOT ligolang upstream (whose bottles lack PascaLIGO). Only
+  # arm64_tahoe is published so far; other platforms build from source until their bottle is added
+  # (build + upload, then add another `sha256 cellar: :any, <tag>: "..."` line here).
+  bottle do
+    root_url "https://gitlab.com/api/v4/projects/51776731/packages/generic/ligo_bottle/current"
+    sha256 cellar: :any, arm64_tahoe: "26bfae1944fd039542fd17eb27a190e706704f34bc6b77d700df84c9da87e2ea"
+  end
 
   build_dependencies = %w[opam rust hidapi pkg-config gnu-sed cmake gcc]
   build_dependencies.each do |dependency|
