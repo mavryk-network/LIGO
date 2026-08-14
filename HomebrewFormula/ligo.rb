@@ -6,7 +6,7 @@ class Ligo < Formula
   # We clone repo explicitely to preserve the information about git submodules
   # MAVRYK: 1.8.0 (PascaLIGO restoration + union types). Update `revision` to the exact commit tagged
   # 1.8.0 (e.g. the dev merge commit); the value below is pascaligo-restoration HEAD at prep time.
-  url "https://gitlab.com/mavryk-network/ligo.git", tag: "1.8.0", revision: "74d225c25e0dccc99a1230ec59037208260e3748"
+  url "https://gitlab.com/mavryk-network/ligo.git", tag: "1.8.0", revision: "81fdd5b229f916b9b0a4be2396034ab0f16af33f"
   version "1.8.0"
   head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
