@@ -1,7 +1,7 @@
 {
   "name": "@ligo/syntax",
   "description": "Switch between different syntaxes",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "output/index.js",
   "peerDependencies": {
     "@docusaurus/core": "^2.2.0",
