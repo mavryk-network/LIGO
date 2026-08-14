@@ -1,28 +1,33 @@
 (** We want to write some high-level functions that can take toplevel declarations
     / cst / etc for all dialects,
     this wrapper allow to simplify types of such functions and create some combinators *)
-type ('cameligo, 'jsligo) dialect =
+type ('cameligo, 'jsligo, 'pascaligo) dialect =
   | CameLIGO of 'cameligo
   | JsLIGO of 'jsligo
+  | PascaLIGO of 'pascaligo (* MAVRYK: PascaLIGO *)
 
 (** Nice form for functions that take [(...) dialect] *)
-type ('cameligo, 'jsligo, 'result) from_dialect =
+type ('cameligo, 'jsligo, 'pascaligo, 'result) from_dialect =
   { cameligo : 'cameligo -> 'result
   ; jsligo : 'jsligo -> 'result
+  ; pascaligo : 'pascaligo -> 'result (* MAVRYK: PascaLIGO *)
   }
 
-let from_dialect : ('a, 'b, 'result) from_dialect -> ('a, 'b) dialect -> 'result =
+let from_dialect : ('a, 'b, 'c, 'result) from_dialect -> ('a, 'b, 'c) dialect -> 'result =
  fun f -> function
   | CameLIGO x -> f.cameligo x
   | JsLIGO x -> f.jsligo x
+  | PascaLIGO x -> f.pascaligo x (* MAVRYK: PascaLIGO *)
 
 
-let to_syntax_type : ('cameligo, 'jsligo) dialect -> Syntax_types.t = function
+let to_syntax_type : ('cameligo, 'jsligo, 'pascaligo) dialect -> Syntax_types.t = function
   | CameLIGO _ -> CameLIGO
   | JsLIGO _ -> JsLIGO
+  | PascaLIGO _ -> PascaLIGO (* MAVRYK: PascaLIGO *)
 
 
-type t = (Parsing.Cameligo.CST.t, Parsing.Jsligo.CST.t) dialect
+type t =
+  (Parsing.Cameligo.CST.t, Parsing.Jsligo.CST.t, Parsing.Pascaligo.CST.t) dialect
 type parsing_raise = (Parsing.Errors.t, Main_warnings.all) Simple_utils.Trace.raise
 
 exception Fatal_cst_error of string
@@ -71,6 +76,16 @@ let get_cst_exn
     let module Parameters = ParserLib.CLI.MakeDefault (LexerParams) in
     let module Parse = Parsing.Jsligo.Make (Parameters.Options) in
     JsLIGO
+      (Parse.parse_file ~preprocess ~preprocess_define ?project_root ~raise c_unit file)
+  (* MAVRYK: PascaLIGO *)
+  | PascaLIGO ->
+    (* Make Config with PascaLIGO options. *)
+    let module Config = Preprocessing_pascaligo.Config in
+    let module PreprocParams = Preprocessor.CLI.MakeDefault (Config) in
+    let module LexerParams = LexerLib.CLI.MakeDefault (PreprocParams) in
+    let module Parameters = ParserLib.CLI.MakeDefault (LexerParams) in
+    let module Parse = Parsing.Pascaligo.Make (Parameters.Options) in
+    PascaLIGO
       (Parse.parse_file ~preprocess ~preprocess_define ?project_root ~raise c_unit file)
 
 

@@ -78,6 +78,25 @@ export namespace MyContract {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=mycontract
+// This is mycontract.ligo
+module MyContract is {
+  type storage is int
+  type result is list (operation) * storage
+
+  [@entry] function increment (const delta : int; const storage : storage) : result is
+    ((nil : list (operation)), storage + delta)
+  [@entry] function decrement (const delta : int; const storage : storage) : result is
+    ((nil : list (operation)), storage - delta)
+  [@entry] function reset (const _u : unit; const _storage : storage) : result is
+    ((nil : list (operation)), 0)
+}
+```
+
+</Syntax>
+
 To test the contract, create a function to originate the contract in the test simulation, call it, and verify the result.
 You can put the test functions in the same file or a separate file.
 
@@ -128,6 +147,24 @@ const test1 = run_test1();
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=mycontract-test
+// This is mycontract-test.ligo
+
+#import "gitlab-pages/docs/testing/src/testing/mycontract.ligo" "MyContract"
+
+const run_test1 =
+  block {
+    const initial_storage = 10;
+    const orig = Test.Next.Originate.contract (contract_of MyContract.MyContract, initial_storage, 0mav);
+    const _u = Assert.assert (Test.Next.Typed_address.get_storage (orig.taddr) = initial_storage);
+    const _n : nat = Test.Next.Contract.transfer_exn (Test.Next.Typed_address.get_entrypoint ("increment", orig.taddr), 32, 0mav);
+  } with Assert.assert (Test.Next.Typed_address.get_storage (orig.taddr) = initial_storage + 32)
+```
+
+</Syntax>
+
 The `run test` command evaluates all top-level definitions and prints any
 entries that begin with the prefix `test` as well as the value that these
 definitions evaluate to. If any of the definitions fail, it prints a message
@@ -149,6 +186,14 @@ ligo run test --library gitlab-pages/docs/testing/src/testing/ gitlab-pages/docs
 
 ```shell
 ligo run test --library gitlab-pages/docs/testing/src/testing/ gitlab-pages/docs/testing/src/testing/mycontract-test.jsligo
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo run test --library gitlab-pages/docs/testing/src/testing/ gitlab-pages/docs/testing/src/testing/mycontract-test.ligo
 ```
 
 </Syntax>
@@ -244,6 +289,38 @@ const test_failure = () => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=mycontract-failures
+module MyContract is {
+  type storage is int
+  type result is list (operation) * storage
+
+  [@entry] function increment (const delta : int; const storage : storage) : result is
+    if abs (delta) <= 5n then ((nil : list (operation)), storage + delta) else failwith ("Pass 5 or less")
+  [@entry] function decrement (const delta : int; const storage : storage) : result is
+    if abs (delta) <= 5n then ((nil : list (operation)), storage - delta) else failwith ("Pass 5 or less")
+  [@entry] function reset (const _u : unit; const _storage : storage) : result is
+    ((nil : list (operation)), 0)
+}
+```
+
+This test verifies that the error works by passing a number larger than 5 and handling the error:
+
+```pascaligo group=mycontract-failures
+const test_failure =
+  block {
+    const initial_storage = 10;
+    const orig = Test.Next.Originate.contract (contract_of MyContract, initial_storage, 0mav);
+    const result : test_exec_result = Test.Next.Contract.transfer (Test.Next.Typed_address.get_entrypoint ("increment", orig.taddr), 50, 0mav);
+  } with case result of [
+    Fail (_x) -> Test.Next.IO.log ("Failed as expected")
+  | Success (_s) -> failwith ("This should not succeed")
+  ]
+```
+
+</Syntax>
+
 ### Generating test accounts
 
 You can use test accounts to simulate real accounts in tests.
@@ -307,6 +384,36 @@ namespace Counter {
     return [[], [0, admin_account]];
   }
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=test-accounts
+module Counter is {
+  type storage is int * address
+  type return_type is list (operation) * storage
+
+  [@entry] function increment (const n : int; const storage : storage) : return_type is
+    block {
+      const (number, admin_account) = storage;
+    } with ((nil : list (operation)), (number + n, admin_account))
+
+  [@entry] function sub (const n : int; const storage : storage) : return_type is
+    block {
+      const (number, admin_account) = storage;
+    } with ((nil : list (operation)), (number - n, admin_account))
+
+  [@entry] function reset (const _u : unit; const storage : storage) : return_type is
+    block {
+      const (_number, admin_account) = storage;
+    } with
+      if Mavryk.get_sender () = admin_account then
+        ((nil : list (operation)), (0, admin_account))
+      else
+        (failwith ("Only the owner can call this entrypoint") : return_type)
+}
 ```
 
 </Syntax>
@@ -375,6 +482,37 @@ const test_admin = (() => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=test-accounts
+const test_admin =
+  block {
+    const admin_account = Test.Next.Account.address (0n);
+    const user_account = Test.Next.Account.address (1n);
+
+    // Originate the contract with the admin account in storage
+    const initial_storage = (10, admin_account);
+    const orig = Test.Next.Originate.contract (contract_of Counter, initial_storage, 0mav);
+
+    // Try to call the reset entrypoint as the user and expect it to fail
+    const _u1 = Test.Next.State.set_source (user_account);
+    const result = Test.Next.Contract.transfer (Test.Next.Typed_address.get_entrypoint ("reset", orig.taddr), unit, 0mav);
+    const _u2 =
+      case result of [
+        Fail (_err) -> Test.Next.IO.log ("Test succeeded")
+      | Success (_s) -> failwith ("User should not be able to call reset")
+      ];
+
+    // Call the reset entrypoint as the admin and expect it to succeed
+    const _u3 = Test.Next.State.set_source (admin_account);
+    const _n : nat = Test.Next.Contract.transfer_exn (Test.Next.Typed_address.get_entrypoint ("reset", orig.taddr), unit, 0mav);
+
+    const (newNumber, _admin_account2) = Test.Next.Typed_address.get_storage (orig.taddr);
+  } with Assert.assert (newNumber = 0)
+```
+
+</Syntax>
+
 By default, the test simulation has two test accounts.
 To create more, pass the number of accounts and a list of their balances or an empty list to use the default balance to the `Test.Next.State.Reset` function, as in the following example.
 The default balance is 4000000 mav minus %5 that is frozen so the account can act as a validator.
@@ -419,6 +557,27 @@ const test_accounts = () => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=reset
+const test_accounts =
+  block {
+    const initial_balances : list (mav) = list [];
+    const _u1 = Test.Next.State.reset (3n, initial_balances);
+    const admin_account = Test.Next.Account.address (0n);
+    const user_account1 = Test.Next.Account.address (1n);
+    const user_account2 = Test.Next.Account.address (2n);
+
+    const _u2 = Test.Next.IO.log (Test.Next.Address.get_balance (admin_account));
+    // 3800000000000mumav
+    const _u3 = Test.Next.IO.log (Test.Next.Address.get_balance (user_account1));
+    // 3800000000000mumav
+  } with Test.Next.IO.log (Test.Next.Address.get_balance (user_account2))
+    // 3800000000000mumav
+```
+
+</Syntax>
+
 ### Testing events
 
 To test events, emit them as usual with the `Mavryk.emit` function and use the `Test.Next.State.last_events` function to capture the most recent events, as in this example:
@@ -455,6 +614,26 @@ const test = () => {
   Test.Next.Typed_address.transfer_exn(orig.taddr, Main ([1,2]), 0mav);
   return [Test.Next.State.last_events(orig.taddr, "foo") as list<[int, int]>, Test.Next.State.last_events(orig.taddr, "foo") as list<int>];
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=test_ex
+module C is {
+  [@entry] function main (const p : int * int; const _s : unit) : list (operation) * unit is
+    (list [Mavryk.emit ("%foo", p); Mavryk.emit ("%foo", p.0)], unit)
+}
+
+const test_foo =
+  block {
+    const orig = Test.Next.Originate.contract (contract_of C, unit, 0mav);
+    const _r : nat = Test.Next.Typed_address.transfer_exn (orig.taddr, Main (1, 2), 0mav);
+  } with (
+    (Test.Next.State.last_events (orig.taddr, "foo") : list (int * int)),
+    (Test.Next.State.last_events (orig.taddr, "foo") : list (int))
+  )
 ```
 
 </Syntax>
@@ -500,6 +679,22 @@ const remove_balances_under = (b: balances, threshold: mav): balances => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=remove-balance
+// This is remove-balance.ligo
+
+type balances is map (address, mav)
+
+function remove_balances_under (const b : balances; const threshold : mav) : balances is
+  Map.fold (
+    function (const acc_kv : balances * (address * mav)) : balances is
+      block { const (acc, (k, v)) = acc_kv; } with (if v < threshold then Map.remove (k, acc) else acc),
+    b, b)
+```
+
+</Syntax>
+
 You can test this function against a range of thresholds with the LIGO test framework.
 
 <!-- I divided unit-remove-balance in multiple part of clarity -->
@@ -527,6 +722,18 @@ const test_remove_balance = (() => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=unit-remove-balance-mixed
+#include "./gitlab-pages/docs/testing/src/testing/remove-balance.ligo"
+
+const test_remove_balance =
+  block {
+    const _u = Test.Next.State.reset (5n, (nil : list (mav)));
+```
+
+</Syntax>
+
 Now build the `balances` map that serves as the test input:
 
 <Syntax syntax="cameligo">
@@ -545,6 +752,19 @@ const balances: balances =
   Map.literal([[Test.Next.Account.address(1n), 10mav],
               [Test.Next.Account.address(2n), 100mav],
               [Test.Next.Account.address(3n), 1000mav]]);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=unit-remove-balance-mixed
+    const balances : balances =
+      block {
+        const a1 = Test.Next.Account.address (1n);
+        const a2 = Test.Next.Account.address (2n);
+        const a3 = Test.Next.Account.address (3n);
+      } with Map.literal (list [(a1, 10mav); (a2, 100mav); (a3, 1000mav)]);
 ```
 
 </Syntax>
@@ -596,6 +816,25 @@ return List.iter(([threshold, expected_size]: [mav, nat]): unit => {
   },
   list ([ [15mav, 2n], [130mav, 1n], [1200mav, 0n]]) );
 }) ()
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=unit-remove-balance-mixed
+  } with List.iter (
+    function (const kv : mav * nat) : unit is
+      block {
+        const (threshold, expected_size) = kv;
+        const tester = function (const bt : balances * mav) : nat is
+          block { const (bals, thr) = bt; } with Map.size (remove_balances_under (bals, thr));
+        const size = Test.Next.Michelson.run (tester, (balances, threshold));
+        const expected_size_ = Test.Next.Michelson.eval (expected_size);
+        const _u1 = Test.Next.IO.log (("expected", expected_size_));
+        const _u2 = Test.Next.IO.log (("actual", size));
+      } with Assert.assert (Test.Next.Compare.eq (size, expected_size_)),
+    list [(15mav, 2n); (130mav, 1n); (1200mav, 0n)])
 ```
 
 </Syntax>
@@ -652,6 +891,36 @@ const test_remove_balance = (() => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=unit-remove-balance-complete
+#include "./gitlab-pages/docs/testing/src/testing/remove-balance.ligo"
+
+const test_remove_balance =
+  block {
+    const _u = Test.Next.State.reset (5n, (nil : list (mav)));
+    const balances : balances =
+      block {
+        const a1 = Test.Next.Account.address (1n);
+        const a2 = Test.Next.Account.address (2n);
+        const a3 = Test.Next.Account.address (3n);
+      } with Map.literal (list [(a1, 10mav); (a2, 100mav); (a3, 1000mav)]);
+  } with List.iter (
+    function (const kv : mav * nat) : unit is
+      block {
+        const (threshold, expected_size) = kv;
+        const tester = function (const bt : balances * mav) : nat is
+          block { const (bals, thr) = bt; } with Map.size (remove_balances_under (bals, thr));
+        const size = Test.Next.Michelson.run (tester, (balances, threshold));
+        const expected_size_ = Test.Next.Michelson.eval (expected_size);
+        const _u1 = Test.Next.IO.log (("expected", expected_size_));
+        const _u2 = Test.Next.IO.log (("actual", size));
+      } with Assert.assert (Test.Next.Compare.eq (size, expected_size_)),
+    list [(15mav, 2n); (130mav, 1n); (1200mav, 0n)])
+```
+
+</Syntax>
+
 You can now execute the test by running this command:
 
 <Syntax syntax="cameligo">
@@ -666,6 +935,14 @@ ligo run test --library . gitlab-pages/docs/testing/src/testing/unit-remove-bala
 
 ```shell
 ligo run test --library . gitlab-pages/docs/testing/src/testing/unit-remove-balance-mixed.jsligo
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo run test --library . gitlab-pages/docs/testing/src/testing/unit-remove-balance-mixed.ligo
 ```
 
 </Syntax>
@@ -718,6 +995,18 @@ const encodeEntry = (a: int, b: string): myDataType => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=interpret
+// This is interpret.ligo
+type myDataType is map (int, string)
+
+function encodeEntry (const a : int; const b : string) : myDataType is
+  Map.literal (list [(a, b)])
+```
+
+</Syntax>
+
 To encode values with this function, pass the LIGO expression to call the function to the `run interpret` command and include the LIGO file in the `--init-file` argument:
 
 <Syntax syntax="cameligo">
@@ -732,6 +1021,14 @@ ligo run interpret 'encodeEntry 5 "hello"' --init-file gitlab-pages/docs/testing
 
 ```shell
 ligo run interpret 'encodeEntry(5, "hello")' --init-file gitlab-pages/docs/testing/src/testing/interpret.jsligo
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo run interpret 'encodeEntry (5, "hello")' --init-file gitlab-pages/docs/testing/src/testing/interpret.ligo
 ```
 
 </Syntax>
@@ -819,6 +1116,33 @@ The result shows the new value of the storage:
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=dry-run-simple
+module Counter is {
+  type storage_type is int
+  type return_type is list (operation) * storage_type
+
+  [@entry]
+  function main (const _action : unit; const storage : storage_type) : return_type is
+    ((nil : list (operation)), storage + 1)
+}
+```
+
+This command tests the contract with the `run dry-run` command:
+
+```bash
+ligo run dry-run -m Counter gitlab-pages/docs/testing/src/testing/counter_simple.ligo 'unit' '4'
+```
+
+The result shows the new value of the storage:
+
+```
+( LIST_EMPTY() , 5 )
+```
+
+</Syntax>
+
 For a more complicated example, this contract stores a map and
 provides an entrypoint that updates elements in it:
 
@@ -873,6 +1197,34 @@ type as the contract storage as the initial value of the storage:
 ligo run dry-run -m MyContract gitlab-pages/docs/testing/src/testing/dry-run-complex.jsligo \
   'Update(1n, "new value")' \
   'Map.empty as map<nat, string>'
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=dry-run-complex
+module MyContract is {
+  type storage_type is map (nat, string)
+  type return_type is list (operation) * storage_type
+
+  [@entry]
+  function update (const param : nat * string; const storage : storage_type) : return_type is
+    block {
+      const (index, value) = param;
+      const updated_map = Map.add (index, value, storage);
+    } with ((nil : list (operation)), updated_map)
+}
+```
+
+You can test the entrypoint and view the resulting operations and
+storage by running this command, which uses an empty map of the same
+type as the contract storage as the initial value of the storage:
+
+```bash
+ligo run dry-run -m MyContract gitlab-pages/docs/testing/src/testing/dry-run-complex.ligo \
+  'Update (1n, "hi")' \
+  '(Map.empty : map (nat, string))'
 ```
 
 </Syntax>

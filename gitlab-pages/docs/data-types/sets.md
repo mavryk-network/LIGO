@@ -56,6 +56,21 @@ const set2 : set<int> = Set.of_list([3, two, two, 1]);
 ```
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=sets
+const empty_set : set (int) = Set.empty
+const set1 : set (int) = Set.literal (list [3; 2; 2; 1])
+```
+
+> Note: The element `2` is repeated in the list, but not in the set
+> made from it.
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
+
+</Syntax>
+
 Set elements are internally sorted by increasing values, so the type
 of the elements must be *comparable*, that is, they obey a total order
 (any two elements can be compared).
@@ -89,6 +104,18 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=cardinal
+const my_set : set (int) = Set.literal (list [3; 2; 2; 1])
+const cardinal : nat = Set.size (my_set) // = 3
+```
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
+
+</Syntax>
+
 ## Searching
 
 The predicate `Set.mem` tests for membership in a given set.
@@ -114,6 +141,18 @@ const contains_3: bool = Set.mem(3, my_set); // == true
 
 Note: See the predefined
 [namespace Set](../reference/set-reference/?lang=jsligo)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=set_membership
+const my_set : set (int) = Set.literal (list [3; 2; 2; 1])
+const contains_3 : bool = Set.mem (3, my_set) // = true
+```
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
 
 </Syntax>
 
@@ -144,6 +183,18 @@ const with_4: set<int> = Set.add(4, my_set);
 
 Note: See the predefined
 [namespace Set](../reference/set-reference/?lang=jsligo)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=set_adding
+const my_set : set (int) = Set.literal (list [3; 2; 2; 1])
+const with_4 : set (int) = Set.add (4, my_set)
+```
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
 
 </Syntax>
 
@@ -179,6 +230,19 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=set_removing
+const my_set : set (int) = Set.literal (list [3; 2; 2; 1])
+const new_set = Set.remove (3, my_set)
+const contains_3 = Set.mem (3, new_set) // = false
+```
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
+
+</Syntax>
+
 ## Updating
 
 Previous sections show how to add and remove an element from a given
@@ -202,6 +266,16 @@ let set_without_3 = Set.update 3 false nats
 const nats: set<int> = Set.literal([3, 2, 2, 1]);
 const set_with_5 = Set.update(5, true, nats);
 const set_without_3 = Set.update(3, false, nats);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=set_updating
+const nats : set (int) = Set.literal (list [3; 2; 2; 1])
+const set_with_5 = Set.update (5, True, nats)
+const set_without_3 = Set.update (3, False, nats)
 ```
 
 </Syntax>
@@ -238,6 +312,20 @@ const odds = Set.filter_map(f, nats);
 
 Note: See the predefined
 [namespace Set](../reference/set-reference/?lang=jsligo)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=set_updating
+function f (const x : int) : option (int) is
+  if x mod 2 = 0n then None else Some (x)
+// odds = Set.literal (list [3; 1])
+const odds = Set.filter_map (f, nats)
+```
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
 
 </Syntax>
 
@@ -294,6 +382,27 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=set_folding
+const s : set (int) = Set.literal (list [1; 2; 3])
+
+function fold_incr (const a_i : list (int) * int) : list (int) is
+  a_i.1 # a_i.0
+// incr = list [3; 2; 1]
+const incr : list (int) = Set.fold (fold_incr, s, (list [] : list (int)))
+
+function fold_decr (const i_a : int * list (int)) : list (int) is
+  i_a.0 # i_a.1
+// decr = list [1; 2; 3]
+const decr : list (int) = Set.fold_desc (fold_decr, s, (list [] : list (int)))
+```
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
+
+</Syntax>
+
 ## Mapping
 
 We may want to change all the elements of a given set by applying to
@@ -325,6 +434,20 @@ const plus_one: set<int> = Set.map(i => i + 1, s);
 
 Note: See the predefined
 [namespace Set](../reference/set-reference/?lang=jsligo)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=set_mapping
+const s : set (int) = Set.literal (list [5; 1; 2; 2])
+// plus_one = Set.literal (list [6; 2; 3])
+function incr (const i : int) : int is i + 1
+const plus_one : set (int) = Set.map (incr, s)
+```
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
 
 </Syntax>
 
@@ -366,6 +489,20 @@ Note: See the predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=set_iterating
+function assert_all_greater_than_3 (const s : set (int)) : unit is
+  block {
+    function check (const i : int) : unit is assert (i > 3)
+  } with Set.iter (check, s)
+```
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
+
+</Syntax>
+
 ## Looping
 
 <Syntax syntax="cameligo">
@@ -395,5 +532,29 @@ function sum_elt (s: set<int>) {
 
 Note: See the predefined
 [namespace Set](../reference/set-reference/?lang=jsligo)
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+One can iterate through all the elements of a set, in increasing
+order, thanks to a loop of the form `for <variable> in set <set_expr> <block>`. It means that the `<block>` of statements will be computed
+once for each `<variable>` ranging over the elements of the set
+`<set_expr>`, in increasing order.
+
+Here is an example where the integers in a set are summed up.
+
+```pascaligo group=set_looping
+function sum_elt (const s : set (int)) : int is
+  block {
+    var sum : int := 0;
+    for e in set s {
+      sum := sum + e
+    }
+  } with sum
+```
+
+Note: See the predefined
+[module Set](../reference/set-reference/?lang=pascaligo)
 
 </Syntax>

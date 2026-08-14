@@ -1,0 +1,10 @@
+type word       is string
+type definition is list (string)
+type dictionary is big_map (word, definition)
+
+const empty_dict : dictionary = Big_map.empty
+
+const dictionary : dictionary =
+  Big_map.literal (list [
+    ("one", list ["The number 1."; "A member of a group."]);
+    ("two", list ["The number 2"])])

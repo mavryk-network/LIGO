@@ -16,6 +16,9 @@ val and : &#39;a &#39;b.&#39;a -&gt; &#39;b -&gt; (&#39;a, &#39;b) external&#95;
 <SyntaxTitle syntax="jsligo">
 let and: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: b) =&gt; external&#95;and&lt;a, b&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const and : a -&gt; b -&gt; external&#95;and (a, b)
+</SyntaxTitle>
 The call `@and a b` is the conjunction defined on boolean,
     natural number and bytes operands. In the boolean case, the result
     is the logical "and" of the operands. In the natural number and
@@ -37,6 +40,9 @@ val or : &#39;a &#39;b.&#39;a -&gt; &#39;b -&gt; (&#39;a, &#39;b) external&#95;x
 <SyntaxTitle syntax="jsligo">
 let or: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: b) =&gt; external&#95;xor&lt;a, b&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const or : a -&gt; b -&gt; external&#95;xor (a, b)
+</SyntaxTitle>
 The call `@or a b` is the disjunction defined on boolean,
     natural number and bytes operands. In the boolean case, the result
     is the logical "or" of the operands. In the natural number and
@@ -53,6 +59,9 @@ val xor : &#39;a &#39;b.&#39;a -&gt; &#39;b -&gt; (&#39;a, &#39;b) external&#95;
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let xor: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: b) =&gt; external&#95;or&lt;a, b&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const xor : a -&gt; b -&gt; external&#95;or (a, b)
 </SyntaxTitle>
 The call `xor a b` is the exclusive disjunction defined on
     boolean, natural number and bytes operands. In the boolean case,
@@ -71,6 +80,9 @@ val shift&#95;left : &#39;a &#39;b.&#39;a -&gt; &#39;b -&gt; (&#39;a, &#39;b) ex
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let shift&#95;left: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: b) =&gt; external&#95;lsl&lt;a, b&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const shift&#95;left : a -&gt; b -&gt; external&#95;lsl (a, b)
 </SyntaxTitle>
 The function `shift_left` on natural numbers consumes two
     natural numbers and produces the first number logically
@@ -96,6 +108,9 @@ val shift&#95;right : &#39;a &#39;b.&#39;a -&gt; &#39;b -&gt; (&#39;a, &#39;b) e
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let shift&#95;right: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: b) =&gt; external&#95;lsr&lt;a, b&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const shift&#95;right : a -&gt; b -&gt; external&#95;lsr (a, b)
 </SyntaxTitle>
 The function `shift_right` on natural numbers consumes two
     natural numbers and produces the first number logically

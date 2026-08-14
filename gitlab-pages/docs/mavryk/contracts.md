@@ -19,6 +19,14 @@ implicit accounts always have the type `unit contract`.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `Mavryk.implicit_account (kh)` casts the public key hash `kh`
+into the address of its *implicit account*. Note that addresses of
+implicit accounts always have the type `contract (unit)`.
+
+</Syntax>
+
 <Syntax syntax="jsligo">
 
 The call `Mavryk.implicit_account(kh)` casts the public key hash `kh`

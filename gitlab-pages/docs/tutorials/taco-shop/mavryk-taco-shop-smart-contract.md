@@ -98,6 +98,16 @@ export type taco_shop_storage = map <nat, taco_supply>;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=TacoShop
+type taco_supply is record [ current_stock : nat ; max_price : mav ]
+
+type taco_shop_storage is map (nat, taco_supply)
+```
+
+</Syntax>
+
 Now that the storage is defined, let's interact with it.
 
 ### Selling the Tacos for Free
@@ -128,6 +138,16 @@ function buy_taco(taco_kind_index: nat, taco_shop_storage: taco_shop_storage): [
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+[@entry]
+function buy_taco (const taco_kind_index : nat; const taco_shop_storage : taco_shop_storage) : list (operation) * taco_shop_storage is
+  ((nil : list (operation)), taco_shop_storage)
+```
+
+</Syntax>
+
 It's already possible to compile your contract by running : 
 
 <Syntax syntax="jsligo">
@@ -142,6 +162,14 @@ ligo compile contract taco_shop.jsligo
 
 ```
 ligo compile contract taco_shop.mligo
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```
+ligo compile contract taco_shop.ligo
 ```
 
 </Syntax>
@@ -194,6 +222,22 @@ namespace TacoShop {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b12
+module TacoShop is {
+  type taco_supply is record [ current_stock : nat ; max_price : mav ]
+
+  type taco_shop_storage is map (nat, taco_supply)
+
+  [@entry]
+  function buy_taco (const taco_kind_index : nat; const taco_shop_storage : taco_shop_storage) : list (operation) * taco_shop_storage is
+    ((nil : list (operation)), taco_shop_storage)
+}
+```
+
+</Syntax>
+
 There is an impact onto the compilation, now you have to tell to the compiler which [module](https://ligo.mavryk.org/docs/language-basics/modules?lang=cameligo) it need to compile :
 
 ```
@@ -231,6 +275,17 @@ const default_storage: taco_shop_storage = Map.literal (list([
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=TacoShop
+const default_storage : taco_shop_storage = Map.literal (list [
+  (1n, record [ current_stock = 50n ; max_price = 50mav ]) ;
+  (2n, record [ current_stock = 20n ; max_price = 75mav ]) ;
+])
+```
+
+</Syntax>
+
 > The storage value is a map with two bindings (entries) distinguished
 > by their keys `1n` and `2n`.
 
@@ -251,6 +306,17 @@ ligo compile storage TacoShop.jsligo default_storage -m TacoShop
 
 ```zsh
 ligo compile storage TacoShop.jsligo default_storage -m TacoShop
+# Output:
+#
+# { Elt 1 (Pair 50 50000000) ; Elt 2 (Pair 20 75000000) }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```zsh
+ligo compile storage TacoShop.ligo default_storage
 # Output:
 #
 # { Elt 1 (Pair 50 50000000) ; Elt 2 (Pair 20 75000000) }
@@ -321,6 +387,30 @@ function buy_taco(taco_kind_index: nat, taco_shop_storage: taco_shop_storage): [
     taco_shop_storage );
   return [list([]), taco_shop_storage_updated]
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+[@entry]
+function buy_taco (const taco_kind_index : nat; const taco_shop_storage : taco_shop_storage) : list (operation) * taco_shop_storage is
+  block {
+    (* Retrieve the taco_kind from the contract's storage or fail *)
+    const taco_kind =
+      case Map.find_opt (taco_kind_index, taco_shop_storage) of [
+        Some (k) -> k
+      | None -> (failwith ("Unknown kind of taco") : taco_supply)
+      ];
+    (* Update the storage decreasing the stock by 1n *)
+    const taco_shop_storage =
+      Map.update (
+        taco_kind_index,
+        Some (taco_kind with record [ current_stock = abs (taco_kind.current_stock - 1n) ]),
+        taco_shop_storage
+      );
+  } with ((nil : list (operation)), taco_shop_storage)
 ```
 
 </Syntax>
@@ -402,6 +492,38 @@ const buy_taco = (taco_kind_index: nat, taco_shop_storage: taco_shop_storage) : 
     return [list([]), taco_shop_storage]
   }
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=TacoShop
+[@entry]
+function buy_taco (const taco_kind_index : nat; const taco_shop_storage : taco_shop_storage)
+  : list (operation) * taco_shop_storage is
+    block {
+      (* Retrieve the taco_kind from the contract's storage or fail *)
+      const taco_kind =
+        case Map.find_opt (taco_kind_index, taco_shop_storage) of [
+          Some (k) -> k
+        | None -> (failwith ("Unknown kind of taco") : taco_supply)
+        ];
+      const current_purchase_price : mav =
+        taco_kind.max_price / taco_kind.current_stock;
+      (* We won't sell tacos if the amount is not correct *)
+      const _check_amount : unit =
+        if Mavryk.get_amount () =/= current_purchase_price
+        then (failwith ("Sorry, the taco you are trying to purchase has a different price") : unit)
+        else unit;
+      (* Update the storage decreasing the stock by 1n *)
+      const taco_shop_storage =
+        Map.update (
+          taco_kind_index,
+          Some (taco_kind with record [ current_stock = abs (taco_kind.current_stock - 1n) ]),
+          taco_shop_storage
+        );
+    } with ((nil : list (operation)), taco_shop_storage)
 ```
 
 </Syntax>
@@ -570,6 +692,67 @@ const test = (
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=test
+#import "gitlab-pages/docs/tutorials/taco-shop/src/mavryk-taco-shop-smart-contract/TacoShop.ligo" "TacoShop"
+
+function assert_string_failure (const res : test_exec_result; const expected : string) : unit is
+  block {
+    const expected = Test.eval (expected);
+  } with
+    case res of [
+      Fail (Rejected (actual, _u)) -> assert (Test.michelson_equal (actual, expected))
+    | Fail (_e) -> failwith ("contract failed for an unknown reason")
+    | Success (_s) -> failwith ("bad price check")
+    ]
+
+(* Auxiliary function for testing equality in maps *)
+function eq_in_map (const r : TacoShop.taco_supply; const m : TacoShop.taco_shop_storage; const k : nat) : bool is
+  case Map.find_opt (k, m) of [
+    None -> False
+  | Some (v) -> (v.current_stock = r.current_stock) and (v.max_price = r.max_price)
+  ]
+
+const test =
+  block {
+    (* originate the contract with a initial storage *)
+    const init_storage = Map.literal (list [
+        (1n, record [ current_stock = 50n ; max_price = 50mav ]) ;
+        (2n, record [ current_stock = 20n ; max_price = 75mav ]) ;
+      ]);
+    const orig = Test.originate (contract_of TacoShop, init_storage, 0mav);
+
+    (* Test inputs *)
+    const clasico_kind : parameter_of TacoShop = Buy_taco (1n);
+    const unknown_kind : parameter_of TacoShop = Buy_taco (3n);
+
+    (* Purchasing a Taco with 1mav and checking that the stock has been updated *)
+    const ok_case : test_exec_result = Test.transfer (orig.addr, clasico_kind, 1mav);
+    const _ok_check =
+      case ok_case of [
+        Success (_s) ->
+          block {
+            const storage = Test.get_storage (orig.addr);
+          } with assert (
+                eq_in_map (record [ current_stock = 49n ; max_price = 50mav ], storage, 1n)
+                and eq_in_map (record [ current_stock = 20n ; max_price = 75mav ], storage, 2n)
+              )
+      | Fail (_e) -> failwith ("ok test case failed")
+      ];
+
+    (* Purchasing an unregistred Taco *)
+    const nok_unknown_kind = Test.transfer (orig.addr, unknown_kind, 1mav);
+    const _u1 = assert_string_failure (nok_unknown_kind, "Unknown kind of taco");
+
+    (* Attempting to Purchase a Taco with 2mav *)
+    const nok_wrong_price = Test.transfer (orig.addr, clasico_kind, 2mav);
+    const _u2 = assert_string_failure (nok_wrong_price, "Sorry, the taco you are trying to purchase has a different price");
+  } with unit
+```
+
+</Syntax>
+
 Let's break it down a little bit:
 - we include the file corresponding to the smart contract we want to
   test;
@@ -612,6 +795,18 @@ ligo run test gitlab-pages/docs/tutorials/taco-shop/src/mavryk-taco-shop-smart-c
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```zsh
+ligo run test gitlab-pages/docs/tutorials/taco-shop/src/mavryk-taco-shop-smart-contract/test.ligo
+# Output:
+#
+# Everything at the top-level was executed.
+# - test exited with value ().
+```
+
+</Syntax>
+
 
 **The test passed ! That's it - Pedro can now sell tacos on-chain, thanks to Mavryk & LIGO.**
 
@@ -639,6 +834,14 @@ if ((Mavryk.get_amount ()) != current_purchase_price)
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+if (Mavryk.get_amount ()) =/= current_purchase_price then
+```
+
+</Syntax>
+
 **With tips**
 
 <Syntax syntax="cameligo">
@@ -653,6 +856,14 @@ if (Mavryk.get_amount ()) >= current_purchase_price then
 
 ```jsligo skip
 if ((Mavryk.get_amount ()) >= current_purchase_price)
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+if (Mavryk.get_amount ()) >= current_purchase_price then
 ```
 
 </Syntax>

@@ -21,6 +21,35 @@ Prism.languages = {
     comment: [/(^|[^\\])\/\*[\s\S]*?\*\//, /\(\*[\s\S]*?\*\)/, /\/\/.*/],
   },
   jsligo: Prism.languages.typescript,
+
+  // MAVRYK: PascaLIGO — Prism grammar for the restored third syntax (homepage showcase).
+  pascaligo: {
+    comment: [/\(\*[\s\S]+?\*\)/, /\/\/.*/],
+    string: {
+      pattern: /(?:'(?:''|[^'\r\n])*'|#[&$%]?[a-f\d]+)+|\^[a-z]/i,
+      greedy: true,
+    },
+    keyword: [
+      {
+        pattern:
+          /(^|[^&])\b(?:absolute|array|asm|begin|case|const|constructor|destructor|do|downto|else|end|file|for|function|goto|if|implementation|inherited|inline|interface|label|nil|object|of|operator|packed|procedure|program|record|reintroduce|repeat|self|set|string|then|to|type|unit|until|uses|var|while|with)\b/i,
+        lookbehind: true,
+      },
+      {
+        pattern: /(^|[^&])\b(?:dispose|exit|false|new|true)\b/i,
+        lookbehind: true,
+      },
+    ],
+    number: [/(?:[&%]\d+|\$[a-f\d]+)/i, /\b\d+(?:\.\d+)?(?:e[+-]?\d+)?/i],
+    operator: [
+      /\.\.|\*\*|:=|<[<=>]?|>[>=]?|[+\-*\/]=?|[@^=]/i,
+      {
+        pattern: /(^|[^&])\b(?:and|as|div|exclude|in|include|is|mod|not|or|shl|shr|xor)\b/,
+        lookbehind: true,
+      },
+    ],
+    punctuation: /\(\.|\.\)|[()\[\]:;,.]/,
+  },
 };
 
 function animateValue(obj, start, end, duration) {

@@ -39,7 +39,7 @@ import Morley.Michelson.Untyped qualified as U
 import Morley.Mavryk.Core qualified as T
 import Morley.Mavryk.Crypto.BLS12381 (toMichelsonBytes)
 
-import Language.LIGO.AST.Skeleton (Lang (Caml, Js))
+import Language.LIGO.AST.Skeleton (Lang (Caml, Js, Pascal)) -- MAVRYK: PascaLIGO
 import Language.LIGO.Debugger.CLI.Exception
 import Language.LIGO.Debugger.CLI.Helpers
 import Language.LIGO.Debugger.CLI.Types
@@ -349,6 +349,7 @@ buildLigoValue' lang mode ligoType = \case
     case (mode, lang) of
       (DpmNormal, _) -> listWithSep "; "
       (DpmEvaluated, Caml) -> listWithSep "; "
+      (DpmEvaluated, Pascal) -> listWithSep "; " -- MAVRYK: PascaLIGO (mirrors CameLIGO)
       (DpmEvaluated, Js) ->  [int||list(#{listWithSep ", "})|]
   val@(LVRecord record) ->
     case toTupleMaybe val of
@@ -360,6 +361,7 @@ buildLigoValue' lang mode ligoType = \case
           case (mode, lang) of
             (DpmNormal, _) -> builtTuple "(" ")"
             (DpmEvaluated, Caml) -> builtTuple "(" ")"
+            (DpmEvaluated, Pascal) -> builtTuple "(" ")" -- MAVRYK: PascaLIGO
             (DpmEvaluated, Js) -> builtTuple "[" "]"
       Nothing ->
         let
@@ -373,6 +375,7 @@ buildLigoValue' lang mode ligoType = \case
             case (mode, lang) of
               (DpmNormal, _) -> recordWithSep "; "
               (DpmEvaluated, Caml) -> recordWithSep "; "
+              (DpmEvaluated, Pascal) -> recordWithSep "; " -- MAVRYK: PascaLIGO (mirrors CameLIGO)
               (DpmEvaluated, Js) -> recordWithSep ", "
         in
           buildRecord $ map (\(LLabel t, v) -> (t, (getTypeByFieldName t ligoType, v))) (HM.toList record)
@@ -446,21 +449,25 @@ buildConstant' lang mode = \case
   LCAddress addr -> case (mode, lang) of
     (DpmNormal, _) -> build addr
     (DpmEvaluated, Caml) ->  [int||(#{addr} : address)|]
+    (DpmEvaluated, Pascal) ->  [int||(#{addr} : address)|] -- MAVRYK: PascaLIGO
     (DpmEvaluated, Js) ->  [int||(#{addr} as address)|]
   LCContract contract -> build contract
   LCNat n ->  [int||#{n}n|]
   LCTimestamp timestamp -> case (mode, lang) of
     (DpmNormal, _) ->  [int||timestamp(#{buildTimestamp timestamp})|]
     (DpmEvaluated, Caml) ->  [int||("#{buildTimestamp timestamp}" : timestamp)|]
+    (DpmEvaluated, Pascal) ->  [int||("#{buildTimestamp timestamp}" : timestamp)|] -- MAVRYK: PascaLIGO
     (DpmEvaluated, Js) ->  [int||("#{buildTimestamp timestamp}" as timestamp)|]
   LCKeyHash keyHash -> build keyHash
   LCKey key -> case (mode, lang) of
     (DpmNormal, _) -> build key
     (DpmEvaluated, Caml) ->  [int||("#{key}" : key)|]
+    (DpmEvaluated, Pascal) ->  [int||("#{key}" : key)|] -- MAVRYK: PascaLIGO
     (DpmEvaluated, Js) ->  [int||("#{key}" as key)|]
   LCSignature sign -> case (mode, lang) of
     (DpmNormal, _) -> build sign
     (DpmEvaluated, Caml) ->  [int||("#{sign}" : signature)|]
+    (DpmEvaluated, Pascal) ->  [int||("#{sign}" : signature)|] -- MAVRYK: PascaLIGO
     (DpmEvaluated, Js) ->  [int||("#{sign}" as signature)|]
   LCMavryk_bls12_381G1 bls -> build bls
   LCMavryk_bls12_381G2 bls -> build bls
@@ -473,6 +480,7 @@ buildConstant' lang mode = \case
   LCUnit -> case (mode, lang) of
     (DpmNormal, _) -> "()"
     (DpmEvaluated, Caml) -> "()"
+    (DpmEvaluated, Pascal) -> "()" -- MAVRYK: PascaLIGO (mirrors CameLIGO)
     (DpmEvaluated, Js) -> "unit"
   where
     buildTimestamp :: Text -> Builder

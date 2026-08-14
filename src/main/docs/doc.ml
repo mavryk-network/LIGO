@@ -18,7 +18,8 @@ let html_using_type_doc (raw_options : Raw_options.t) directory doc_args ()
   Docs_utils.with_raise ~cleanup
   @@ fun ~raise ->
   match Syntax.of_string_opt ~raise (Syntax_name raw_options.syntax) None with
-  | CameLIGO -> Format.eprintf "ligo doc --type-doc supports only JsLIGO."
+  | CameLIGO | PascaLIGO ->
+    Format.eprintf "ligo doc --type-doc supports only JsLIGO." (* MAVRYK: PascaLIGO *)
   | JsLIGO ->
     (* It would be convenient to check for typedoc installation
         before generating ts files. *)

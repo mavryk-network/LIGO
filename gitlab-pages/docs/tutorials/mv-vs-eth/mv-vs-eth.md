@@ -92,6 +92,16 @@ type token_amount = | ["TokenAmount", nat];
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b2
+type nat_alias is nat
+
+type token_amount is TokenAmount of nat
+```
+
+</Syntax>
+
 As in Solidity, there are record types:
 
 <Syntax syntax="cameligo">
@@ -106,6 +116,14 @@ type creature = {heads_count : nat; legs_count : nat; tails_count : nat}
 
 ```jsligo group=b3
 type creature = { heads_count: nat, legs_count: nat, tails_count: nat };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b3
+type creature is record [ heads_count : nat; legs_count : nat; tails_count : nat ]
 ```
 
 </Syntax>
@@ -140,6 +158,22 @@ let y = Null ();
 ```
 
 Valid values of this type are regular numbers wrapped in `Number` (e.g., `Number(5)`, `Number(10)`, etc.) or `Null`. Notice how `Null()` does not hold any value.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b4
+type int_option is
+  Number of int
+| Null of unit
+
+const x : int_option = Number (5)
+
+const y : int_option = Null (unit)
+```
+
+Valid values of this type are regular numbers wrapped in `Number` (e.g., `Number (5)`, `Number (10)`, etc.) or `Null (unit)`. In PascaLIGO, a nullary constructor still carries a `unit` argument, both in its type declaration (`Null of unit`) and when it is constructed (`Null (unit)`).
 
 </Syntax>
 
@@ -189,6 +223,28 @@ let x_or_zero  =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b5
+const x : option (int) = Some (5)
+
+const y : option (int) = None
+```
+
+This is how we express _nullability_ in LIGO: instead of using a special ad-hoc value like "zero address", we just say it is an `option (address)`. We can then use `case` to see if there is something inside:
+
+```pascaligo group=b6
+const x : option (int) = Some (5)
+
+const x_or_zero : int =
+  case x of [
+    Some (value) -> value
+  | None -> 0
+  ]
+```
+
+</Syntax>
+
 
 We can go further and combine variant types with records:
 
@@ -214,6 +270,20 @@ type committee = {members: list<address>, quorum: nat };
 type leader = {name: string, address: address };
 
 type authority = ["Dictatorship", leader] | ["Democracy", committee];
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b7
+type committee is record [ members : list (address); quorum : nat ]
+
+type leader is record [ name : string; address : address ]
+
+type authority is
+  Dictatorship of leader
+| Democracy of committee
 ```
 
 </Syntax>
@@ -297,6 +367,36 @@ const decrement = (_u : unit, s : storage) : result => [[], s - 1]
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a2
+[@entry]
+function main (const parameter : bytes; const storage : int) : list (operation) * int is
+  if parameter = 0xbc1ecb8e
+  then ((nil : list (operation)), storage + 1)
+  else
+    if parameter = 0x36e44653
+    then ((nil : list (operation)), storage - 1)
+    else (failwith ("Unknown entrypoint") : list (operation) * int)
+```
+
+However, we can do better. As we discussed, LIGO has a much richer type system than Solidity does. We can encode the entrypoints by marking the functions which are entry points. For our counter contract, we can say, e.g., that the entry points are _either_ `Increment` or `Decrement`, and implement their behaviours as separate functions:
+
+```pascaligo group=a3
+type storage is int
+type result is list (operation) * storage
+
+[@entry]
+function increment (const _u : unit; const s : storage) : result is
+  ((nil : list (operation)), s + 1)
+
+[@entry]
+function decrement (const _u : unit; const s : storage) : result is
+  ((nil : list (operation)), s - 1)
+```
+
+</Syntax>
+
 
 We do not need any internal operations, since we neither call other contracts nor transfer money. Here is how we can add arguments to our entrypoints:
 
@@ -327,6 +427,23 @@ const add = (i : int, s : storage) : result => [[], s + i]
 
 @entry
 const subtract = (i : int, s : storage) : result => [[], s - i]
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a4
+type storage is int
+type result is list (operation) * storage
+
+[@entry]
+function add (const i : int; const s : storage) : result is
+  ((nil : list (operation)), s + i)
+
+[@entry]
+function subtract (const i : int; const s : storage) : result is
+  ((nil : list (operation)), s - i)
 ```
 
 </Syntax>
@@ -385,6 +502,22 @@ let doMultiplyBy4 = (store : storage) : int => doMultiplyBy2(doMultiplyBy2(store
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a5
+type storage is int
+type result is list (operation) * storage
+
+function doMultiplyBy2 (const store : storage) : int is store * 2
+
+function doMultiplyBy4 (const store : storage) : int is doMultiplyBy2 (doMultiplyBy2 (store))
+
+[@entry] function multiplyBy4 (const _u : unit; const s : storage) : result is ((nil : list (operation)), doMultiplyBy4 (s))
+[@entry] function multiplyBy16 (const _u : unit; const s : storage) : result is ((nil : list (operation)), doMultiplyBy4 (doMultiplyBy4 (s)))
+```
+
+</Syntax>
+
 Here:
 1. `multiplyBy2` is _private_ (in Solidity terms): we cannot call it directly from outside of the contract.
 2. `multiplyBy4` is _public:_ we can call it both from inside the contract and using the `%multiplyBy4` entrypoint.
@@ -428,6 +561,20 @@ We can then call this contract with the parameter of the form `Compute ((x : int
 ```
 ligo run interpret 'main([Compute ((x : int) => x * x + 2 * x + 1), 3])' --init-file examples/contracts/jsligo/Lambda.jsligo
 ```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a6
+type storage is int
+
+[@entry]
+function compute (const func : int -> int; const s : storage) : list (operation) * storage is
+  ((nil : list (operation)), func (s))
+```
+
+We can then call this contract with the parameter of the form `Compute (function (const x : int) : int is x * x + 2 * x + 1)`.
 
 </Syntax>
 
@@ -482,6 +629,31 @@ const callFunction = (_u : unit, s : storage) : result =>
 ```
 
 Now we can _upgrade_ a part of the implementation by calling our contract with `SetFunction ((x : int) => ...)`.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a1
+type storage is record [ fn : option (int -> int); value : int ]
+type result is list (operation) * storage
+
+function call (const fn : option (int -> int); const value : int) : int is
+  case fn of [
+    Some (f) -> f (value)
+  | None -> (failwith ("Lambda is not set") : int)
+  ]
+
+[@entry]
+function setFunction (const fn : int -> int; const s : storage) : result is
+  ((nil : list (operation)), s with record [ fn = Some (fn) ])
+
+[@entry]
+function callFunction (const _u : unit; const s : storage) : result is
+  ((nil : list (operation)), s with record [ value = call (s.fn, s.value) ])
+```
+
+Now we can _upgrade_ a part of the implementation by calling our contract with `SetFunction (function (const x : int) : int is ...)`.
 
 </Syntax>
 
@@ -570,6 +742,33 @@ let treasury = (p : unit, s : storage) => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b1
+type storage is record [ rewardsLeft : mav; beneficiaryAddress : address ]
+
+function treasury (const _p : unit; const s : storage) : list (operation) * storage is
+  block {
+    // We do our computations first
+    const newStorage : storage = s with record [ rewardsLeft = 0mumav ];
+
+    // Then we find our beneficiary's `handleRewards` entrypoint:
+    const beneficiaryOpt = Mavryk.get_entrypoint_opt ("%handleTransfer", s.beneficiaryAddress);
+    const beneficiary =
+      case beneficiaryOpt of [
+        Some (c) -> c
+      | None -> (failwith ("Beneficiary does not exist") : contract (unit))
+      ];
+
+    // Then we prepare the internal operation we want to perform
+    const operation = Mavryk.transaction (unit, s.rewardsLeft, beneficiary)
+
+    // ...and return both the operations and the updated storage
+  } with (list [ operation ], newStorage)
+```
+
+</Syntax>
+
 Note that all the state changes occur _before_ the internal operation gets executed. This way, Mavryk protects us from unintended reentrancy attacks. However, with complex interactions chain, reentrancy attacks may still be possible.
 
 It is a common idiom in Ethereum to make read-only calls to other contracts. Mavryk does not offer a straightforward way to do it but you might think of using something like a callback mechanism:
@@ -605,6 +804,23 @@ let doSomethingCont = ([p, s]: [int, int]) => [([] as list<operation>), p + s];
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+type parameter is DoSomething of unit | DoSomethingCont of int
+
+function doSomething (const _p : unit; const s : int) : list (operation) * int is
+  block {
+    // The callee should call `%doSomethingCont` with the value we want
+    const op = Mavryk.transaction (...)
+  } with (list [ op ], s)
+
+function doSomethingCont (const p : int; const s : int) : list (operation) * int is
+  ((nil : list (operation)), p + s)
+```
+
+</Syntax>
+
 However, here you leave your contract in an _intermediate_ state before making an external call. You would need additional precautions to make such callback-style calls secure. In most cases, you should avoid this pattern.
 
 By making contract interactions harder, Mavryk incentives you to simplify your architecture. Think about whether you can use lambdas or merge your contracts to avoid complex inter-contract dependencies. If it is possible to _not_ split your logic into multiple contracts, then avoid the split.
@@ -626,10 +842,10 @@ In this article, we discussed some Solidity patterns and their LIGO counterparts
 
 | Solidity pattern | LIGO pattern |
 |------------------|--------------|
-| `public` field   | A field in the storage record, e.g. <Syntax syntax="cameligo">`type storage = { x : int; y : nat }`</Syntax><Syntax syntax="jsligo">`type storage = { x : int, y : nat }`</Syntax> |
+| `public` field   | A field in the storage record, e.g. <Syntax syntax="cameligo">`type storage = { x : int; y : nat }`</Syntax><Syntax syntax="jsligo">`type storage = { x : int, y : nat }`</Syntax><Syntax syntax="pascaligo">`type storage is record [ x : int; y : nat ]`</Syntax> |
 | `private` field  | N/A: all fields are public |
-| `private` method | A regular function, e.g., <Syntax syntax="cameligo">`let func (a : int) = ...`</Syntax><Syntax syntax="jsligo">`let func = (a : int) => ...`</Syntax> |
-| `public` /  `external` method  | A separate entrypoint in the parameter: <Syntax syntax="cameligo">`type parameter = F of int`</Syntax><Syntax syntax="jsligo">`type parameter = ["F", int]`</Syntax>. `main` entrypoint should dispatch and forward this call to the corresponding function using a match expression |
+| `private` method | A regular function, e.g., <Syntax syntax="cameligo">`let func (a : int) = ...`</Syntax><Syntax syntax="jsligo">`let func = (a : int) => ...`</Syntax><Syntax syntax="pascaligo">`function func (const a : int) is ...`</Syntax> |
+| `public` /  `external` method  | A separate entrypoint in the parameter: <Syntax syntax="cameligo">`type parameter = F of int`</Syntax><Syntax syntax="jsligo">`type parameter = ["F", int]`</Syntax><Syntax syntax="pascaligo">`type parameter is F of int`</Syntax>. `main` entrypoint should dispatch and forward this call to the corresponding function using a match expression |
 | `internal` method | There is no concept of inheritance in Mavryk |
 | Constructor      | Set the initial storage upon origination |
 | Method that returns a value | Inspect the contract storage directly |

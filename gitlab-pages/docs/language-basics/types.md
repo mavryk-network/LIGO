@@ -43,6 +43,15 @@ const dog_breed: breed = "Saluki";
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a
+type breed is string
+const dog_breed : breed = "Saluki"
+```
+
+</Syntax>
+
 
 > The above type definitions are aliases, which means that `breed` and
 > `string` are interchangeable in all contexts.
@@ -72,6 +81,19 @@ type account_balances = map<address, mav>;
 
 const ledger : account_balances =
   Map.literal([["mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" as address, 10mumav]]);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b
+// The type account_balances denotes maps from addresses to mav
+
+type account_balances is map (address, mav)
+
+const ledger : account_balances =
+  Map.literal (list [(("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), 10mumav)])
 ```
 
 </Syntax>

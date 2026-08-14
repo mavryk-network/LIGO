@@ -195,6 +195,93 @@ const k_other = (x: int, _y: int) => x;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Functions in PascaLIGO are defined using the `function` keyword,
+followed by the function's name, its parameters and its return
+type. Parameters are separated by semicolons, and each one is
+introduced by `const` (or `var`, for a parameter that can be
+reassigned inside the function). For example:
+```pascaligo group=add
+function add (const a : int; const b : int) : int is a + b
+```
+
+You can call the function `add` defined above using the LIGO compiler
+like this:
+```shell
+ligo run evaluate-expr \
+  gitlab-pages/docs/language-basics/src/functions/add.ligo \
+  'add (1, 2)'
+# Outputs: 3
+```
+
+Like CameLIGO, a PascaLIGO function whose parameters are separated by
+`;` is curried under the hood: applying it to only some of its
+arguments yields a new function waiting for the rest. Currying is,
+however, *not* the preferred way to pass function arguments in
+PascaLIGO either: it is costlier in Michelson than naive function
+execution accepting multiple arguments at once. Instead, for most
+functions with more than one parameter, we should gather the
+arguments in a [tuple](sets-lists-tuples.md) and pass the tuple in as
+a single parameter.
+
+Here is how you define a basic function that accepts two integers and
+returns an integer as well:
+
+```pascaligo group=curry
+function add (const ab : int * int) : int is ab.0 + ab.1              // Uncurried
+function add_curry (const a : int; const b : int) : int is a + b      // Curried
+const increment : int -> int = add_curry (1)                          // Partial application
+```
+
+You can run the `increment` function defined above using the LIGO
+compiler like this:
+```shell
+ligo run evaluate-call \
+  gitlab-pages/docs/language-basics/src/functions/curry.ligo \
+  increment 5
+# Outputs: 6
+```
+
+When the function body is a single expression, as above, its value is
+implicitly returned: no block or `with` clause is required.
+
+By default, LIGO will warn about unused arguments inside
+functions. In case we do not use an argument, we can use the wildcard
+`_` to prevent warnings. Either use `_` instead of the argument
+identifier:
+
+```pascaligo
+function k (const x : int; const _ : int) : int is x
+```
+
+or use an identifier starting with wildcard:
+
+```pascaligo
+function k (const x : int; const _y : int) : int is x
+```
+
+
+Sometimes, one has to chain multiple function applications.
+In this case, parentheses are needed.
+
+```pascaligo group=revapp
+function f (const x : int) : int is x + 1
+function g (const x : int) : int is x - 2
+function h (const x : int) : int is x + x - 3
+
+(* Here we apply function f on value 42,
+   then apply g on the result,
+   and then apply h on the result *)
+const result : int = h (g (f (42)))
+```
+
+PascaLIGO does not have a reverse-application (pipe) operator like
+CameLIGO's `|>`, so nesting the calls with parentheses, as above, is
+the standard way to chain function applications.
+
+</Syntax>
+
 
 ## Anonymous functions (a.k.a. lambdas)
 
@@ -231,6 +318,23 @@ You can check the value of `a` defined above using the LIGO compiler
 like this:
 ```shell
 ligo run evaluate-expr gitlab-pages/docs/language-basics/src/functions/anon.jsligo a
+# Outputs: 2
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=anon
+function increment (const b : int) : int is
+  (function (const a : int) : int is a + 1) (b)
+const a : int = increment (1) // a = 2
+```
+
+You can check the value of `a` defined above using the LIGO compiler
+like this:
+```shell
+ligo run evaluate-expr gitlab-pages/docs/language-basics/src/functions/anon.ligo a
 # Outputs: 2
 ```
 
@@ -275,6 +379,23 @@ ligo run evaluate-call \
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=incr_map
+function incr_map (const l : list (int)) : list (int) is
+  List.map (function (const i : int) : int is i + 1, l)
+```
+You can call the function `incr_map` defined above using the LIGO compiler
+like so:
+```shell
+ligo run evaluate-call \
+  gitlab-pages/docs/language-basics/src/functions/incr_map.ligo \
+  incr_map "list [1;2;3]"
+# Outputs: CONS(2 , CONS(3 , CONS(4 , LIST_EMPTY()))), equivalent to list [ 2 ; 3 ; 4 ]
+```
+
+</Syntax>
+
 
 ## Nested functions (also known as closures)
 
@@ -298,6 +419,16 @@ function closure_example (i) {
   let closure = j => i + j;
   return closure(i);
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+function closure_example (const i : int) : int is {
+  function closure (const j : int) : int is i + j
+} with closure (i)
 ```
 
 </Syntax>
@@ -330,6 +461,21 @@ function fibo (n: int, n_1: int, n_0: int): int {
   if (n < 2) return n_1 else return fibo (n-1, n_1 + n_0, n_1);
 };
 ```
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, recursive functions are defined using the `recursive`
+keyword before `function`:
+
+```pascaligo group=d
+recursive function sum (const n : int; const acc : int) : int is
+  if n < 1 then acc else sum (n - 1, acc + n)
+
+recursive function fibo (const n : int; const n_1 : int; const n_0 : int) : int is
+  if n < 2 then n_1 else fibo (n - 1, n_1 + n_0, n_1)
+```
+
 </Syntax>
 
 <!-- updated use of entry -->

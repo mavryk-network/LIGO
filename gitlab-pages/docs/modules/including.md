@@ -38,3 +38,14 @@ module NewEuro =
 <Syntax syntax="jsligo">
 This feature is not available in JsLIGO.
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+PascaLIGO 0.73 does not have a module-body `include` declaration: its
+grammar only allows `include` inside a `sig ... end` signature, to
+combine module *types*. A new module cannot splice another module's
+declarations into its own body this way, so this particular example
+— extending `Euro` with a 10 euro note by including it in `NewEuro` —
+is not available in PascaLIGO.
+
+</Syntax>

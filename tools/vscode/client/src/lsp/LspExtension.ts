@@ -119,6 +119,8 @@ export class LspExtension implements vscode.Disposable {
       documentSelector: [
         { scheme: 'file', language: 'mligo' },
         { scheme: 'file', language: 'jsligo' },
+        // MAVRYK: PascaLIGO
+        { scheme: 'file', language: 'ligo' },
       ],
       synchronize: {
         // Notify the server about file changes to '.clientrc files contained in the workspace

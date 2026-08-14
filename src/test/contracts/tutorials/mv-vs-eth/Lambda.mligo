@@ -1,1 +1,1 @@
-../../../../../gitlab-pages/docs/tutorials/mv-vs-eth/examples/contracts/mligo/Lambda.mligo
+../../../../../gitlab-pages/website/versioned_docs/version-1.6.0/tutorials/mv-vs-eth/examples/contracts/mligo/Lambda.mligo

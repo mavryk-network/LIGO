@@ -151,6 +151,59 @@ const sub = (n : int, storage : storage) : return_type => [[], storage - n];
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+1. On your computer, create a folder to store the contract file, such as `ligo_tutorial`.
+1. Create a file with the extension `.ligo`, which indicates PascaLIGO code, such as `counter.ligo`.
+1. In any code or text editor, add this code to the file:
+
+   ```pascaligo
+   type storage is int
+   type return_type is list (operation) * storage
+   ```
+
+   This code defines two data types:
+
+      - A type that represents the storage for the contract.
+      In this case, the contract stores an integer, but contracts can define more complex data types to store more data.
+      - A type that represents what the contract entrypoints return.
+      LIGO entrypoints always return a list of operations to run after the entrypoint completes and the new state of the storage.
+
+1. Add an entrypoint named `add` that accepts an integer as a parameter and adds it to the storage value:
+
+   ```pascaligo
+   [@entry] function add (const n : int; const storage : storage) : return_type is
+     ((nil : list (operation)), storage + n)
+   ```
+
+   This code creates a function and annotates it with `[@entry]`, which indicates that it is an entrypoint that users can call.
+   Contracts can also include internal functions that are not annotated.
+
+   The function accepts an integer and the current state of the storage as parameters.
+   All entrypoints receive the storage state as their final parameter.
+   The function returns an empty list of operations to run next and the new state of the storage, which in this case is the current integer in storage plus the integer that the caller passed.
+
+1. Similarly, add an entrypoint named `sub` that accepts an integer and subtracts it from the storage value:
+
+   ```pascaligo
+   [@entry] function sub (const n : int; const storage : storage) : return_type is
+     ((nil : list (operation)), storage - n)
+   ```
+
+The complete contract looks like this:
+
+```pascaligo group=a
+type storage is int
+type return_type is list (operation) * storage
+
+[@entry] function add (const n : int; const storage : storage) : return_type is
+  ((nil : list (operation)), storage + n)
+[@entry] function sub (const n : int; const storage : storage) : return_type is
+  ((nil : list (operation)), storage - n)
+```
+
+</Syntax>
+
 That's all that is necessary for a very simple LIGO smart contract.
 
 ## Trying out the contract
@@ -170,6 +223,14 @@ ligo run dry-run counter.mligo 'Add(3)' '5'
 
 ```bash
 ligo run dry-run counter.jsligo 'Add(3)' '5'
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```bash
+ligo run dry-run counter.ligo 'Add(3)' '5'
 ```
 
 </Syntax>
@@ -340,6 +401,80 @@ Follow these steps to add an automated test to the contract:
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+1. In your contract file, wrap the existing code in a module:
+
+   ```pascaligo
+   module Counter is {
+     type storage is int
+     type return_type is list (operation) * storage
+
+     [@entry] function add (const n : int; const storage : storage) : return_type is
+       ((nil : list (operation)), storage + n)
+     [@entry] function sub (const n : int; const storage : storage) : return_type is
+       ((nil : list (operation)), storage - n)
+   }
+   ```
+
+   Modules in PascaLIGO provide a scope to the identifiers (names of types, functions, variables, etc.) to prevent collisions between them.
+   You can access identifiers that are within a module with dot notation, as in `<module>.<identifier>`.
+
+1. At the end of the file, outside of the module, add a constant named `test_add`:
+
+   ```pascaligo
+   const test_add = block {
+   ```
+
+1. Add code to _originate_ (deploy) the contract to the test environment:
+
+   ```pascaligo
+   const initial_storage : int = 10;
+   const orig = Test.Next.Originate.contract (contract_of Counter, initial_storage, 0mav);
+   ```
+
+   This command simulates deploying the contract, setting its initial storage to 10, and setting its initial balance to 0 mav.
+
+1. Add code to call the `add` entrypoint and pass the value 32:
+
+   ```pascaligo
+   const _r = Test.Next.Contract.transfer_exn (Test.Next.Typed_address.get_entrypoint ("add", orig.taddr), 32, 0mav);
+   ```
+
+1. Add code to verify that the new value of the storage is correct:
+
+   ```pascaligo
+   } with Assert.assert (Test.Next.Typed_address.get_storage (orig.taddr) = initial_storage + 32)
+   ```
+
+   The complete code looks like this:
+
+   ```pascaligo group=b
+   module Counter is {
+     type storage is int
+     type return_type is list (operation) * storage
+
+     [@entry] function add (const n : int; const storage : storage) : return_type is
+       ((nil : list (operation)), storage + n)
+     [@entry] function sub (const n : int; const storage : storage) : return_type is
+       ((nil : list (operation)), storage - n)
+   }
+
+   const test_add = block {
+     const initial_storage : int = 10;
+     const orig = Test.Next.Originate.contract (contract_of Counter, initial_storage, 0mav);
+     const _r = Test.Next.Contract.transfer_exn (Test.Next.Typed_address.get_entrypoint ("add", orig.taddr), 32, 0mav);
+   } with Assert.assert (Test.Next.Typed_address.get_storage (orig.taddr) = initial_storage + 32)
+   ```
+
+1. Run this command to run the test:
+
+   ```bash
+   ligo run test counter.ligo
+   ```
+
+</Syntax>
+
 The output shows that the test ran successfully:
 
 ```
@@ -366,6 +501,14 @@ ligo compile contract counter.mligo -m Counter -o counter.mv
 
 ```bash
 ligo compile contract counter.jsligo -m Counter -o counter.mv
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```bash
+ligo compile contract counter.ligo -m Counter -o counter.mv
 ```
 
 </Syntax>
@@ -410,7 +553,7 @@ The Basenet test network is just like the Mavryk mainnet, so you can use it to t
    - For MacOS, use `brew`:
 
    ```bash
-   brew tap serokell/mavryk-packaging-stable https://github.com/serokell/mavryk-packaging-stable.git
+   brew tap mavryk-network/mavryk-packaging-stable
    brew install mavryk-client
    ```
 

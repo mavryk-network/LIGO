@@ -216,6 +216,9 @@ let signature (raw_options : Raw_options.t) source_file =
         | Syntax_types.JsLIGO ->
           Parsing.Jsligo.(pretty_print_signature_expr Pretty.default_state)
           <@ Unification.Jsligo.decompile_sig_expr
+        (* MAVRYK: PascaLIGO. No module signatures / signature decompilation. *)
+        | Syntax_types.PascaLIGO ->
+          fun _ -> failwith "Printing a PascaLIGO signature is not supported."
       in
       to_syntax unified_sig_expr, [] )
 

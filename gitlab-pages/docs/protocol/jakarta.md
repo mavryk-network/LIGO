@@ -19,6 +19,10 @@ type tx_rollup_l2_address
 <SyntaxTitle syntax="jsligo">
 type tx_rollup_l2_address
 </SyntaxTitle>
+
+<SyntaxTitle syntax="pascaligo">
+type tx_rollup_l2_address
+</SyntaxTitle>
 A type used to identify accounts on transaction rollups’ legders. Values of type tx_rollup_l2_address are 20-byte hashes of a BLS public keys (with a string notation based of a base58 encoding, prefixed with mv4).
 
 ### New primitives
@@ -32,6 +36,10 @@ val min_block_time : unit -> nat
 
 <SyntaxTitle syntax="jsligo">
 let min_block_time: unit => nat;
+</SyntaxTitle>
+
+<SyntaxTitle syntax="pascaligo">
+const min_block_time : unit -> nat
 </SyntaxTitle>
 Returns the current minimal time between blocks, the value is obtained from the protocol’s minimal_block_delay constant.
 

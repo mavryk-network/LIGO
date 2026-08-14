@@ -28,6 +28,15 @@ const b = false;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a
+const a : bool = True
+const b : bool = False
+```
+
+</Syntax>
+
 Common operations:
 
 <Syntax syntax="cameligo">
@@ -276,6 +285,129 @@ const lte = 4 <= 3;
 </Syntax>
 
 
+<Syntax syntax="pascaligo">
+<div className="boolean-example-table">
+  <div className="operation">
+    and
+  </div>
+  <div className="description">
+    Logical and
+  </div>
+  <div className="example">
+
+```pascaligo
+const logical_and : bool = True and True
+```
+
+  </div>
+  <div className="operation">
+    or
+  </div>
+  <div className="description">
+    Logical or
+  </div>
+  <div className="example">
+
+```pascaligo
+const logical_or : bool = False or True
+```
+
+  </div>
+  <div className="operation">
+    not
+  </div>
+  <div className="description">
+    Logical not
+  </div>
+  <div className="example">
+
+```pascaligo
+const logical_not : bool = not False
+```
+
+  </div>
+  <div className="operation">
+    =
+  </div>
+  <div className="description">
+    Equals
+  </div>
+  <div className="example">
+
+```pascaligo
+const eq : bool = 2 = 3
+```
+
+  </div>
+  <div className="operation">
+    =/=
+  </div>
+  <div className="description">
+    Not equals
+  </div>
+  <div className="example">
+
+```pascaligo
+const not_eq : bool = 2 =/= 3
+```
+
+  </div>
+  <div className="operation">
+    &gt;
+  </div>
+  <div className="description">
+    Greater than
+  </div>
+  <div className="example">
+
+```pascaligo
+const gt : bool = 4 > 3
+```
+
+  </div>
+  <div className="operation">
+    &lt;
+  </div>
+  <div className="description">
+    Less than
+  </div>
+  <div className="example">
+
+```pascaligo
+const lt : bool = 4 < 3
+```
+
+  </div>
+  <div className="operation">
+    &gt;=
+  </div>
+  <div className="description">
+    Greater than or equal to
+  </div>
+  <div className="example">
+
+```pascaligo
+const gte : bool = 4 >= 3
+```
+
+  </div>
+  <div className="operation">
+    &lt;=
+  </div>
+  <div className="description">
+    Less than or equal to
+  </div>
+  <div className="example">
+
+```pascaligo
+const lte : bool = 4 <= 3
+```
+
+  </div>
+</div>
+</Syntax>
+
+
 ## Comparing Values
 
 In LIGO, only values of the same type can be compared. Moreover, not
@@ -314,6 +446,16 @@ const c = (a == b); // true
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b
+const a : string = "Alice"
+const b : string = "Alice"
+const c : bool = (a = b) // true
+```
+
+</Syntax>
+
 
 ### Comparing numbers
 
@@ -342,6 +484,21 @@ const e = (a < b);
 const f = (a <= b);
 const g = (a >= b);
 const h = (a != b);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+const a : int  = 5
+const b : int  = 4
+const c : bool = (a = b)
+const d : bool = (a > b)
+const e : bool = (a < b)
+const f : bool = (a <= b)
+const g : bool = (a >= b)
+const h : bool = (a =/= b)
 ```
 
 </Syntax>
@@ -388,6 +545,27 @@ const h = (a != b);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+
+To check if the following operators have the expected result use
+`ligo compile expression pascaligo "a OP b"`
+
+Usage:
+
+```pascaligo group=d
+const a : bytes  = 0x1001
+const b : bytes  = 0x1000
+const c : bool = (a = b)
+const d : bool = (a > b)
+const e : bool = (a < b)
+const f : bool = (a <= b)
+const g : bool = (a >= b)
+const h : bool = (a =/= b)
+```
+
+</Syntax>
+
 ### Comparing mav
 
 > 💡 Comparing `mav` values is especially useful when dealing with an
@@ -409,6 +587,16 @@ let c : bool = (a = b) // false
 const a: mav  = 5mumav;
 const b: mav  = 10mumav;
 const c = (a == b); // false
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=e
+const a : mav  = 5mumav
+const b : mav  = 10mumav
+const c : bool = (a = b) // false
 ```
 
 </Syntax>
@@ -457,6 +645,26 @@ like this:
 ```shell
 ligo run evaluate-call gitlab-pages/docs/language-basics/src/boolean-if-else/cond.jsligo compare '21n'
 # Outputs: Large
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=cond
+type magnitude is
+  Small of unit
+| Large of unit  // See variant types.
+
+function compare (const n : nat) : magnitude is
+  if n < 10n then Small (unit) else Large (unit)
+```
+
+You can run the `compare` function defined above using the LIGO compiler
+like this:
+```shell
+ligo run evaluate-call gitlab-pages/docs/language-basics/src/boolean-if-else/cond.ligo compare '21n'
+# Outputs: Large(unit)
 ```
 
 </Syntax>

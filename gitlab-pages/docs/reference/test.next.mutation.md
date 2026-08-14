@@ -17,6 +17,9 @@ val func : &#39;a &#39;b.&#39;a -&gt; (&#39;a -&gt; &#39;b) -&gt; (&#39;b * muta
 <SyntaxTitle syntax="jsligo">
 let func: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: (&#95;: a) =&gt; b) =&gt; option&lt;[b, mutation]&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const func : a -&gt; (a -&gt; b) -&gt; option (b * mutation)
+</SyntaxTitle>
 Given a value to mutate (first argument), it will try all the
         mutations available of it, passing each one to the function
         (second argument). On the first case of non failure when running
@@ -36,6 +39,11 @@ let from&#95;file:
   &lt;b, p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; (&#95;: (&#95;: [typed&#95;address&lt;p, s&gt;, michelson&#95;contract&lt;p, s&gt;, int]) =&gt; b) =&gt; option&lt;
     [b, mutation]
   &gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const from&#95;file :
+  string -&gt;
+  s -&gt; mav -&gt; ((typed&#95;address (p, s) * michelson&#95;contract (p, s) * int) -&gt; b) -&gt; option (b * mutation)
 </SyntaxTitle>
 Given a contract from a file (passed by filepath, entrypoint and
         views), an initial storage and balance, it will originate mutants
@@ -58,6 +66,11 @@ let contract:
     &#95;: (&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; (&#95;: int) =&gt; b
   ) =&gt; option&lt;[b, mutation]&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const contract :
+  module&#95;contract (p, s) -&gt;
+  s -&gt; mav -&gt; (typed&#95;address (p, s) -&gt; michelson&#95;contract (p, s) -&gt; int -&gt; b) -&gt; option (b * mutation)
+</SyntaxTitle>
 Given a contract as a module/namespace, an initial storage and
         balance, it will originate mutants of the contract and pass the
         result to the function (last argument). On the first case of non
@@ -71,6 +84,9 @@ val value : &#39;a.nat -&gt; &#39;a -&gt; (&#39;a * mutation) option
 <SyntaxTitle syntax="jsligo">
 let value: &lt;a&gt;(&#95;: nat) =&gt; (&#95;: a) =&gt; option&lt;[a, mutation]&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const value : nat -&gt; a -&gt; option (a * mutation)
+</SyntaxTitle>
 Mutates a value using a natural number as an index for the
         available mutations, returns an option for indicating whether
         mutation was successful or not.
@@ -81,6 +97,9 @@ val save : string -&gt; mutation -&gt; string option
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let save: (&#95;: string) =&gt; (&#95;: mutation) =&gt; option&lt;string&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const save : string -&gt; mutation -&gt; option (string)
 </SyntaxTitle>
 This function reconstructs a file from a mutation (second
         argument), and saves it to a file in the directory path (first

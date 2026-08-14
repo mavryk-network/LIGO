@@ -37,6 +37,18 @@ type result<success,failure> =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+In PascaLIGO:
+
+```pascaligo group=failwith_view
+type result (success, failure) is
+  | Ok of success
+  | Error of failure
+```
+
+</Syntax>
+
 An exception (pun not intended) to this is that when using the test framework, some functions are able to detect a `failwith` raised by one of their callbacks, and return a different result based on the success or failure.
 
 For example, the [Test.transfer](../reference/test.md) function catches errors raised with `failwith` and converts them to a result of type `type test_exec_result = Success of nat | Fail of test_exec_error`.

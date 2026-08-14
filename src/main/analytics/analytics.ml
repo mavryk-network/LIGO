@@ -551,11 +551,17 @@ let get_labels_from_group : metric_group -> string list = function
 
 let edit_metric_value : analytics_input -> unit =
  fun { group; metric_value } ->
-  let counter_group = get_family_by_group group in
-  let labels = get_labels_from_group group in
-  match counter_group with
-  | `Ctr counter_group -> inc ~counter_group ~labels ~value:metric_value
-  | `Gauge gauge_group -> set ~gauge_group ~labels ~value:metric_value
+  (* MAVRYK: PascaLIGO. Telemetry must never crash the tool/LSP. A Prometheus label-count
+     assertion in the aggregation path was raising an *uncaught* exception on LSP
+     [initialize], killing the language server (so hover/completion never worked). Guard it. *)
+  try
+    let counter_group = get_family_by_group group in
+    let labels = get_labels_from_group group in
+    match counter_group with
+    | `Ctr counter_group -> inc ~counter_group ~labels ~value:metric_value
+    | `Gauge gauge_group -> set ~gauge_group ~labels ~value:metric_value
+  with
+  | _exn -> ()
 
 
 let edit_metrics_values : analytics_inputs -> unit = List.iter ~f:edit_metric_value

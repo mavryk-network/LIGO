@@ -2084,4 +2084,5 @@ test_Contracts_are_sensible = reinsuring $ testCase "Contracts are sensible" do
       , "dupped-ticket.mligo" -- illegal intentionally
       , "pretty" </> "sum-type.mligo" -- this file doesn't have any entrypoint
       , "pretty" </> "sum-type.jsligo" -- this file doesn't have any entrypoint
+      , "pascaligo-decode-smoke.ligo" -- MAVRYK: PascaLIGO. Decoder smoke fixture (declarations only), not a contract.
       ]

@@ -167,3 +167,64 @@ function sum_list (l : list<int>) {
 See the relevant sections on maps and sets for their loops.
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+The programming style promoted by PascaLIGO is imperative, that is,
+the preferred way to write iterations is by means of _loops_, even
+though recursive functions are also available.
+
+Here is how to compute the greatest common divisors of two natural
+numbers by means of Euclid's algorithm using a recursive function:
+
+```pascaligo group=looping
+recursive function iter (const x : nat; const y : nat) : nat is
+  if y = 0n then x else iter (y, x mod y)
+
+function gcd (const x : nat; const y : nat) : nat is
+  if x < y then iter (y, x) else iter (x, y)
+```
+
+PascaLIGO also features _loops_, which we understand as syntactic
+constructs where the state of a stopping condition is mutated until
+it becomes true and the loop is exited. There are two kinds of loops:
+`for` loops and the more general `while` loops. Here is again
+Euclid's algorithm, but using mutation (a.k.a. side effects) and a
+`while` loop:
+
+```pascaligo group=looping
+function gcd (const a : nat; const b : nat) : nat is
+  block {
+    var x : nat := a;
+    var y : nat := b;
+    if x < y then {
+      const z : nat = x;
+      x := y;
+      y := z              // Swapping x and y
+    };
+    var r : nat := 0n;
+    while y =/= 0n {
+      r := x mod y;
+      x := y;
+      y := r
+    }
+  } with x
+```
+
+Here is how to check if a string is a palindrome or not using a `for` loop:
+
+```pascaligo group=looping
+function get_char (const s : string; const idx : nat) : string is
+  String.sub (idx, 1n, s)
+
+function is_palindrome (const s : string) : bool is
+  block {
+    var p : string := "";
+    const length : nat = String.length (s);
+    for i := int (length) - 1 to 0 step -1 {
+      p := p ^ get_char (s, abs (i))
+    }
+  } with p = s
+```
+
+</Syntax>

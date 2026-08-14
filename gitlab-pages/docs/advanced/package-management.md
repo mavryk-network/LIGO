@@ -93,6 +93,17 @@ Now we can write a smart contract which will use the `@ligo/mathlib` library.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+#import "@ligo/mathlib/rational/rational.mligo" "Rational"
+
+...
+
+```
+
+</Syntax>
+
 <br/>
 
 > Note: When using LIGO packages via `#import`/`#include`
@@ -145,6 +156,24 @@ const test = (() => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+#include "main.ligo"
+
+const test =
+  block {
+    const storage = Test.compile_value (list [1; 2; 3]);
+    const (addr, _code, _size) = Test.originate_from_file ("./main.ligo", "main", (nil : list (string)), storage, 0mav);
+    const taddr : typed_address (parameter, storage) = Test.cast_address (addr);
+    const contr : contract (parameter) = Test.to_contract (taddr);
+    const _r = Test.transfer_to_contract_exn (contr, Reverse (unit), 1mumav);
+  } with assert (Test.get_storage (taddr) = list [3; 2; 1])
+
+```
+
+</Syntax>
+
 To compile the contract to Michelson run the command
 
 <Syntax syntax="cameligo">
@@ -159,6 +188,14 @@ $ ligo compile contract main.mligo
 
 ```bash
 $ ligo compile contract main.jsligo
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```bash
+$ ligo compile contract main.ligo
 ```
 
 </Syntax>
@@ -179,6 +216,14 @@ $ ligo run test main.test.mligo
 
 ```bash
 $ ligo run test main.test.jsligo
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```bash
+$ ligo run test main.test.ligo
 ```
 
 </Syntax>
@@ -254,6 +299,23 @@ Included directives:
 In  [1]: #import "@ligo/bigarray/lib/bigarray.mligo" "BA";;
 Out [1]: Done.
 In  [2]: BA.concat ([1, 2, 3])([4, 5, 6]);;
+Out [2]: CONS(1 , CONS(2 , CONS(3 , CONS(4 , CONS(5 , CONS(6 , LIST_EMPTY()))))))
+In  [3]:
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```
+$ ligo repl pascaligo
+Welcome to LIGO's interpreter!
+Included directives:
+  #use "file_path";;
+  #import "file_path" "module_name";;
+In  [1]: #import "@ligo/bigarray/lib/bigarray.mligo" "BA";;
+Out [1]: Done.
+In  [2]: BA.concat (list [1;2;3], list [4;5;6]);;
 Out [2]: CONS(1 , CONS(2 , CONS(3 , CONS(4 , CONS(5 , CONS(6 , LIST_EMPTY()))))))
 In  [3]:
 ```
@@ -370,6 +432,25 @@ export const reverse = <T>(xs : list<T>) : list<T> => {
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=pkg
+// LIGO library for working with lists
+
+function concat<a> (const xs : list (a); const ys : list (a)) : list (a) is
+  block {
+    function f (const p : a * list (a)) : list (a) is p.0 # p.1
+  } with List.fold_right (f, xs, ys)
+
+function reverse<a> (const xs : list (a)) : list (a) is
+  block {
+    function f (const p : list (a) * a) : list (a) is p.1 # p.0
+  } with List.fold_left (f, (nil : list (a)), xs)
+
+```
+
+</Syntax>
 <br/>
 
 and some tests for the library
@@ -413,6 +494,25 @@ const test_reverse = (() => {
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo skip
+#include "list.ligo"
+
+const test_concat = block {
+  const xs = list [1; 2; 3];
+  const ys = list [4; 5; 6];
+  const zs = concat (xs, ys);
+} with assert (zs = list [1; 2; 3; 4; 5; 6])
+
+const test_reverse = block {
+  const xs = list [1; 2; 3];
+} with assert (reverse (xs) = list [3; 2; 1])
+
+```
+
+</Syntax>
 <br/>
 
 To run the tests run the command
@@ -428,6 +528,14 @@ $ ligo run test list.test.mligo
 
 ```bash
 $ ligo run test list.test.jsligo
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```bash
+$ ligo run test list.test.ligo
 ```
 
 </Syntax>
@@ -514,6 +622,14 @@ $ ligo compile contract main.mligo --project-root PATH
 
 ```bash
 $ ligo compile contract main.jsligo --project-root PATH
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```bash
+$ ligo compile contract main.ligo --project-root PATH
 ```
 
 </Syntax>

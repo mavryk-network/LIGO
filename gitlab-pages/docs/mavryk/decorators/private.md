@@ -66,3 +66,34 @@ const foo = ModuleWithPrivate.f(123);  // = 5167
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+The attribute `[@private]` can be used on a top-level declaration to
+prevent a given value from being exported outside the compilation
+unit.
+
+Consider the following contents of the file `module-with-private.ligo`:
+
+```pascaligo group=module-with-private
+[@private] const stuff : int = 42
+[@private] function g (const x : int) : int is x * stuff
+function f (const x : int) : int is g (x) + 1 // exported by default
+```
+
+Then the following piece of code, in another file:
+
+```pascaligo group=import-module-with-private
+#import "gitlab-pages/docs/mavryk/decorators/src/private/module-with-private.ligo" "ModuleWithPrivate"
+
+const foo : int = ModuleWithPrivate.f (123)  // = 5167
+
+(*
+  The following lines cause errors because g and stuff are private:
+
+  const bad_1 = ModuleWithPrivate.g (123)
+  const bad_2 = ModuleWithPrivate.stuff
+*)
+```
+
+</Syntax>

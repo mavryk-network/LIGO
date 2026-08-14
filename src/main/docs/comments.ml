@@ -19,7 +19,8 @@ let is_doc_comment : output_syntax:Syntax_types.t -> string -> bool =
        ~prefix:
          (match output_syntax with
          | CameLIGO -> display_only_for_jsligo
-         | JsLIGO -> display_only_for_cameligo)
+         | JsLIGO -> display_only_for_cameligo
+         | PascaLIGO -> display_only_for_jsligo (* MAVRYK: PascaLIGO *))
 
 
 let format_doc_comment ~(source_syntax : Syntax_types.t) =
@@ -38,7 +39,7 @@ let format_doc_comment ~(source_syntax : Syntax_types.t) =
   strip_internal_prefix
   <@
   match source_syntax with
-  | CameLIGO -> strip_spaces_and_star
+  | CameLIGO | PascaLIGO -> strip_spaces_and_star (* MAVRYK: PascaLIGO uses (* … *) comments *)
   | JsLIGO ->
     String.strip ~drop:Char.is_whitespace
     <@ String.concat ~sep:"\n"

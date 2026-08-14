@@ -45,3 +45,16 @@ can either rely on the compiler error message or always use
 parentheses.
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+The syntax uses the keywords `if`, `then` and `else` to separate the
+three parts, like so:
+
+```pascaligo group=conditionals
+const a = 0
+const b = 1
+const min = if a < b then a else b // min = 0
+```
+
+</Syntax>

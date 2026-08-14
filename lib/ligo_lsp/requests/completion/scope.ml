@@ -45,6 +45,16 @@ let pick_closest_pos (cst : Dialect_cst.t) (pos : Position.t) : Position.t =
       | _ -> Skip
     in
     fold_cst None folder collect cst
+  (* MAVRYK: PascaLIGO *)
+  | PascaLIGO cst ->
+    let open Cst_pascaligo.Fold in
+    let collect (Some_node (node, sing)) =
+      match sing with
+      | S_reg _ -> fold_control node.region
+      | S_wrap _ -> fold_control node#region
+      | _ -> Skip
+    in
+    fold_cst None folder collect cst
 
 (** Traverses the CST spine up to the given position, collecting all module names from the
     declarations that the position is nested in. *)
@@ -71,6 +81,16 @@ let get_current_module (cst : Dialect_cst.t) (pos : Position.t) : Scopes.Uid.t l
       match sing with
       | S_reg S_namespace_decl when is_region_of_interest node.region ->
         Continue (node.value.namespace_name :: module_path)
+      | _ -> Skip
+    in
+    fold_cst' [] collect cst
+  (* MAVRYK: PascaLIGO *)
+  | PascaLIGO cst ->
+    let open Cst_pascaligo.Fold in
+    let collect module_path (Some_node (node, sing)) =
+      match sing with
+      | S_reg S_module_decl when is_region_of_interest node.region ->
+        Continue (node.value.name :: module_path)
       | _ -> Skip
     in
     fold_cst' [] collect cst

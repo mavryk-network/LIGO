@@ -117,7 +117,10 @@ let output : string -> string -> string -> string -> _ Term.ret =
   then `Error (false, "Not a valid directory to output TextMate files")
   else (
     let syntaxes =
-      [ "jsligo", JsLIGO.syntax_highlighting; "mligo", CameLIGO.syntax_highlighting ]
+      [ "jsligo", JsLIGO.syntax_highlighting
+      ; "mligo", CameLIGO.syntax_highlighting
+      ; (* MAVRYK: PascaLIGO *) "ligo", PascaLIGO.syntax_highlighting
+      ]
     in
     let* _ = vscode_syntax_highlighting vscode_directory syntaxes in
     print_endline "Success (Visual Studio Code)";

@@ -769,6 +769,9 @@ let semantic_tokens (cst : Dialect_cst.t) (range : Range.t) : int array =
         | _ -> Skip
       in
       fold_cst' () (fun () -> collect Normal) cst
+    (* MAVRYK: PascaLIGO. Semantic tokens deferred; the TextMate grammar handles
+       PascaLIGO syntax highlighting in the editor. *)
+    | PascaLIGO _cst -> ()
   in
   Vector.to_array data
 

@@ -1,0 +1,3 @@
+const today : timestamp = Mavryk.get_now ()
+const some_date : timestamp = ("2035-01-01t10:10:10Z" : timestamp)
+const secs_until_some_date : int = some_date - today

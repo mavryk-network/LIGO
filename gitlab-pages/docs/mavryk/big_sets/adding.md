@@ -26,3 +26,12 @@ const with_4: big_set<int> = Big_set.add(4, my_big_set);
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_set_adding
+const my_big_set : big_set (int) = Big_set.literal (list [3; 2; 2; 1])
+const with_4 : big_set (int) = Big_set.add (4, my_big_set)
+```
+
+</Syntax>

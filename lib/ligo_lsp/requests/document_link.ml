@@ -42,6 +42,7 @@ let on_req_document_link (file : Path.t) : DocumentLink.t list option handler =
     @@ Dialect_cst.from_dialect
          { cameligo = Directive.extract_directives_cameligo
          ; jsligo = Directive.extract_directives_jsligo
+         ; pascaligo = (fun _ -> []) (* MAVRYK: PascaLIGO. Directive links deferred. *)
          }
          cst
   in

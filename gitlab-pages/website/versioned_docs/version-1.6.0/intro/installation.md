@@ -52,15 +52,15 @@ sudo cp ./ligo /usr/local/bin
 Try our tap :
 
 ```bash
-brew tap ligolang/ligo https://gitlab.com/mavryk-network/ligo.git
-brew install ligolang/ligo/ligo
+brew tap mavryk-network/ligo https://gitlab.com/mavryk-network/ligo.git
+brew install mavryk-network/ligo/ligo
 ```
 
 To upgrade ligo :
 
 ```bash
 brew update
-brew upgrade ligolang/ligo/ligo
+brew upgrade mavryk-network/ligo/ligo
 ```
 
 </TabItem>

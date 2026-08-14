@@ -45,6 +45,20 @@ const main = (p: [nat, nat], s: [nat, nat]) : [list<operation>, [nat, nat]] =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo
+
+[@inline]
+function fst (const p : nat * nat) : nat is p.0
+
+[@entry]
+function main (const p : nat * nat; const s : nat * nat) : list (operation) * (nat * nat) is
+    ((nil : list (operation)), (fst ((p.0, p.1)), fst ((s.1, s.0))))
+```
+
+</Syntax>
+
 Now if we measure the difference between inlining and without inlining, using
 `ligo info measure-contract name_of_contract.mligo --entry-point <entrypoint>`, we see the
 following results:

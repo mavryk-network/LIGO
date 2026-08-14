@@ -88,6 +88,28 @@ address` means that we type-cast a string into an address.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_maps
+type word       is string
+type definition is list (string)
+type dictionary is big_map (word, definition)
+
+const empty_dict : dictionary = Big_map.empty
+
+const dictionary : dictionary =
+  Big_map.literal (list [
+    ("one", list ["The number 1."; "A member of a group."]);
+    ("two", list ["The number 2"])])
+```
+
+The `Big_map.literal` predefined function builds a big map from a list
+of key-value pairs, `(<key>, <value>)`. Note also the "`;`" to
+separate individual big map bindings, and that the list of pairs
+itself is written using `list [...]`.
+
+</Syntax>
+
 > Note: Map keys are internally sorted by increasing values, so the
 > type of the keys be *comparable*, that is, they obey a total order
 > (any two keys can be compared).

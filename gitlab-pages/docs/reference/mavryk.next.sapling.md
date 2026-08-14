@@ -14,6 +14,9 @@ val empty&#95;state : &#39;sap&#95;t.&#39;sap&#95;t sapling&#95;state
 <SyntaxTitle syntax="jsligo">
 let empty&#95;state: &lt;sap&#95;t&gt;sapling&#95;state&lt;sap&#95;t&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const empty&#95;state : sapling&#95;state (sap&#95;t)
+</SyntaxTitle>
 The evaluation of the constant `empty_state` is an empty
         sapling state, that is, no one can spend tokens from it.
 
@@ -25,6 +28,9 @@ val verify&#95;update :
 <SyntaxTitle syntax="jsligo">
 let verify&#95;update:
   &lt;sap&#95;a&gt;(&#95;: sapling&#95;transaction&lt;sap&#95;a&gt;) =&gt; (&#95;: sapling&#95;state&lt;sap&#95;a&gt;) =&gt; option&lt;[bytes, [int, sapling&#95;state&lt;sap&#95;a&gt;]]&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const verify&#95;update : sapling&#95;transaction (sap&#95;a) -&gt; sapling&#95;state (sap&#95;a) -&gt; option (bytes * int * sapling&#95;state (sap&#95;a))
 </SyntaxTitle>
 <Syntax syntax="cameligo">
 
@@ -42,6 +48,17 @@ The call `verify_update trans state`, where the
 The call `verify_update(trans, state)`, where the
         transaction `trans` can be applied to the state `state`, returns
         `Some ([data, [delta, new_state]])`, where `data` is the bound data
+        (as bytes), `delta` is the difference between the outputs and the
+        inputs of the transaction, and `new_state` is the updated
+        state.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The call `verify_update (trans, state)`, where the
+        transaction `trans` can be applied to the state `state`, returns
+        `Some (data, (delta, new_state))`, where `data` is the bound data
         (as bytes), `delta` is the difference between the outputs and the
         inputs of the transaction, and `new_state` is the updated
         state.

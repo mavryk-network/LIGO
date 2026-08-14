@@ -32,8 +32,14 @@ let cameligo_keyword_completions : CompletionItem.t list =
 let jsligo_keyword_completions : CompletionItem.t list =
   dialect_keyword_completions (module Lx_js_self_tokens.Token)
 
+(* MAVRYK: PascaLIGO. Gets completions for PascaLIGO keywords and operators. *)
+let pascaligo_keyword_completions : CompletionItem.t list =
+  dialect_keyword_completions (module Lx_psc_self_tokens.Token)
+
 (** Gets completions for keywords and operators based on whether we're dealing with
     CameLIGO or JsLIGO. *)
 let get_keyword_completions : Syntax_types.t -> CompletionItem.t list = function
   | CameLIGO -> cameligo_keyword_completions
   | JsLIGO -> jsligo_keyword_completions
+  (* MAVRYK: PascaLIGO *)
+  | PascaLIGO -> pascaligo_keyword_completions

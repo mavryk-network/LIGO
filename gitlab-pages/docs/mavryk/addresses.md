@@ -35,3 +35,12 @@ const my_account: address =
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=address
+const my_account : address =
+  ("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address)
+```
+
+</Syntax>

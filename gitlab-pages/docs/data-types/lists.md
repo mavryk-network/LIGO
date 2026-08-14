@@ -52,6 +52,18 @@ See predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=lists
+const empty_list : list (int) = list []
+const my_list : list (int) = list [1; 2; 2] // The head is 1, the tail is [2; 2]
+```
+
+See predefined
+[module List](../reference/list-reference/?lang=pascaligo).
+
+</Syntax>
+
 ## Adding
 
 Lists can be augmented by adding an element before the head (or, in
@@ -103,6 +115,30 @@ const longer_list = List.cons(6, long_list);
 
 See predefined
 [namespace List](../reference/list-reference/?lang=jsligo).
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The *cons operator* is infix and noted "`#`". It is not symmetric: on
+the left lies the element to cons, and, on the right, a list on which
+to cons.
+
+```pascaligo group=consing
+const short_list : list (int) = list [1; 2; 2]
+// long_list = [5; 1; 2; 2]
+const long_list : list (int) = 5 # short_list
+```
+
+There is also a predefined function `List.cons`:
+
+```pascaligo group=consing
+// longer_list = [6; 5; 1; 2; 2]
+const longer_list = List.cons (6, long_list)
+```
+
+See predefined
+[module List](../reference/list-reference/?lang=pascaligo).
 
 </Syntax>
 
@@ -163,6 +199,25 @@ See predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=reverse
+function rev<a> (const xs : list (a)) : list (a) is {
+  var acc := (nil : list (a));
+  for x in list xs { acc := x # acc; };
+} with acc
+```
+
+Note that PascaLIGO does not have a `let rec ... in` form for local
+recursive functions, so here the accumulator is threaded through a
+`for` loop over a mutable local variable instead of an explicit
+recursive call.
+
+See predefined
+[module List](../reference/list-reference/?lang=pascaligo).
+
+</Syntax>
+
 We use an accumulator variable `acc` to keep the elements of the list
 processed, consing each element on it.
 
@@ -190,6 +245,18 @@ See predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=reverse
+const ints : list (int) = rev (list [1; 2; 3])
+const nats : list (nat) = rev (list [1n; 2n; 3n])
+```
+
+See predefined
+[module List](../reference/list-reference/?lang=pascaligo).
+
+</Syntax>
+
 ## Updating
 
 The function `List.update_with` enables the replacement of elements of
@@ -213,6 +280,17 @@ let evens_zeroed = List.update_with (fun x -> x mod 2 = 0n) 0 nats
 const nats : list<int> = [0, 1, 2, 3, 4];
 // evens_zeroed == [0, 1, 0, 3, 0]
 const evens_zeroed = List.update_with(x => x % 2 == 0n, 0, nats);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=list_updating
+const nats : list (int) = list [0; 1; 2; 3; 4]
+// evens_zeroed = [0; 1; 0; 3; 0]
+function is_even (const x : int) : bool is x mod 2 = 0n
+const evens_zeroed = List.update_with (is_even, 0, nats)
 ```
 
 </Syntax>
@@ -254,6 +332,25 @@ const odds_squared = List.update(f, nats);
 
 See predefined
 [namespace List](../reference/list-reference/?lang=jsligo).
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+That function takes an element and returns an optional value: if that
+value is `None`, then the element is left unchanged, otherwise, if the
+value is `Some (v)`, then the element is replaced in the resulting list
+by `v`.
+
+```pascaligo group=list_updating
+function f (const x : int) : option (int) is
+  if x mod 2 = 0n then None else Some (x * x)
+// odds_squared = [0; 1; 2; 9; 4]
+const odds_squared = List.update (f, nats)
+```
+
+See predefined
+[module List](../reference/list-reference/?lang=pascaligo).
 
 </Syntax>
 
@@ -378,6 +475,52 @@ See predefined
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The module `List` exports the functions `fold_left` and `fold_right`,
+so folds have either the form:
+
+```
+List.fold_left (folded, init, list)
+```
+
+or
+
+```
+List.fold_right (folded, list, init)
+```
+
+which means that the folding can be done leftwards or rightwards on
+the list. One way to tell them apart is to look where the folded
+function, and the fold itself, keep the accumulator in their
+signatures. Take for example a function `f`, a list `[1; 2; 3]`, and
+an initial accumulator `init`. Then
+
+```
+List.fold_left (f, init, list [1; 2; 3]) = f (f (f (init, 1), 2), 3)
+```
+
+and
+
+```
+List.fold_right (f, list [1; 2; 3], init) = f (1, f (2, f (3, init)))
+```
+
+For example, let us compute the sum of integers in a list, assuming
+that the empty list yields `0`:
+
+```pascaligo group=folding_lists
+function add1 (const a_i : int * int) : int is a_i.0 + a_i.1
+const sum1 : int = List.fold_left (add1, 0, list [1; 2; 3])
+function add2 (const i_a : int * int) : int is i_a.0 + i_a.1
+const sum2 : int = List.fold_right (add2, list [1; 2; 3], 0)
+```
+
+See predefined
+[module List](../reference/list-reference/?lang=pascaligo).
+
+</Syntax>
+
 ## Mapping
 
 We may want to change all the elements of a given list by applying to
@@ -405,6 +548,18 @@ const plus_one = List.map(i => i + 1, [6, 2, 3, 3]);
 
 See predefined
 [namespace List](../reference/list-reference/?lang=jsligo).
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=map_lists
+function increment (const i : int) : int is i + 1
+const plus_one : list (int) = List.map (increment, list [6; 2; 3; 3])
+```
+
+See predefined
+[module List](../reference/list-reference/?lang=pascaligo).
 
 </Syntax>
 
@@ -438,5 +593,32 @@ function sum_list (l: list<int>) {
 
 See predefined
 [namespace List](../reference/list-reference/?lang=jsligo).
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+One can iterate through all the elements of a list, from left to
+right, thanks to a loop of the form
+`for <variable> in list <list_expr> <block>`. It means that the
+`<block>` of statements will be computed once for each `<variable>`
+ranging over the elements of the list `<list_expr>`, from left to
+right.
+
+Here is an example where the integers in a list are summed up, and the
+sum is zero if the list is empty:
+
+```pascaligo group=list_looping
+function sum_list (const l : list (int)) : int is
+  block {
+    var sum : int := 0;
+    for i in list l {
+      sum := sum + i
+    }
+  } with sum
+```
+
+See predefined
+[module List](../reference/list-reference/?lang=pascaligo).
 
 </Syntax>

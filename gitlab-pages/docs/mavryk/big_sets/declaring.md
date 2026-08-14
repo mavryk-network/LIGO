@@ -100,6 +100,43 @@ const big_set2 : big_set<int> = Big_set.of_list([3, two, two, 1]);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The type of big sets is `big_set (elt)` or, equivalently,
+`Big_set.t (elt)`, where `elt` is the type of the elements of the big
+set. It is defined as follows in the standard library:
+
+```pascaligo group=big_sets
+type t (elt) is big_map (elt, unit)
+```
+
+The empty big set is denoted by the predefined value
+`Big_set.empty`. In some contexts, it is useful to annotate it with
+its type, for example: `(Big_set.empty : big_set (int))`.
+
+A non-empty big set can be built by using the function
+`Big_set.literal` which takes a list of *literal elements* and returns
+a set containing them, and only them.
+
+```pascaligo group=big_sets
+const empty_big_set : big_set (int) = Big_set.empty
+const big_set1 : big_set (int) = Big_set.literal (list [3; 2; 2; 1])
+```
+
+> Note: The element `2` is repeated in the list, but not in the set
+> made from it.
+
+If you want to build a big set from an arbitrary list of arbitrary
+values (not just literal values), then you must use `Big_set.of_list`
+instead of `Big_set.literal`:
+
+```pascaligo group=big_sets
+const two = 2
+const big_set2 : big_set (int) = Big_set.of_list (list [3; two; two; 1])
+```
+
+</Syntax>
+
 Set elements are internally sorted by increasing values, so the type
 of the elements must be *comparable*, that is, they obey a total order
 (any two elements can be compared).

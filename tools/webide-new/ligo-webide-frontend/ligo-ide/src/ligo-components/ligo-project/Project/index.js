@@ -32,6 +32,9 @@ modelSessionManager.registerModeDetector((filePath) => {
   if (base.endsWith(".jsligo")) {
     return "jsligoext";
   }
+  if (base.endsWith(".ligo")) {
+    return "pascaligoext"; // MAVRYK: PascaLIGO
+  }
   if (base.endsWith(".mv")) {
     return "tzext";
   }

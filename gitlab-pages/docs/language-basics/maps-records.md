@@ -50,6 +50,26 @@ type user = {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Records are one-way data of different types can be packed into a
+single type. A record is made of a set of *fields*, which are made of
+a *field name* and a *field type*. Given a value of a record type, the
+value bound to a field can be accessed by giving its field name to a
+special operator (`.`).
+
+Let us first consider an example of record type declaration.
+
+```pascaligo group=records1
+type user is record [
+  id       : nat;
+  is_admin : bool;
+  name     : string
+]
+```
+
+</Syntax>
+
 <Syntax syntax="cameligo">
 
 And here is how a record value is defined:
@@ -78,6 +98,20 @@ const alice : user = {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+And here is how a record value is defined:
+
+```pascaligo group=records1
+const alice : user = record [
+  id       = 1n;
+  is_admin = True;
+  name     = "Alice"
+]
+```
+
+</Syntax>
+
 ### Accessing Record Fields
 
 If we want the contents of a given field, we use the (`.`) infix
@@ -95,6 +129,14 @@ let alice_admin : bool = alice.is_admin
 
 ```jsligo group=records1
 const alice_admin = alice.is_admin;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=records1
+const alice_admin : bool = alice.is_admin
 ```
 
 </Syntax>
@@ -125,6 +167,17 @@ function userToTuple (u : user) {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=records1
+function user_to_tuple (const u : user) : nat * bool * string is
+  block {
+    const record [id; is_admin; name] = u
+  } with (id, is_admin, name)
+```
+
+</Syntax>
+
 We can ignore some fields of the records we can do so by
 using `_` (underscore), like so:
 
@@ -148,6 +201,17 @@ function getId (u : user) {
   ignore([is_admin, name]);
   return id
 }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=records1
+function get_id (const u : user) : nat is
+  block {
+    const record [id; is_admin = _ia; name = _nm] = u
+  } with id
 ```
 
 </Syntax>
@@ -228,6 +292,27 @@ ligo run evaluate-expr \
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The syntax for the functional updates of record in PascaLIGO also uses
+the `with` keyword:
+
+```pascaligo group=record_update
+type point is record [x : int; y : int; z : int]
+type vector is record [dx : int; dy : int]
+
+const origin : point = record [x = 0; y = 0; z = 0]
+
+function xy_translate (const p : point; const vec : vector) : point is
+  p with record [x = p.x + vec.dx; y = p.y + vec.dy]
+```
+
+> You have to understand that `p` has not been changed by the
+> functional update: a nameless new version of it has been created and
+> returned.
+
+</Syntax>
+
 #### Nested updates
 
 <Syntax syntax="cameligo">
@@ -275,6 +360,27 @@ type account = {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+A unique feature of LIGO is the ability to perform nested updates on
+records. For example if you have the following record structure:
+
+```pascaligo group=record_nested_update
+type color is Blue of unit | Green of unit
+
+type preferences is record [
+  color : color;
+  other : int
+]
+
+type account is record [
+  id          : int;
+  preferences : preferences
+]
+```
+
+</Syntax>
+
 You can update the nested record with the following code:
 
 <Syntax syntax="cameligo">
@@ -291,6 +397,15 @@ let change_color_preference (account : account) (color : color) : account =
 ```jsligo group=record_nested_update
 const change_color_preference = (account : account, color : color) =>
   ({ ...account, preferences: {...account.preferences, color: color }});
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=record_nested_update
+function change_color_preference (const account : account; const color : color) : account is
+  account with record [preferences.color = color]
 ```
 
 </Syntax>
@@ -333,6 +448,17 @@ the record, and objects are then ordered with lexicographic ordering.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Record types are comparable, which allows to check for equality and
+use records as key in sets or maps. By default, the ordering of
+records is **undefined and implementation-dependent**. Ultimately, the
+order is determined by the translated Michelson type. When using the
+`[@layout comb]` attribute, fields are translated in their order in
+the record, and records are then ordered with lexicographic ordering.
+
+</Syntax>
+
 ## Maps
 
 *Maps* are a data structure which associate values of the same type to
@@ -364,6 +490,15 @@ type register = map<address, move>;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+type move is int * int
+type register is map (address, move)
+```
+
+</Syntax>
+
 
 ### Creating an Empty Map
 
@@ -381,6 +516,14 @@ let empty : register = Map.empty
 
 ```jsligo group=maps
 const empty: register = Map.empty;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+const empty : register = Map.empty
 ```
 
 </Syntax>
@@ -422,6 +565,23 @@ that we type-cast a string into an address.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+const moves : register =
+  Map.literal (list [
+    (("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), (1,2));
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))])
+```
+
+The `Map.literal` predefined function builds a map from a `list` of
+key-value pair tuples, `(<key>, <value>)`.  Note also the `;` to
+separate individual map entries, and that the list of pairs must be
+wrapped with `list [...]`.  `("<string value>" : address)` means that
+we type-cast a string into an address.
+
+</Syntax>
+
 
 ### Accessing Map Bindings
 
@@ -439,6 +599,15 @@ let my_balance : move option =
 ```jsligo group=maps
 const my_balance: option<move> =
   Map.find_opt("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, moves);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+const my_balance : option (move) =
+  Map.find_opt (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), moves)
 ```
 
 </Syntax>
@@ -468,6 +637,18 @@ let force_access = (key: address, moves: register) => {
     when(None()): failwith("No move.")
   };
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+function force_access (const key : address; const moves : register) : move is
+  case Map.find_opt (key, moves) of [
+    Some (mv) -> mv
+  | None -> failwith ("No move.")
+  ]
 ```
 
 </Syntax>
@@ -527,6 +708,28 @@ const add = (m: register) =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+We can update a binding in a map in PascaLIGO by means of the
+`Map.update` built-in function:
+
+```pascaligo group=maps
+function assign (const m : register) : register is
+  Map.update (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), Some (4,9), m)
+```
+
+Notice the optional value `Some (4,9)` instead of `(4,9)`. If we had
+use `None` instead, that would have meant that the binding is removed.
+
+As a particular case, we can only add a key and its associated value.
+
+```pascaligo group=maps
+function add (const m : register) : register is
+  Map.add (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (4,9), m)
+```
+
+</Syntax>
+
 To remove a binding from a map, we need its key.
 
 <Syntax syntax="cameligo">
@@ -547,6 +750,17 @@ In JsLIGO, we use the predefined function `Map.remove` as follows:
 ```jsligo group=maps
 const delete = (key: address, moves: register) =>
   Map.remove(key, moves);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, we use the predefined function `Map.remove` as follows:
+
+```pascaligo group=maps
+function delete (const key : address; const moves : register) : register is
+  Map.remove (key, moves)
 ```
 
 </Syntax>
@@ -597,6 +811,18 @@ const assert_all_greater_than_three = (m: register) => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+function iter_op (const m : register) : unit is
+  block {
+    function predicate (const kv : address * move) : unit is
+      assert (kv.1.0 > 3)
+  } with Map.iter (predicate, m)
+```
+
+</Syntax>
+
 
 #### Map Operations over Maps
 
@@ -624,6 +850,17 @@ const map_op = (m: register) => {
   let increment = ([_a, j]: [address, move]) => [j[0], j[1] + 1];
   return Map.map(increment, m);
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+function map_op (const m : register) : register is
+  block {
+    function increment (const kv : address * move) : move is (kv.1.0, kv.1.1 + 1)
+  } with Map.map (increment, m)
 ```
 
 </Syntax>
@@ -657,6 +894,17 @@ const fold_op = (m: register): int => {
   let folded = ([i, j]: [int, [address, move]]) => i + j[1][1];
   return Map.fold(folded, m, 5);
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=maps
+function fold_op (const m : register) : int is
+  block {
+    function folded (const acc_kv : int * (address * move)) : int is acc_kv.0 + acc_kv.1.1.1
+  } with Map.fold (folded, m, 5)
 ```
 
 </Syntax>
@@ -695,6 +943,15 @@ type register = big_map<address, move>;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_maps
+type move is int * int
+type register is big_map (address, move)
+```
+
+</Syntax>
+
 
 ### Creating an Empty Big Map
 
@@ -712,6 +969,14 @@ let empty : register = Big_map.empty
 
 ```jsligo group=big_maps
 const empty: register = Big_map.empty;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_maps
+const empty : register = Big_map.empty
 ```
 
 </Syntax>
@@ -752,6 +1017,23 @@ value>" as address)` means that we cast a string into an address.
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_maps
+const moves : register =
+  Big_map.literal (list [
+    (("mv18Cw7psUrAAPBpXYd9CtCpHg9EgjHP9KTe" : address), (1,2));
+    (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), (0,3))])
+```
+
+The predefined function `Big_map.literal` constructs a big map from a
+`list` of key-value pairs `(<key>, <value>)`. Note also the semicolon
+separating individual map entries, and that the list of pairs must be
+wrapped with `list [...]`.  The annotated value `("<string value>" :
+address)` means that we cast a string into an address.
+
+</Syntax>
+
 
 ### Accessing Values
 
@@ -774,6 +1056,15 @@ let my_balance : move option =
 ```jsligo group=big_maps
 const my_balance: option<move> =
   Big_map.find_opt("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, moves);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=big_maps
+const my_balance : option (move) =
+  Big_map.find_opt (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), moves)
 ```
 
 </Syntax>
@@ -808,6 +1099,18 @@ const updated_map: register =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+We can update a big map in PascaLIGO using the `Big_map.update`
+built-in:
+
+```pascaligo group=big_maps
+const updated_map : register =
+  Big_map.update (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), Some (4,9), moves)
+```
+
+</Syntax>
+
 
 ### Removing Bindings
 
@@ -834,6 +1137,18 @@ is called `Map.remove` and is used as follows:
 ```jsligo group=big_maps
 const updated_map_: register =
   Big_map.remove("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" as address, moves);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, the predefined function which removes a binding in a map
+is called `Big_map.remove` and is used as follows:
+
+```pascaligo group=big_maps
+const updated_map : register =
+  Big_map.remove (("mv1Bbr38otexaqYQBJHHqV4uCYncf2y1HR9k" : address), moves)
 ```
 
 </Syntax>

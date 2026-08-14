@@ -42,3 +42,19 @@ const string_binding : binding<string> = ["Bob", "cat"];
 ```
 
 </Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=parametric_types
+type key is string
+type binding (value) is key * value
+
+const int_binding : binding (int) = ("Alice", 4)
+const string_binding : binding (string) = ("Bob", "cat")
+```
+
+Note how the type parameter `value` is declared in parentheses right
+after the type name being defined, as in `binding (value)`, and the
+type is instantiated the same way, as in `binding (int)`.
+
+</Syntax>

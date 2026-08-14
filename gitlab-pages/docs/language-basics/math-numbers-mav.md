@@ -104,6 +104,39 @@ const g = 1_000_000;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a
+// int + int yields int
+const a : int = 5 + 10
+
+// nat + int yields int
+const b : int = 5n + 10
+
+// mav + mav yields mav
+const c : mav = 5mumav + 0.000_010mav
+
+// mav + int or mav + nat is invalid
+// const d : mav = 5mumav + 10n
+
+// two nats yield a nat
+const e : nat = 5n + 10n
+
+// nat + int yields an int: invalid
+// const f : nat = 5n + 10
+
+const g : int = 1_000_000
+```
+
+> Tip: you can use underscores for readability when defining large
+> numbers:
+>
+>```pascaligo
+>const sum : mav = 100_000mumav
+>```
+
+</Syntax>
+
 ## Subtraction
 
 Subtraction looks as follows.
@@ -138,6 +171,20 @@ const b: int = 5n - 2n;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b
+const a : int = 5 - 10
+
+// Subtraction of two nats yields an int
+const b : int = 5n - 2n
+
+// Therefore the following is invalid
+// const c : nat = 5n - 2n
+```
+
+</Syntax>
+
 From protocol *`Ithaca`* onwards subtracting values of type `mav`
 yeilds an optional value (due to the Michelson instruction
 `SUB_MUMAV`)
@@ -156,6 +203,15 @@ let e : mav option = 1mumav - 5mumav (* None *)
 ```jsligo group=b
 const d : option<mav> = 5mumav - 1mumav; /* Some (4mumav) */
 const e : option<mav> = 1mumav - 5mumav; /* None */
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b
+const d : option (mav) = 5mumav - 1mumav (* Some (4mumav) *)
+const e : option (mav) = 1mumav - 5mumav (* None *)
 ```
 
 </Syntax>
@@ -188,6 +244,18 @@ const c: mav = 5n * 5mumav;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+const a : int = 5 * 5
+const b : nat = 5n * 5n
+
+// You can also multiply `nat` and `mav`
+const c : mav = 5n * 5mumav
+```
+
+</Syntax>
+
 
 ## Euclidean Division
 
@@ -211,6 +279,16 @@ let c : nat = 10mumav / 3mumav
 const a: int = 10 / 3;
 const b: nat = 10n / 3n;
 const c: nat = 10mumav / 3mumav;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=d
+const a : int = 10 / 3
+const b : nat = 10n / 3n
+const c : nat = 10mumav / 3mumav
 ```
 
 </Syntax>
@@ -254,6 +332,21 @@ const rem4 = a % d;  // 3
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=d
+const a : int = 120
+const b : int = 9
+const rem1 : nat = a mod b  // 3
+const c : nat = 120n
+const rem2 : nat = c mod b  // 3
+const d : nat = 9n
+const rem3 : nat = c mod d  // 3
+const rem4 : nat = a mod d  // 3
+```
+
+</Syntax>
+
 
 For cases when you need both the quotient and the remainder, LIGO provides the
 `ediv` operation. `ediv x y` returns `Some (quotient, remainder)`, unless `y`
@@ -289,6 +382,21 @@ const ediv4: option<[int , nat]> = ediv(a, d);  // Some (7, 2)
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=f
+const a : int = 37
+const b : int = 5
+const ediv1 : option (int * nat) = ediv (a, b)  // Some (7, 2)
+const c : nat = 37n
+const ediv2 : option (int * nat) = ediv (c, b)  // Some (7, 2)
+const d : nat = 5n
+const ediv3 : option (nat * nat) = ediv (c, d)  // Some (7, 2)
+const ediv4 : option (int * nat) = ediv (a, d)  // Some (7, 2)
+```
+
+</Syntax>
+
 
 ## From `int` to `nat` and back
 
@@ -308,6 +416,15 @@ let b : nat = abs (1)
 ```jsligo group=g
 const a = int(1n);
 const b = abs(1);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=e
+const a : int = int (1n)
+const b : nat = abs (1)
 ```
 
 </Syntax>
@@ -336,6 +453,14 @@ const is_a_nat = is_nat(1);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=e
+const is_a_nat : option (nat) = is_nat (1)
+```
+
+</Syntax>
+
 <Syntax syntax="cameligo">
 
 ## Bitwise operations
@@ -357,6 +482,31 @@ let three : nat = 7n lxor 4n // 3
 let fourteen : nat = 7n lsl 1n // 14
 // Bitwise shift right
 let seven_ : nat = 14n land 1n // 7
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+## Bitwise operations
+You can perform bitwise operations as follows:
+
+> bitwise operations can be performed mostly with `nat`'s
+>
+> only in case of bitwise and, the first operand can be either `int` or `nat`
+
+```pascaligo
+// Bitwise and (first operand can be int or nat)
+const four : nat = Bitwise.and (4n, 4n) // 4
+const four_ : nat = Bitwise.and (7, 4n) // 4
+// Bitwise or
+const seven : nat = Bitwise.or (7n, 4n) // 7
+// Bitwise xor
+const three : nat = Bitwise.xor (7n, 4n) // 3
+// Bitwise shift left
+const fourteen : nat = Bitwise.shift_left (7n, 1n) // 14
+// Bitwise shift right
+const seven_ : nat = Bitwise.shift_right (14n, 1n) // 7
 ```
 
 </Syntax>

@@ -4,16 +4,21 @@ class Ligo < Formula
   license "MIT"
 
   # We clone repo explicitely to preserve the information about git submodules
-  url "https://gitlab.com/mavryk-network/ligo.git", tag: "1.7.0", revision: "86548dbd16776c30fd47e5fdf48631cfffecaea3"
-  version "1.7.0"
+  # MAVRYK: 1.8.0 (PascaLIGO restoration + union types). Update `revision` to the exact commit tagged
+  # 1.8.0 (e.g. the dev merge commit); the value below is pascaligo-restoration HEAD at prep time.
+  url "https://gitlab.com/mavryk-network/ligo.git", tag: "1.8.0", revision: "74d225c25e0dccc99a1230ec59037208260e3748"
+  version "1.8.0"
   head "https://gitlab.com/mavryk-network/ligo.git", branch: "dev"
 
 
-  bottle do
-    root_url "https://gitlab.com/api/v4/projects/12294987/packages/generic/ligo_bottle/current"
-  sha256 cellar: :any, arm64_sonoma: "09e098ab450b300793c6351f014897a454347cba47528ab8b3f266401d6771a6"
-  sha256 cellar: :any, sonoma: "17a30966abd7a7886c9ba866e3dde7f4b80df4bb6f908a0e0bbe30e3a9a8de0b"
-  end
+  # MAVRYK: 1.8.0 builds from source — no bottle block on purpose. The previous bottles lived in
+  # ligolang UPSTREAM's registry (project 12294987) and do NOT contain PascaLIGO. To ship fast installs,
+  # build 1.8.0 bottles from THIS source, upload them to the mavryk-network/ligo package registry
+  # (project 51776731 — none exists yet), then re-add:
+  #   bottle do
+  #     root_url "https://gitlab.com/api/v4/projects/51776731/packages/generic/ligo_bottle/current"
+  #     sha256 cellar: :any, arm64_sonoma: "<shasum -a 256 of the bottle>"
+  #   end
 
   build_dependencies = %w[opam rust hidapi pkg-config gnu-sed cmake gcc]
   build_dependencies.each do |dependency|
@@ -32,7 +37,7 @@ class Ligo < Formula
 
   def install
     # ligo version is taken from the environment variable in build-time
-    ENV["LIGO_VERSION"] = "1.7.0"
+    ENV["LIGO_VERSION"] = "1.8.0"
     # avoid opam prompts
     ENV["OPAMYES"] = "true"
 

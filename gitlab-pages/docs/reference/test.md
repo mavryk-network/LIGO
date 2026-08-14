@@ -25,6 +25,9 @@ val run : &#39;a &#39;b.(&#39;a -&gt; &#39;b) -&gt; &#39;a -&gt; michelson&#95;p
 <SyntaxTitle syntax="jsligo">
 let run: &lt;a, b&gt;(&#95;: (&#95;: a) =&gt; b) =&gt; (&#95;: a) =&gt; michelson&#95;program
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const run : (a -&gt; b) -&gt; a -&gt; michelson&#95;program
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.run` from `Test.Next` is encouraged for a smoother migration.
 
 Run a function on an input, all in Michelson. More concretely:
@@ -40,6 +43,9 @@ val eval : &#39;a.&#39;a -&gt; michelson&#95;program
 <SyntaxTitle syntax="jsligo">
 let eval: &lt;a&gt;(&#95;: a) =&gt; michelson&#95;program
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const eval : a -&gt; michelson&#95;program
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
 Compile a LIGO value to Michelson. Currently it is a renaming of
@@ -51,6 +57,9 @@ val decompile : &#39;a.michelson&#95;program -&gt; &#39;a
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let decompile: &lt;a&gt;(&#95;: michelson&#95;program) =&gt; a
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const decompile : michelson&#95;program -&gt; a
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.decompile` from `Test.Next` is encouraged for a smoother migration.
 
@@ -66,6 +75,9 @@ val compile&#95;value : &#39;a.&#39;a -&gt; michelson&#95;program
 <SyntaxTitle syntax="jsligo">
 let compile&#95;value: &lt;a&gt;(&#95;: a) =&gt; michelson&#95;program
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const compile&#95;value : a -&gt; michelson&#95;program
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.eval` from `Test.Next` is encouraged for a smoother migration.
 
 Compile a LIGO value to Michelson.
@@ -76,6 +88,9 @@ val get&#95;total&#95;voting&#95;power : unit -&gt; nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get&#95;total&#95;voting&#95;power: (&#95;: unit) =&gt; nat
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;total&#95;voting&#95;power : unit -&gt; nat
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.get_total_voting_power` from `Test.Next` is encouraged for a smoother migration.
 
@@ -91,6 +106,9 @@ val failwith : &#39;a &#39;b.&#39;a -&gt; &#39;b
 <SyntaxTitle syntax="jsligo">
 let failwith: &lt;a, b&gt;(&#95;: a) =&gt; b
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const failwith : a -&gt; b
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.failwith` from `Test.Next` is encouraged for a smoother migration.
 
 Cause the testing framework to fail.
@@ -101,6 +119,9 @@ val to&#95;contract : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#3
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let to&#95;contract: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; contract&lt;p&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;contract : typed&#95;address (p, s) -&gt; contract (p)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.to_contract` from `Test.Next` is encouraged for a smoother migration.
 
@@ -116,6 +137,9 @@ val set&#95;source : address -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let set&#95;source: (&#95;: address) =&gt; unit
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const set&#95;source : address -&gt; unit
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.set_source` from `Test.Next` is encouraged for a smoother migration.
 
 Sets the source for `Test.transfer` and `Test.originate`.
@@ -126,6 +150,9 @@ val cast&#95;address : &#39;a &#39;b.address -&gt; (&#39;a, &#39;b) typed&#95;ad
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let cast&#95;address: &lt;a, b&gt;(&#95;: address) =&gt; typed&#95;address&lt;a, b&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const cast&#95;address : address -&gt; typed&#95;address (a, b)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Address.to_typed_address` from `Test.Next` is encouraged for a smoother migration.
 
@@ -139,6 +166,9 @@ val to&#95;address : &#39;a &#39;b.(&#39;a, &#39;b) typed&#95;address -&gt; addr
 <SyntaxTitle syntax="jsligo">
 let to&#95;address: &lt;a, b&gt;(&#95;: typed&#95;address&lt;a, b&gt;) =&gt; address
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;address : typed&#95;address (a, b) -&gt; address
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.to_address` from `Test.Next` is encouraged for a smoother migration.
 
 
@@ -147,6 +177,9 @@ val get&#95;storage : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#3
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get&#95;storage: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; s
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;storage : typed&#95;address (p, s) -&gt; s
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_storage` from `Test.Next` is encouraged for a smoother migration.
 
@@ -159,6 +192,9 @@ val get&#95;storage&#95;of&#95;address : &#39;b.address -&gt; &#39;b
 <SyntaxTitle syntax="jsligo">
 let get&#95;storage&#95;of&#95;address: &lt;b&gt;(&#95;: address) =&gt; b
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;storage&#95;of&#95;address : address -&gt; b
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_storage` from `Test.Next` is encouraged for a smoother migration.
 
 Gets the storage of an account in `michelson_program`.
@@ -169,6 +205,9 @@ val get&#95;balance&#95;of&#95;address : address -&gt; mav
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get&#95;balance&#95;of&#95;address: (&#95;: address) =&gt; mav
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;balance&#95;of&#95;address : address -&gt; mav
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
@@ -181,6 +220,9 @@ val get&#95;balance : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; mav
 <SyntaxTitle syntax="jsligo">
 let get&#95;balance: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; mav
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;balance : typed&#95;address (p, s) -&gt; mav
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_balance` from `Test.Next` is encouraged for a smoother migration.
 
 Gets the balance of an account in mav.
@@ -191,6 +233,9 @@ val print : string -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let print: (&#95;: string) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const print : string -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `IO.print` from `Test.Next` is encouraged for a smoother migration.
 
@@ -203,6 +248,9 @@ val eprint : string -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let eprint: (&#95;: string) =&gt; unit
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const eprint : string -&gt; unit
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `IO.eprint` from `Test.Next` is encouraged for a smoother migration.
 
 Prints an string to stderr.
@@ -213,6 +261,9 @@ val get&#95;voting&#95;power : key&#95;hash -&gt; nat
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get&#95;voting&#95;power: (&#95;: key&#95;hash) =&gt; nat
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;voting&#95;power : key&#95;hash -&gt; nat
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.get_voting_power` from `Test.Next` is encouraged for a smoother migration.
 
@@ -228,6 +279,9 @@ val nth&#95;bootstrap&#95;contract : nat -&gt; address
 <SyntaxTitle syntax="jsligo">
 let nth&#95;bootstrap&#95;contract: (&#95;: nat) =&gt; address
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const nth&#95;bootstrap&#95;contract : nat -&gt; address
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Account.Contract.bootstrap` from `Test.Next` is encouraged for a smoother migration.
 
 Returns the address corresponding to the nth bootstrapped
@@ -240,6 +294,9 @@ val nth&#95;bootstrap&#95;account : int -&gt; address
 <SyntaxTitle syntax="jsligo">
 let nth&#95;bootstrap&#95;account: (&#95;: int) =&gt; address
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const nth&#95;bootstrap&#95;account : int -&gt; address
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Account.address` from `Test.Next` is encouraged for a smoother migration.
 
 Returns the address of the nth bootstrapped account.
@@ -250,6 +307,9 @@ val get&#95;bootstrap&#95;account : nat -&gt; (address * key * string)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get&#95;bootstrap&#95;account: (&#95;: nat) =&gt; [address, key, string]
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;bootstrap&#95;account : nat -&gt; (address * key * string)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Account.info` from `Test.Next` is encouraged for a smoother migration.
 
@@ -263,6 +323,9 @@ val nth&#95;bootstrap&#95;typed&#95;address : &#39;a &#39;b.nat -&gt; (&#39;a, &
 <SyntaxTitle syntax="jsligo">
 let nth&#95;bootstrap&#95;typed&#95;address: &lt;a, b&gt;(&#95;: nat) =&gt; typed&#95;address&lt;a, b&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const nth&#95;bootstrap&#95;typed&#95;address : nat -&gt; typed&#95;address (a, b)
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Account.Contract.bootstrap_typed_address` from `Test.Next` is encouraged for a smoother migration.
 
 Returns the typed address corresponding to the nth bootstrapped
@@ -275,6 +338,9 @@ val last&#95;originations : unit -&gt; (address, address list) map
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let last&#95;originations: (&#95;: unit) =&gt; map&lt;address, list&lt;address&gt;&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const last&#95;originations : unit -&gt; map (address, list (address))
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.last_originations` from `Test.Next` is encouraged for a smoother migration.
 
@@ -290,6 +356,9 @@ val random : &#39;a.unit -&gt; &#39;a
 <SyntaxTitle syntax="jsligo">
 let random: &lt;a&gt;(&#95;: unit) =&gt; a
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const random : unit -&gt; a
+</SyntaxTitle>
 This function creates a random value for a chosen type.
 
 
@@ -298,6 +367,9 @@ val new&#95;account : unit -&gt; (string * key)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let new&#95;account: (&#95;: unit) =&gt; [string, key]
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const new&#95;account : unit -&gt; (string * key)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Account.new` from `Test.Next` is encouraged for a smoother migration.
 
@@ -309,6 +381,9 @@ val bake&#95;until&#95;n&#95;cycle&#95;end : nat -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let bake&#95;until&#95;n&#95;cycle&#95;end: (&#95;: nat) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const bake&#95;until&#95;n&#95;cycle&#95;end : nat -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.bake_until` from `Test.Next` is encouraged for a smoother migration.
 
@@ -323,12 +398,18 @@ val get&#95;time : unit -&gt; timestamp
 <SyntaxTitle syntax="jsligo">
 let get&#95;time: (&#95;: unit) =&gt; timestamp
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;time : unit -&gt; timestamp
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 val register&#95;delegate : key&#95;hash -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let register&#95;delegate: (&#95;: key&#95;hash) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const register&#95;delegate : key&#95;hash -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.register_delegate` from `Test.Next` is encouraged for a smoother migration.
 
@@ -341,6 +422,9 @@ val stake : key&#95;hash -&gt; mav -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let stake: (&#95;: key&#95;hash) =&gt; (&#95;: mav) =&gt; unit
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const stake : key&#95;hash -&gt; mav -&gt; unit
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.stake` from `Test.Next` is encouraged for a smoother migration.
 
 
@@ -349,6 +433,9 @@ val register&#95;constant : michelson&#95;program -&gt; string
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let register&#95;constant: (&#95;: michelson&#95;program) =&gt; string
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const register&#95;constant : michelson&#95;program -&gt; string
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.register_constant` from `Test.Next` is encouraged for a smoother migration.
 
@@ -362,6 +449,9 @@ val to&#95;typed&#95;address : &#39;a &#39;b.&#39;a contract -&gt; (&#39;a, &#39
 <SyntaxTitle syntax="jsligo">
 let to&#95;typed&#95;address: &lt;a, b&gt;(&#95;: contract&lt;a&gt;) =&gt; typed&#95;address&lt;a, b&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;typed&#95;address : contract (a) -&gt; typed&#95;address (a, b)
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Contract.to_typed_address` from `Test.Next` is encouraged for a smoother migration.
 
 
@@ -370,6 +460,9 @@ val constant&#95;to&#95;michelson&#95;program : string -&gt; michelson&#95;progr
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let constant&#95;to&#95;michelson&#95;program: (&#95;: string) =&gt; michelson&#95;program
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const constant&#95;to&#95;michelson&#95;program : string -&gt; michelson&#95;program
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.parse` from `Test.Next` is encouraged for a smoother migration.
 
@@ -383,6 +476,9 @@ val parse&#95;michelson : string -&gt; michelson&#95;program
 <SyntaxTitle syntax="jsligo">
 let parse&#95;michelson: (&#95;: string) =&gt; michelson&#95;program
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const parse&#95;michelson : string -&gt; michelson&#95;program
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.parse` from `Test.Next` is encouraged for a smoother migration.
 
 Parses Michelson (as string) into a `michelson_program`.
@@ -393,6 +489,9 @@ val restore&#95;context : unit -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let restore&#95;context: (&#95;: unit) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const restore&#95;context : unit -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.restore` from `Test.Next` is encouraged for a smoother migration.
 
@@ -407,6 +506,9 @@ val save&#95;context : unit -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let save&#95;context: (&#95;: unit) =&gt; unit
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const save&#95;context : unit -&gt; unit
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.save` from `Test.Next` is encouraged for a smoother migration.
 
 Takes current testing framework context and saves it, pushing it
@@ -418,6 +520,9 @@ val drop&#95;context : unit -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let drop&#95;context: (&#95;: unit) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const drop&#95;context : unit -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.drop` from `Test.Next` is encouraged for a smoother migration.
 
@@ -431,6 +536,9 @@ val to&#95;string : &#39;a.&#39;a -&gt; string
 <SyntaxTitle syntax="jsligo">
 let to&#95;string: &lt;a&gt;(&#95;: a) =&gt; string
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;string : a -&gt; string
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `String.show` from `Test.Next` is encouraged for a smoother migration.
 
 Converts a value to a string (same conversion as used by
@@ -443,6 +551,9 @@ val to&#95;json : &#39;a.&#39;a -&gt; string
 <SyntaxTitle syntax="jsligo">
 let to&#95;json: &lt;a&gt;(&#95;: a) =&gt; string
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;json : a -&gt; string
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `String.json` from `Test.Next` is encouraged for a smoother migration.
 
 Converts a value to its JSON representation (as a string).
@@ -454,6 +565,9 @@ val to&#95;debugger&#95;json : &#39;a.&#39;a -&gt; string
 <SyntaxTitle syntax="jsligo">
 let to&#95;debugger&#95;json: &lt;a&gt;(&#95;: a) =&gt; string
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;debugger&#95;json : a -&gt; string
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `String.debugger_json` from `Test.Next` is encouraged for a smoother migration.
 
 
@@ -462,6 +576,9 @@ val set&#95;baker&#95;policy : test&#95;baker&#95;policy -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let set&#95;baker&#95;policy: (&#95;: test&#95;baker&#95;policy) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const set&#95;baker&#95;policy : test&#95;baker&#95;policy -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.set_baker_policy` from `Test.Next` is encouraged for a smoother migration.
 
@@ -474,6 +591,9 @@ val set&#95;baker : address -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let set&#95;baker: (&#95;: address) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const set&#95;baker : address -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.set_baker` from `Test.Next` is encouraged for a smoother migration.
 
@@ -488,6 +608,9 @@ val size : &#39;p &#39;s.(&#39;p, &#39;s) michelson&#95;contract -&gt; int
 <SyntaxTitle syntax="jsligo">
 let size: &lt;p, s&gt;(&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; int
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const size : michelson&#95;contract (p, s) -&gt; int
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.Contract.size` from `Test.Next` is encouraged for a smoother migration.
 
 Measures the size of a contract.
@@ -498,6 +621,9 @@ val compile&#95;contract : &#39;p &#39;s.((&#39;p * &#39;s) -&gt; (operation lis
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let compile&#95;contract: &lt;p, s&gt;(&#95;: (&#95;: [p, s]) =&gt; [list&lt;operation&gt;, s]) =&gt; michelson&#95;contract&lt;p, s&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const compile&#95;contract : ((p * s) -&gt; (list (operation) * s)) -&gt; michelson&#95;contract (p, s)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.Contract.compile` from `Test.Next` is encouraged for a smoother migration.
 
@@ -510,6 +636,9 @@ val read&#95;contract&#95;from&#95;file : &#39;p &#39;s.string -&gt; (&#39;p, &#
 <SyntaxTitle syntax="jsligo">
 let read&#95;contract&#95;from&#95;file: &lt;p, s&gt;(&#95;: string) =&gt; michelson&#95;contract&lt;p, s&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const read&#95;contract&#95;from&#95;file : string -&gt; michelson&#95;contract (p, s)
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.Contract.from_file` from `Test.Next` is encouraged for a smoother migration.
 
 Reads a contract from a `.mv` file.
@@ -520,6 +649,9 @@ val chr : nat -&gt; string option
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let chr: (&#95;: nat) =&gt; option&lt;string&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const chr : nat -&gt; option (string)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `String.chr` from `Test.Next` is encouraged for a smoother migration.
 
@@ -533,6 +665,9 @@ val nl : string
 <SyntaxTitle syntax="jsligo">
 let nl: string
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const nl : string
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `String.nl` from `Test.Next` is encouraged for a smoother migration.
 
 String consisting of only a newline.
@@ -544,6 +679,9 @@ val println : string -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let println: (&#95;: string) =&gt; unit
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const println : string -&gt; unit
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `IO.println` from `Test.Next` is encouraged for a smoother migration.
 
 Prints an string to stdout, ended with a newline.
@@ -554,6 +692,9 @@ val set&#95;print&#95;values : unit -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let set&#95;print&#95;values: (&#95;: unit) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const set&#95;print&#95;values : unit -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `IO.set_test_print` from `Test.Next` is encouraged for a smoother migration.
 
@@ -567,6 +708,9 @@ val unset&#95;print&#95;values : unit -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let unset&#95;print&#95;values: (&#95;: unit) =&gt; unit
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const unset&#95;print&#95;values : unit -&gt; unit
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `IO.unset_test_print` from `Test.Next` is encouraged for a smoother migration.
 
 Turns off the printing of `test` prefixed values at the end of
@@ -578,6 +722,9 @@ val get&#95;last&#95;events&#95;from : &#39;a &#39;p &#39;s.(&#39;p, &#39;s) typ
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let get&#95;last&#95;events&#95;from: &lt;a, p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: string) =&gt; list&lt;a&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const get&#95;last&#95;events&#95;from : typed&#95;address (p, s) -&gt; string -&gt; list (a)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.last_events` from `Test.Next` is encouraged for a smoother migration.
 
@@ -592,6 +739,9 @@ val transfer : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#39;p -&g
 <SyntaxTitle syntax="jsligo">
 let transfer: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; test&#95;exec&#95;result
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const transfer : typed&#95;address (p, s) -&gt; p -&gt; mav -&gt; test&#95;exec&#95;result
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer` from `Test.Next` is encouraged for a smoother migration.
 
 Bakes a transaction by sending an amount of mav with a parameter
@@ -604,6 +754,9 @@ val transfer&#95;exn : &#39;p &#39;s.(&#39;p, &#39;s) typed&#95;address -&gt; &#
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let transfer&#95;exn: &lt;p, s&gt;(&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; nat
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const transfer&#95;exn : typed&#95;address (p, s) -&gt; p -&gt; mav -&gt; nat
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
@@ -619,6 +772,9 @@ val log : &#39;a.&#39;a -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let log: &lt;a&gt;(&#95;: a) =&gt; unit
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const log : a -&gt; unit
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `IO.log` from `Test.Next` is encouraged for a smoother migration.
 
 Logs a value.
@@ -629,6 +785,9 @@ val reset&#95;state : nat -&gt; mav list -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let reset&#95;state: (&#95;: nat) =&gt; (&#95;: list&lt;mav&gt;) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const reset&#95;state : nat -&gt; list (mav) -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.reset` from `Test.Next` is encouraged for a smoother migration.
 
@@ -647,6 +806,9 @@ val reset&#95;state&#95;at : timestamp -&gt; nat -&gt; mav list -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let reset&#95;state&#95;at: (&#95;: timestamp) =&gt; (&#95;: nat) =&gt; (&#95;: list&lt;mav&gt;) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const reset&#95;state&#95;at : timestamp -&gt; nat -&gt; list (mav) -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.reset_at` from `Test.Next` is encouraged for a smoother migration.
 
@@ -667,6 +829,9 @@ val bootstrap&#95;contract : &#39;p &#39;s.((&#39;p * &#39;s) -&gt; (operation l
 <SyntaxTitle syntax="jsligo">
 let bootstrap&#95;contract: &lt;p, s&gt;(&#95;: (&#95;: [p, s]) =&gt; [list&lt;operation&gt;, s]) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; unit
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const bootstrap&#95;contract : ((p * s) -&gt; (list (operation) * s)) -&gt; s -&gt; mav -&gt; unit
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.Reset.add_func_contract` from `Test.Next` is encouraged for a smoother migration.
 
 Setup a bootstrap contract with an entrypoint function, initial
@@ -680,6 +845,9 @@ val mutate&#95;value : &#39;a.nat -&gt; &#39;a -&gt; (&#39;a * mutation) option
 <SyntaxTitle syntax="jsligo">
 let mutate&#95;value: &lt;a&gt;(&#95;: nat) =&gt; (&#95;: a) =&gt; option&lt;[a, mutation]&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const mutate&#95;value : nat -&gt; a -&gt; option (a * mutation)
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.value` from `Test.Next` is encouraged for a smoother migration.
 
 Mutates a value using a natural number as an index for the
@@ -692,6 +860,9 @@ val save&#95;mutation : string -&gt; mutation -&gt; string option
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let save&#95;mutation: (&#95;: string) =&gt; (&#95;: mutation) =&gt; option&lt;string&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const save&#95;mutation : string -&gt; mutation -&gt; option (string)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.save` from `Test.Next` is encouraged for a smoother migration.
 
@@ -707,6 +878,9 @@ val sign : string -&gt; bytes -&gt; signature
 <SyntaxTitle syntax="jsligo">
 let sign: (&#95;: string) =&gt; (&#95;: bytes) =&gt; signature
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const sign : string -&gt; bytes -&gt; signature
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Crypto.sign` from `Test.Next` is encouraged for a smoother migration.
 
 Creates a signature of bytes from a string representing a secret
@@ -718,6 +892,9 @@ val add&#95;account : string -&gt; key -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let add&#95;account: (&#95;: string) =&gt; (&#95;: key) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const add&#95;account : string -&gt; key -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Account.add` from `Test.Next` is encouraged for a smoother migration.
 
@@ -731,6 +908,9 @@ val baker&#95;account : (string * key) -&gt; mav option -&gt; unit
 <SyntaxTitle syntax="jsligo">
 let baker&#95;account: (&#95;: [string, key]) =&gt; (&#95;: option&lt;mav&gt;) =&gt; unit
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const baker&#95;account : (string * key) -&gt; option (mav) -&gt; unit
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.Reset.add_baker` from `Test.Next` is encouraged for a smoother migration.
 
 Adds an account `(sk, pk)` as a baker. The change is only
@@ -742,6 +922,9 @@ val set&#95;big&#95;map : &#39;a &#39;b.int -&gt; (&#39;a, &#39;b) big&#95;map -
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let set&#95;big&#95;map: &lt;a, b&gt;(&#95;: int) =&gt; (&#95;: big&#95;map&lt;a, b&gt;) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const set&#95;big&#95;map : int -&gt; big&#95;map (a, b) -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `State.set_big_map` from `Test.Next` is encouraged for a smoother migration.
 
@@ -758,6 +941,9 @@ val transfer&#95;to&#95;contract : &#39;p.&#39;p contract -&gt; &#39;p -&gt; mav
 <SyntaxTitle syntax="jsligo">
 let transfer&#95;to&#95;contract: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; test&#95;exec&#95;result
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const transfer&#95;to&#95;contract : contract (p) -&gt; p -&gt; mav -&gt; test&#95;exec&#95;result
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Contract.transfer` from `Test.Next` is encouraged for a smoother migration.
 
 Bake a transaction by sending an amount of mav with a parameter
@@ -770,6 +956,9 @@ val transfer&#95;to&#95;contract&#95;exn : &#39;p.&#39;p contract -&gt; &#39;p -
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let transfer&#95;to&#95;contract&#95;exn: &lt;p&gt;(&#95;: contract&lt;p&gt;) =&gt; (&#95;: p) =&gt; (&#95;: mav) =&gt; nat
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const transfer&#95;to&#95;contract&#95;exn : contract (p) -&gt; p -&gt; mav -&gt; nat
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Contract.transfer_exn` from `Test.Next` is encouraged for a smoother migration.
 
@@ -786,6 +975,9 @@ val michelson&#95;equal : michelson&#95;program -&gt; michelson&#95;program -&gt
 <SyntaxTitle syntax="jsligo">
 let michelson&#95;equal: (&#95;: michelson&#95;program) =&gt; (&#95;: michelson&#95;program) =&gt; bool
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const michelson&#95;equal : michelson&#95;program -&gt; michelson&#95;program -&gt; bool
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Compare.eq` from `Test.Next` is encouraged for a smoother migration.
 
 Compares two Michelson values.
@@ -796,6 +988,9 @@ val to&#95;entrypoint : &#39;a &#39;b &#39;c.string -&gt; (&#39;a, &#39;b) typed
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let to&#95;entrypoint: &lt;a, b, c&gt;(&#95;: string) =&gt; (&#95;: typed&#95;address&lt;a, b&gt;) =&gt; contract&lt;c&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const to&#95;entrypoint : string -&gt; typed&#95;address (a, b) -&gt; contract (c)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Typed_address.get_entrypoint` from `Test.Next` is encouraged for a smoother migration.
 
@@ -821,6 +1016,9 @@ val storage&#95;with&#95;dynamic&#95;entrypoints :
 let storage&#95;with&#95;dynamic&#95;entrypoints:
   &lt;p, s, s2&gt;(&#95;: module&#95;contract&lt;p, s&gt;, s: s2) =&gt; &#123; dynamic&#95;entrypoints: dynamic&#95;entrypoints; storage: s2 &#125;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const storage&#95;with&#95;dynamic&#95;entrypoints : module&#95;contract (p, s) -&gt; s2 -&gt; record [ dynamic&#95;entrypoints : dynamic&#95;entrypoints ; storage : s2 ]
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Dynamic_entrypoints.storage` from `Test.Next` is encouraged for a smoother migration.
 
 
@@ -829,6 +1027,9 @@ val originate&#95;contract : &#39;p &#39;s.(&#39;p, &#39;s) michelson&#95;contra
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate&#95;contract: &lt;p, s&gt;(&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; typed&#95;address&lt;p, s&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const originate&#95;contract : michelson&#95;contract (p, s) -&gt; s -&gt; mav -&gt; typed&#95;address (p, s)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.michelson` from `Test.Next` is encouraged for a smoother migration.
 
@@ -843,6 +1044,9 @@ val compile&#95;contract&#95;with&#95;views : &#39;p &#39;s.((&#39;p * &#39;s) -
 let compile&#95;contract&#95;with&#95;views:
   &lt;p, s&gt;(&#95;: (&#95;: [p, s]) =&gt; [list&lt;operation&gt;, s]) =&gt; (&#95;: views&lt;s&gt;) =&gt; michelson&#95;contract&lt;p, s&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const compile&#95;contract&#95;with&#95;views : ((p * s) -&gt; (list (operation) * s)) -&gt; views (s) -&gt; michelson&#95;contract (p, s)
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.Contract.compile_with_views` from `Test.Next` is encouraged for a smoother migration.
 
 
@@ -851,6 +1055,9 @@ val originate : &#39;p &#39;s.(&#39;p, &#39;s) module&#95;contract -&gt; &#39;s 
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate: &lt;p, s&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; origination&#95;result&lt;p, s&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const originate : module&#95;contract (p, s) -&gt; s -&gt; mav -&gt; origination&#95;result (p, s)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.contract` from `Test.Next` is encouraged for a smoother migration.
 
@@ -864,6 +1071,9 @@ val compile&#95;contract&#95;from&#95;file : &#39;p &#39;s.string -&gt; (&#39;p,
 <SyntaxTitle syntax="jsligo">
 let compile&#95;contract&#95;from&#95;file: &lt;p, s&gt;(&#95;: string) =&gt; michelson&#95;contract&lt;p, s&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const compile&#95;contract&#95;from&#95;file : string -&gt; michelson&#95;contract (p, s)
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Michelson.Contract.from_file` from `Test.Next` is encouraged for a smoother migration.
 
 Compiles a contract with a path to the contract file, an
@@ -875,6 +1085,9 @@ val originate&#95;from&#95;file : &#39;p &#39;s.string -&gt; &#39;s -&gt; mav -&
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let originate&#95;from&#95;file: &lt;p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; origination&#95;result&lt;p, s&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const originate&#95;from&#95;file : string -&gt; s -&gt; mav -&gt; origination&#95;result (p, s)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Originate.from_file` from `Test.Next` is encouraged for a smoother migration.
 
@@ -888,6 +1101,9 @@ val mutation&#95;test : &#39;a &#39;b.&#39;a -&gt; (&#39;a -&gt; &#39;b) -&gt; (
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let mutation&#95;test: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: (&#95;: a) =&gt; b) =&gt; option&lt;[b, mutation]&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const mutation&#95;test : a -&gt; (a -&gt; b) -&gt; option (b * mutation)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.func` from `Test.Next` is encouraged for a smoother migration.
 
@@ -903,6 +1119,9 @@ val mutation&#95;test&#95;all : &#39;a &#39;b.&#39;a -&gt; (&#39;a -&gt; &#39;b)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let mutation&#95;test&#95;all: &lt;a, b&gt;(&#95;: a) =&gt; (&#95;: (&#95;: a) =&gt; b) =&gt; list&lt;[b, mutation]&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const mutation&#95;test&#95;all : a -&gt; (a -&gt; b) -&gt; list (b * mutation)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.All.func` from `Test.Next` is encouraged for a smoother migration.
 
@@ -926,6 +1145,9 @@ let originate&#95;from&#95;file&#95;and&#95;mutate:
     [b, mutation]
   &gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const originate&#95;from&#95;file&#95;and&#95;mutate : string -&gt; s -&gt; mav -&gt; ((typed&#95;address (p, s) * michelson&#95;contract (p, s) * int) -&gt; b) -&gt; option (b * mutation)
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.from_file` from `Test.Next` is encouraged for a smoother migration.
 
 Given a contract from a file (passed by filepath, entrypoint and
@@ -947,6 +1169,9 @@ let originate&#95;from&#95;file&#95;and&#95;mutate&#95;all:
   &lt;b, p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; (&#95;: (&#95;: [typed&#95;address&lt;p, s&gt;, michelson&#95;contract&lt;p, s&gt;, int]) =&gt; b) =&gt; list&lt;
     [b, mutation]
   &gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const originate&#95;from&#95;file&#95;and&#95;mutate&#95;all : string -&gt; s -&gt; mav -&gt; ((typed&#95;address (p, s) * michelson&#95;contract (p, s) * int) -&gt; b) -&gt; list (b * mutation)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.All.from_file` from `Test.Next` is encouraged for a smoother migration.
 
@@ -971,6 +1196,9 @@ let originate&#95;module&#95;and&#95;mutate:
     &#95;: (&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; (&#95;: int) =&gt; b
   ) =&gt; option&lt;[b, mutation]&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const originate&#95;module&#95;and&#95;mutate : module&#95;contract (p, s) -&gt; s -&gt; mav -&gt; (typed&#95;address (p, s) -&gt; michelson&#95;contract (p, s) -&gt; int -&gt; b) -&gt; option (b * mutation)
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.contract` from `Test.Next` is encouraged for a smoother migration.
 
 Given a contract as a module/namespace, an initial storage and
@@ -993,6 +1221,9 @@ let originate&#95;and&#95;mutate&#95;all:
     &#95;: (&#95;: typed&#95;address&lt;p, s&gt;) =&gt; (&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; (&#95;: int) =&gt; b
   ) =&gt; list&lt;[b, mutation]&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const originate&#95;and&#95;mutate&#95;all : module&#95;contract (p, s) -&gt; s -&gt; mav -&gt; (typed&#95;address (p, s) -&gt; michelson&#95;contract (p, s) -&gt; int -&gt; b) -&gt; list (b * mutation)
+</SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Mutation.All.contract` from `Test.Next` is encouraged for a smoother migration.
 
 Given a contract as a module/namespace, an initial storage and
@@ -1007,6 +1238,9 @@ val assert : bool -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert: (&#95;: bool) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert : bool -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.assert` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1028,12 +1262,24 @@ The call `assert(cond)` terminates the execution with the string
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert (cond)` terminates the execution with the string
+    `"failed assertion"` if, and only if, the boolean condition `cond`
+    is false. The failure is handled by LIGO's testing framework and
+    not by Michelson's interpreter.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert&#95;some : &#39;a.&#39;a option -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;some: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;some : option (a) -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.some` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1055,12 +1301,24 @@ The call `assert_some(opt)` terminates the execution with the
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_some (opt)` terminates the execution with the
+    string `"failed assert some"` if, and only if, `opt` is `None`.
+    The failure is handled by LIGO's testing framework and
+    not by Michelson's interpreter.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert&#95;none : &#39;a.&#39;a option -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;none: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;none : option (a) -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.none` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1082,12 +1340,24 @@ The call `assert_none(opt)` terminates the execution with the string
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_none (opt)` terminates the execution with the string
+    `"failed assert none"` if, and only if, `opt` is not `None`.
+    The failure is handled by LIGO's testing framework and
+    not by Michelson's interpreter.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert&#95;with&#95;error : bool -&gt; string -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;with&#95;error: (b: bool, s: string) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;with&#95;error : bool -&gt; string -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.Error.assert` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1109,12 +1379,24 @@ The call `assert_with_error(cond, error)` terminates the execution
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_with_error (cond, error)` terminates the execution
+    with the string `error` (that is, an error message) if, and only
+    if, the boolean condition `cond` is false. The failure is handled
+    by LIGO's testing framework and not by Michelson's interpreter.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert&#95;some&#95;with&#95;error : &#39;a.&#39;a option -&gt; string -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;some&#95;with&#95;error: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; (&#95;: string) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;some&#95;with&#95;error : option (a) -&gt; string -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.Error.some` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1136,12 +1418,24 @@ The call `assert_some_with_error(opt, err)` terminates the
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_some_with_error (opt, err)` terminates the execution
+    with the string `err` (that is, an error message) if, and only if,
+    `opt` is `None`. The failure is handled by LIGO's testing
+    framework and not by Michelson's interpreter.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val assert&#95;none&#95;with&#95;error : &#39;a.&#39;a option -&gt; string -&gt; unit
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let assert&#95;none&#95;with&#95;error: &lt;a&gt;(&#95;: option&lt;a&gt;) =&gt; (&#95;: string) =&gt; unit
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const assert&#95;none&#95;with&#95;error : option (a) -&gt; string -&gt; unit
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Assert.Error.none` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1165,12 +1459,25 @@ The call `assert_none_with_error(opt, err)` terminates the
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `assert_none_with_error (opt, err)` terminates the execution
+    with the string `err` (that is, an error message) if, and only if,
+    `opt` is an optional value different from `None`. The failure is
+    handled by LIGO's testing framework and not by Michelson's
+    interpreter.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val equal : &#39;a.&#39;a -&gt; &#39;a -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let equal: &lt;a&gt;(&#95;: a) =&gt; (&#95;: a) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const equal : a -&gt; a -&gt; bool
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Compare.eq` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1190,12 +1497,23 @@ The call `equal(x, y)` returns `true` if, and only if, `x` and `y`
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `equal (x, y)` returns `true` if, and only if, `x` and `y`
+    are considered to be equal w.r.t. the order on the underlying
+    type.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val not&#95;equal : &#39;a.&#39;a -&gt; &#39;a -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let not&#95;equal: &lt;a&gt;(&#95;: a) =&gt; (&#95;: a) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const not&#95;equal : a -&gt; a -&gt; bool
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Compare.neq` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1215,12 +1533,23 @@ The call `not_equal(x, y)` returns `true` if, and only if, `x` and
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `not_equal (x, y)` returns `true` if, and only if, `x` and
+    `y` are not considered to be equal w.r.t. the order on the
+    underlying type.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val greater : &#39;a.&#39;a -&gt; &#39;a -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let greater: &lt;a&gt;(&#95;: a) =&gt; (&#95;: a) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const greater : a -&gt; a -&gt; bool
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Compare.gt` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1240,12 +1569,23 @@ The call `greater(x, y)` returns `true` if, and only if, `x` is
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `greater (x, y)` returns `true` if, and only if, `x` is
+    considered to be greater than `y` w.r.t. the order on the
+    underlying type.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val less : &#39;a.&#39;a -&gt; &#39;a -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let less: &lt;a&gt;(&#95;: a) =&gt; (&#95;: a) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const less : a -&gt; a -&gt; bool
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Compare.lt` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1265,12 +1605,23 @@ The call `less(x, y)` returns `true` if, and only if, `x` is
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `less (x, y)` returns `true` if, and only if, `x` is
+    considered to be less than `y` w.r.t. the order on the underlying
+    type.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val greater&#95;or&#95;equal : &#39;a.&#39;a -&gt; &#39;a -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let greater&#95;or&#95;equal: &lt;a&gt;(&#95;: a) =&gt; (&#95;: a) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const greater&#95;or&#95;equal : a -&gt; a -&gt; bool
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Compare.ge` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1290,12 +1641,23 @@ The call `greater_or_equal(x, y)` returns `true` if, and only if,
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `greater_or_equal (x, y)` returns `true` if, and only if,
+    `x` is considered to be greater or equal than `y` w.r.t. the order
+    on the underlying type.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val less&#95;or&#95;equal : &#39;a.&#39;a -&gt; &#39;a -&gt; bool
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let less&#95;or&#95;equal: &lt;a&gt;(&#95;: a) =&gt; (&#95;: a) =&gt; bool
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const less&#95;or&#95;equal : a -&gt; a -&gt; bool
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Compare.le` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1315,12 +1677,23 @@ The call `less_or_equal(x, y)` returns `true` if, and only if, `x`
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The call `less_or_equal (x, y)` returns `true` if, and only if, `x`
+    is considered to be less or equal than `y` w.r.t. the order on the
+    underlying type.
+
+</Syntax>
+
 
 <SyntaxTitle syntax="cameligo">
 val create&#95;chest : bytes -&gt; nat -&gt; (chest * chest&#95;key)
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let create&#95;chest: (&#95;: bytes) =&gt; (&#95;: nat) =&gt; [chest, chest&#95;key]
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const create&#95;chest : bytes -&gt; nat -&gt; (chest * chest&#95;key)
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Timelock.create` from `Test.Next` is encouraged for a smoother migration.
 
@@ -1330,5 +1703,8 @@ val create&#95;chest&#95;key : chest -&gt; nat -&gt; chest&#95;key
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let create&#95;chest&#95;key: (&#95;: chest) =&gt; (&#95;: nat) =&gt; chest&#95;key
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const create&#95;chest&#95;key : chest -&gt; nat -&gt; chest&#95;key
 </SyntaxTitle>
 **Deprecated:** In a future version, `Test` will be replaced by `Test.Next`, and using `Timelock.create_key` from `Test.Next` is encouraged for a smoother migration.

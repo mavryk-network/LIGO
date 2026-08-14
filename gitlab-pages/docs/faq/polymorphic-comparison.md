@@ -58,6 +58,31 @@ import Syntax from '@theme/Syntax';
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+> I'm trying to write some functions in (came)ligo that compare several values as long as they are ints, strings, or nats. compare_equal is one of them.
+>
+> This errors out with Only composed types of not more than two element are allowed to be compared.
+>
+> ```pascaligo skip
+> function compare_equal <k> (const a : k; const b : k) : bool is
+>   if a = b then True
+>   else False
+> ```
+>
+> Is it possible to convert a and b to their composed types?
+>
+> ```pascaligo skip
+> function compare_equal <k> (const a : k; const b : k) : bool is
+>   case a of [
+>     int (v) -> if a = b then True else False
+>   | string (v) -> if a = b then True else False
+>   ]
+> ```
+>
+
+</Syntax>
+
 The problem here is that LIGO usually tries to prevent you from seeing Michelson typechecking errors, by raising errors early when you do something that might cause a Michelson typechecking error.
 
 If LIGO allowed comparisons `a = b` on any types, you might get such
@@ -84,6 +109,17 @@ typechecking error, it is possible to work around this by using
 // @inline
 const compare_equal = <k>(a : k, b : k) : bool =>
   (Michelson `{ UNPAIR; COMPARE; EQ }` as ((x : [k, k]) => bool)) ([a, b])
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo
+[@inline] function compare_equal <k> (const a : k; const b : k) : bool is
+  block {
+    const f : (k * k -> bool) = [%Michelson ({|{ UNPAIR; COMPARE; EQ }|} : k * k -> bool)];
+  } with f ((a, b))
 ```
 
 </Syntax>

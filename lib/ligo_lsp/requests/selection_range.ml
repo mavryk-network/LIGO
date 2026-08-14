@@ -36,6 +36,14 @@ let selection_range cst (position : Position.t) : SelectionRange.t =
             | S_reg _ -> process content.region
             | S_wrap _ -> process content#region
             | _ -> Skip))
+    ; (* MAVRYK: PascaLIGO *)
+      pascaligo =
+        (let open Cst_pascaligo.Fold in
+        fold_cst None select_range (fun (Some_node (content, tag)) ->
+            match tag with
+            | S_reg _ -> process content.region
+            | S_wrap _ -> process content#region
+            | _ -> Skip))
     }
     cst
   |> Option.value

@@ -37,6 +37,13 @@ const config = {
           path: "../docs",
           sidebarPath: require.resolve("./sidebars.js"),
           sidebarCollapsed: true,
+          // MAVRYK: serve the live docs/ as the latest version, labelled 1.8.0 (PascaLIGO restoration),
+          // instead of the frozen 1.6.0 snapshot. To cut a frozen snapshot instead, run
+          // `yarn docusaurus docs:version 1.8.0` and drop these two keys.
+          lastVersion: "current",
+          versions: {
+            current: { label: "1.8.0", path: "" },
+          },
         },
         blog: {
           showReadingTime: true,

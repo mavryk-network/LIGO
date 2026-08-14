@@ -1,0 +1,1 @@
+const today : timestamp = Mavryk.get_now ()

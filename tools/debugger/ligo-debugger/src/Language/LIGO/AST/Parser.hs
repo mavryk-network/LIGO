@@ -13,6 +13,7 @@ import UnliftIO.Directory (doesDirectoryExist, listDirectory)
 
 import Language.LIGO.AST.Parser.CameLigoCST qualified as CameLIGO
 import Language.LIGO.AST.Parser.JsLigoCST qualified as JsLIGO
+import Language.LIGO.AST.Parser.PascaLigoCST qualified as PascaLIGO -- MAVRYK: PascaLIGO
 import Language.LIGO.AST.Skeleton
 import Language.LIGO.Extension
 
@@ -53,6 +54,11 @@ instance ToAST 'Js where
   type CST 'Js = JsLIGO.CST
   toAST = JsLIGO.toAST
 
+-- MAVRYK: PascaLIGO.
+instance ToAST 'Pascal where
+  type CST 'Pascal = PascaLIGO.CST
+  toAST = PascaLIGO.toAST
+
 -- | An existential type that incapsulates @Lang@ type
 -- and evidences that its CST could be parsed from MessagePack
 -- and unified.
@@ -64,6 +70,9 @@ reifyLang :: Lang -> SomeLang
 reifyLang = \case
   Caml -> SomeLang (Proxy @'Caml)
   Js -> SomeLang (Proxy @'Js)
+  -- MAVRYK: PascaLIGO. Decoder lives in PascaLigoCST.hs (unverified — mirrors CameLigoCST.hs
+  -- against the real dump-cst schema; finalize with a GHC build loop).
+  Pascal -> SomeLang (Proxy @'Pascal)
 
 -- | A convenient wrapper that stores a list of parsed and unified CSTs.
 newtype ASTs = ASTs { unASTs :: [SomeLIGO Info] }

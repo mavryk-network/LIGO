@@ -64,6 +64,31 @@ const view3 = (_arg : unit , _s : storage) : int
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=onchainviews
+type storage is string
+type ret is list (operation) * storage
+
+[@entry]
+function main (const word : string; const store : storage) : ret is
+  ((nil : list (operation)), store ^ " " ^ word)
+
+// view 'view1', simply returns the storage
+[@view] function view1 (const _u : unit; const s : storage) : storage is
+  s
+
+// view 'v2', returns true if the storage has a given length
+[@view] function v2 (const expected_length : nat; const s : storage) : bool is
+  (String.length (s) = expected_length)
+
+// view 'v3' does not use its parameters and returns a constant int
+[@view] function v3 (const _u : unit; const _s : storage) : int is
+  42
+```
+
+</Syntax>
+
 ## Calling On-Chain Views
 
 <SyntaxTitle syntax="cameligo">
@@ -118,6 +143,21 @@ namespace C {
 ```
 
 </Syntax>
+<Syntax syntax="pascaligo">
+
+```pascaligo group=view_file
+module C is {
+  type storage is string
+
+  [@entry] function append (const a : string; const s : storage) : list (operation) * storage is ((nil : list (operation)), s ^ a)
+
+  [@entry] function clear (const _u : unit; const _s : storage) : list (operation) * storage is ((nil : list (operation)), "")
+
+  function v (const expected_length : nat; const s : storage) : bool is (String.length (s) = expected_length)
+}
+```
+
+</Syntax>
 
 We can compile function `v` from contract `C` as an off-chain view as follows:
 
@@ -138,6 +178,18 @@ Output
 Input
 ```bash
 ❯ ligo compile expression jsligo "C.v" --init-file off_chain.jsligo --function-body
+```
+Output
+```bash
+{ UNPAIR ; SWAP ; SIZE ; COMPARE ; EQ }
+```
+
+</Syntax>
+<Syntax syntax="pascaligo">
+
+Input
+```bash
+❯ ligo compile expression pascaligo "C.v" --init-file off_chain.ligo --function-body
 ```
 Output
 ```bash

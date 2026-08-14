@@ -39,6 +39,18 @@ type user = {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=records1
+type user is record [
+  id       : nat;
+  is_admin : bool;
+  name     : string
+]
+```
+
+</Syntax>
+
 <Syntax syntax="cameligo">
 
 And here is how a record value is defined:
@@ -67,6 +79,20 @@ const alice : user = {
 
 > Note: A semicolon `;` can also separate fields instead of a
 > comma.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+And here is how a record value is defined:
+
+```pascaligo group=records1
+const alice : user = record [
+  id       = 1n;
+  is_admin = True;
+  name     = "Alice"
+]
+```
 
 </Syntax>
 
@@ -124,6 +150,30 @@ of the field in the record declaration:
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+If we want the contents of a given field, we use the selection operator
+"`.`", like so:
+
+```pascaligo group=record_access
+type user is record [
+  login : string;
+  name  : string
+]
+
+type account is record [
+  user     : user;
+  id       : int;
+  is_admin : bool
+]
+
+const user : user = record [login = "al"; name = "Alice"]
+const alice : account = record [user; id = 5; is_admin = True]
+const is_alice_admin : bool = alice.is_admin // = true
+```
+
+</Syntax>
+
 <Syntax syntax="cameligo">
 
 We can also access fields of a record using a destructuring syntax,
@@ -153,6 +203,21 @@ function userToTuple (a : account) {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+We can also access fields of a record using a destructuring syntax,
+known as _pattern matching_, which enables accessing multiple fields of
+a record in parallel, like so:
+
+```pascaligo group=record_access
+function user_to_triple (const a : account) : user * int * bool is
+  block {
+    var record [ user; id; is_admin ] := a
+  } with (user, id, is_admin)
+```
+
+</Syntax>
+
 <Syntax syntax="cameligo">
 
 If we do not use some of the fields we matched, we assign them the
@@ -178,6 +243,22 @@ function getId (a : account) {
   ignore([user, is_admin]); // To avoid a warning
   return id;
 }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+If we do not use some of the fields we matched, we assign them
+distinct discarded names prefixed with an underscore, to avoid
+triggering a warning about an unused variable (a pattern cannot bind
+the same name twice), like so:
+
+```pascaligo group=record_access
+function get_id (const a : account) : int is
+  block {
+    var record [ user = _u; id; is_admin = _ia ] := a  // To avoid a warning
+  } with id
 ```
 
 </Syntax>
@@ -229,6 +310,27 @@ const origin = {x: 0, y: 0, z: 0};
 
 const xy_translate = (p: point, vec: vector) =>
   ({...p, x: p.x + vec.dx, y: p.y + vec.dy});
+```
+
+> It is important to understand that `p` has not been changed by the
+> functional update: a nameless new version of it has been created and
+> returned.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The syntax for the functional update of a record in PascaLIGO uses the
+`with` keyword:
+
+```pascaligo group=record_update
+type point is record [x : int; y : int; z : int]
+type vector is record [dx : int; dy : int]
+
+const origin : point = record [x = 0; y = 0; z = 0]
+
+function xy_translate (const p : point; const vec : vector) : point is
+  p with record [x = p.x + vec.dx; y = p.y + vec.dy]
 ```
 
 > It is important to understand that `p` has not been changed by the
@@ -297,6 +399,35 @@ const change_login = (login: string, account: account) : account =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+PascaLIGO also supports the ability to perform nested updates on
+records directly, using a dotted path. For example, given the
+following record declarations:
+
+```pascaligo group=record_nested_update
+type user is record [
+  login : string;
+  name  : string
+]
+
+type account is record [
+  user     : user;
+  id       : int;
+  is_admin : bool
+]
+```
+
+You can update the record `user` nested inside `account` with the
+following code:
+
+```pascaligo group=record_nested_update
+function change_login (const login : string; const account : account) : account is
+  account with record [user.login = login]
+```
+
+</Syntax>
+
 ## Comparing
 
 Record types are comparable types, which means that their values can
@@ -320,6 +451,16 @@ the alphabet).
 <Syntax syntax="jsligo">
 
 When using the `@layout("comb")` decorator, fields are translated in
+Michelsom with their order as written in the source code, and records
+are then ordered lexicographically (that is, when two fields of the
+same name have the same values, another field is compared, much rather
+like ordering two English words according to the alphabet).
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+When using the `[@layout comb]` attribute, fields are translated in
 Michelsom with their order as written in the source code, and records
 are then ordered lexicographically (that is, when two fields of the
 same name have the same values, another field is compared, much rather

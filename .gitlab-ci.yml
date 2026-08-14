@@ -90,6 +90,16 @@ docker_build:
   needs:
     - job: changelog
       artifacts: true
+  # MAVRYK: auto-retry the recurring flaky `dune runtest` port race ("Address in use" from the Lwt/Conduit
+  # HTTP-server test under `-j 5`) so the core build self-heals instead of needing a manual re-run.
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - scheduler_failure
+      - api_failure
+      - script_failure
   script:
     - git submodule update --init --recursive # because of a gitlab caching issue
     - cat changelog.md > gitlab-pages/docs/intro/changelog.md
@@ -327,11 +337,22 @@ algolia-crawl:
 deploy_website_preview:
   stage: deploy
   image: node:18.19.1-bookworm
+  variables:
+    # MAVRYK: sharp <0.33 (bundled by netlify-cli) can't reach its default binary host (github.com)
+    # from this runner ("socket hang up") — fetch its prebuilt binaries from a mirror instead.
+    # If this runner also can't reach npmmirror, build from source instead: add to `script` before
+    # the npm install: `apt-get install -y --no-install-recommends libvips-dev` and
+    # `export npm_config_build_from_source=true`.
+    npm_config_sharp_binary_host: "https://npmmirror.com/mirrors/sharp"
+    npm_config_sharp_libvips_binary_host: "https://npmmirror.com/mirrors/sharp-libvips"
   tags:
     - ubuntu-amd64
   needs:
     - job: pages-attempt
       artifacts: true
+  # MAVRYK: preview deploy is a convenience, not a correctness gate — sharp/CDN + Netlify infra
+  # failures must not block the MR pipeline.
+  allow_failure: true
   script:
     - apt-get update
     - apt-get install -y --no-install-recommends jq

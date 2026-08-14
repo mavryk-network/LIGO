@@ -40,6 +40,19 @@ const emitEvents = (_: unit, storage: int): [list<operation>, int] => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=events
+[@entry]
+function emitEvents (const _u : unit; const storage : int) : list (operation) * int is
+  block {
+    const event1 : operation = Mavryk.Next.Operation.emit ("%emitEvents", "hi");
+    const event2 : operation = Mavryk.Next.Operation.emit ("%emitEvents", 6);
+  } with (list [event1; event2], storage)
+```
+
+</Syntax>
+
 By convention, the event tag is a percent symbol and the name of the entrypoint that emitted the event or "default" if the contract does not use entrypoints, such as `%myEntrypoint`.
 However, you can use any string composed of these valid characters as the tag: ('a'..'z' | 'A'..'Z' | '_' | '.' | '%' | '@' | '0'..'9').
 

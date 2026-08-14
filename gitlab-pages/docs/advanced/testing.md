@@ -84,6 +84,26 @@ namespace C {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=mycontract
+// This is mycontract.ligo
+module C is {
+  type storage is int
+  type result is list (operation) * storage
+
+  // Two entrypoints
+  [@entry] function increment (const delta : int; const store : storage) : result is
+    ((nil : list (operation)), store + delta)
+  [@entry] function decrement (const delta : int; const store : storage) : result is
+    ((nil : list (operation)), store - delta)
+  [@entry] function reset (const _u : unit; const _store : storage) : result is
+    ((nil : list (operation)), 0)
+}
+```
+
+</Syntax>
+
 We can deploy it and query the storage right after, to check that the
 storage is in fact the one which we started with:
 
@@ -122,6 +142,23 @@ const test1 = run_test1();
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=mycontract-test
+// This is mycontract-test.ligo
+
+#import "gitlab-pages/docs/advanced/src/testing/mycontract.ligo" "MyContract"
+type param is parameter_of MyContract.C
+
+const test1 =
+  block {
+    const initial_storage = 42;
+    const orig = Test.originate (contract_of MyContract.C, initial_storage, 0mav);
+  } with assert (Test.get_storage (orig.addr) = initial_storage)
+```
+
+</Syntax>
+
 The `ligo run test` sub-command will evaluate all top-level definitions and print any
 entries that begin with the prefix `test` as well as the value that these
 definitions evaluate to. If any of the definitions are found to have
@@ -143,6 +180,17 @@ ligo run test --library . gitlab-pages/docs/advanced/src/testing/mycontract-test
 
 ```shell
 ligo run test --library . gitlab-pages/docs/advanced/src/testing/mycontract-test.jsligo
+# Outputs:
+# Everything at the top-level was executed.
+# - test1 exited with value ().
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo run test --library . gitlab-pages/docs/advanced/src/testing/mycontract-test.ligo
 # Outputs:
 # Everything at the top-level was executed.
 # - test1 exited with value ().
@@ -194,6 +242,22 @@ const test2 = do {
   Test.log(["gas consumption", gas_cons]);
   return (Test.get_storage(orig.addr) == initial_storage + 1);
 }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=mycontract-test
+// This continues mycontract-test.ligo
+
+const test2 =
+  block {
+    const initial_storage = 42;
+    const orig = Test.originate (contract_of MyContract.C, initial_storage, 0mav);
+    const gas_cons = Test.transfer_exn (orig.addr, Increment (1), 1mumav);
+    const _u = Test.log (("gas consumption", gas_cons));
+  } with assert (Test.get_storage (orig.addr) = initial_storage + 1)
 ```
 
 </Syntax>
@@ -361,6 +425,47 @@ const test_transfer_to_contract = do {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=usage_transfer
+module C is {
+  type param is int * ticket (string)
+  type storage is string * address
+
+  [@entry]
+  function main (const p : param; const _s : storage) : list (operation) * storage is
+    block {
+      const (_n, t) = p;
+      const ((_addr, (v, _amt)), _t) = Mavryk.read_ticket (t);
+    } with ((nil : list (operation)), (v, Mavryk.get_sender ()))
+}
+
+const test_transfer_to_contract =
+  block {
+    const orig = Test.originate (contract_of C, ("bye", Test.nth_bootstrap_account (1)), 1mumav);
+    const main_addr = Test.to_address (orig.addr);
+
+    // Use this address everytime you want to send tickets from the same proxy-contract
+    // mk_param is executed __by the proxy contract__
+    const mk_param = function (const t : ticket (string)) : C.param is (42, t);
+    // initialize a proxy contract in charge of creating and sending your tickets
+    const proxy_taddr = Test.Proxy_ticket.init_transfer (mk_param);
+    const _u1 = Test.log (("poxy addr:", proxy_taddr));
+
+    // ticket_info lets you control the amount and the value of the tickets you send
+    const ticket_info1 = ("hello", 10n);
+    // we send ticket to C through the proxy-contract
+    const _r1 = Test.Proxy_ticket.transfer (proxy_taddr, (ticket_info1, main_addr));
+    const _u2 = Test.log (Test.get_storage (orig.addr));
+
+    const ticket_info2 = ("world", 5n);
+    const _r2 = Test.Proxy_ticket.transfer (proxy_taddr, (ticket_info2, main_addr));
+    const _u3 = Test.log (Test.get_storage (orig.addr));
+  } with unit
+```
+
+</Syntax>
+
 result:
 
 ```bash
@@ -466,6 +571,43 @@ const test_originate_contract = do {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=usage_orig
+// originate.ligo
+
+type storage is option (ticket (bytes))
+type unforged_storage is option (unforged_ticket (bytes))
+
+function main (const _u : unit; const s : storage) : list (operation) * storage is
+  ((nil : list (operation)),
+   case s of [
+     Some (tk) -> block { const (_info, tk2) = Mavryk.read_ticket (tk); } with Some (tk2)
+   | None -> None
+   ])
+
+const mk_storage = function (const t : ticket (bytes)) : storage is Some (t);
+
+const test_originate_contract =
+  block {
+    const ticket_info = (0x0202, 15n);
+    const addr = Test.Proxy_ticket.originate (ticket_info, mk_storage, main);
+    const unforged_storage : unforged_storage = Test.Proxy_ticket.get_storage (addr);
+  } with
+    // the ticket 'unforged_storage' can be manipulated freely without caring about ticket linearity
+    case unforged_storage of [
+      Some (x) ->
+        block {
+          const _l = Test.log (("unforged_ticket", unforged_storage));
+          const _a1 = assert (x.value = ticket_info.0);
+          const _a2 = assert (x.amount = ticket_info.1);
+        } with unit
+    | None -> (failwith ("impossible") : unit)
+    ]
+```
+
+</Syntax>
+
 result:
 
 ```bash
@@ -512,6 +654,22 @@ const remove_balances_under = (b : balances, threshold:mav) : balances => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=remove-balance
+// This is remove-balance.ligo
+
+type balances is map (address, mav)
+
+function remove_balances_under (const b : balances; const threshold : mav) : balances is
+  Map.fold (
+    function (const acc_kv : balances * (address * mav)) : balances is
+      block { const (acc, (k, v)) = acc_kv; } with (if v < threshold then Map.remove (k, acc) else acc),
+    b, b)
+```
+
+</Syntax>
+
 Let us imagine that we want to test this function against a range of thresholds with the LIGO test framework.
 
 <!-- I divided unit-remove-balance in multiple part of clarity -->
@@ -536,6 +694,15 @@ let _u = Test.reset_state (5n, list([]) as list <mav>);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=unit-remove-balance-mixed
+#include "./gitlab-pages/docs/advanced/src/testing/remove-balance.ligo"
+const _u = Test.reset_state (5n, (nil : list (mav)))
+```
+
+</Syntax>
+
 Now build the `balances` map that will serve as the input of our test.
 
 <Syntax syntax="cameligo">
@@ -554,6 +721,19 @@ let balances : balances =
   Map.literal(list([[Test.nth_bootstrap_account(1), 10mav],
                     [Test.nth_bootstrap_account(2), 100mav],
                     [Test.nth_bootstrap_account(3), 1000mav]]));
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=unit-remove-balance-mixed
+const balances : balances =
+  block {
+    const a1 = Test.nth_bootstrap_account (1);
+    const a2 = Test.nth_bootstrap_account (2);
+    const a3 = Test.nth_bootstrap_account (3);
+  } with Map.literal (list [(a1, 10mav); (a2, 100mav); (a3, 1000mav)])
 ```
 
 </Syntax>
@@ -610,6 +790,26 @@ let test =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=unit-remove-balance-mixed
+const test =
+  List.iter (
+    function (const kv : mav * nat) : unit is
+      block {
+        const (threshold, expected_size) = kv;
+        const tester = function (const bt : balances * mav) : nat is
+          block { const (bals, thr) = bt; } with Map.size (remove_balances_under (bals, thr));
+        const size = Test.run (tester, (balances, threshold));
+        const expected_size_ = Test.eval (expected_size);
+        const _u1 = Test.log (("expected", expected_size_));
+        const _u2 = Test.log (("actual", size));
+      } with assert (Test.michelson_equal (size, expected_size_)),
+    list [(15mav, 2n); (130mav, 1n); (1200mav, 0n)])
+```
+
+</Syntax>
+
 You can now execute the test:
 
 <Syntax syntax="cameligo">
@@ -633,6 +833,23 @@ ligo run test --library . gitlab-pages/docs/advanced/src/testing/unit-remove-bal
 
 ```shell
 ligo run test --library . gitlab-pages/docs/advanced/src/testing/unit-remove-balance-mixed.jsligo
+# Outputs:
+# ("expected" , 2)
+# ("actual" , 2)
+# ("expected" , 1)
+# ("actual" , 1)
+# ("expected" , 0)
+# ("actual" , 0)
+# Everything at the top-level was executed.
+# - test exited with value ().
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo run test --library . gitlab-pages/docs/advanced/src/testing/unit-remove-balance-mixed.ligo
 # Outputs:
 # ("expected" , 2)
 # ("actual" , 2)
@@ -689,6 +906,29 @@ type result = [list<operation>, storage];
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=testme
+// This is testme.ligo
+
+type storage is int
+type result is list (operation) * storage
+
+[@entry]
+function increment (const delta : int; const store : storage) : result is
+  ((nil : list (operation)), store + delta)
+
+[@entry]
+function decrement (const delta : int; const store : storage) : result is
+  ((nil : list (operation)), store - delta)
+
+[@entry]
+function reset (const _u : unit; const _s : storage) : result is
+  ((nil : list (operation)), 0)
+```
+
+</Syntax>
+
 This contract keeps an integer as storage, and has three entry-points:
 one for incrementing the storage, one for decrementing the storage,
 and one for resetting the storage to `0`.
@@ -712,6 +952,16 @@ ligo run interpret "increment 32 10" --init-file gitlab-pages/docs/advanced/src/
 
 ```shell
 ligo run interpret "increment (32, 10)" --init-file gitlab-pages/docs/advanced/src/testing/testme.jsligo
+# Outputs:
+# ( LIST_EMPTY() , 42 )
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```shell
+ligo run interpret "increment (32, 10)" --init-file gitlab-pages/docs/advanced/src/testing/testme.ligo
 # Outputs:
 # ( LIST_EMPTY() , 42 )
 ```
@@ -779,6 +1029,26 @@ let test = do {
   Test.transfer_exn(orig.addr, Main ([1,2]), 0mav);
   return [Test.get_last_events_from(orig.addr, "foo") as list<[int, int]>, Test.get_last_events_from(orig.addr, "foo") as list<int>];
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo test-ligo group=test_ex
+module C is {
+  [@entry] function main (const p : int * int; const _s : unit) : list (operation) * unit is
+    (list [Mavryk.emit ("%foo", p); Mavryk.emit ("%foo", p.0)], unit)
+}
+
+const test_foo =
+  block {
+    const orig = Test.originate (contract_of C, unit, 0mav);
+    const _r = Test.transfer_exn (orig.addr, Main (1, 2), 0mav);
+  } with (
+    (Test.get_last_events_from (orig.addr, "foo") : list (int * int)),
+    (Test.get_last_events_from (orig.addr, "foo") : list (int))
+  )
 ```
 
 </Syntax>

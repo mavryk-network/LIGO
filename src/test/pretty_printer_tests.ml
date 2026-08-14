@@ -63,6 +63,18 @@ let test { test_name; actual; expected } =
           ~raise
           Pretty.default_state
           buffer
+          actual
+      (* MAVRYK: PascaLIGO — pre-existing M1 test-sweep gap: this match lacked a
+         PascaLIGO arm, making it inexhaustive once PascaLIGO joined Syntax_types.t. *)
+      | PascaLIGO ->
+        let module Parse = Pascaligo.Make (Options) in
+        let module Pretty = Pascaligo.Pretty in
+        Parse.pretty_print_file
+          ~preprocess
+          ~preprocess_define
+          ~raise
+          Pretty.default_state
+          buffer
           actual)
   in
   Alcotest.(check string)

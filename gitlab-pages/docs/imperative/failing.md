@@ -30,6 +30,15 @@ const check =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=failwith
+function check (const _param : unit) : unit is
+  failwith ("This function always fails.")
+```
+
+</Syntax>
+
 The call to `failwith` sometimes needs to be annotated with a type
 when the type-checker cannot infer the correct type, e.g. `(failwith
 "message" : type_of_result)`.

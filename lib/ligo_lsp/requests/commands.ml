@@ -69,7 +69,7 @@ type storage_var_position =
     [@tzip16_compatible] for JsLIGO. *)
 let create_attr_text (name : string) (syntax : Syntax_types.t) : string =
   match syntax with
-  | CameLIGO -> Format.sprintf "[%@%s]" name
+  | CameLIGO | PascaLIGO -> Format.sprintf "[%@%s]" name (* MAVRYK: PascaLIGO *)
   | JsLIGO -> Format.sprintf "%@%s" name
 
 (** Executes a command to add an attribute marking a storage as TZIP-16-compatible. See

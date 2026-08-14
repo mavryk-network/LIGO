@@ -41,6 +41,15 @@ const my_ticket2 = Option.unopt(Mavryk.create_ticket("one", 10n));
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=manip_ticket
+const my_ticket1 = Option.unopt (Mavryk.create_ticket (1, 10n))
+const my_ticket2 = Option.unopt (Mavryk.create_ticket ("one", 10n))
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="cameligo">
 val Mavryk.read_ticket : 'value ticket -> (address * ('value * nat)) * 'value ticket
 </SyntaxTitle>
@@ -75,6 +84,19 @@ const v2 = do {
   let [[_addr, [payload, _amt]], _ticket] = Mavryk.read_ticket (my_ticket2);
   return payload;
 }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+To read the content of a ticket, you can use tuple destructuring:
+
+```pascaligo group=manip_ticket
+const v : int =
+  block {
+    const ((_addr, (payload, _amt)), _ticket) = Mavryk.read_ticket (my_ticket1);
+  } with payload
 ```
 
 </Syntax>
@@ -114,6 +136,18 @@ const [ta, tb] =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=manip_ticket
+const (ta, tb) =
+  case Mavryk.split_ticket (my_ticket1, (6n, 4n)) of [
+    None -> (failwith ("amt_a + amt_v =/= amt") : ticket (int) * ticket (int))
+  | Some (split_tickets) -> split_tickets
+  ]
+```
+
+</Syntax>
+
 <SyntaxTitle syntax="cameligo">
 val Mavryk.join_tickets : 'value ticket * 'value ticket -> ('value ticket) option
 </SyntaxTitle>
@@ -144,6 +178,18 @@ let tc : int ticket option =
 const ta = Option.unopt(Mavryk.create_ticket(1, 10n));
 const tb = Option.unopt(Mavryk.create_ticket(1, 5n));
 const tc = Mavryk.join_tickets([ta, tb]);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=manip_ticket
+const tc : option (ticket (int)) =
+  block {
+    const ta = Option.unopt (Mavryk.create_ticket (1, 10n));
+    const tb = Option.unopt (Mavryk.create_ticket (1, 5n));
+  } with Mavryk.join_tickets ((ta, tb))
 ```
 
 </Syntax>

@@ -31,6 +31,14 @@ const id_int = (x: int) : int => x;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=monomorphism
+function id_int (const x : int) : int is x
+```
+
+</Syntax>
+
 However, if we would want to use the same function on a different
 type, such as `nat`, we will need to write a new definition:
 
@@ -46,6 +54,14 @@ let id_nat (x : nat) = x
 
 ```jsligo group=monomorphism
 const id_nat = (x : nat) : nat => x;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=monomorphism
+function id_nat (const x : nat) : nat is x
 ```
 
 </Syntax>
@@ -88,6 +104,23 @@ const map = <A,B>(f: (x:A) => B, l: list<A>) : list<B> => List.map (f,l);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=polymorphism
+function id<a> (const x : a) : a is x
+```
+
+Here we introduce a type variable `a` which can be generalised using
+`<a>` after the function name in the declaration. If we have more
+than one type parameter, we list them like so (the function below is
+named `poly_map`, since `map` is a reserved keyword in PascaLIGO):
+
+```pascaligo group=polymorphism
+function poly_map<a, b> (const f : a -> b; const l : list (a)) : list (b) is List.map (f, l)
+```
+
+</Syntax>
+
 We can now call the function `id` with arguments of different
 types:
 
@@ -105,6 +138,15 @@ let three_string : string = id "three"
 ```jsligo group=polymorphism
 const three_int : int = id(3);
 const three_string : string = id("three");
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=polymorphism
+const three_int : int = id (3);
+const three_string : string = id ("three");
 ```
 
 </Syntax>

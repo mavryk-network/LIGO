@@ -39,6 +39,11 @@ let _dummy : (cycles : nat) => unit = Test.bake_until_n_cycle_end
 let _dummy_2 : (initial_timestamp : timestamp, no_of_accounts: nat, amount: list<mav>) => unit = Test.reset_state_at
 ```
 
+```pascaligo test-ligo group=log
+const _dummy : nat -> unit = Test.bake_until_n_cycle_end
+const _dummy_2 : timestamp -> nat -> list (mav) -> unit = Test.reset_state_at
+```
+
 -->
 
 So, to bake and advance time, you can use:
@@ -50,6 +55,10 @@ const Test.bake_until_n_cycle_end : nat -> unit
 const Test.bake_until_n_cycle_end = (cycles : nat) => unit
 </SyntaxTitle>
 
+<SyntaxTitle syntax="pascaligo">
+const Test.bake_until_n_cycle_end : nat -> unit
+</SyntaxTitle>
+
 Depending on the situation, the following can be useful as well:
 <SyntaxTitle syntax="cameligo">
 val Test.reset_state_at : timestamp -> nat -> mav list -> unit
@@ -57,6 +66,10 @@ val Test.reset_state_at : timestamp -> nat -> mav list -> unit
 
 <SyntaxTitle syntax="jsligo">
 const Test.reset_state_at = (initial_timestamp : timestamp, no_of_accounts: nat, amount: list&lt;mav&gt;) => unit
+</SyntaxTitle>
+
+<SyntaxTitle syntax="pascaligo">
+const Test.reset_state_at : timestamp -> nat -> list (mav) -> unit
 </SyntaxTitle>
 
 

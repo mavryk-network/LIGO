@@ -52,6 +52,14 @@ const sum: mav = 5mumav + 1mav;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=mav
+const sum : mav = 5mumav + 0.000_010mav
+```
+
+</Syntax>
+
 ### Subtracting
 
 Since subtracting two amounts could result in a negative amount,
@@ -76,6 +84,15 @@ const negative: option<mav> = 1mumav - 5mumav; /* None */
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=mav
+const amount : option (mav) = 5mumav - 1mumav // Some (4mumav)
+const negative : option (mav) = 1mumav - 5mumav // None
+```
+
+</Syntax>
+
 ### Multiplying
 
 You can multiply `nat` and `mav` values:
@@ -96,6 +113,14 @@ const mult: mav = 5n * 5mumav;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=mav
+const mult : mav = 5n * 5mumav
+```
+
+</Syntax>
+
 ### Dividing
 
 The division of two `mav` values results into a `nat`.
@@ -112,6 +137,14 @@ let div : nat = 10mumav / 3mumav
 
 ```jsligo group=mav
 const div: nat = 10mumav / 3mumav;
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=mav
+const div : nat = 10mumav / 3mumav
 ```
 
 </Syntax>
@@ -150,6 +183,24 @@ const ediv1: option<[nat, mav]> = ediv(37mumav, 5mumav);
 
 // Some (7mumav, 2mumav)
 const ediv2: option<[mav, mav]> = ediv(37mumav, 5n);
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+For cases when you need both the quotient and the remainder, LIGO
+provides the `ediv` operation. `ediv (x, y)` returns `Some (quotient,
+remainder)`, unless `y` is zero, in which case it returns `None`. The
+function `ediv` is overloaded to accept mav, beyond all the
+combinations of natural and integer numbers:
+
+```pascaligo group=mav_euclidean
+// Some (7, 2mumav)
+const ediv1 : option (nat * mav) = ediv (37mumav, 5mumav)
+
+// Some (7mumav, 2mumav)
+const ediv2 : option (mav * mav) = ediv (37mumav, 5n)
 ```
 
 </Syntax>

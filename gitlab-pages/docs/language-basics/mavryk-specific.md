@@ -45,6 +45,17 @@ const id_string = (p) => {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=a
+function id_string (const p : string) : option (string) is
+  block {
+    const packed : bytes = Bytes.pack (p)
+  } with (Bytes.unpack (packed) : option (string))
+```
+
+</Syntax>
+
 
 ## Hashing Keys
 
@@ -72,6 +83,17 @@ const check_hash_key = (kh1: key_hash, k2: key) => {
   let kh2 = Crypto.hash_key(k2);
   return [kh1 == kh2, kh2];
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b
+function check_hash_key (const kh1 : key_hash; const k2 : key) : bool * key_hash is
+  block {
+    const kh2 : key_hash = Crypto.hash_key (k2)
+  } with (kh1 = kh2, kh2)
 ```
 
 </Syntax>
@@ -108,6 +130,15 @@ const check_signature =
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+function check_signature (const pk : key; const signed : signature; const msg : bytes) : bool is
+  Crypto.check (pk, signed, msg)
+```
+
+</Syntax>
+
 
 ## Contract's Own Address
 
@@ -130,6 +161,14 @@ let current_addr : address = Mavryk.get_self_address ()
 
 ```jsligo group=d
 const current_addr = Mavryk.get_self_address();
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=d
+const current_addr : address = Mavryk.get_self_address ()
 ```
 
 </Syntax>
@@ -163,6 +202,20 @@ const origination = Mavryk.create_contract(
   3mav,
   "initial_storage"
 );
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=e
+const origination : operation * address = Mavryk.create_contract (
+  (function (const p : nat; const s : string) is
+    ((nil : list (operation)), s)),
+  (None : option (key_hash)),
+  3mav,
+  "initial_storage"
+)
 ```
 
 </Syntax>

@@ -66,6 +66,25 @@ let mapping_binop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
     ; WORD_LAND, C_LAND
     ; WORD_LOR, C_LOR
     ]
+  (* MAVRYK: PascaLIGO *)
+  | PascaLIGO ->
+    [ SHARP, C_CONS
+    ; CONTAINS, C_SET_MEM
+    ; CARET, C_CONCAT
+    ; PLUS, C_ADD
+    ; MINUS, C_POLYMORPHIC_SUB
+    ; STAR, C_MUL
+    ; SLASH, C_DIV
+    ; WORD_MOD, C_MOD
+    ; WORD_OR, C_OR
+    ; WORD_AND, C_AND
+    ; LT, C_LT
+    ; GT, C_GT
+    ; GE, C_GE
+    ; LE, C_LE
+    ; SEQ, C_EQ
+    ; EQ_SLASH_EQ, C_NEQ
+    ]
 
 
 let mapping_unop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
@@ -73,6 +92,7 @@ let mapping_unop ~syntax : (Operators.op * Ligo_prim.Constant.constant') list =
   match syntax with
   | CameLIGO -> [ MINUS, C_NEG; WORD_NOT, C_NOT ]
   | JsLIGO -> [ MINUS, C_NEG; EX_MARK, C_NOT ]
+  | PascaLIGO -> [ MINUS, C_NEG; WORD_NOT, C_NOT ] (* MAVRYK: PascaLIGO *)
 
 
 let get_constant_of_operator mapping ~syntax k : Ligo_prim.Constant.constant' option =

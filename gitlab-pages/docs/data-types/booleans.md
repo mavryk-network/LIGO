@@ -25,6 +25,15 @@ const b: bool = false;
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=booleans
+const a : bool = True
+const b : bool = False
+```
+
+</Syntax>
+
 ## Or
 
 <Syntax syntax="cameligo">
@@ -66,6 +75,20 @@ const or_4: bool = true  || false; // true
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+The logical disjunction ("or") is implemented by the keyword operator
+`or` (PascaLIGO has no symbolic `||` operator):
+
+```pascaligo group=or
+const or_1 : bool = False or True   // true
+const or_2 : bool = False or False  // false
+const or_3 : bool = True  or True   // true
+const or_4 : bool = True  or False  // true
+```
+
+</Syntax>
+
 ## And
 
 The logical conjunction ("and") is implemented by the binary operator
@@ -93,6 +116,20 @@ const and_4: bool = true  && false; // false
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, the logical conjunction ("and") is implemented by the
+keyword operator `and`:
+
+```pascaligo group=conjunction
+const and_1 : bool = False and True   // false
+const and_2 : bool = False and False  // false
+const and_3 : bool = True  and True   // true
+const and_4 : bool = True  and False  // false
+```
+
+</Syntax>
+
 ## Not
 
 <Syntax syntax="cameligo">
@@ -115,6 +152,18 @@ The logical negation ("not") is implemented by the unary operator
 ```jsligo group=not
 const not_1: bool = !true  // false
 const not_2: bool = !false // true
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The logical negation ("not") is implemented by the unary operator
+`not`.
+
+```pascaligo group=not
+const not_1 : bool = not True   // false
+const not_2 : bool = not False  // true
 ```
 
 </Syntax>
@@ -150,6 +199,19 @@ const c: bool = 1 > 0;   // greater than (true)
 const d: bool = 0 < 1;   // lower than (true)
 const e: bool = 0 >= 0;  // greater than or equal (true)
 const f: bool = 0 <= 0;  // lower than or equal (true)
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=comparing
+const a : bool = 1 = 1     // equality (true)
+const b : bool = 1 =/= 0   // inequality (true)
+const c : bool = 1 > 0     // greater than (true)
+const d : bool = 0 < 1     // lower than (true)
+const e : bool = 0 >= 0    // greater than or equal (true)
+const f : bool = 0 <= 0    // lower than or equal (true)
 ```
 
 </Syntax>
@@ -194,5 +256,18 @@ const min = (a < b) ? a : b; // min == 0
 Note: Parentheses are often necessary before `?`, but not always: you
 can either rely on the compiler error message or always use
 parentheses.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+The syntax uses the keywords `if`, `then` and `else` to separate the
+three parts, like so:
+
+```pascaligo group=conditionals
+const a = 0
+const b = 1
+const min = if a < b then a else b // min = 0
+```
 
 </Syntax>

@@ -93,6 +93,7 @@ type RawLigoList =
 data Lang
   = Caml -- ^ @CameLIGO@.
   | Js  -- ^ @JsLIGO@.
+  | Pascal -- ^ @PascaLIGO@.  -- MAVRYK: PascaLIGO
   deriving stock (Show, Eq, Enum, Bounded, Generic)
   deriving anyclass (Hashable, NFData)
 
@@ -100,12 +101,14 @@ instance Buildable Lang where
   build = \case
     Caml -> "caml"
     Js -> "js"
+    Pascal -> "pascal" -- MAVRYK: PascaLIGO
 
 instance MessagePack Lang where
   fromObjectWith _ = withMsgText "Lang" \(toString -> str) ->
     case str of
       "CameLIGO" -> pure Caml
       "JsLIGO" -> pure Js
+      "PascaLIGO" -> pure Pascal -- MAVRYK: PascaLIGO
       other -> refute $ decodeError [int||Unexpected lang: #{other}|]
 
 -- | All LIGO dialects.
@@ -120,6 +123,7 @@ langExtension :: Lang -> FilePath
 langExtension = \case
   Caml -> ".mligo"
   Js   -> ".jsligo"
+  Pascal -> ".ligo" -- MAVRYK: PascaLIGO
 
 -- Let 'Accessor' be either 'FieldName' or a 'Text'ual representation of an
 -- index (a number).

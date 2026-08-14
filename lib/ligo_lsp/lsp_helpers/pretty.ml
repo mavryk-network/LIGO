@@ -24,9 +24,10 @@ let with_pp_mode
       about changing the pp_mode to (Parsing_shared.PrettyComb.state,...) dialect  *)
       ( Parsing_shared.PrettyComb.state * 'a
       , Parsing_shared.PrettyComb.state * 'b
+      , unit * 'c (* MAVRYK: PascaLIGO — PascaLIGO's Pretty uses a [unit] state *)
       , PPrint.document )
       Dialect_cst.from_dialect)
-    (x : ('a, 'b) Dialect_cst.dialect)
+    (x : ('a, 'b, 'c) Dialect_cst.dialect)
   =
   let set_ident pprint_state =
     object
@@ -41,6 +42,8 @@ let with_pp_mode
     (* FIXME #1923 should set_ident here but CameLIGO gives nonpretty result with custom ident *)
     pprint.cameligo (Parsing.Cameligo.Pretty.default_state, code)
   | JsLIGO code -> pprint.jsligo (set_ident Parsing.Jsligo.Pretty.default_state, code)
+  (* MAVRYK: PascaLIGO. PascaLIGO's pretty state is [unit], so no [set_ident]. *)
+  | PascaLIGO code -> pprint.pascaligo (Parsing.Pascaligo.Pretty.default_state, code)
 
 (** Pretty prints the provided CST using the provided configuration. *)
 let pretty_print_cst pp_mode ~(dialect_cst : Dialect_cst.t) : string =
@@ -48,6 +51,7 @@ let pretty_print_cst pp_mode ~(dialect_cst : Dialect_cst.t) : string =
     pp_mode
     { cameligo = uncurry Parsing.Cameligo.Pretty.print
     ; jsligo = uncurry Parsing.Jsligo.Pretty.print
+    ; pascaligo = uncurry Parsing.Pascaligo.Pretty.print (* MAVRYK: PascaLIGO *)
     }
     dialect_cst
 
@@ -94,6 +98,12 @@ let pretty_print_signature
         Buffer.contents
         <@ pretty_print_signature_expr Parsing.Cameligo.Pretty.default_state
         <@ Unification.Jsligo.decompile_sig_expr
+      (* MAVRYK: PascaLIGO *)
+      | PascaLIGO ->
+        let open Parsing.Pascaligo in
+        Buffer.contents
+        <@ pretty_print_signature_expr Parsing.Pascaligo.Pretty.default_state
+        <@ Unification.Pascaligo.decompile_sig_expr
     in
     `Ok (to_syntax unified_sig)
   | Error err ->
@@ -104,7 +114,11 @@ let pretty_print_signature
 
 let decompile_type
     :  syntax:Syntax_types.t -> Ast_core.ty_expr
-    -> ( (Cst.Cameligo.type_expr, Cst.Jsligo.type_expr) Dialect_cst.dialect
+    -> ( (* MAVRYK: PascaLIGO *)
+         ( Cst.Cameligo.type_expr
+         , Cst.Jsligo.type_expr
+         , Cst.Pascaligo.type_expr )
+         Dialect_cst.dialect
        , [> `Exn of exn | `PassesError of Nanopasses.Errors.t ] )
        result
   =
@@ -121,7 +135,10 @@ let decompile_type
         (match syntax with
         | JsLIGO -> JsLIGO (Unification_jsligo.Decompile.decompile_type_expression s)
         | CameLIGO ->
-          CameLIGO (Unification_cameligo.Decompile.decompile_type_expression s))
+          CameLIGO (Unification_cameligo.Decompile.decompile_type_expression s)
+        (* MAVRYK: PascaLIGO *)
+        | PascaLIGO ->
+          PascaLIGO (Unification_pascaligo.Decompile.decompile_type_expression s))
   with
   | exn -> Error (`Exn exn)
 
@@ -140,11 +157,13 @@ let pretty_print_variant
     then (
       match syntax with
       | CameLIGO -> Ok (Dialect_cst.CameLIGO None)
-      | JsLIGO -> Ok (JsLIGO None))
+      | JsLIGO -> Ok (JsLIGO None)
+      | PascaLIGO -> Ok (PascaLIGO None) (* MAVRYK: PascaLIGO *))
     else (
       match decompile_type ~syntax typ with
       | Ok (CameLIGO typ) -> Ok (CameLIGO (Some typ))
       | Ok (JsLIGO typ) -> Ok (JsLIGO (Some typ))
+      | Ok (PascaLIGO typ) -> Ok (PascaLIGO (Some typ)) (* MAVRYK: PascaLIGO *)
       | Error err -> Error err)
   in
   match decompiled_cst_result with
@@ -163,7 +182,21 @@ let pretty_print_variant
         in
         Parsing.Jsligo.Pretty.(print_legacy_variant print_type_expr state variant)
       in
-      Dialect_cst.{ cameligo = print_cameligo; jsligo = print_jsligo }
+      (* MAVRYK: PascaLIGO. PascaLIGO's Pretty exposes no [print_variant]; render the
+         constructor (and its argument type, if any) directly via [print_type_expr]. *)
+      let print_pascaligo ((), te) =
+        let (Label (lbl, _)) = label in
+        match te with
+        | None -> PPrint.string lbl
+        | Some te ->
+          PPrint.(
+            string lbl ^^ string " of " ^^ Parsing.Pascaligo.Pretty.print_type_expr () te)
+      in
+      Dialect_cst.
+        { cameligo = print_cameligo
+        ; jsligo = print_jsligo
+        ; pascaligo = print_pascaligo
+        }
     in
     `Ok (with_pp_mode pp_mode print cst)
   | Error err ->
@@ -203,6 +236,8 @@ let pretty_print_type_expression
       Dialect_cst.
         { cameligo = add_prefix <@ uncurry Parsing.Cameligo.Pretty.print_type_expr
         ; jsligo = add_prefix <@ uncurry Parsing.Jsligo.Pretty.print_type_expr
+        ; (* MAVRYK: PascaLIGO *)
+          pascaligo = add_prefix <@ uncurry Parsing.Pascaligo.Pretty.print_type_expr
         }
     in
     `Ok (with_pp_mode ~doc_to_string pp_mode print cst)

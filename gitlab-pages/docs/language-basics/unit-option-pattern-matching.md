@@ -52,6 +52,28 @@ let eq = (u1 == u2); // true
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+In PascaLIGO, the unique value of the `unit` type is `unit`.
+```pascaligo group=a
+const n : unit = unit
+```
+
+Sequences of expressions that return the `unit` type can be written
+using `begin` and `end`, separating expressions using semi-colons. The
+last expression, which represents the value returned, can have a
+different type to `unit`, introduced with `with`:
+
+```pascaligo group=a
+function m (const x : int) : int is
+  begin
+    assert (x > 0);
+    assert (x < 10)
+  end with x
+```
+
+</Syntax>
+
 <Syntax syntax="jsligo">
 
 ## Discriminated union type
@@ -140,6 +162,17 @@ let tail: coin = Tail();
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=b
+type coin is Head of unit | Tail of unit
+
+const head : coin = Head (unit)
+const tail : coin = Tail (unit)
+```
+
+</Syntax>
+
 
 The names `Head` and `Tail` in the definition of the type `coin` are
 called *data constructors*, or *variants*. In this particular, they
@@ -187,6 +220,26 @@ const g : user = Guest();
 In JsLIGO, a constant constructor is equivalent to the same constructor
 taking an argument of type `unit`, so, for example, `Guest ()` is the
 same value as `Guest (unit)`.
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=c
+type id is nat
+
+type user is
+  Admin   of id
+| Manager of id
+| Guest of unit
+
+const u : user = Admin (1000n)
+const g : user = Guest (unit)
+```
+
+In PascaLIGO, a constant constructor must be declared as taking an
+argument of type `unit`, and is constructed by applying it to `unit`,
+so, for example, `Guest` is written `Guest (unit)`.
+
 </Syntax>
 
 There are cases where several sum types match a given constructor.
@@ -257,6 +310,32 @@ const x = A(42);
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=multi_sum
+type t2 is A of int | B of int
+
+module MyModule is {
+  type t5 is A of int | C of bool
+  type t4 is A of int | D of int
+
+  module MySubModule is {
+    type t6 is A of int | E of mav
+  }
+}
+
+module MySecondModule is {
+  type t3 is A of int | F of int
+}
+
+type t1 is A of int | G of mav
+
+// The compiler will search above for sum types with an 'A' constructor
+const x = A (42)
+```
+
+</Syntax>
+
 <Syntax syntax="cameligo">
 
 In CameLigo when looking for a matching sum type, the compiler will
@@ -273,6 +352,26 @@ end
 
 (* This will fail because A will not be found *)
 (* let x = A 42 *)
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+In PascaLIGO when looking for a matching sum type, the compiler will
+not look in shadowed modules. The below code would throw an error
+because type `t1` is in a shadowed module and thus not accessible.
+
+```pascaligo group=sum_shadow
+module M is {
+  type t1 is A of int | B of int
+}
+module M is {
+  const y = 10
+}
+
+// This will fail because A will not be found
+// const x = A (42)
 ```
 
 </Syntax>
@@ -303,6 +402,15 @@ let div (a, b : nat * nat) : nat option =
 function div (a: nat, b: nat): option<nat> {
   if (b == 0n) return None() else return Some(a/b)
 };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=d
+function div (const a : nat; const b : nat) : option (nat) is
+  if b = 0n then None else Some (a/b)
 ```
 
 </Syntax>
@@ -384,6 +492,24 @@ function match_with_block () {
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=pm_variant
+type color is
+  | RGB   of (int * int * int)
+  | Gray  of int
+  | Default of unit
+
+function int_of_color (const c : color) : int is
+  case c of [
+    RGB (r,g,b) -> 16 + b + g * 6 + r * 36
+  | Gray (i) -> 232 + i
+  | Default (_u) -> 0
+  ]
+```
+
+</Syntax>
+
 ### Matching records or tuples
 
 Fields of records and components of tuples can be destructured. Record
@@ -424,6 +550,25 @@ let on_tuple = (v : my_tuple) : int =>
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+```pascaligo group=pm_rec_tuple
+type my_record is record [a : int; b : nat; c : string]
+type my_tuple is int * nat * string
+
+function on_record (const v : my_record) : int is
+  case v of [
+    record [ a = a; b = b_renamed; c = _ ] -> a + int (b_renamed)
+  ]
+
+function on_tuple (const v : my_tuple) : int is
+  case v of [
+    (x, y, _) -> x + int (y)
+  ]
+```
+
+</Syntax>
+
 ### Matching lists
 
 <Syntax syntax="cameligo">
@@ -446,6 +591,19 @@ let weird_length = (v : list<int>) : int =>
     when([]): -1;
     when([hd, ...tl]): 1 + int(List.length(tl))
   };
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=pm_lists
+function weird_length (const v : list (int)) : int is
+  case v of [
+    nil -> -1
+  | a # (b # (c # nil)) -> -2
+  | x -> int (List.length (x))
+  ]
 ```
 
 </Syntax>
@@ -482,6 +640,22 @@ const complex = (x: complex_t, y: complex_t) =>
     when ([{a:_a; b:_b}, {a: Some ([hd,...tl]); b:[]}]): hd
     when ([{a: Some (a); b:_b}, _l]) : int (List.length (a))
   }
+```
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=pm_complex
+type complex_t is record [ a : option (list (int)); b : list (int) ]
+
+function complex (const x : complex_t; const y : complex_t) : int is
+  case (x, y) of [
+    (record [a=None; b=_b1], record [a=_a2; b=_b2]) -> -1
+  | (record [a=_a3; b=_b3], record [a=Some (nil); b=(hd # tl)]) -> hd
+  | (record [a=_a4; b=_b4], record [a=Some (hd # tl); b=nil]) -> hd
+  | (record [a=Some (a); b=_b5], _) -> int (List.length (a))
+  ]
 ```
 
 </Syntax>

@@ -1,7 +1,7 @@
 {-# LANGUAGE PolyKinds, UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
--- | Pretty printers for all 2 dialects and core s-expressions
+-- | Pretty printers for all 3 dialects and core s-expressions
 -- and their corresponding `Show` instances for @AST.Skeleton@ types.
 
 module Language.LIGO.AST.Pretty
@@ -783,21 +783,200 @@ instance LPP1 'Caml Direction where
     Downto -> "downto"
 
 ----------------------------------------------------------------------------
+-- Pascal
+--
+-- MAVRYK: PascaLIGO. Pretty-printer instances rendering the universal AST as
+-- PascaLIGO (0.73) surface syntax. Mirrors the CameLIGO instances structurally,
+-- swapping the concrete rendering: @record [ .. ]@, @case .. of [ .. ]@,
+-- @function .. is ..@, @True@/@False@, @parameter_of@ prefix, list cons @#@, etc.
+-- UNVERIFIED: written without a GHC/nix toolchain in this environment; expect a
+-- compile-and-fix pass in a Haskell build (mirrors the CameLIGO shapes closely).
+----------------------------------------------------------------------------
+
+instance LPP1 'Pascal AST.Type where
+  lpp1 = \case
+    TArrow  dom    codom  -> dom <+> "->" <+> codom
+    TRecord layout fields ->
+      let record = "record [" `indent` blockWith (<.> ";") fields `above` "]" in
+        case layout of
+          Comb -> "[@layout comb]" `indent` record
+          Tree -> record
+
+    TProduct [element]          -> element
+    TProduct elements           -> parens (train " *" elements)
+    TSum     layout   (x :| xs) ->
+      let sum' = x `indent` blockWith ("| " <.>) xs in
+        case layout of
+          Comb -> "[@layout comb] |" `indent` sum'
+          Tree -> sum'
+
+    TApply     f xs      -> f <+> tuple xs
+    TString    t         -> lpp t
+    TWildcard            -> "_"
+    TVariable  v         -> v
+    TParen     t         -> parens (lpp t)
+    TInt       t         -> t
+    TParameter p         -> "parameter_of" <+> p
+    TForAll    vars typ  -> train " " vars <+> "." <+> typ
+
+instance LPP1 'Pascal Signature where
+  lpp1 (Signature elements) = block' elements
+
+instance LPP1 'Pascal SigItem where
+  lpp1 = \case
+    SValue name typ -> "const" <+> name <+> ":" <+> typ
+    SType name typMb ->
+      let pref = "type" <+> name in
+      case typMb of
+        Nothing -> pref
+        Just typ -> pref <+> "is" <+> typ
+    SInclude incl -> "include" <+> incl
+
+instance LPP1 'Pascal TypeVariableName where
+  lpp1 = \case
+    TypeVariableName raw -> lpp raw
+
+instance LPP1 'Pascal Binding where
+  lpp1 = \case
+    BTypeDecl     n    _tys ty  -> "type" <+> n <+> "is" <+> lpp ty
+    BConst _isRec name _tys ty body ->
+      "const" <+> name <+> maybe DPretty.empty ((":" <+>) . lpp) ty <+> "=" <+> lpp body
+    BInclude      fname         -> "#include" <+> pp fname
+    BImport       fname _ alias -> "#import" <+> pp fname <+> pp alias
+
+    BFunction isRec name _tys params ty body ->
+      foldr (<+>) DPretty.empty $ concat
+        [ ["recursive" | isRec]
+        , ["function"]
+        , [name]
+        , [parens (train ";" params)]
+        , [maybe DPretty.empty ((":" <+>) . lpp) ty]
+        , ["is", body]
+        ]
+
+    BModuleDecl   mname _ body  -> "module" <+> lpp mname <+> "is" <+> braces (lpp body)
+    BModuleAlias  mname _ alias -> "module" <+> lpp mname <+> "is" <+> lpp alias
+    BSignature sname sig _      -> "module type" <+> sname <+> "is sig" <+> sig <+> "end"
+    node                        -> error "unexpected `Binding` node failed with: " <+> pp node
+
+instance LPP1 'Pascal QuotedTypeParams where
+  lpp1 = \case
+    QuotedTypeParam  t  -> t
+    QuotedTypeParams ts -> tuple ts
+
+instance LPP1 'Pascal Variant where
+  lpp1 = \case
+    Variant ctor typs -> case typs of
+      [] -> ctor
+      [ty] -> ctor <+> "of" <+> parens (pp ty)
+      _ -> error "Expected zero or one arg in variant type"
+
+instance LPP1 'Pascal Expr where
+  lpp1 = \case
+    Let       decl body  -> "block {" `indent` decl `above` "} with" <+> body
+    Apply     f xs       -> f <+> tuple xs
+    BinOp     l o r      -> l <+> o <+> r
+    UnOp        o r      -> lpp o <+> lpp r
+    Op          o        -> lpp o
+    Record    az         -> "record [" `indent` blockWith (<.> ";") az `above` "]"
+    If        b t e      -> "if" <+> b <+> "then" <+> lpp t <+> "else" <+> lpp e
+    List      l          -> "list" <+> lpp l
+    ListAccess l ids     -> lpp l <.> fsep (brackets <$> ids)
+    Tuple     l          -> tuple l
+    Annot     n t        -> parens (n <+> ":" <+> t)
+    Case      s az       -> foldr (<+>) DPretty.empty
+      [ "case", lpp s, "of ["
+      , foldr above DPretty.empty $ lpp <$> az
+      , "]"
+      ]
+    Seq       es         -> train ";" es
+    Lambda    ps _tys ty b -> foldr (<+>) DPretty.empty
+      [ "function"
+      , parens (train ";" ps)
+      , maybe DPretty.empty ((":" <+>) . lpp) ty
+      , "is", lpp b
+      ]
+    RecordUpd r up       -> r <+> "with record [" <+> train ";" up <+> "]"
+    Paren     e          -> "(" <+> lpp e <+> ")"
+    Contract  m          -> "contract_of" <+> m
+    AssignOp  l o r      -> l <+> o <+> r
+    EFalse               -> "False"
+    ETrue                -> "True"
+    node                 -> error "unexpected `Expr` node failed with: " <+> pp node
+
+instance LPP1 'Pascal Alt where
+  lpp1 = \case
+    Alt p b -> "|" <+> lpp p <+> "->" <+> lpp b
+    _ -> error "Default is not supported in PascaLIGO"
+
+instance LPP1 'Pascal FieldAssignment where
+  lpp1 = \case
+    FieldAssignment n e -> lpp n <+> "=" <+> lpp e
+    Spread n -> "..." <.> n
+    Capture n -> lpp n
+
+instance LPP1 'Pascal Constant where
+  lpp1 = \case
+    CInt           z   -> lpp z
+    CNat           z   -> lpp z <.> "n"
+    CString        z   -> lpp z
+    CFloat         z   -> lpp z
+    CBytes         z   -> lpp z
+    CMav           z   -> lpp z <.> "mav"
+
+instance LPP1 'Pascal Pattern where
+  lpp1 = \case
+    IsConstr     ctor arg  -> ctor <+> parens (lpp arg)
+    IsVar        name      -> name
+    IsAnnot      s t       -> parens (lpp s <+> ":" <+> lpp t)
+    IsWildcard             -> "_"
+    IsSpread     n         -> "..." <.> lpp n
+    IsList       l         -> "list" <+> list l
+    IsTuple      t         -> parens (train "," t)
+    IsCons       h t       -> h <+> "#" <+> t
+    IsRecord     fields    -> "record [" <+> train ";" fields <+> "]"
+    IsParen      x         -> parens x
+    IsFalse                -> "False"
+    IsTrue                 -> "True"
+    pat                    -> error "unexpected `Pattern` node failed with:" <+> pp pat
+
+instance LPP1 'Pascal RecordFieldPattern where
+  lpp1 = \case
+    IsRecordField name body -> name <+> "=" <+> body
+    IsRecordCapture name -> name
+
+instance LPP1 'Pascal TField where
+  lpp1 = \case
+    TField      n t -> n <.> maybe "" (":" `indent`) t
+
+instance LPP1 'Pascal CaseOrDefaultStm where
+  lpp1 = \case
+    CaseStm _ _  -> error "unexpected `CaseStm` node"
+    DefaultStm _ -> error "unexpected `DefaultStm` node"
+
+instance LPP1 'Pascal Direction where
+  lpp1 = \case
+    Upto   -> "to"
+    Downto -> "downto"
+
+----------------------------------------------------------------------------
 -- General utilities
 ----------------------------------------------------------------------------
 
--- | A convenient constraint that provides @CameLIGO@
--- and @JsLIGO@ pretty-printers.
-type TotalLPP expr = (LPP 'Caml expr, LPP 'Js expr)
+-- | A convenient constraint that provides @CameLIGO@, @JsLIGO@
+-- and @PascaLIGO@ pretty-printers.
+type TotalLPP expr = (LPP 'Caml expr, LPP 'Js expr, LPP 'Pascal expr) -- MAVRYK: PascaLIGO
 
 -- | Prettifies a LIGO expression in the given dialect.
 lppDialect :: TotalLPP expr => Lang -> expr -> Doc
 lppDialect dialect = case dialect of
   Caml -> lpp @'Caml
   Js   -> lpp @'Js
+  Pascal -> lpp @'Pascal -- MAVRYK: PascaLIGO
 
 -- | Wraps contents into block comments in the given dialect.
 blockComment :: Lang -> Doc -> Doc
 blockComment dialect contents = case dialect of
   Caml -> "(*" <+> contents <+> "*)"
+  Pascal -> "(*" <+> contents <+> "*)" -- MAVRYK: PascaLIGO (same block-comment as CameLIGO)
   Js   -> "/*" <+> contents <+> "*/"

@@ -18,12 +18,22 @@ type (&#39;p, &#39;s) origination&#95;result = &#123;
 <SyntaxTitle syntax="jsligo">
 type origination&#95;result&lt;p, s&gt; = &#123; code: michelson&#95;contract&lt;p, s&gt;; size: int; taddr: typed&#95;address&lt;p, s&gt; &#125;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+type origination&#95;result (p, s) is record [
+ code : michelson&#95;contract (p, s);
+ size : int;
+ taddr : typed&#95;address (p, s)
+]
+</SyntaxTitle>
 
 <SyntaxTitle syntax="cameligo">
 val contract : &#39;p &#39;s.(&#39;p, &#39;s) module&#95;contract -&gt; &#39;s -&gt; mav -&gt; (&#39;p, &#39;s) origination&#95;result
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let contract: &lt;p, s&gt;(&#95;: module&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; origination&#95;result&lt;p, s&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const contract : module&#95;contract (p, s) -&gt; s -&gt; mav -&gt; origination&#95;result (p, s)
 </SyntaxTitle>
 Originate a contract with an entrypoint function in curried
         form, initial storage and initial balance.
@@ -35,6 +45,9 @@ val from&#95;file : &#39;p &#39;s.string -&gt; &#39;s -&gt; mav -&gt; (&#39;p, &
 <SyntaxTitle syntax="jsligo">
 let from&#95;file: &lt;p, s&gt;(&#95;: string) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; origination&#95;result&lt;p, s&gt;
 </SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const from&#95;file : string -&gt; s -&gt; mav -&gt; origination&#95;result (p, s)
+</SyntaxTitle>
 Originate a contract with a path to the contract file, an
         entrypoint, and a list of views, together with an initial storage
         and an initial balance.
@@ -45,6 +58,9 @@ val michelson : &#39;p &#39;s.(&#39;p, &#39;s) michelson&#95;contract -&gt; &#39
 </SyntaxTitle>
 <SyntaxTitle syntax="jsligo">
 let michelson: &lt;p, s&gt;(&#95;: michelson&#95;contract&lt;p, s&gt;) =&gt; (&#95;: s) =&gt; (&#95;: mav) =&gt; typed&#95;address&lt;p, s&gt;
+</SyntaxTitle>
+<SyntaxTitle syntax="pascaligo">
+const michelson : michelson&#95;contract (p, s) -&gt; s -&gt; mav -&gt; typed&#95;address (p, s)
 </SyntaxTitle>
 Originate a contract with initial storage and initial
         balance.

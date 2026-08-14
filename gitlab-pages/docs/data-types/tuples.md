@@ -77,6 +77,44 @@ const friends : couple = ["Alice", "Bob"];
 
 </Syntax>
 
+<Syntax syntax="pascaligo">
+
+Tuples gather a given number of values in a specific order and those
+values, called *components*, can be retrieved by their index
+(position).  Probably the most common tuple is the *pair*. For
+example, if we were storing coordinates on a two dimensional grid we
+might use a pair `(x,y)` to store the coordinates `x` and `y`. There
+is a *specific order*, so `(y,x)` is not equal to `(x,y)` in
+general. The number of components is part of the type of a tuple, so,
+for example, we cannot add an extra component to a pair and obtain a
+triple of the same type: `(x,y)` has always a different type from
+`(x,y,z)`, whereas `(y,x)` might have the same type as `(x,y)`.
+
+> Unlike CameLIGO, PascaLIGO requires parentheses around tuple
+> values, so `(x,y)` cannot be written `x,y`.
+
+Tuple components can be of arbitrary types. A pair is a 2-tuple. If it
+contains a first component of type `t_1` and a second component of
+type `t_2`, its type is written `t_1 * t_2`. If more components: `t1 *
+t2 * ... * t_n`. (We can think of tuple types as products of types.)
+Tuple types do not have to be defined before they can be used:
+
+```pascaligo group=tuple
+const friends = ("Alice", "Bob")
+```
+
+but it is sometimes more informative to define a type. Type
+definitions are introduced with the keyword `type`, like value
+definitions are with `const`. Instead of a value expression as a
+right-hand side, we have a type expression:
+
+```pascaligo group=tuple
+type couple is string * string
+const friends : couple = ("Alice", "Bob")
+```
+
+</Syntax>
+
 ## Accessing
 
 If we want to get the first and second names of a pair, we can use
@@ -158,6 +196,51 @@ without naming it. In that case, we use the binary operator `[]`:
 
 ```jsligo group=destructuring
 const film = deep[1][1] + ", Dolly!" // film == "Hello, Dolly!"
+```
+
+The first component has index `0`, the second `1` etc.
+
+</Syntax>
+
+<Syntax syntax="pascaligo">
+
+```pascaligo group=destructuring
+const friends = ("Alice", "Bob")
+const (alice, bob) = friends
+```
+
+That single definition actually introduces in the current scope *two*
+constants, `alice` and `bob`. Sometimes we might want to ignore a
+component of the tuple, in which case we use the character `_`:
+
+```pascaligo group=destructuring
+const (alice, _) = friends
+```
+
+Alternatively, if we still want to give a meaningful name to a useless
+component, we can use a silent variable for it, by prefixing it with
+`_`:
+
+```pascaligo group=destructuring
+const (alice, _bob) = friends // This alice shadows the previous one
+```
+
+We can destructure nested tuples in the same manner. Note that
+PascaLIGO does not allow the wildcard `_` to appear more than once in
+the same pattern, so each ignored component needs its own silent
+name:
+
+```pascaligo group=destructuring
+const deep = (1, (2n, "Hello"))
+const (_x, (_y, greeting)) = deep // greeting = "Hello"
+```
+
+This works well if we want to give a name to a component (like
+`greeting` above), but we might simply want the value of a component
+without naming it. In that case, we use the binary operator `.`:
+
+```pascaligo group=destructuring
+const film = deep.1.1 ^ ", Dolly!" // film = "Hello, Dolly!"
 ```
 
 The first component has index `0`, the second `1` etc.
