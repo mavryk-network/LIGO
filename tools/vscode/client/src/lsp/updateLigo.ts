@@ -342,7 +342,7 @@ async function detectInstaller(platform: NodeJS.Platform): Promise<InstallMethod
 /** Installs LIGO using Homebrew. */
 async function runBrewInstaller(client: LanguageClient): Promise<boolean> {
   const terminal = mkTerminal()
-  terminal.sendText(`brew tap mavryk-network/ligo https://gitlab.com/mavryk-network/ligo.git`)
+  terminal.sendText(`brew tap mavryk-network/ligo`)
   await withClientRestart(client, () => terminal.sendText(`brew install mavryk-network/ligo/ligo`))
   return true
 }

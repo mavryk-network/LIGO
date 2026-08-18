@@ -289,9 +289,20 @@ xrefcheck:
     - export DOC_PATH=./gitlab-pages/docs
     - export WEBSITE_PATH=./gitlab-pages/website
     - cp -f ./changelog.md $DOC_PATH/intro/changelog.md
-    - export LATEST_VERSION=$(ls -1r $WEBSITE_PATH/versioned_docs | sed -n '1p')
-    - echo $LATEST_VERSION
-    - cp -f ./changelog.md $WEBSITE_PATH/versioned_docs/$LATEST_VERSION/intro/changelog.md
+    # MAVRYK: the 1.6.0 frozen snapshot was retired (versions.json emptied, versioned_docs/ removed),
+    # so the site serves only the live docs/ as "current". Guard the versioned-changelog copy so it is
+    # a no-op when there are no snapshots (it used to unconditionally cp into versioned_docs/$LATEST/,
+    # which now fails the pages job). It transparently resumes if `docs:version` is run again later.
+    - |
+      if [ -d "$WEBSITE_PATH/versioned_docs" ]; then
+        LATEST_VERSION=$(ls -1r "$WEBSITE_PATH/versioned_docs" | sed -n '1p')
+        echo "Latest versioned snapshot: $LATEST_VERSION"
+        if [ -n "$LATEST_VERSION" ]; then
+          cp -f ./changelog.md "$WEBSITE_PATH/versioned_docs/$LATEST_VERSION/intro/changelog.md"
+        fi
+      else
+        echo "No versioned_docs/ snapshots; serving live docs only."
+      fi
     - npm --prefix $WEBSITE_PATH ci
     - npm --prefix $WEBSITE_PATH run clear
     - npm --prefix $WEBSITE_PATH run build

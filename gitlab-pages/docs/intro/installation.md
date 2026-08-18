@@ -52,7 +52,7 @@ sudo cp ./ligo /usr/local/bin
 Try our tap :
 
 ```bash
-brew tap mavryk-network/ligo https://gitlab.com/mavryk-network/ligo.git
+brew tap mavryk-network/ligo
 brew install mavryk-network/ligo/ligo
 ```
 

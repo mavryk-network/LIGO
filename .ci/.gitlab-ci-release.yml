@@ -496,7 +496,20 @@ update-repository-status:
     - ./.ci/scripts/versioning_website.sh $RELEASE_VERSION
     - LAST_TAG_JOB_ID=`./.ci/scripts/release_metadata/read_release_metadata.sh LAST_TAG_JOB_ID`
     - ./.ci/scripts/update_distribution_references_with_release.sh $LAST_TAG_JOB_ID $RELEASE_VERSION $SRI_LIGO_BINARY_HASH
-    - git add tools/webide-new/ligo-webide-backend/Dockerfile HomebrewFormula/ gitlab-pages/docs/reference gitlab-pages/docs/tutorials/. gitlab-pages/docs/intro/installation.md gitlab-pages/website/versioned_docs/. gitlab-pages/website/versioned_sidebars/. gitlab-pages/website/versions.json gitlab-pages/docs/manpages gitlab-pages/website/sidebars.js
+    # MAVRYK: versioned_docs/ and versioned_sidebars/ were removed when the frozen 1.6.0 snapshot was
+    # retired (versions.json is now []). `git add <dir>/.` errors when the dir is absent, which would break
+    # this release commit. Add the always-present paths unconditionally here, then add the versioned trees
+    # only when they exist (loop below). versioning_website.sh runs `docs:version` just above and recreates
+    # both trees on the next Ligo release, so the guard transparently re-includes them then — no other change
+    # is needed to restore versioning. TO HARD-RESTORE: fold
+    #   gitlab-pages/website/versioned_docs/. gitlab-pages/website/versioned_sidebars/.
+    # back into the git add below and delete the guard loop.
+    - git add tools/webide-new/ligo-webide-backend/Dockerfile HomebrewFormula/ gitlab-pages/docs/reference gitlab-pages/docs/tutorials/. gitlab-pages/docs/intro/installation.md gitlab-pages/website/versions.json gitlab-pages/docs/manpages gitlab-pages/website/sidebars.js
+    - |
+      # MAVRYK: stage the versioned doc snapshots only when present (see note above).
+      for d in gitlab-pages/website/versioned_docs gitlab-pages/website/versioned_sidebars; do
+        if [ -e "$d" ]; then git add "$d"; else echo "MAVRYK: skipping absent $d (retired 1.6.0 snapshot; recreated on the next release)"; fi
+      done
     - git commit -m "[Bot] Docs $RELEASE_VERSION"
     - git push -o ci.skip origin HEAD:$CI_COMMIT_REF_NAME
   needs:
